@@ -50,6 +50,7 @@ def bulk_upload(file_path, role):
             return
 
         results = []
+        skipped = []
         conn = psycopg2.connect(db_url)
         cur = conn.cursor()
 
@@ -57,7 +58,25 @@ def bulk_upload(file_path, role):
             name = str(row[name_col]).strip()
             email = str(row[email_col]).strip()
             
+            # Skip invalid entries
             if not name or not email or '@' not in email:
+                skipped.append({
+                    "name": name if name else "N/A",
+                    "email": email if email else "N/A",
+                    "reason": "Invalid name or email format"
+                })
+                continue
+
+            # Check if user already exists
+            cur.execute("SELECT id, name, role, status FROM users WHERE email = %s", (email,))
+            existing_user = cur.fetchone()
+            
+            if existing_user:
+                skipped.append({
+                    "name": name,
+                    "email": email,
+                    "reason": f"User already exists (ID: {existing_user[0]}, Name: {existing_user[1]}, Role: {existing_user[2]}, Status: {existing_user[3]})"
+                })
                 continue
 
             password = generate_random_password()
@@ -65,23 +84,33 @@ def bulk_upload(file_path, role):
 
             try:
                 cur.execute(
-                    "INSERT INTO users (name, email, password, role, status) VALUES (%s, %s, %s, %s, %s) ON CONFLICT (email) DO NOTHING RETURNING id",
+                    "INSERT INTO users (name, email, password, role, status) VALUES (%s, %s, %s, %s, %s) RETURNING id",
                     (name, email, hashed_pw, role, 'active')
                 )
                 inserted = cur.fetchone()
                 if inserted:
                     results.append({"name": name, "email": email, "password": password})
+                    conn.commit()
             except Exception as e:
                 # Skip errors for specific rows
                 conn.rollback()
+                skipped.append({
+                    "name": name,
+                    "email": email,
+                    "reason": f"Database error: {str(e)}"
+                })
                 continue
-            else:
-                conn.commit()
 
         cur.close()
         conn.close()
 
-        print(json.dumps({"success": True, "count": len(results), "users": results}))
+        print(json.dumps({
+            "success": True, 
+            "count": len(results), 
+            "users": results,
+            "skipped": skipped,
+            "skippedCount": len(skipped)
+        }))
 
     except Exception as e:
         print(json.dumps({"error": str(e)}))

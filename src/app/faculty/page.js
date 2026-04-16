@@ -57,11 +57,28 @@ export default function FacultyDashboard() {
         }}>
           🎓
         </div>
-        <h1 style={{ color: '#1e293b', marginBottom: '10px', fontSize: '24px' }}>Registered Successfully</h1>
-        <p style={{ color: '#64748b', marginBottom: '30px', lineHeight: '1.6' }}>
-          Greetings, <strong>{user.name}</strong>! Your account has been successfully registered as a <strong>Faculty Member</strong>. 
-          The administration team is currently setting up your portal.
+        <h1 style={{ color: '#1e293b', marginBottom: '10px', fontSize: '28px', fontWeight: '700' }}>
+          Faculty Logged In Successfully
+        </h1>
+        <p style={{ color: '#64748b', marginBottom: '30px', lineHeight: '1.6', fontSize: '16px' }}>
+          Welcome, <strong>{user.name}</strong>!<br/>
+          Your faculty account is active and ready to use.
         </p>
+        
+        <div style={{
+          backgroundColor: '#f8fafc',
+          padding: '20px',
+          borderRadius: '12px',
+          marginBottom: '30px',
+          textAlign: 'left'
+        }}>
+          <p style={{ color: '#475569', marginBottom: '8px', fontSize: '14px' }}>
+            <strong>Email:</strong> {user.email}
+          </p>
+          <p style={{ color: '#475569', fontSize: '14px' }}>
+            <strong>Role:</strong> Faculty
+          </p>
+        </div>
         
         <div style={{ display: 'flex', gap: '15px', justifyContent: 'center' }}>
           <button 

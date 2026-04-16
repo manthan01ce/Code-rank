@@ -52,20 +52,29 @@ export async function POST(request) {
     const results = [];
     const updated = [];
     const errors = [];
+    const skipped = [];
 
     for (const row of records) {
       const name  = getVal(row, ['Name', 'Full Name', 'fullname', 'Student Name', 'StudentName']);
       const email = getVal(row, ['Email', 'Email ID', 'EmailID', 'email_id', 'emailaddr', 'Email Address']);
 
       if (!name || !email) {
-        errors.push({ row: JSON.stringify(row), error: 'Missing Name or Email — row skipped' });
+        skipped.push({ 
+          name: name || 'N/A', 
+          email: email || 'N/A', 
+          reason: 'Missing Name or Email' 
+        });
         continue;
       }
 
       // Validate email format
       const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
       if (!emailRegex.test(email)) {
-        errors.push({ email, error: `Invalid email format: "${email}"` });
+        skipped.push({ 
+          name, 
+          email, 
+          reason: `Invalid email format: "${email}"` 
+        });
         continue;
       }
 
@@ -86,33 +95,29 @@ export async function POST(request) {
 
       try {
         // Check if user already exists
-        const existing = await sql`SELECT id, status FROM users WHERE email = ${email}`;
+        const existing = await sql`SELECT id, name, role, status FROM users WHERE email = ${email}`;
 
         if (existing.length > 0) {
-          // UPDATE existing user — never skip, just update name + extra_info
-          const result = await sql`
-            UPDATE users
-            SET name       = ${name},
-                extra_info = ${JSON.stringify(extra_info)},
-                status     = 'active'
-            WHERE email = ${email}
-            RETURNING id, name, email, role, extra_info, status
-          `;
-          // Don't expose old password — generate a note
-          updated.push({ ...result[0], rawPassword: '(existing account — password unchanged)' });
-
-        } else {
-          // INSERT new user with generated password
-          const rawPassword    = generateSecurePassword();
-          const hashedPassword = await hashPassword(rawPassword);
-
-          const result = await sql`
-            INSERT INTO users (name, email, password, role, extra_info, status)
-            VALUES (${name}, ${email}, ${hashedPassword}, ${role}, ${JSON.stringify(extra_info)}, 'active')
-            RETURNING id, name, email, role, extra_info, status
-          `;
-          results.push({ ...result[0], rawPassword });
+          const existingUser = existing[0];
+          // Skip if user already exists - don't update
+          skipped.push({
+            name,
+            email,
+            reason: `User already exists (ID: ${existingUser.id}, Name: ${existingUser.name}, Role: ${existingUser.role}, Status: ${existingUser.status})`
+          });
+          continue;
         }
+
+        // INSERT new user with generated password
+        const rawPassword    = generateSecurePassword();
+        const hashedPassword = await hashPassword(rawPassword);
+
+        const result = await sql`
+          INSERT INTO users (name, email, password, role, extra_info, status)
+          VALUES (${name}, ${email}, ${hashedPassword}, ${role}, ${JSON.stringify(extra_info)}, 'active')
+          RETURNING id, name, email, role, extra_info, status
+        `;
+        results.push({ ...result[0], rawPassword });
 
       } catch (err) {
         console.error('DB error for', email, err);
@@ -123,18 +128,20 @@ export async function POST(request) {
     await sql`
       INSERT INTO activity_logs (user_id, action, details)
       VALUES (${admin.id}, 'BULK_CREATE_USERS',
-        ${`Bulk upload: ${results.length} created, ${updated.length} updated, ${errors.length} errors (${role})`})
+        ${`Bulk upload: ${results.length} created, ${skipped.length} skipped, ${errors.length} errors (${role})`})
     `;
 
     return NextResponse.json({
       success: true,
       created: results,          // new users with passwords → go into PDF
-      updated,                   // existing users that were updated
+      updated,                   // keeping for backward compatibility (empty now)
       errors,                    // actual failures (bad email format, etc.)
+      skipped,                   // users that already exist
+      skippedCount: skipped.length,
       summary: {
         total:   records.length,
         created: results.length,
-        updated: updated.length,
+        skipped: skipped.length,
         errors:  errors.length,
       }
     });

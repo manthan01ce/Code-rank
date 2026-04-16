@@ -57,11 +57,28 @@ export default function StudentDashboard() {
         }}>
           ✓
         </div>
-        <h1 style={{ color: '#1e293b', marginBottom: '10px', fontSize: '24px' }}>Registered Successfully</h1>
-        <p style={{ color: '#64748b', marginBottom: '30px', lineHeight: '1.6' }}>
-          Welcome, <strong>{user.name}</strong>! Your account as a <strong>Student</strong> has been verified. 
-          You will be notified once your courses and assessments are assigned.
+        <h1 style={{ color: '#1e293b', marginBottom: '10px', fontSize: '28px', fontWeight: '700' }}>
+          Student Logged In Successfully
+        </h1>
+        <p style={{ color: '#64748b', marginBottom: '30px', lineHeight: '1.6', fontSize: '16px' }}>
+          Welcome, <strong>{user.name}</strong>!<br/>
+          Your student account is active and ready to use.
         </p>
+        
+        <div style={{
+          backgroundColor: '#f8fafc',
+          padding: '20px',
+          borderRadius: '12px',
+          marginBottom: '30px',
+          textAlign: 'left'
+        }}>
+          <p style={{ color: '#475569', marginBottom: '8px', fontSize: '14px' }}>
+            <strong>Email:</strong> {user.email}
+          </p>
+          <p style={{ color: '#475569', fontSize: '14px' }}>
+            <strong>Role:</strong> Student
+          </p>
+        </div>
         
         <div style={{ display: 'flex', gap: '15px', justifyContent: 'center' }}>
           <button 

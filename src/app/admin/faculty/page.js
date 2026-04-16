@@ -246,7 +246,7 @@ export default function FacultyManagement() {
         return;
       }
 
-      const { created = [], updated = [], errors = [], summary = {} } = data;
+      const { created = [], updated = [], errors = [], summary = {}, skipped = [], skippedCount = 0 } = data;
 
       if (created.length > 0) {
         const newFaculty = created.map(u => ({ ...u, status: 'active' }));
@@ -267,9 +267,27 @@ export default function FacultyManagement() {
       const parts = [];
       if (created.length > 0) parts.push(`${created.length} created`);
       if (updated.length > 0) parts.push(`${updated.length} updated`);
+      if (skippedCount > 0)  parts.push(`${skippedCount} skipped`);
       if (errors.length > 0)  parts.push(`${errors.length} failed`);
 
       const msg = `${summary.total || 0} rows processed: ${parts.join(', ')}.${created.length > 0 ? ' PDF downloaded!' : ''}`;
+
+      // Show detailed skipped users in console and alert
+      if (skipped.length > 0) {
+        console.group('⚠️ Skipped Users Details:');
+        skipped.forEach((skip, idx) => {
+          console.log(`${idx + 1}. ${skip.name} (${skip.email})`);
+          console.log(`   Reason: ${skip.reason}`);
+        });
+        console.groupEnd();
+
+        // Show detailed modal with skipped users
+        const skippedDetails = skipped.map((s, i) => 
+          `${i + 1}. ${s.name} (${s.email})\n   → ${s.reason}`
+        ).join('\n\n');
+        
+        alert(`⚠️ ${skippedCount} user(s) were skipped:\n\n${skippedDetails}\n\nCheck console for full details.`);
+      }
 
       if (errors.length > 0 && created.length === 0 && updated.length === 0) {
         showToast('error', `Upload failed for all rows. Check your file format.`);
