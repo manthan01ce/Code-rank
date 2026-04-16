@@ -1,66 +1,101 @@
-import Image from "next/image";
-import styles from "./page.module.css";
+'use client';
 
-export default function Home() {
+import { useState } from 'react';
+import { useRouter } from 'next/navigation';
+
+export default function Login() {
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
+  const [showPassword, setShowPassword] = useState(false);
+  const [error, setError] = useState('');
+  const [success, setSuccess] = useState('');
+  const router = useRouter();
+
+  const handleLogin = async (e) => {
+    e.preventDefault();
+    setError('');
+    
+    try {
+      const res = await fetch('/api/auth/login', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email, password }),
+      });
+
+      const data = await res.json();
+
+      if (res.ok) {
+        localStorage.setItem('token', data.token);
+        localStorage.setItem('user', JSON.stringify(data.user));
+
+        if (data.user.role === 'admin') {
+          router.push('/admin');
+        } else if (data.user.role === 'student') {
+          router.push('/student');
+        } else if (data.user.role === 'faculty') {
+          router.push('/faculty');
+        } else {
+          setSuccess(`Login Successful! Logged in as ${data.user.role.toUpperCase()}.`);
+        }
+      } else {
+        setError(data.error || 'Login failed');
+      }
+    } catch (err) {
+      setError(err.message);
+    }
+  };
+
   return (
-    <div className={styles.page}>
-      <main className={styles.main}>
-        <Image
-          className={styles.logo}
-          src="/next.svg"
-          alt="Next.js logo"
-          width={100}
-          height={20}
-          priority
-        />
-        <div className={styles.intro}>
-          <h1>To get started, edit the page.js file.</h1>
-          <p>
-            Looking for a starting point or more instructions? Head over to{" "}
-            <a
-              href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              target="_blank"
-              rel="noopener noreferrer"
-            >
-              Templates
-            </a>{" "}
-            or the{" "}
-            <a
-              href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              target="_blank"
-              rel="noopener noreferrer"
-            >
-              Learning
-            </a>{" "}
-            center.
-          </p>
+    <div className="login-container">
+      <div className="login-card">
+        <div className="logo-container">
+          <img 
+            src="/coderank-logo.png" 
+            alt="CodeRank Logo" 
+            onError={(e) => { e.target.src = '/coderank-logo.svg'; }}
+            style={{ width: '100px', height: '100px', objectFit: 'contain' }}
+          />
         </div>
-        <div className={styles.ctas}>
-          <a
-            className={styles.primary}
-            href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            <Image
-              className={styles.logo}
-              src="/vercel.svg"
-              alt="Vercel logomark"
-              width={16}
-              height={16}
+        <h1 className="brand-text">CodeRank</h1>
+        <p className="tagline">Rank Up Coding.</p>
+
+        {error && <p style={{color: '#ef4444', fontSize: '14px', marginBottom: '15px', background: '#fee2e2', padding: '10px', borderRadius: '6px'}}>{error}</p>}
+        {success && <p style={{color: '#10b981', fontSize: '14px', marginBottom: '15px', background: '#ecfdf5', padding: '10px', borderRadius: '6px'}}>{success}</p>}
+
+        <form onSubmit={handleLogin}>
+          <div className="input-group">
+            <input 
+              type="text" 
+              className="input-field" 
+              placeholder="Enter Username" 
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+              required
             />
-            Deploy Now
-          </a>
-          <a
-            className={styles.secondary}
-            href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Documentation
-          </a>
-        </div>
-      </main>
+          </div>
+          
+          <div className="input-group">
+            <input 
+              type={showPassword ? "text" : "password"} 
+              className="input-field" 
+              placeholder="Enter Password" 
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+              required
+            />
+            <span 
+              className="password-toggle"
+              onClick={() => setShowPassword(!showPassword)}
+            >
+              👁
+            </span>
+          </div>
+
+          <button type="submit" className="btn-primary">
+            Login
+          </button>
+        </form>
+      </div>
     </div>
   );
 }

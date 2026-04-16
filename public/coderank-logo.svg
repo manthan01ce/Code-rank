@@ -1,0 +1,34 @@
+<svg viewBox="0 0 300 300" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <style>
+      .bracket { fill: none; stroke: #3B4FD8; stroke-width: 22; stroke-linecap: round; stroke-linejoin: round; }
+      .r-letter { font-family: 'Arial Black', Arial, sans-serif; font-size: 148px; font-weight: 900; fill: #1A1F3C; }
+      .arrow-body { fill: #2EC8EA; }
+    </style>
+  </defs>
+
+  <!-- White background -->
+  <circle cx="150" cy="150" r="148" fill="white"/>
+
+  <!-- Blue outer ring -->
+  <circle cx="150" cy="150" r="141" fill="none" stroke="#3B4FD8" stroke-width="8"/>
+
+  <!-- Left curly brace { as a path -->
+  <path class="bracket"
+    d="M 120,58
+       C 90,58 88,78 88,98
+       L 88,122
+       C 88,138 68,142 68,142
+       C 68,142 88,146 88,162
+       L 88,186
+       C 88,206 90,226 120,226"/>
+
+  <!-- Dark R — positioned to overlap the bracket -->
+  <text x="108" y="218" class="r-letter">R</text>
+
+  <!-- Cyan arrow — shaft + head, centered, pointing up -->
+  <!-- Shaft -->
+  <rect x="141" y="158" width="17" height="70" rx="5" class="arrow-body"/>
+  <!-- Head (triangle pointing up) -->
+  <polygon points="149.5,86  122,162  177,162" class="arrow-body"/>
+</svg>
