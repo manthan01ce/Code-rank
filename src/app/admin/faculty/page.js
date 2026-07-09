@@ -449,7 +449,7 @@ export default function FacultyManagement() {
                   className="input-field"
                   placeholder="Email Prefix *"
                   value={form.emailPrefix}
-                  onChange={e => setForm(f => ({ ...f, emailPrefix: e.target.value }))}
+                  onChange={e => setForm(f => ({ ...f, emailPrefix: e.target.value.replace(/[^a-zA-Z0-9.\-_]/g, '') }))}
                   required
                   disabled={!!editTarget}
                   style={{ flex: 1, border: 'none', borderRadius: 0, ...(editTarget ? { opacity: 0.5, cursor: 'not-allowed', backgroundColor: '#f8fafc' } : {}) }}
