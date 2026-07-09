@@ -10,11 +10,11 @@ export async function PUT(request, { params }) {
     }
 
     const { id } = await params;
-    const { name, description, assigned_faculty } = await request.json();
+    const { course_code, name, semester } = await request.json();
 
     const result = await sql`
       UPDATE courses 
-      SET name = ${name}, description = ${description}, assigned_faculty = ${assigned_faculty || null}
+      SET course_code = ${course_code}, name = ${name}, semester = ${semester}
       WHERE id = ${parseInt(id)}
       RETURNING *
     `;

@@ -209,14 +209,20 @@ export default function AdminSidebar() {
           <li className={pathname === '/admin' ? 'active' : ''} onClick={() => router.push('/admin')}>
             Dashboard
           </li>
+          <li className={pathname === '/admin/departments' ? 'active' : ''} onClick={() => router.push('/admin/departments')}>
+            Department Master
+          </li>
           <li className={pathname === '/admin/faculty' ? 'active' : ''} onClick={() => router.push('/admin/faculty')}>
-            Faculty Management
+            Faculty Master
           </li>
           <li className={pathname === '/admin/students' ? 'active' : ''} onClick={() => router.push('/admin/students')}>
-            Student Management
+            Student Master
           </li>
           <li className={pathname === '/admin/courses' ? 'active' : ''} onClick={() => router.push('/admin/courses')}>
             Courses
+          </li>
+          <li className={pathname === '/admin/mapping' ? 'active' : ''} onClick={() => router.push('/admin/mapping')}>
+            Course Mapping
           </li>
           <li className={pathname === '/admin/logs' ? 'active' : ''} onClick={() => router.push('/admin/logs')}>
             Activity Logs

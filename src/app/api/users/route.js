@@ -21,36 +21,36 @@ export async function GET(request) {
       // All three parameters
       const searchPattern = `%${search}%`;
       if (status === 'all') {
-        query = sql`SELECT id, name, email, role, status, created_at, extra_info FROM users 
+        query = sql`SELECT id, first_name, last_name, name, email, role, status, created_at, extra_info FROM users 
                    WHERE role = ${role} AND (name ILIKE ${searchPattern} OR email ILIKE ${searchPattern})
                    ORDER BY created_at DESC`;
       } else {
-        query = sql`SELECT id, name, email, role, status, created_at, extra_info FROM users 
+        query = sql`SELECT id, first_name, last_name, name, email, role, status, created_at, extra_info FROM users 
                    WHERE role = ${role} AND status = ${status} AND (name ILIKE ${searchPattern} OR email ILIKE ${searchPattern})
                    ORDER BY created_at DESC`;
       }
     } else if (role && status) {
       // Role and status
       if (status === 'all') {
-        query = sql`SELECT id, name, email, role, status, created_at, extra_info FROM users 
+        query = sql`SELECT id, first_name, last_name, name, email, role, status, created_at, extra_info FROM users 
                    WHERE role = ${role} ORDER BY created_at DESC`;
       } else {
-        query = sql`SELECT id, name, email, role, status, created_at, extra_info FROM users 
+        query = sql`SELECT id, first_name, last_name, name, email, role, status, created_at, extra_info FROM users 
                    WHERE role = ${role} AND status = ${status} ORDER BY created_at DESC`;
       }
     } else if (role && search) {
       // Role and search
       const searchPattern = `%${search}%`;
-      query = sql`SELECT id, name, email, role, status, created_at, extra_info FROM users 
+      query = sql`SELECT id, first_name, last_name, name, email, role, status, created_at, extra_info FROM users 
                  WHERE role = ${role} AND status = 'active' AND (name ILIKE ${searchPattern} OR email ILIKE ${searchPattern})
                  ORDER BY created_at DESC`;
     } else if (role) {
       // Just role
-      query = sql`SELECT id, name, email, role, status, created_at, extra_info FROM users 
+      query = sql`SELECT id, first_name, last_name, name, email, role, status, created_at, extra_info FROM users 
                  WHERE role = ${role} AND status = 'active' ORDER BY created_at DESC`;
     } else {
       // No role specified, get all non-admin users
-      query = sql`SELECT id, name, email, role, status, created_at, extra_info FROM users 
+      query = sql`SELECT id, first_name, last_name, name, email, role, status, created_at, extra_info FROM users 
                  WHERE role != 'admin' ORDER BY created_at DESC`;
     }
 
@@ -69,9 +69,10 @@ export async function POST(request) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
-    const { name, email, role, extra_info } = await request.json();
+    const { first_name, last_name, email, role, extra_info } = await request.json();
+    const name = `${first_name} ${last_name}`;
 
-    if (!name || !email || !role) {
+    if (!first_name || !last_name || !email || !role) {
       return NextResponse.json({ error: 'Missing required fields' }, { status: 400 });
     }
 
@@ -80,9 +81,9 @@ export async function POST(request) {
     const hashedPassword = await hashPassword(rawPassword);
 
     const result = await sql`
-      INSERT INTO users (name, email, password, role, extra_info)
-      VALUES (${name}, ${email}, ${hashedPassword}, ${role}, ${extra_info ? JSON.stringify(extra_info) : null})
-      RETURNING id, name, email, role, extra_info
+      INSERT INTO users (first_name, last_name, name, email, password, role, extra_info)
+      VALUES (${first_name}, ${last_name}, ${name}, ${email}, ${hashedPassword}, ${role}, ${extra_info ? JSON.stringify(extra_info) : null})
+      RETURNING id, first_name, last_name, name, email, role, extra_info
     `;
 
     await sql`INSERT INTO activity_logs (user_id, action, details) VALUES (${user.id}, 'CREATE_USER', ${`Created ${role} ${email}`})`;
@@ -106,7 +107,8 @@ export async function PUT(request) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
-    const { id, name, email, role, status, extra_info } = await request.json();
+    const { id, first_name, last_name, email, role, status, extra_info } = await request.json();
+    const name = `${first_name} ${last_name}`;
 
     if (!id) {
       return NextResponse.json({ error: 'Missing user ID' }, { status: 400 });
@@ -114,13 +116,15 @@ export async function PUT(request) {
 
     const result = await sql`
       UPDATE users 
-      SET name = ${name}, 
+      SET first_name = ${first_name},
+          last_name = ${last_name},
+          name = ${name}, 
           email = ${email}, 
           role = ${role}, 
           status = ${status},
           extra_info = ${extra_info ? JSON.stringify(extra_info) : null}
       WHERE id = ${id} AND role != 'admin'
-      RETURNING id, name, email, role, status
+      RETURNING id, first_name, last_name, name, email, role, status
     `;
 
     if (result.length === 0) {

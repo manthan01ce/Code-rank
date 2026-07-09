@@ -19,13 +19,13 @@ async function downloadCredentialsPDF(users) {
 
   autoTable(doc, {
     startY: 35,
-    head: [['Name', 'Email', 'Roll No', 'Branch', 'Batch', 'Password']],
+    head: [['Name', 'Email', 'Roll No', 'Department', 'Semester', 'Password']],
     body: users.map(u => [
       u.name,
       u.email,
       u.extra_info?.roll_number || '-',
-      u.extra_info?.branch || '-',
-      u.extra_info?.batch || '-',
+      u.extra_info?.department || '-',
+      u.extra_info?.semester || '-',
       u.rawPassword,
     ]),
     theme: 'grid',
@@ -64,6 +64,7 @@ async function parseFile(file) {
 // ─── Component ───────────────────────────────────────────────────────────────
 export default function StudentManagement() {
   const [students, setStudents]       = useState([]);
+  const [departmentsList, setDepartmentsList] = useState([]);
   const [loading, setLoading]         = useState(true);
   const [processing, setProcessing]   = useState(false);
   const [search, setSearch]           = useState('');
@@ -74,7 +75,7 @@ export default function StudentManagement() {
   const fileRef                       = useRef();
 
   // Form fields
-  const [form, setForm] = useState({ name: '', email: '', roll: '', branch: '', batch: '' });
+  const [form, setForm] = useState({ firstName: '', lastName: '', roll: '', department: '', semester: '' });
 
   const token = () => localStorage.getItem('token');
 
@@ -104,23 +105,33 @@ export default function StudentManagement() {
     finally { setLoading(false); }
   };
 
+  const fetchDepartments = async () => {
+    try {
+      const res = await fetch('/api/departments', { headers: { Authorization: `Bearer ${token()}` } });
+      if (res.ok) {
+        setDepartmentsList(await res.json());
+      }
+    } catch (e) { console.error(e); }
+  };
+
   useEffect(() => { fetchStudents(); }, [search, statusFilter]);
+  useEffect(() => { fetchDepartments(); }, []);
 
   // ── Open modal ──
   const openAdd = () => {
     setEditTarget(null);
-    setForm({ name: '', email: '', roll: '', branch: '', batch: '' });
+    setForm({ firstName: '', lastName: '', roll: '', department: '', semester: '' });
     setShowModal(true);
   };
 
   const openEdit = (s) => {
     setEditTarget(s);
     setForm({
-      name: s.name,
-      email: s.email,
+      firstName: s.first_name || s.name?.split(' ')[0] || '',
+      lastName: s.last_name || s.name?.split(' ').slice(1).join(' ') || '',
       roll: s.extra_info?.roll_number || '',
-      branch: s.extra_info?.branch || '',
-      batch: s.extra_info?.batch || '',
+      department: s.extra_info?.department || '',
+      semester: s.extra_info?.semester || '',
     });
     setShowModal(true);
   };
@@ -130,14 +141,19 @@ export default function StudentManagement() {
     e.preventDefault();
     setProcessing(true);
     try {
+      const email = form.roll ? `${form.roll.toLowerCase()}@charusat.edu.in` : '';
       if (editTarget) {
         // ── EDIT ──
         const res = await fetch(`/api/users/${editTarget.id}`, {
           method: 'PUT',
           headers: { Authorization: `Bearer ${token()}`, 'Content-Type': 'application/json' },
           body: JSON.stringify({
-            name: form.name,
-            extra_info: { roll_number: form.roll, branch: form.branch, batch: form.batch },
+            first_name: form.firstName,
+            last_name: form.lastName,
+            email: email,
+            role: 'student',
+            status: editTarget.status,
+            extra_info: { roll_number: form.roll, department: form.department, semester: form.semester },
           }),
         });
         const data = await res.json();
@@ -147,7 +163,7 @@ export default function StudentManagement() {
         setStudents(prev => prev.map(s =>
           s.id === editTarget.id ? data.user : s
         ));
-        showToast('success', `${form.name} updated successfully`);
+        showToast('success', `${form.firstName} updated successfully`);
         setShowModal(false);
 
       } else {
@@ -156,10 +172,11 @@ export default function StudentManagement() {
           method: 'POST',
           headers: { Authorization: `Bearer ${token()}`, 'Content-Type': 'application/json' },
           body: JSON.stringify({
-            name: form.name,
-            email: form.email,
+            first_name: form.firstName,
+            last_name: form.lastName,
+            email: email,
             role: 'student',
-            extra_info: { roll_number: form.roll, branch: form.branch, batch: form.batch },
+            extra_info: { roll_number: form.roll, department: form.department, semester: form.semester },
           }),
         });
         const data = await res.json();
@@ -174,14 +191,14 @@ export default function StudentManagement() {
 
         // Download single credential PDF
         await downloadCredentialsPDF([{ ...newStudent, rawPassword: data.rawPassword }]);
-        showToast('success', `${form.name} created! Password PDF downloaded.`);
+        showToast('success', `${form.firstName} created! Password PDF downloaded.`);
         setShowModal(false);
       }
     } catch (err) {
       showToast('error', 'Network error — please try again');
     } finally {
       setProcessing(false);
-      setForm({ name: '', email: '', roll: '', branch: '', batch: '' });
+      setForm({ firstName: '', lastName: '', roll: '', department: '', semester: '' });
     }
   };
 
@@ -343,7 +360,7 @@ export default function StudentManagement() {
       {/* Header */}
       <div className="header">
         <div>
-          <h2 style={{ fontSize: '22px', fontWeight: 700 }}>Student Management</h2>
+          <h2 style={{ fontSize: '22px', fontWeight: 700 }}>Student Master</h2>
           <p style={{ color: 'var(--text-muted)', fontSize: '13px' }}>
             {loading ? 'Loading...' : `${students.length} student${students.length !== 1 ? 's' : ''} total`}
           </p>
@@ -399,7 +416,7 @@ export default function StudentManagement() {
 
       {/* Hint */}
       <p style={{ fontSize: '12px', color: '#94a3b8', marginBottom: '16px' }}>
-        Bulk Upload expects columns: <strong>Name, Email, RollNumber, Branch, Batch</strong>. Passwords are auto-generated and included in the downloaded PDF.
+        Bulk Upload expects columns: <strong>Name, RollNumber, Department, Semester</strong>. Emails and Passwords are auto-generated and included in the downloaded PDF.
       </p>
 
       {/* Modal */}
@@ -417,45 +434,70 @@ export default function StudentManagement() {
             </h3>
 
             <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
-              <input
-                className="input-field"
-                placeholder="Full Name *"
-                value={form.name}
-                onChange={e => setForm(f => ({ ...f, name: e.target.value }))}
-                required
-              />
-              <input
-                className="input-field"
-                type="email"
-                placeholder="Email *"
-                value={form.email}
-                onChange={e => setForm(f => ({ ...f, email: e.target.value }))}
-                required
-                disabled={!!editTarget}
-                style={editTarget ? { opacity: 0.5, cursor: 'not-allowed' } : {}}
-              />
               <div style={{ display: 'flex', gap: '10px' }}>
                 <input
                   className="input-field"
-                  placeholder="Roll Number"
+                  placeholder="First Name *"
+                  value={form.firstName}
+                  onChange={e => setForm(f => ({ ...f, firstName: e.target.value.replace(/[^A-Za-z\s]/g, '') }))}
+                  required
+                  style={{ flex: 1 }}
+                />
+                <input
+                  className="input-field"
+                  placeholder="Last Name *"
+                  value={form.lastName}
+                  onChange={e => setForm(f => ({ ...f, lastName: e.target.value.replace(/[^A-Za-z\s]/g, '') }))}
+                  required
+                  style={{ flex: 1 }}
+                />
+              </div>
+              <div style={{ display: 'flex', gap: '10px' }}>
+                <input
+                  className="input-field"
+                  placeholder="Roll Number (e.g. 25ce097 or D25ce097) *"
                   value={form.roll}
                   onChange={e => setForm(f => ({ ...f, roll: e.target.value }))}
+                  pattern="^[dD]?\d+[a-zA-Z]{2,3}\d+$"
+                  title="Roll number must start with D (optional) or digits, followed by 2-3 letters, and end with digits (e.g. 25ce097 or D25ce097)"
+                  required
                   style={{ flex: 1 }}
                 />
+                <select
+                  className="input-field"
+                  value={form.semester}
+                  onChange={e => setForm(f => ({ ...f, semester: e.target.value }))}
+                  required
+                  style={{ flex: 1 }}
+                >
+                  <option value="" disabled>Select Semester *</option>
+                  {[1, 2, 3, 4, 5, 6, 7, 8].map(s => <option key={s} value={s}>{s}</option>)}
+                </select>
+                <select
+                  className="input-field"
+                  value={form.department}
+                  onChange={e => setForm(f => ({ ...f, department: e.target.value }))}
+                  required
+                  style={{ flex: 1 }}
+                >
+                  <option value="" disabled>Select Department *</option>
+                  {departmentsList.map(d => (
+                    <option key={d.id} value={d.name}>{d.name}</option>
+                  ))}
+                </select>
+              </div>
+              
+              <div style={{ display: 'flex', alignItems: 'center', border: '1px solid var(--border-color)', borderRadius: '6px', overflow: 'hidden' }}>
                 <input
                   className="input-field"
-                  placeholder="Branch (e.g. CE)"
-                  value={form.branch}
-                  onChange={e => setForm(f => ({ ...f, branch: e.target.value }))}
-                  style={{ flex: 1 }}
+                  placeholder="Email"
+                  value={form.roll ? form.roll.toLowerCase() : ''}
+                  disabled
+                  style={{ flex: 1, border: 'none', borderRadius: 0, opacity: 0.7, cursor: 'not-allowed', backgroundColor: '#f8fafc' }}
                 />
-                <input
-                  className="input-field"
-                  placeholder="Batch (e.g. 2026)"
-                  value={form.batch}
-                  onChange={e => setForm(f => ({ ...f, batch: e.target.value }))}
-                  style={{ flex: 1 }}
-                />
+                <span style={{ padding: '0 15px', backgroundColor: '#f1f5f9', color: '#64748b', fontSize: '14px', borderLeft: '1px solid var(--border-color)', height: '100%', display: 'flex', alignItems: 'center', minHeight: '44px' }}>
+                  @charusat.edu.in
+                </span>
               </div>
 
               {!editTarget && (
@@ -493,7 +535,7 @@ export default function StudentManagement() {
                 <th>Name</th>
                 <th>Email</th>
                 <th>Branch</th>
-                <th>Batch</th>
+                <th>Semester</th>
                 <th>Status</th>
                 <th>Actions</th>
               </tr>
@@ -506,8 +548,8 @@ export default function StudentManagement() {
                     <td style={{ fontWeight: 600, color: 'var(--primary)' }}>{info.roll_number || '—'}</td>
                     <td style={{ fontWeight: 500 }}>{s.name}</td>
                     <td style={{ color: '#64748b' }}>{s.email}</td>
-                    <td>{info.branch || '—'}</td>
-                    <td>{info.batch || '—'}</td>
+                    <td>{info.department || '—'}</td>
+                    <td>{info.semester || '—'}</td>
                     <td>
                       <span style={{
                         padding: '4px 12px', borderRadius: '20px', fontSize: '12px', fontWeight: 600,

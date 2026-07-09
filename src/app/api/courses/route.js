@@ -16,18 +16,14 @@ export async function GET(request) {
     if (search) {
       const searchPattern = `%${search}%`;
       query = sql`
-        SELECT c.*, u.name as faculty_name 
-        FROM courses c 
-        LEFT JOIN users u ON c.assigned_faculty = u.id 
-        WHERE c.name ILIKE ${searchPattern}
-        ORDER BY c.created_at DESC
+        SELECT * FROM courses 
+        WHERE name ILIKE ${searchPattern} OR course_code ILIKE ${searchPattern}
+        ORDER BY created_at DESC
       `;
     } else {
       query = sql`
-        SELECT c.*, u.name as faculty_name 
-        FROM courses c 
-        LEFT JOIN users u ON c.assigned_faculty = u.id 
-        ORDER BY c.created_at DESC
+        SELECT * FROM courses 
+        ORDER BY created_at DESC
       `;
     }
 
@@ -45,15 +41,15 @@ export async function POST(request) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
-    const { name, description, assigned_faculty } = await request.json();
+    const { course_code, name, semester } = await request.json();
 
-    if (!name) {
-      return NextResponse.json({ error: 'Name is required' }, { status: 400 });
+    if (!course_code || !name || !semester) {
+      return NextResponse.json({ error: 'Missing required fields' }, { status: 400 });
     }
 
     const result = await sql`
-      INSERT INTO courses (name, description, assigned_faculty)
-      VALUES (${name}, ${description}, ${assigned_faculty || null})
+      INSERT INTO courses (course_code, name, semester)
+      VALUES (${course_code}, ${name}, ${semester})
       RETURNING *
     `;
 

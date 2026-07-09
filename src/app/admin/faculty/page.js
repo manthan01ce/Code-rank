@@ -60,6 +60,7 @@ async function parseFile(file) {
 // ─── Component ────────────────────────────────────────────────────────────────
 export default function FacultyManagement() {
   const [faculty, setFaculty]         = useState([]);
+  const [departmentsList, setDepartmentsList] = useState([]);
   const [loading, setLoading]         = useState(true);
   const [processing, setProcessing]   = useState(false);
   const [search, setSearch]           = useState('');
@@ -69,7 +70,7 @@ export default function FacultyManagement() {
   const [toast, setToast]             = useState(null);
   const fileRef                       = useRef();
 
-  const [form, setForm] = useState({ name: '', email: '', department: '', designation: '' });
+  const [form, setForm] = useState({ facultyId: '', firstName: '', lastName: '', emailPrefix: '', department: '', designation: '' });
 
   const token = () => localStorage.getItem('token');
 
@@ -99,20 +100,32 @@ export default function FacultyManagement() {
     finally { setLoading(false); }
   };
 
+  const fetchDepartments = async () => {
+    try {
+      const res = await fetch('/api/departments', { headers: { Authorization: `Bearer ${token()}` } });
+      if (res.ok) {
+        setDepartmentsList(await res.json());
+      }
+    } catch (e) { console.error(e); }
+  };
+
   useEffect(() => { fetchFaculty(); }, [search, statusFilter]);
+  useEffect(() => { fetchDepartments(); }, []);
 
   // ── Open modal ──
   const openAdd = () => {
     setEditTarget(null);
-    setForm({ name: '', email: '', department: '', designation: '' });
+    setForm({ facultyId: '', firstName: '', lastName: '', emailPrefix: '', department: '', designation: '' });
     setShowModal(true);
   };
 
   const openEdit = (f) => {
     setEditTarget(f);
     setForm({
-      name: f.name,
-      email: f.email,
+      facultyId: f.extra_info?.facultyId || '',
+      firstName: f.first_name || f.name?.split(' ')[0] || '',
+      lastName: f.last_name || f.name?.split(' ').slice(1).join(' ') || '',
+      emailPrefix: f.email ? f.email.split('@')[0] : '',
       department: f.extra_info?.department || '',
       designation: f.extra_info?.designation || '',
     });
@@ -124,14 +137,19 @@ export default function FacultyManagement() {
     e.preventDefault();
     setProcessing(true);
     try {
+      const email = `${form.emailPrefix}@charusat.ac.in`;
       if (editTarget) {
         // EDIT
         const res = await fetch(`/api/users/${editTarget.id}`, {
           method: 'PUT',
           headers: { Authorization: `Bearer ${token()}`, 'Content-Type': 'application/json' },
           body: JSON.stringify({
-            name: form.name,
-            extra_info: { department: form.department, designation: form.designation },
+            first_name: form.firstName,
+            last_name: form.lastName,
+            email: email,
+            role: 'faculty',
+            status: editTarget.status,
+            extra_info: { facultyId: form.facultyId, department: form.department, designation: form.designation },
           }),
         });
         const data = await res.json();
@@ -141,7 +159,7 @@ export default function FacultyManagement() {
         setFaculty(prev => prev.map(f =>
           f.id === editTarget.id ? data.user : f
         ));
-        showToast('success', `${form.name} updated successfully`);
+        showToast('success', `${form.firstName} updated successfully`);
         setShowModal(false);
 
       } else {
@@ -150,10 +168,11 @@ export default function FacultyManagement() {
           method: 'POST',
           headers: { Authorization: `Bearer ${token()}`, 'Content-Type': 'application/json' },
           body: JSON.stringify({
-            name: form.name,
-            email: form.email,
+            first_name: form.firstName,
+            last_name: form.lastName,
+            email: email,
             role: 'faculty',
-            extra_info: { department: form.department, designation: form.designation },
+            extra_info: { facultyId: form.facultyId, department: form.department, designation: form.designation },
           }),
         });
         const data = await res.json();
@@ -166,14 +185,14 @@ export default function FacultyManagement() {
         };
         setFaculty(prev => [newFaculty, ...prev]);
         await downloadCredentialsPDF([{ ...newFaculty, rawPassword: data.rawPassword }]);
-        showToast('success', `${form.name} created! PDF downloaded.`);
+        showToast('success', `${form.firstName} created! PDF downloaded.`);
         setShowModal(false);
       }
     } catch (err) {
       showToast('error', 'Network error — please try again');
     } finally {
       setProcessing(false);
-      setForm({ name: '', email: '', department: '', designation: '' });
+      setForm({ facultyId: '', firstName: '', lastName: '', emailPrefix: '', department: '', designation: '' });
     }
   };
 
@@ -327,7 +346,7 @@ export default function FacultyManagement() {
       {/* Header */}
       <div className="header">
         <div>
-          <h2 style={{ fontSize: '22px', fontWeight: 700 }}>Faculty Management</h2>
+          <h2 style={{ fontSize: '22px', fontWeight: 700 }}>Faculty Master</h2>
           <p style={{ color: 'var(--text-muted)', fontSize: '13px' }}>
             {loading ? 'Loading...' : `${faculty.length} faculty member${faculty.length !== 1 ? 's' : ''} total`}
           </p>
@@ -401,32 +420,60 @@ export default function FacultyManagement() {
             <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
               <input
                 className="input-field"
-                placeholder="Full Name *"
-                value={form.name}
-                onChange={e => setForm(f => ({ ...f, name: e.target.value }))}
+                type="number"
+                placeholder="Faculty ID (Max 5 digits) *"
+                value={form.facultyId}
+                onChange={e => e.target.value.length <= 5 && setForm(f => ({ ...f, facultyId: e.target.value }))}
                 required
-              />
-              <input
-                className="input-field"
-                type="email"
-                placeholder="Email *"
-                value={form.email}
-                onChange={e => setForm(f => ({ ...f, email: e.target.value }))}
-                required
-                disabled={!!editTarget}
-                style={editTarget ? { opacity: 0.5, cursor: 'not-allowed' } : {}}
               />
               <div style={{ display: 'flex', gap: '10px' }}>
                 <input
                   className="input-field"
-                  placeholder="Department (e.g. CS)"
-                  value={form.department}
-                  onChange={e => setForm(f => ({ ...f, department: e.target.value }))}
+                  placeholder="First Name *"
+                  value={form.firstName}
+                  onChange={e => setForm(f => ({ ...f, firstName: e.target.value.replace(/[^A-Za-z\s]/g, '') }))}
+                  required
                   style={{ flex: 1 }}
                 />
                 <input
                   className="input-field"
-                  placeholder="Designation (e.g. Professor)"
+                  placeholder="Last Name *"
+                  value={form.lastName}
+                  onChange={e => setForm(f => ({ ...f, lastName: e.target.value.replace(/[^A-Za-z\s]/g, '') }))}
+                  required
+                  style={{ flex: 1 }}
+                />
+              </div>
+              <div style={{ display: 'flex', alignItems: 'center', border: '1px solid var(--border-color)', borderRadius: '6px', overflow: 'hidden' }}>
+                <input
+                  className="input-field"
+                  placeholder="Email Prefix *"
+                  value={form.emailPrefix}
+                  onChange={e => setForm(f => ({ ...f, emailPrefix: e.target.value }))}
+                  required
+                  disabled={!!editTarget}
+                  style={{ flex: 1, border: 'none', borderRadius: 0, ...(editTarget ? { opacity: 0.5, cursor: 'not-allowed', backgroundColor: '#f8fafc' } : {}) }}
+                />
+                <span style={{ padding: '0 15px', backgroundColor: '#f1f5f9', color: '#64748b', fontSize: '14px', borderLeft: '1px solid var(--border-color)', height: '100%', display: 'flex', alignItems: 'center', minHeight: '44px' }}>
+                  @charusat.ac.in
+                </span>
+              </div>
+              <div style={{ display: 'flex', gap: '10px' }}>
+                <select
+                  className="input-field"
+                  value={form.department}
+                  onChange={e => setForm(f => ({ ...f, department: e.target.value }))}
+                  required
+                  style={{ flex: 1 }}
+                >
+                  <option value="" disabled>Select Department *</option>
+                  {departmentsList.map(d => (
+                    <option key={d.id} value={d.name}>{d.name}</option>
+                  ))}
+                </select>
+                <input
+                  className="input-field"
+                  placeholder="Designation (Optional)"
                   value={form.designation}
                   onChange={e => setForm(f => ({ ...f, designation: e.target.value }))}
                   style={{ flex: 1 }}
@@ -464,6 +511,7 @@ export default function FacultyManagement() {
           <table>
             <thead>
               <tr>
+                <th>Faculty ID</th>
                 <th>Name</th>
                 <th>Email</th>
                 <th>Department</th>
@@ -477,6 +525,7 @@ export default function FacultyManagement() {
                 const info = f.extra_info || {};
                 return (
                   <tr key={f.id}>
+                    <td style={{ fontWeight: 600, color: 'var(--primary)' }}>{info.facultyId || '—'}</td>
                     <td style={{ fontWeight: 500 }}>{f.name}</td>
                     <td style={{ color: '#64748b' }}>{f.email}</td>
                     <td>{info.department || '—'}</td>
@@ -527,7 +576,7 @@ export default function FacultyManagement() {
               })}
               {!loading && faculty.length === 0 && (
                 <tr>
-                  <td colSpan={6} style={{ textAlign: 'center', color: '#94a3b8', padding: '40px' }}>
+                  <td colSpan={7} style={{ textAlign: 'center', color: '#94a3b8', padding: '40px' }}>
                     No faculty members found for the selected filter.
                   </td>
                 </tr>

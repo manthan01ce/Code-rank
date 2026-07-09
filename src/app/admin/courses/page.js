@@ -13,13 +13,12 @@ export default function CoursesManagement() {
   // Form State
   const [showAddModal, setShowAddModal] = useState(false);
   const [editId, setEditId] = useState(null);
+  const [newCourseCode, setNewCourseCode] = useState('');
   const [newCourseName, setNewCourseName] = useState('');
-  const [newCourseDesc, setNewCourseDesc] = useState('');
-  const [newCourseFaculty, setNewCourseFaculty] = useState('');
+  const [newCourseSem, setNewCourseSem] = useState('');
 
   useEffect(() => {
     fetchCourses();
-    fetchFaculties();
   }, [search]);
 
   const fetchCourses = async () => {
@@ -38,17 +37,7 @@ export default function CoursesManagement() {
     }
   };
 
-  const fetchFaculties = async () => {
-    try {
-      const token = localStorage.getItem('token');
-      const res = await fetch('/api/users?role=faculty', {
-        headers: { 'Authorization': `Bearer ${token}` }
-      });
-      if (res.ok) setFaculties(await res.json());
-    } catch (e) {
-      console.error(e);
-    }
-  };
+
 
   const handleAddOrEditCourse = async (e) => {
     e.preventDefault();
@@ -56,9 +45,9 @@ export default function CoursesManagement() {
     try {
       const token = localStorage.getItem('token');
       const payload = { 
+        course_code: newCourseCode,
         name: newCourseName, 
-        description: newCourseDesc, 
-        assigned_faculty: newCourseFaculty || null 
+        semester: parseInt(newCourseSem)
       };
 
       if (editId) {
@@ -71,8 +60,7 @@ export default function CoursesManagement() {
           body: JSON.stringify(payload)
         });
         if (res.ok) {
-           const faculty = faculties.find(f => f.id == newCourseFaculty);
-           setCourses(prev => prev.map(c => c.id === editId ? { ...c, ...payload, faculty_name: faculty ? faculty.name : null } : c));
+           setCourses(prev => prev.map(c => c.id === editId ? { ...c, ...payload } : c));
            resetForm();
         }
       } else {
@@ -87,8 +75,7 @@ export default function CoursesManagement() {
 
         if (res.ok) {
           const newCourse = await res.json();
-          const faculty = faculties.find(f => f.id == newCourseFaculty);
-          setCourses(prev => [{ ...newCourse, faculty_name: faculty ? faculty.name : null }, ...prev]);
+          setCourses(prev => [newCourse, ...prev]);
           resetForm();
         }
       }
@@ -120,17 +107,17 @@ export default function CoursesManagement() {
 
   const handleEditClick = (c) => {
     setEditId(c.id);
-    setNewCourseName(c.name);
-    setNewCourseDesc(c.description || '');
-    setNewCourseFaculty(c.assigned_faculty || '');
+    setNewCourseCode(c.course_code || '');
+    setNewCourseName(c.name || '');
+    setNewCourseSem(c.semester || '');
     setShowAddModal(true);
   };
 
   const resetForm = () => {
     setEditId(null);
+    setNewCourseCode('');
     setNewCourseName('');
-    setNewCourseDesc('');
-    setNewCourseFaculty('');
+    setNewCourseSem('');
     setShowAddModal(false);
   };
 
@@ -148,12 +135,19 @@ export default function CoursesManagement() {
         />
       </div>
 
-      <div style={{ marginBottom: '20px' }}>
+      <div style={{ marginBottom: '20px', display: 'flex', gap: '12px' }}>
         <button className="btn-primary" style={{ width: 'auto', padding: '10px 20px', margin: 0 }} onClick={() => {
             if (showAddModal) resetForm();
             else setShowAddModal(true);
         }}>
           {showAddModal ? 'Cancel' : '+ Add New Course'}
+        </button>
+        <button
+          className="btn-small"
+          style={{ padding: '10px 16px', borderRadius: '8px', border: '1px solid var(--border-color)', background: 'transparent', cursor: 'pointer', fontSize: '13px', color: 'var(--text-muted)' }}
+          onClick={fetchCourses}
+        >
+          ↻ Refresh
         </button>
       </div>
 
@@ -161,13 +155,11 @@ export default function CoursesManagement() {
         <div className="table-container" style={{ marginBottom: '20px' }}>
           <h3>{editId ? 'Edit Course' : 'Add New Course'}</h3>
           <form onSubmit={handleAddOrEditCourse} style={{ display: 'flex', flexDirection: 'column', gap: '15px', marginTop: '15px', maxWidth: '500px' }}>
+            <input type="text" className="input-field" placeholder="Course Code (e.g. CE101)" value={newCourseCode} onChange={e => setNewCourseCode(e.target.value)} required />
             <input type="text" className="input-field" placeholder="Course Name" value={newCourseName} onChange={e => setNewCourseName(e.target.value)} required />
-            <textarea className="input-field" placeholder="Description" rows="3" value={newCourseDesc} onChange={e => setNewCourseDesc(e.target.value)} />
-            <select className="input-field" value={newCourseFaculty} onChange={e => setNewCourseFaculty(e.target.value)}>
-              <option value="">Unassigned</option>
-              {faculties.map(f => (
-                <option key={f.id} value={f.id}>{f.name} ({f.email})</option>
-              ))}
+            <select className="input-field" value={newCourseSem} onChange={e => setNewCourseSem(e.target.value)} required>
+              <option value="" disabled>Select Semester *</option>
+              {[1, 2, 3, 4, 5, 6, 7, 8].map(s => <option key={s} value={s}>{s}</option>)}
             </select>
             <button type="submit" className="btn-primary" style={{ margin: 0 }}>
                 {editId ? 'Save Changes' : 'Create Course'}
@@ -181,9 +173,9 @@ export default function CoursesManagement() {
           <table>
             <thead>
               <tr>
+                <th>Code</th>
                 <th>Name</th>
-                <th>Description</th>
-                <th>Assigned Faculty</th>
+                <th>Semester</th>
                 <th>Status</th>
                 <th>Actions</th>
               </tr>
@@ -191,9 +183,9 @@ export default function CoursesManagement() {
             <tbody>
               {courses.map(c => (
                 <tr key={c.id}>
+                  <td style={{ fontWeight: 600, color: 'var(--primary)' }}>{c.course_code}</td>
                   <td style={{ fontWeight: 600 }}>{c.name}</td>
-                  <td style={{ color: '#666' }}>{c.description?.slice(0, 50) || 'N/A'}{c.description?.length > 50 ? '...' : ''}</td>
-                  <td>{c.faculty_name || <span style={{ color: '#999', fontStyle: 'italic' }}>Unassigned</span>}</td>
+                  <td>{c.semester}</td>
                   <td>
                     <span className={`status-badge ${c.status === 'ongoing' ? 'status-active' : 'status-inactive'}`}>
                       {c.status.toUpperCase()}
