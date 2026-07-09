@@ -201,6 +201,12 @@ export default function AdminSidebar() {
       {/* Sidebar */}
       <div className="sidebar" style={{ paddingTop: '20px' }}>
         <div className="logo-container" style={{ padding: '0 20px', textAlign: 'center', marginBottom: '30px' }}>
+          <img 
+            src="/coderank-logo.png" 
+            alt="CodeRank Logo" 
+            onError={(e) => { e.target.src = '/coderank-logo.svg'; }}
+            style={{ width: '60px', height: '60px', objectFit: 'contain', marginBottom: '10px' }}
+          />
           <h2 className="brand-text" style={{ fontSize: '22px', marginBottom: '5px' }}>CodeRank</h2>
           <p style={{ fontSize: '12px', color: '#888' }}>Admin Panel</p>
         </div>

@@ -9,19 +9,28 @@ export async function PUT(request, { params }) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
-    const { id } = await params;  // Next.js 15: params must be awaited
+    const { id } = await params;
     const body = await request.json();
-    const { name, extra_info, status } = body;
+    const { first_name, last_name, email, name, extra_info, status } = body;
+
+    // Use reconstructed name if first and last name provided, otherwise use name
+    let finalName = name;
+    if (first_name && last_name) {
+      finalName = `${first_name} ${last_name}`;
+    }
 
     // Build update in one query to return updated row
     const result = await sql`
       UPDATE users
       SET
-        name = COALESCE(${name ?? null}, name),
+        first_name = COALESCE(${first_name ?? null}, first_name),
+        last_name = COALESCE(${last_name ?? null}, last_name),
+        name = COALESCE(${finalName ?? null}, name),
+        email = COALESCE(${email ?? null}, email),
         extra_info = COALESCE(${extra_info ? JSON.stringify(extra_info) : null}::jsonb, extra_info),
         status = COALESCE(${status ?? null}, status)
       WHERE id = ${parseInt(id)} AND role != 'admin'
-      RETURNING id, name, email, role, status, extra_info
+      RETURNING id, first_name, last_name, name, email, role, status, extra_info
     `;
 
     if (result.length === 0) {
