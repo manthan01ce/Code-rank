@@ -1,0 +1,17 @@
+{
+  "mcpServers": {
+    "insforge": {
+      "command": "npx",
+      "args": [
+        "-y",
+        "@insforgedev/mcp-server"
+      ],
+      "env": {
+        "INSFORGE_API_KEY": "ik_9c36de072e94aa6556c05bb06f578869",
+        "INSFORGE_PROJECT_URL": "https://z5vrvnw3.us-east.insforge.app"
+      },
+      "disabled": false,
+      "autoApprove": []
+    }
+  }
+}
