@@ -468,7 +468,7 @@ export default function FacultyManagement() {
                 >
                   <option value="" disabled>Select Department *</option>
                   {departmentsList.map(d => (
-                    <option key={d.id} value={d.name}>{d.name}</option>
+                    <option key={d.id} value={d.name}>{d.name} ({d.institute_name})</option>
                   ))}
                 </select>
                 <input
