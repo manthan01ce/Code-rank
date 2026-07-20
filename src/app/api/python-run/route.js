@@ -45,12 +45,48 @@ export async function POST(request) {
       expected: tc.expected,
     }));
 
-    // ── 4. Invoke runner ──
-    const result = await runPython({
-      code,
-      problem,
-      testCases: runnerTestCases,
-    });
+    // ── 4. Invoke runner (stands ready for local docker or standalone remote compiler service) ──
+    let result;
+    const compilerUrl = process.env.COMPILER_SERVICE_URL;
+
+    if (compilerUrl) {
+      try {
+        const response = await fetch(`${compilerUrl.replace(/\/$/, '')}/run-python`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'x-compiler-secret': process.env.COMPILER_SECRET || 'super-secret-key-coderank'
+          },
+          body: JSON.stringify({
+            code,
+            problem,
+            testCases: runnerTestCases
+          })
+        });
+
+        if (!response.ok) {
+          throw new Error(`Compiler service returned status code: ${response.status}`);
+        }
+        result = await response.json();
+      } catch (err) {
+        console.error('Compiler service connection failed:', err);
+        result = {
+          status: 'runtime_error',
+          summary: 'Compiler Service Unreachable',
+          exitCode: 503,
+          compileError: null,
+          runtimeError: `Could not reach compiler service. Verify your connection or check if the code server is online. Details: ${err.message}`,
+          cases: [],
+        };
+      }
+    } else {
+      // Local development fallback
+      result = await runPython({
+        code,
+        problem,
+        testCases: runnerTestCases,
+      });
+    }
 
     // Return the execution report (success, status, stdout/stderr compile errors)
     return NextResponse.json(result, { status: 200 });
@@ -63,13 +99,20 @@ export async function POST(request) {
 
 export async function GET() {
   try {
+    const compilerUrl = process.env.COMPILER_SERVICE_URL;
+    if (compilerUrl) {
+      const res = await fetch(`${compilerUrl.replace(/\/$/, '')}/health`);
+      const data = await res.json();
+      return NextResponse.json({ status: 'healthy', mode: 'remote', details: data });
+    }
+
     const { stdout } = await execAsync('docker images -q python:3.12-slim');
     if (stdout.trim()) {
-      return NextResponse.json({ status: 'healthy', message: 'Docker is running and python:3.12-slim is available.' });
+      return NextResponse.json({ status: 'healthy', mode: 'local', message: 'Docker is running and python:3.12-slim is available.' });
     } else {
-      return NextResponse.json({ status: 'warning', message: 'Docker is running but python:3.12-slim image is missing.' }, { status: 404 });
+      return NextResponse.json({ status: 'warning', mode: 'local', message: 'Docker is running but python:3.12-slim image is missing.' }, { status: 404 });
     }
   } catch (err) {
-    return NextResponse.json({ status: 'error', message: 'Docker is not running or not installed on the host machine.' }, { status: 503 });
+    return NextResponse.json({ status: 'error', message: 'Docker is not running or compiler service is offline.' }, { status: 503 });
   }
 }

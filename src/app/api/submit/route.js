@@ -46,20 +46,58 @@ export async function POST(request) {
       return NextResponse.json({ success: false, error: 'Problem not found.' }, { status: 404 });
     }
 
-    // ── 4. Call execution engine with sample cases to strictly test compilation ──
+    // ── 4. Map sample cases for compilation checks ──
     const runnerTestCases = problem.testCases.map((tc) => ({
       args: tc.args || [],
       kwargs: tc.kwargs || {},
       expected: tc.expected,
     }));
 
-    const result = await runPython({
-      code,
-      problem,
-      testCases: runnerTestCases,
-    });
+    // ── 5. Call execution engine (handles local docker or standalone remote compiler service) ──
+    let result;
+    const compilerUrl = process.env.COMPILER_SERVICE_URL;
 
-    // ── 5. If compile error, strictly report it ──
+    if (compilerUrl) {
+      try {
+        const response = await fetch(`${compilerUrl.replace(/\/$/, '')}/run-python`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'x-compiler-secret': process.env.COMPILER_SECRET || 'super-secret-key-coderank'
+          },
+          body: JSON.stringify({
+            code,
+            problem,
+            testCases: runnerTestCases
+          })
+        });
+
+        if (!response.ok) {
+          throw new Error(`Compiler service returned status code: ${response.status}`);
+        }
+        result = await response.json();
+      } catch (err) {
+        console.error('Compiler service connection failed for submission:', err);
+        return NextResponse.json({
+          status: 'runtime_error',
+          summary: 'Compiler Service Unreachable',
+          passed_count: 0,
+          total_count: 5,
+          compileError: null,
+          runtimeError: `Could not reach compiler service for submission check. Details: ${err.message}`,
+          cases: []
+        }, { status: 200 });
+      }
+    } else {
+      // Local development fallback
+      result = await runPython({
+        code,
+        problem,
+        testCases: runnerTestCases,
+      });
+    }
+
+    // ── 6. If compile error, strictly report it ──
     if (result.status === 'compile_error') {
       return NextResponse.json({
         status: 'compile_error',
@@ -72,39 +110,43 @@ export async function POST(request) {
       }, { status: 200 });
     }
 
-    // ── 6. Otherwise, save the submission as accepted and return submission success ──
+    // ── 7. Otherwise, save the submission as accepted and return submission success ──
     const status = 'accepted';
     const summary = 'All 5 / 5 Sample Cases Passed';
 
-    const submissions = await sql`
-      INSERT INTO submissions (
-        student_id, 
-        problem_id, 
-        source_code, 
-        language, 
-        status, 
-        summary, 
-        passed_count, 
-        total_count, 
-        runtime_ms, 
-        compile_error, 
-        runtime_error
-      )
-      VALUES (
-        ${user.id}, 
-        ${problem.id}, 
-        ${code}, 
-        ${language}, 
-        ${status}, 
-        ${summary}, 
-        5, 
-        5, 
-        0.0, 
-        null, 
-        null
-      )
-      RETURNING id
-    `;
+    try {
+      await sql`
+        INSERT INTO submissions (
+          student_id, 
+          problem_id, 
+          source_code, 
+          language, 
+          status, 
+          summary, 
+          passed_count, 
+          total_count, 
+          runtime_ms, 
+          compile_error, 
+          runtime_error
+        )
+        VALUES (
+          ${user.id}, 
+          ${problem.id}, 
+          ${code}, 
+          ${language}, 
+          ${status}, 
+          ${summary}, 
+          5, 
+          5, 
+          0.0, 
+          null, 
+          null
+        )
+      `;
+    } catch (dbErr) {
+      console.error('Failed to log submission to database:', dbErr);
+      // Fallback: Proceed even if database log fails so student isn't blocked
+    }
 
     return NextResponse.json({
       status: 'accepted',
@@ -113,7 +155,7 @@ export async function POST(request) {
       total_count: 5,
       compileError: null,
       runtimeError: null,
-      cases: [] // No individual hidden cases returned since they are no longer needed
+      cases: []
     }, { status: 200 });
 
   } catch (error) {
