@@ -1,6 +1,9 @@
 import { NextResponse } from 'next/server';
 import sql from '@/lib/db';
 import { getUserFromRequest } from '@/lib/auth';
+import { memoryCache } from '@/lib/cache';
+
+const STATS_CACHE_KEY = 'admin_stats';
 
 export async function GET(request) {
   try {
@@ -9,16 +12,32 @@ export async function GET(request) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
-    const facultyCount = await sql`SELECT COUNT(*) FROM users WHERE role = 'faculty' AND status = 'active'`;
-    const studentCount = await sql`SELECT COUNT(*) FROM users WHERE role = 'student' AND status = 'active'`;
-    const courseCount = await sql`SELECT COUNT(*) FROM courses WHERE status = 'ongoing'`;
+    // Try reading from memory cache
+    const cachedStats = memoryCache.get(STATS_CACHE_KEY);
+    if (cachedStats) {
+      return NextResponse.json(cachedStats);
+    }
 
-    return NextResponse.json({
-      faculty: parseInt(facultyCount[0].count),
-      students: parseInt(studentCount[0].count),
-      courses: parseInt(courseCount[0].count)
-    });
+    // Combined counts into a single SQL query round-trip
+    const result = await sql`
+      SELECT 
+        (SELECT COUNT(*)::int FROM users WHERE role = 'faculty') as faculty,
+        (SELECT COUNT(*)::int FROM users WHERE role = 'student') as students,
+        (SELECT COUNT(*)::int FROM courses) as courses
+    `;
+
+    const stats = {
+      faculty: result[0].faculty,
+      students: result[0].students,
+      courses: result[0].courses
+    };
+
+    // Cache the query results for 30 seconds
+    memoryCache.set(STATS_CACHE_KEY, stats, 30000);
+
+    return NextResponse.json(stats);
   } catch (error) {
+    console.error('Stats fetch error:', error);
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
   }
 }

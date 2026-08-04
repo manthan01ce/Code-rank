@@ -18,7 +18,14 @@ export const STATIC_PROBLEMS = {
       methodName: 'twoSum'
     },
     boilerplates: {
-      python: `class Solution:\n    def twoSum(self, nums, target):\n        # Write your code here\n        pass`
+      python: `import math\nimport collections\nimport heapq\nimport sys\n\nclass Solution:\n    def twoSum(self, nums, target):\n        # Write your code here\n        pass`,
+      cpp: `class Solution {
+public:
+    vector<int> twoSum(vector<int>& nums, int target) {
+        // Write your code here
+        return {};
+    }
+};`
     },
     solution: `class Solution:\n    def twoSum(self, nums, target):\n        mapping = {}\n        for i, num in enumerate(nums):\n            diff = target - num\n            if diff in mapping:\n                return [mapping[diff], i]\n            mapping[num] = i\n        return []`,
     examples: [
@@ -51,7 +58,13 @@ export const STATIC_PROBLEMS = {
       methodName: 'reverseString'
     },
     boilerplates: {
-      python: `class Solution:\n    def reverseString(self, s):\n        # Write your code here\n        pass`
+      python: `import math\nimport collections\nimport heapq\nimport sys\n\nclass Solution:\n    def reverseString(self, s):\n        # Write your code here\n        pass`,
+      cpp: `class Solution {
+public:
+    void reverseString(vector<char>& s) {
+        // Write your code here
+    }
+};`
     },
     solution: `class Solution:\n    def reverseString(self, s):\n        s.reverse()\n        return s`,
     examples: [
@@ -83,7 +96,14 @@ export const STATIC_PROBLEMS = {
       methodName: 'isPalindrome'
     },
     boilerplates: {
-      python: `class Solution:\n    def isPalindrome(self, x):\n        # Write your code here\n        pass`
+      python: `import math\nimport collections\nimport heapq\nimport sys\n\nclass Solution:\n    def isPalindrome(self, x):\n        # Write your code here\n        pass`,
+      cpp: `class Solution {
+public:
+    bool isPalindrome(int x) {
+        // Write your code here
+        return false;
+    }
+};`
     },
     solution: `class Solution:\n    def isPalindrome(self, x):\n        if x < 0:\n            return False\n        return str(x) == str(x)[::-1]`,
     examples: [
@@ -121,7 +141,14 @@ export const STATIC_PROBLEMS = {
       methodName: 'fizzBuzz'
     },
     boilerplates: {
-      python: `class Solution:\n    def fizzBuzz(self, n):\n        # Write your code here\n        pass`
+      python: `import math\nimport collections\nimport heapq\nimport sys\n\nclass Solution:\n    def fizzBuzz(self, n):\n        # Write your code here\n        pass`,
+      cpp: `class Solution {
+public:
+    vector<string> fizzBuzz(int n) {
+        // Write your code here
+        return {};
+    }
+};`
     },
     solution: `class Solution:\n    def fizzBuzz(self, n):\n        result = []\n        for i in range(1, n + 1):\n            if i % 3 == 0 and i % 5 == 0:\n                result.append("FizzBuzz")\n            elif i % 3 == 0:\n                result.append("Fizz")\n            elif i % 5 == 0:\n                result.append("Buzz")\n            else:\n                result.append(str(i))\n        return result`,
     examples: [
@@ -156,7 +183,14 @@ export const STATIC_PROBLEMS = {
       methodName: 'singleNumber'
     },
     boilerplates: {
-      python: `class Solution:\n    def singleNumber(self, nums):\n        # Write your code here\n        pass`
+      python: `import math\nimport collections\nimport heapq\nimport sys\n\nclass Solution:\n    def singleNumber(self, nums):\n        # Write your code here\n        pass`,
+      cpp: `class Solution {
+public:
+    int singleNumber(vector<int>& nums) {
+        // Write your code here
+        return 0;
+    }
+};`
     },
     solution: `class Solution:\n    def singleNumber(self, nums):\n        result = 0\n        for num in nums:\n            result ^= num\n        return result`,
     examples: [
@@ -189,7 +223,14 @@ export const STATIC_PROBLEMS = {
       methodName: 'containsDuplicate'
     },
     boilerplates: {
-      python: `class Solution:\n    def containsDuplicate(self, nums):\n        # Write your code here\n        pass`
+      python: `import math\nimport collections\nimport heapq\nimport sys\n\nclass Solution:\n    def containsDuplicate(self, nums):\n        # Write your code here\n        pass`,
+      cpp: `class Solution {
+public:
+    bool containsDuplicate(vector<int>& nums) {
+        // Write your code here
+        return false;
+    }
+};`
     },
     solution: `class Solution:\n    def containsDuplicate(self, nums):\n        return len(nums) != len(set(nums))`,
     examples: [
@@ -221,7 +262,14 @@ export const STATIC_PROBLEMS = {
       methodName: 'fib'
     },
     boilerplates: {
-      python: `class Solution:\n    def fib(self, n):\n        # Write your code here\n        pass`
+      python: `import math\nimport collections\nimport heapq\nimport sys\n\nclass Solution:\n    def fib(self, n):\n        # Write your code here\n        pass`,
+      cpp: `class Solution {
+public:
+    int fib(int n) {
+        // Write your code here
+        return 0;
+    }
+};`
     },
     solution: `class Solution:\n    def fib(self, n):\n        if n <= 1:\n            return n\n        a, b = 0, 1\n        for _ in range(2, n + 1):\n            a, b = b, a + b\n        return b`,
     examples: [
@@ -254,7 +302,14 @@ export const STATIC_PROBLEMS = {
       methodName: 'isAnagram'
     },
     boilerplates: {
-      python: `class Solution:\n    def isAnagram(self, s, t):\n        # Write your code here\n        pass`
+      python: `import math\nimport collections\nimport heapq\nimport sys\n\nclass Solution:\n    def isAnagram(self, s, t):\n        # Write your code here\n        pass`,
+      cpp: `class Solution {
+public:
+    bool isAnagram(string s, string t) {
+        // Write your code here
+        return false;
+    }
+};`
     },
     solution: `class Solution:\n    def isAnagram(self, s, t):\n        if len(s) != len(t):\n            return False\n        count = {}\n        for char in s:\n            count[char] = count.get(char, 0) + 1\n        for char in t:\n            if char not in count or count[char] == 0:\n                return False\n            count[char] -= 1\n        return True`,
     examples: [
@@ -287,7 +342,14 @@ export const STATIC_PROBLEMS = {
       methodName: 'lengthOfLastWord'
     },
     boilerplates: {
-      python: `class Solution:\n    def lengthOfLastWord(self, s):\n        # Write your code here\n        pass`
+      python: `import math\nimport collections\nimport heapq\nimport sys\n\nclass Solution:\n    def lengthOfLastWord(self, s):\n        # Write your code here\n        pass`,
+      cpp: `class Solution {
+public:
+    int lengthOfLastWord(string s) {
+        // Write your code here
+        return 0;
+    }
+};`
     },
     solution: `class Solution:\n    def lengthOfLastWord(self, s):\n        words = s.strip().split()\n        if not words:\n            return 0\n        return len(words[-1])`,
     examples: [
@@ -319,7 +381,14 @@ export const STATIC_PROBLEMS = {
       methodName: 'addDigits'
     },
     boilerplates: {
-      python: `class Solution:\n    def addDigits(self, num):\n        # Write your code here\n        pass`
+      python: `import math\nimport collections\nimport heapq\nimport sys\n\nclass Solution:\n    def addDigits(self, num):\n        # Write your code here\n        pass`,
+      cpp: `class Solution {
+public:
+    int addDigits(int num) {
+        // Write your code here
+        return 0;
+    }
+};`
     },
     solution: `class Solution:\n    def addDigits(self, num):\n        if num == 0:\n            return 0\n        return 1 + (num - 1) % 9`,
     examples: [

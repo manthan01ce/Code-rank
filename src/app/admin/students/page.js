@@ -95,6 +95,12 @@ export default function StudentManagement() {
         const data = await res.json();
         setStudents(Array.isArray(data) ? data : []);
       } else {
+        if (res.status === 401) {
+          localStorage.removeItem('token');
+          localStorage.removeItem('user');
+          window.location.href = '/';
+          return;
+        }
         console.error('Failed to fetch students:', res.status);
         setStudents([]);
       }
@@ -110,6 +116,10 @@ export default function StudentManagement() {
       const res = await fetch('/api/departments', { headers: { Authorization: `Bearer ${token()}` } });
       if (res.ok) {
         setDepartmentsList(await res.json());
+      } else if (res.status === 401) {
+        localStorage.removeItem('token');
+        localStorage.removeItem('user');
+        window.location.href = '/';
       }
     } catch (e) { console.error(e); }
   };

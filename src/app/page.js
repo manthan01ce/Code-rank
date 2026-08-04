@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 
 export default function Login() {
@@ -10,6 +10,23 @@ export default function Login() {
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
   const router = useRouter();
+
+  useEffect(() => {
+    const userData = localStorage.getItem('user');
+    const token = localStorage.getItem('token');
+    if (userData && token) {
+      try {
+        const user = JSON.parse(userData);
+        if (user.role === 'admin') {
+          router.replace('/admin');
+        } else if (user.role === 'student') {
+          router.replace('/student');
+        } else if (user.role === 'faculty') {
+          router.replace('/faculty');
+        }
+      } catch (e) {}
+    }
+  }, [router]);
 
   const handleLogin = async (e) => {
     e.preventDefault();
@@ -71,6 +88,7 @@ export default function Login() {
               value={email}
               onChange={(e) => setEmail(e.target.value)}
               required
+              suppressHydrationWarning
             />
           </div>
           
@@ -82,6 +100,7 @@ export default function Login() {
               value={password}
               onChange={(e) => setPassword(e.target.value)}
               required
+              suppressHydrationWarning
             />
             <span 
               className="password-toggle"
@@ -91,7 +110,7 @@ export default function Login() {
             </span>
           </div>
 
-          <button type="submit" className="btn-primary">
+          <button type="submit" className="btn-primary" suppressHydrationWarning>
             Login
           </button>
         </form>

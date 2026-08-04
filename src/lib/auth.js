@@ -1,7 +1,11 @@
 import jwt from 'jsonwebtoken';
 import bcrypt from 'bcryptjs';
+import crypto from 'crypto';
 
-const JWT_SECRET = process.env.JWT_SECRET || 'fallback_secret';
+const JWT_SECRET = process.env.JWT_SECRET;
+if (!JWT_SECRET) {
+  throw new Error('FATAL: JWT_SECRET environment variable is missing.');
+}
 
 export function generateToken(user) {
   return jwt.sign(
@@ -35,16 +39,24 @@ export function generateSecurePassword(length = 10) {
   const all = uppercase + lowercase + digits + special;
 
   let password = '';
-  password += uppercase[Math.floor(Math.random() * uppercase.length)];
-  password += lowercase[Math.floor(Math.random() * lowercase.length)];
-  password += digits[Math.floor(Math.random() * digits.length)];
-  password += special[Math.floor(Math.random() * special.length)];
+  password += uppercase[crypto.randomInt(0, uppercase.length)];
+  password += lowercase[crypto.randomInt(0, lowercase.length)];
+  password += digits[crypto.randomInt(0, digits.length)];
+  password += special[crypto.randomInt(0, special.length)];
 
   for (let i = 4; i < length; i++) {
-    password += all[Math.floor(Math.random() * all.length)];
+    password += all[crypto.randomInt(0, all.length)];
   }
 
-  return password.split('').sort(() => Math.random() - 0.5).join('');
+  // Fisher-Yates Shuffle using secure random index
+  const arr = password.split('');
+  for (let i = arr.length - 1; i > 0; i--) {
+    const j = crypto.randomInt(0, i + 1);
+    const temp = arr[i];
+    arr[i] = arr[j];
+    arr[j] = temp;
+  }
+  return arr.join('');
 }
 
 export function getUserFromRequest(request) {

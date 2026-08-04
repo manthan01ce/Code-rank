@@ -1,6 +1,7 @@
 'use client';
 
 import Editor from '@monaco-editor/react';
+import { useRef } from 'react';
 import { Code2, RotateCcw, Maximize2 } from 'lucide-react';
 import { LANGUAGES } from './LanguageConfig';
 
@@ -12,8 +13,38 @@ export default function MonacoEditorPanel({
   onReset,
   isRunning,
   activeProblem,
+  onRun,
+  onSubmit,
+  fontSize,
+  tabSize,
 }) {
   const langConfig = LANGUAGES[selectedLang];
+  const onRunRef = useRef(onRun);
+  const onSubmitRef = useRef(onSubmit);
+
+  // Keep refs updated to avoid stale closures in Monaco actions
+  onRunRef.current = onRun;
+  onSubmitRef.current = onSubmit;
+
+  function handleEditorDidMount(editor, monaco) {
+    editor.addAction({
+      id: 'run-code',
+      label: 'Run Code',
+      keybindings: [monaco.KeyMod.CtrlCmd | monaco.KeyCode.Quote],
+      run: () => {
+        if (onRunRef.current) onRunRef.current();
+      }
+    });
+
+    editor.addAction({
+      id: 'submit-code',
+      label: 'Submit Code',
+      keybindings: [monaco.KeyMod.CtrlCmd | monaco.KeyCode.Enter],
+      run: () => {
+        if (onSubmitRef.current) onSubmitRef.current();
+      }
+    });
+  }
 
   function handleReset() {
     if (onReset) {
@@ -73,9 +104,16 @@ export default function MonacoEditorPanel({
             onChange={(e) => onLangChange(e.target.value)}
             disabled={isRunning}
           >
-            {Object.entries(LANGUAGES).map(([key, cfg]) => (
-              <option key={key} value={key}>{cfg.label}</option>
-            ))}
+            {Object.entries(LANGUAGES)
+              .filter(([key]) => {
+                if (activeProblem?.isPractical && activeProblem?.allowedLanguages) {
+                  return activeProblem.allowedLanguages.includes(key);
+                }
+                return true;
+              })
+              .map(([key, cfg]) => (
+                <option key={key} value={key}>{cfg.label}</option>
+              ))}
           </select>
           {!langConfig.executableInPhase1 && (
             <span style={{ fontSize: '10px', fontWeight: 700, color: '#f4b400', background: 'rgba(244,180,0,0.1)', border: '1px solid rgba(244,180,0,0.25)', padding: '2px 8px', letterSpacing: '0.5px', textTransform: 'uppercase' }}>
@@ -107,6 +145,7 @@ export default function MonacoEditorPanel({
           theme="vs-dark"
           value={code}
           onChange={(value) => onCodeChange(value ?? '')}
+          onMount={handleEditorDidMount}
           loading={
             <div style={{ height: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', background: '#1e1e1e', color: '#7e7e7e', fontSize: '13px', fontFamily: 'Inter, sans-serif' }}>
               Loading editor…
@@ -114,7 +153,8 @@ export default function MonacoEditorPanel({
           }
           options={{
             minimap: { enabled: false },
-            fontSize: 14,
+            fontSize: fontSize || 14,
+            tabSize: tabSize || 4,
             fontFamily: "'JetBrains Mono', 'Fira Code', Consolas, monospace",
             lineHeight: 22,
             padding: { top: 12, bottom: 12 },

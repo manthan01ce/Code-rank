@@ -1,12 +1,13 @@
 'use client';
 
 /**
- * WorkspaceClientWrapper.js — CLIENT COMPONENT
- *
- * Checks authorization:
- * - JWT token presence.
- * - Confirms role is student, admin, or faculty.
- * - Restricts student access strictly to 4th-semester students only.
+ * PURPOSE OF THIS FILE:
+ * Client-side layout wrapper for the student coding workspace.
+ * It handles:
+ * - Session verification: Verifies if the local storage contains a valid user token on mount.
+ * - Authorization bypass: Evaluates credentials and role details, allowing immediate entry
+ *   to any logged-in student (removing semester barriers).
+ * - Component mounting: Wraps the core WorkspaceLayout layout to prevent server hydration mismatches.
  */
 
 import { useState, useEffect } from 'react';
@@ -31,42 +32,14 @@ export default function WorkspaceClientWrapper({ problem }) {
       return;
     }
 
-    setAuthed(true);
-
-    // Fetch full profile from backend to inspect semester dynamically
-    fetch('/api/auth/profile', {
-      headers: {
-        'Authorization': `Bearer ${token}`
-      }
-    })
-      .then((res) => {
-        if (!res.ok) throw new Error('Failed to load profile');
-        return res.json();
-      })
-      .then((data) => {
-        const profile = data.user;
-        setUserProfile(profile);
-        
-        // Authorization rule:
-        // - Allow admin/faculty to view and test.
-        // - Allow students ONLY if they are strictly in the 4th semester.
-        if (profile.role === 'student') {
-          const sem = String(profile.extra_info?.semester || '').trim();
-          if (sem === '4') {
-            setIsSemesterAuthorized(true);
-          } else {
-            setIsSemesterAuthorized(false);
-          }
-        } else {
-          // Admins/Faculty are authorized
-          setIsSemesterAuthorized(true);
-        }
-      })
-      .catch((err) => {
-        console.error('Profile fetch failed:', err);
-        // Fallback: block access if authorization cannot be verified
-        setIsSemesterAuthorized(false);
-      });
+    try {
+      const profile = JSON.parse(userData);
+      setUserProfile(profile);
+      setAuthed(true);
+      setIsSemesterAuthorized(true);
+    } catch (e) {
+      router.replace('/');
+    }
   }, [router]);
 
   // ── 1. Loading State ──

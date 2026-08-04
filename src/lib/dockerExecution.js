@@ -3,27 +3,15 @@ import { promisify } from 'util';
 import fs from 'fs/promises';
 import path from 'path';
 import crypto from 'crypto';
+import { executionQueue } from './executionQueue.js';
 
 const execAsync = promisify(exec);
 
-/**
- * Executes Python code in an isolated Docker container.
- *
- * Flow:
- *  1. Generate a UUID and create .tmp/<uuid>/ on the host
- *  2. Write user code to temp.py (as requested)
- *  3. Write custom stdin to input.txt
- *  4. Mount the folder into python:3.12-slim container at /app
- *  5. Run:  python temp.py < input.txt
- *  6. Capture stdout, stderr, and real exit code via a wrapper sh command
- *  7. Clean up the temp directory unconditionally in finally
- *
- * Limits: 128MB memory, 0.5 CPU, no network, 5s hard timeout.
- */
 export async function executePythonCode(code, customInput = '') {
-  const uuid = crypto.randomUUID();
-  const tmpBase   = path.join(process.cwd(), '.tmp');
-  const sessionDir = path.join(tmpBase, uuid);
+  return executionQueue.run(async () => {
+    const uuid = crypto.randomUUID();
+    const tmpBase   = path.join(process.cwd(), '.tmp');
+    const sessionDir = path.join(tmpBase, uuid);
 
   try {
     // ── 1. Create isolated temp directory ─────────────────────────────────
@@ -41,7 +29,7 @@ export async function executePythonCode(code, customInput = '') {
     // ── 3. Build Docker command ───────────────────────────────────────────
     // Windows: replace backslashes for Docker Desktop volume mount
     const volumePath    = sessionDir.replace(/\\/g, '/');
-    const containerName = `py_exec_${uuid.slice(0, 8)}`;
+    const containerName = `coderank_py_exec_${uuid.slice(0, 8)}`;
 
     // We use `sh -c` so we can pipe stdin from input.txt using redirection.
     // Exit code from python is propagated through sh correctly.
@@ -54,7 +42,7 @@ export async function executePythonCode(code, customInput = '') {
       '--network none',
       `--volume "${volumePath}:/app"`,
       '--workdir /app',
-      'python:3.12-slim',
+      'coderank-python:latest',
       'sh -c "python temp.py < input.txt"',
     ].join(' ');
 
@@ -114,13 +102,14 @@ export async function executePythonCode(code, customInput = '') {
       exitCode: 500,
     };
 
-  } finally {
-    // ── 5. Unconditional cleanup ───────────────────────────────────────────
-    try {
-      await fs.rm(sessionDir, { recursive: true, force: true });
-      console.log(`[DockerExec] 🧹 Cleaned up ${sessionDir}`);
-    } catch (cleanupErr) {
-      console.error(`[DockerExec] Failed to clean up ${sessionDir}:`, cleanupErr.message);
+    } finally {
+      // ── 5. Unconditional cleanup ───────────────────────────────────────────
+      try {
+        await fs.rm(sessionDir, { recursive: true, force: true });
+        console.log(`[DockerExec] 🧹 Cleaned up ${sessionDir}`);
+      } catch (cleanupErr) {
+        console.error(`[DockerExec] Failed to clean up ${sessionDir}:`, cleanupErr.message);
+      }
     }
-  }
+  });
 }

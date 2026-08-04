@@ -1,6 +1,16 @@
 'use client';
 
-import { useState } from 'react';
+/**
+ * PURPOSE OF THIS FILE:
+ * Left panel component within the student coding workspace.
+ * It renders tabs:
+ * - DESCRIPTION: Renders challenge difficulty, problem statement text, formatting specifications
+ *   (input/output formats, sample test cases), and constraint blocks.
+ * - SUBMISSIONS: Fetches and lists the student's solution log history specifically for
+ *   this active practical task (status, raw/normalized scores, language, and timestamp).
+ */
+
+import { useState, useEffect } from 'react';
 import { AlignLeft, Lightbulb, MessageSquare, Clock } from 'lucide-react';
 
 const STATIC_PROBLEM = {
@@ -34,13 +44,30 @@ const DIFFICULTY_COLORS = {
 
 const TABS = [
   { id: 'description', icon: <AlignLeft size={13} />,     label: 'DESCRIPTION' },
-  { id: 'editorial',   icon: <Lightbulb size={13} />,     label: 'EDITORIAL'   },
-  { id: 'solutions',   icon: <MessageSquare size={13} />, label: 'SOLUTIONS'   },
-  { id: 'submissions', icon: <Clock size={13} />,         label: 'SUBMISSIONS' },
+  { id: 'submissions', icon: <Clock size={13} />,         label: 'SUBMISSIONS' }
 ];
 
 export default function ProblemPanel({ problem }) {
   const [activeTab, setActiveTab] = useState('description');
+  const [submissions, setSubmissions] = useState([]);
+  const [loading, setLoading] = useState(false);
+
+  useEffect(() => {
+    if (activeTab === 'submissions' && problem?.dbId) {
+      setLoading(true);
+      const token = localStorage.getItem('token');
+      fetch(`/api/student/practicals/${problem.dbId}/submissions`, {
+        headers: { Authorization: `Bearer ${token}` }
+      })
+        .then(res => res.json())
+        .then(data => {
+          if (Array.isArray(data)) setSubmissions(data);
+        })
+        .catch(err => console.error(err))
+        .finally(() => setLoading(false));
+    }
+  }, [activeTab, problem?.dbId]);
+
   const p = problem ?? STATIC_PROBLEM;
   const diff = DIFFICULTY_COLORS[p.difficulty] ?? DIFFICULTY_COLORS.Easy;
 
@@ -98,7 +125,8 @@ export default function ProblemPanel({ problem }) {
             />
 
             {/* Examples */}
-            {p.examples && p.examples.length > 0 && (
+            {/* Examples (Static Problems) */}
+            {!p.isPractical && p.examples && p.examples.length > 0 && (
               <div style={{ display: 'flex', flexDirection: 'column', gap: '20px', marginBottom: '32px' }}>
                 {p.examples.map((ex, i) => (
                   <div key={i}>
@@ -113,8 +141,46 @@ export default function ProblemPanel({ problem }) {
               </div>
             )}
 
-            {/* Constraints */}
-            {p.constraints && p.constraints.length > 0 && (
+            {/* Dynamic Practicals Format Specifier Block */}
+            {p.isPractical && (
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '20px', marginBottom: '32px' }}>
+                {p.inputFormat && (
+                  <div>
+                    <p style={{ color: '#e6e6e6', fontWeight: 700, fontSize: '13px', marginBottom: '8px', letterSpacing: '0.5px' }}>Input Format:</p>
+                    <div style={{ background: '#1a1a1a', borderLeft: '3px solid #00b8a3', padding: '14px 16px', fontSize: '13px', color: '#bbbbbb', whiteSpace: 'pre-wrap' }}>
+                      {p.inputFormat}
+                    </div>
+                  </div>
+                )}
+                {p.outputFormat && (
+                  <div>
+                    <p style={{ color: '#e6e6e6', fontWeight: 700, fontSize: '13px', marginBottom: '8px', letterSpacing: '0.5px' }}>Output Format:</p>
+                    <div style={{ background: '#1a1a1a', borderLeft: '3px solid #00b8a3', padding: '14px 16px', fontSize: '13px', color: '#bbbbbb', whiteSpace: 'pre-wrap' }}>
+                      {p.outputFormat}
+                    </div>
+                  </div>
+                )}
+                {p.sampleInput && (
+                  <div>
+                    <p style={{ color: '#e6e6e6', fontWeight: 700, fontSize: '13px', marginBottom: '8px', letterSpacing: '0.5px' }}>Sample Input:</p>
+                    <pre style={{ background: '#1a1a1a', border: '1px solid #262626', padding: '14px 16px', fontFamily: 'monospace', fontSize: '13px', color: '#e6e6e6', overflowX: 'auto', margin: 0, whiteSpace: 'pre-wrap' }}>
+                      {p.sampleInput}
+                    </pre>
+                  </div>
+                )}
+                {p.sampleOutput && (
+                  <div>
+                    <p style={{ color: '#e6e6e6', fontWeight: 700, fontSize: '13px', marginBottom: '8px', letterSpacing: '0.5px' }}>Sample Output:</p>
+                    <pre style={{ background: '#1a1a1a', border: '1px solid #262626', padding: '14px 16px', fontFamily: 'monospace', fontSize: '13px', color: '#e6e6e6', overflowX: 'auto', margin: 0, whiteSpace: 'pre-wrap' }}>
+                      {p.sampleOutput}
+                    </pre>
+                  </div>
+                )}
+              </div>
+            )}
+
+            {/* Constraints (Static Problems) */}
+            {!p.isPractical && p.constraints && p.constraints.length > 0 && (
               <div>
                 <p style={{ color: '#e6e6e6', fontWeight: 700, fontSize: '13px', marginBottom: '12px', letterSpacing: '0.5px', textTransform: 'uppercase' }}>Constraints</p>
                 <div style={{ background: '#1a1a1a', border: '1px solid #262626', padding: '16px' }}>
@@ -127,12 +193,62 @@ export default function ProblemPanel({ problem }) {
                 </div>
               </div>
             )}
+
+            {/* Constraints (Dynamic Practicals) */}
+            {p.isPractical && p.constraints && (
+              <div>
+                <p style={{ color: '#e6e6e6', fontWeight: 700, fontSize: '13px', marginBottom: '12px', letterSpacing: '0.5px', textTransform: 'uppercase' }}>Constraints</p>
+                <div style={{ background: '#1a1a1a', border: '1px solid #262626', padding: '16px', fontSize: '13px', color: '#bbbbbb', whiteSpace: 'pre-wrap', fontFamily: 'monospace' }}>
+                  {p.constraints}
+                </div>
+              </div>
+            )}
           </div>
         )}
 
-        {activeTab !== 'description' && (
-          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', height: '200px', color: '#3c3c3c', fontSize: '13px', fontWeight: 300, letterSpacing: '0.5px' }}>
-            Content coming soon.
+        {activeTab === 'submissions' && (
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
+            <h3 style={{ fontSize: '16px', fontWeight: 700, color: '#ffffff', marginBottom: '8px' }}>Your Submission History</h3>
+            
+            {loading ? (
+              <div style={{ display: 'flex', justifyContent: 'center', padding: '30px', color: '#7e7e7e', fontSize: '13px' }}>
+                Loading submissions...
+              </div>
+            ) : submissions.length === 0 ? (
+              <div style={{ padding: '30px', textAlign: 'center', color: '#5e5e5e', fontSize: '13px', background: '#111', borderRadius: '6px' }}>
+                No submissions found for this practical. Solve and submit!
+              </div>
+            ) : (
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+                {submissions.map((sub) => {
+                  const isSuccess = sub.status === 'success' || sub.status === 'Passed';
+                  return (
+                    <div key={sub.id} style={{ backgroundColor: '#141414', border: '1px solid #222', borderRadius: '8px', padding: '15px' }}>
+                      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '8px' }}>
+                        <span style={{ fontSize: '12px', fontWeight: 600, color: '#888', textTransform: 'uppercase' }}>{sub.language}</span>
+                        <span style={{
+                          fontSize: '11px',
+                          fontWeight: 700,
+                          padding: '2px 8px',
+                          borderRadius: '4px',
+                          backgroundColor: isSuccess ? 'rgba(16,185,129,0.1)' : 'rgba(239,68,68,0.1)',
+                          color: isSuccess ? '#10b981' : '#ef4444',
+                        }}>
+                          {sub.status.toUpperCase()}
+                        </span>
+                      </div>
+                      <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '13px', color: '#ccc', marginBottom: '4px' }}>
+                        <span>Raw Score: <strong style={{ color: '#fff' }}>{sub.raw_marks}</strong></span>
+                        <span>Normalized: <strong style={{ color: '#10b981' }}>{sub.normalized_marks} / 10</strong></span>
+                      </div>
+                      <div style={{ fontSize: '11px', color: '#555', textAlign: 'right' }}>
+                        {new Date(sub.submitted_at).toLocaleString()}
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            )}
           </div>
         )}
       </div>

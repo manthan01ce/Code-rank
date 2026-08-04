@@ -3,6 +3,7 @@ import { promisify } from 'util';
 import fs            from 'fs/promises';
 import path          from 'path';
 import crypto        from 'crypto';
+import { executionQueue } from '../executionQueue.js';
 
 const execAsync = promisify(exec);
 
@@ -262,16 +263,17 @@ export async function runPython({
   timeoutMs = 5000,
   memoryMb = 128,
 }) {
-  if (!code || typeof code !== 'string') {
-    throw new Error('Code is required and must be a string');
-  }
-  if (!testCases || !Array.isArray(testCases)) {
-    throw new Error('testCases is required and must be an array');
-  }
+  return executionQueue.run(async () => {
+    if (!code || typeof code !== 'string') {
+      throw new Error('Code is required and must be a string');
+    }
+    if (!testCases || !Array.isArray(testCases)) {
+      throw new Error('testCases is required and must be an array');
+    }
 
-  const uuid       = crypto.randomUUID();
-  const tmpBase    = path.join(process.cwd(), '.tmp');
-  const sessionDir = path.join(tmpBase, uuid);
+    const uuid       = crypto.randomUUID();
+    const tmpBase    = path.join(process.cwd(), '.tmp');
+    const sessionDir = path.join(tmpBase, uuid);
 
   try {
     // ── 1. Isolated workspace ─────────────────────────────────────────────
@@ -293,7 +295,7 @@ export async function runPython({
 
     // ── 3. Docker execution command ───────────────────────────────────────
     const volumePath    = sessionDir.replace(/\\/g, '/');
-    const containerName = `py_exec_${uuid.slice(0, 8)}`;
+    const containerName = `coderank_py_runner_${uuid.slice(0, 8)}`;
 
     const cmd = [
       'docker run',
@@ -304,7 +306,7 @@ export async function runPython({
       '--network none',
       `--volume "${volumePath}:/app"`,
       '--workdir /app',
-      'python:3.12-slim',
+      'coderank-python:latest',
       'python runner.py',
     ].join(' ');
 
@@ -388,10 +390,11 @@ export async function runPython({
       cases: [],
     };
 
-  } finally {
-    // ── 5. Unconditional cleanup ──────────────────────────────────────────
-    try {
-      await fs.rm(sessionDir, { recursive: true, force: true });
-    } catch {}
-  }
+    } finally {
+      // ── 5. Unconditional cleanup ──────────────────────────────────────────
+      try {
+        await fs.rm(sessionDir, { recursive: true, force: true });
+      } catch {}
+    }
+  });
 }

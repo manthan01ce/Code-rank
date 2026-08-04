@@ -2,25 +2,23 @@
  * src/lib/execution/index.js — Language execution router
  *
  * Routes { language, code, input } to the correct runner function.
- * Phase 1: Only Python is fully implemented; all other runners throw.
- * Phase 2: Implement one language at a time starting with JavaScript.
  */
 
 import { runPython }     from './runPython.js';
 import { runCpp }        from './runCpp.js';
+import { runC }          from './runC.js';
 import { runJava }       from './runJava.js';
 import { runJavaScript } from './runJavaScript.js';
-import { runGo }         from './runGo.js';
 
 /** Set of language keys accepted by /api/execute */
-export const ALLOWED_LANGUAGES = new Set(['python', 'cpp', 'java', 'javascript', 'go']);
+export const ALLOWED_LANGUAGES = new Set(['python', 'cpp', 'c', 'java', 'javascript']);
 
-const RUNNERS = {
+export const RUNNERS = {
   python:     runPython,
   cpp:        runCpp,
+  c:          runC,
   java:       runJava,
   javascript: runJavaScript,
-  go:         runGo,
 };
 
 /**
@@ -41,5 +39,5 @@ export async function executeCode(language, code, input = '') {
     };
   }
 
-  return RUNNERS[language](code, input);
+  return RUNNERS[language]({ code });
 }

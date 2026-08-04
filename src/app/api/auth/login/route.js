@@ -50,16 +50,18 @@ export async function POST(request) {
     const dbUserPassword = dbUser.password;
     let passwordMatch = false;
     
-    // If it's the fallback admin, we compare directly (or if we seeded with hash, it's already there)
-    // Actually, seeding is better. But let's handle both.
+    // If it's the fallback admin, we compare timing-safely by hashing first to prevent timing attacks
     if (dbUser.id === 0) {
-      passwordMatch = (password === dbUserPassword);
+      const crypto = require('crypto');
+      const userHash = crypto.createHash('sha256').update(password).digest();
+      const adminHash = crypto.createHash('sha256').update(dbUserPassword).digest();
+      passwordMatch = crypto.timingSafeEqual(userHash, adminHash);
     } else {
       try {
          passwordMatch = await comparePassword(password, dbUserPassword);
       } catch (e) {
          console.error('Bcrypt Error:', e);
-         return NextResponse.json({ error: 'Password verification failed' }, { status: 500 });
+         return NextResponse.json({ error: 'Authentication failed' }, { status: 500 });
       }
     }
 
@@ -98,7 +100,7 @@ export async function POST(request) {
     });
   } catch (error) {
     console.error('Unhandled Login error:', error);
-    return NextResponse.json({ error: 'Internal server error: ' + error.message }, { status: 500 });
+    return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
   }
 }
 

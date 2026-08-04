@@ -3,6 +3,7 @@ import { runPython } from '@/lib/execution/runPython';
 import { STATIC_PROBLEMS } from '@/lib/problems';
 import { exec } from 'child_process';
 import { promisify } from 'util';
+import { runDynamicPractical } from '@/lib/execution/runDynamicPractical';
 
 const execAsync = promisify(exec);
 
@@ -24,6 +25,12 @@ export async function POST(request) {
 
     if (!problemId) {
       return NextResponse.json({ success: false, error: 'problemId is required.' }, { status: 400 });
+    }
+
+    if (typeof problemId === 'string' && problemId.startsWith('practical_')) {
+      const dbId = parseInt(problemId.replace('practical_', ''));
+      const result = await runDynamicPractical({ language: 'python', code, dbId, isSubmit: false });
+      return NextResponse.json(result, { status: 200 });
     }
 
     // ── 2. Find problem statically ──

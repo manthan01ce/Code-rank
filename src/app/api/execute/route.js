@@ -72,9 +72,8 @@ export async function GET() {
   const IMAGES = [
     { image: 'python:3.12-slim',    lang: 'python'     },
     { image: 'gcc:13',              lang: 'cpp'        },
-    { image: 'openjdk:21-slim',     lang: 'java'       },
+    { image: 'eclipse-temurin:21-jdk', lang: 'java'       },
     { image: 'node:20-slim',        lang: 'javascript' },
-    { image: 'golang:1.22-alpine',  lang: 'go'         },
   ];
 
   try {

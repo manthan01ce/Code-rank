@@ -1,5 +1,12 @@
 'use client';
 
+/**
+ * PURPOSE OF THIS FILE:
+ * Entry component for /student page.
+ * It checks credentials and redirects the student user immediately
+ * to the unified coding workspace (/student/code/1) so they bypass the dashboard cards.
+ */
+
 import { useRouter } from 'next/navigation';
 import { useEffect, useState } from 'react';
 
@@ -16,28 +23,7 @@ export default function StudentDashboard() {
       router.push('/');
       return;
     }
-
-    setUser(JSON.parse(userData));
-
-    // Fetch full profile from backend to inspect semester
-    fetch('/api/auth/profile', {
-      headers: {
-        'Authorization': `Bearer ${token}`
-      }
-    })
-      .then((res) => {
-        if (!res.ok) throw new Error('Failed to load profile');
-        return res.json();
-      })
-      .then((data) => {
-        setProfile(data.user);
-      })
-      .catch((err) => {
-        console.error('Failed to fetch profile:', err);
-      })
-      .finally(() => {
-        setLoading(false);
-      });
+    router.replace('/student/code/1');
   }, [router]);
 
   const handleLogout = () => {
@@ -49,7 +35,7 @@ export default function StudentDashboard() {
   if (!user) return null;
 
   const semester = profile?.extra_info?.semester || '';
-  const is4thSemester = String(semester).trim() === '4';
+  const is4thSemester = true;
 
   return (
     <div style={{ 
@@ -118,7 +104,7 @@ export default function StudentDashboard() {
             border: `1px solid ${is4thSemester ? 'rgba(0,102,177,0.15)' : '#fde2e2'}`,
             borderRadius: '12px',
             padding: '20px',
-            marginBottom: '30px',
+            marginBottom: '20px',
             textAlign: 'left'
           }}>
             <h4 style={{ color: is4thSemester ? '#0066b1' : '#ef4444', margin: '0 0 6px 0', fontSize: '15px', fontWeight: 700 }}>
@@ -154,6 +140,44 @@ export default function StudentDashboard() {
                 Access Restricted (Current Semester: {semester || 'unspecified'})
               </div>
             )}
+          </div>
+        )}
+
+        {/* ── Assigned Practicals Section ── */}
+        {!loading && (
+          <div style={{
+            background: 'rgba(79,70,229,0.05)',
+            border: '1px solid rgba(79,70,229,0.15)',
+            borderRadius: '12px',
+            padding: '20px',
+            marginBottom: '30px',
+            textAlign: 'left'
+          }}>
+            <h4 style={{ color: '#4F46E5', margin: '0 0 6px 0', fontSize: '15px', fontWeight: 700 }}>
+              📝 Assigned Practicals & Challenges
+            </h4>
+            <p style={{ color: '#64748b', fontSize: '12.5px', lineHeight: 1.5, margin: '0 0 16px 0' }}>
+              Solve programming assignments assigned to your course/batch by faculty members.
+            </p>
+            <button
+              onClick={() => router.push('/student/code/1')}
+              style={{
+                background: '#4F46E5',
+                color: '#ffffff',
+                border: 'none',
+                borderRadius: '6px',
+                padding: '10px 20px',
+                fontSize: '12px',
+                fontWeight: 700,
+                cursor: 'pointer',
+                width: '100%',
+                transition: 'background 0.2s'
+              }}
+              onMouseEnter={e => e.currentTarget.style.background = '#4338ca'}
+              onMouseLeave={e => e.currentTarget.style.background = '#4F46E5'}
+            >
+              View Practical Assignments →
+            </button>
           </div>
         )}
         

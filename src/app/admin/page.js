@@ -34,6 +34,67 @@ export default function AdminDashboard() {
     return new Date(dateString).toLocaleString();
   };
 
+  const downloadDocs = async () => {
+    const { default: jsPDF } = await import('jspdf');
+    const doc = new jsPDF();
+    
+    doc.setFont("helvetica", "bold");
+    doc.setFontSize(22);
+    doc.setTextColor(79, 70, 229);
+    doc.text('CodeRank Backend Architecture Guide', 14, 22);
+    
+    doc.setFontSize(10);
+    doc.setFont("helvetica", "normal");
+    doc.setTextColor(100);
+    doc.text(`Generated: ${new Date().toLocaleString()} | System Documentation`, 14, 30);
+    doc.line(14, 33, 196, 33);
+    
+    let y = 42;
+    const printSectionHeader = (title) => {
+      if (y > 250) { doc.addPage(); y = 20; }
+      doc.setFont("helvetica", "bold");
+      doc.setFontSize(14);
+      doc.setTextColor(30, 41, 59);
+      doc.text(title, 14, y);
+      y += 8;
+      doc.setFont("helvetica", "normal");
+      doc.setFontSize(10);
+      doc.setTextColor(71, 85, 105);
+    };
+
+    const printParagraph = (text) => {
+      const lines = doc.splitTextToSize(text, 180);
+      lines.forEach(line => {
+        if (y > 270) { doc.addPage(); y = 20; }
+        doc.text(line, 14, y);
+        y += 6;
+      });
+      y += 4;
+    };
+
+    printSectionHeader('1. Executive Overview');
+    printParagraph('CodeRank is a secure, serverless coding playground and dynamic practical management system built on Next.js 16. The backend leverages Neon Serverless Postgres for relational storage and local/remote Docker compiler containers for sandboxed standard I/O execution.');
+
+    printSectionHeader('2. Database Schema Architecture');
+    printParagraph('The relational database uses Neon Postgres and comprises key tables:\n' +
+      '- users: Mapped to email, password, and roles (admin, faculty, student).\n' +
+      '- courses: Tracks name, course_code, status, and semester.\n' +
+      '- practicals: Stores title, description, allowed_languages, difficulty, and total_marks.\n' +
+      '- practical_test_cases: Maps input, expected output, and partial marks per case.\n' +
+      '- practical_submissions: Stores user code, selected language, status, and score results.\n' +
+      '- practical_submission_cases: Granular evaluation report per test case.');
+
+    printSectionHeader('3. Dynamic Execution & Sandboxing');
+    printParagraph('When a student runs or submits code, the request is intercepted by language execution managers (python-run, cpp-run, java-run, c-run, javascript-run). It mounts the source code and input text inside isolated Docker containers, compiles if necessary, and executes the program safely under resource constraints (128MB memory limit, 5s timeout).');
+
+    printSectionHeader('4. Grading and Normalization Formula');
+    printParagraph('During submission, the system evaluates all test cases. The raw marks are aggregated. The overall score is then normalized to a 10-point scale using the formula:\n' +
+      '   Normalized Marks = (Raw Marks / Total Marks) * 10\n' +
+      'The result is rounded to 2 decimal places and stored in the database.');
+
+    doc.save('CodeRank_Backend_Architecture.pdf');
+  };
+
   return (
     <div>
       {loading && <LoadingOverlay />}

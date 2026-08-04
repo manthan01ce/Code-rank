@@ -1,0 +1,56 @@
+import { NextResponse } from 'next/server';
+import sql from '@/lib/db';
+import { getUserFromRequest } from '@/lib/auth';
+
+export async function GET(request) {
+  try {
+    const user = getUserFromRequest(request);
+    if (!user || user.role !== 'student') {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    }
+
+    // Fetch student's full profile to check batch & semester
+    const students = await sql`
+      SELECT extra_info FROM users WHERE id = ${user.id}
+    `;
+    if (students.length === 0) {
+      return NextResponse.json({ error: 'Student profile not found' }, { status: 404 });
+    }
+
+    const extra = students[0].extra_info || {};
+    const batch = extra.batch || '';
+    const semester = parseInt(extra.semester) || 0;
+
+    if (!semester) {
+      return NextResponse.json([]);
+    }
+
+    // Fetch practicals where practical batch matches and course semester matches student semester
+    const practicals = await sql`
+      SELECT p.id, p.title, p.description, p.instructions, p.total_marks, p.difficulty, 
+             p.is_challenge, p.input_format, p.output_format, p.constraints, 
+             p.sample_input, p.sample_output, p.starter_code,
+             c.name as course_name, c.course_code, u.name as faculty_name,
+             s.status as my_status, s.normalized_marks as my_marks, s.submitted_at as my_submitted_at
+      FROM practicals p
+      JOIN courses c ON p.course_id = c.id
+      JOIN users u ON p.faculty_id = u.id
+      LEFT JOIN (
+        SELECT DISTINCT ON (practical_id) 
+          practical_id, status, normalized_marks, submitted_at
+        FROM practical_submissions 
+        WHERE student_id = ${user.id}
+        ORDER BY practical_id, normalized_marks DESC, submitted_at DESC
+      ) s ON s.practical_id = p.id
+      WHERE (p.batch_id = ${batch} OR p.batch_id = 'All')
+        AND c.semester = ${semester}
+        AND p.status = 'active'
+      ORDER BY p.created_at DESC
+    `;
+
+    return NextResponse.json(practicals);
+  } catch (error) {
+    console.error('Fetch student practicals error:', error);
+    return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
+  }
+}

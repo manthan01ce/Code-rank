@@ -1,7 +1,7 @@
 import { NextResponse } from 'next/server';
 import sql from '@/lib/db';
 import { getUserFromRequest } from '@/lib/auth';
-import { runPython } from '@/lib/execution/runPython';
+import { RUNNERS, ALLOWED_LANGUAGES } from '@/lib/execution/index';
 import { STATIC_PROBLEMS } from '@/lib/problems';
 
 export async function POST(request) {
@@ -26,12 +26,19 @@ export async function POST(request) {
       return NextResponse.json({ success: false, error: 'problemId is required.' }, { status: 400 });
     }
 
-    if (!language || language !== 'python') {
-      return NextResponse.json({ success: false, error: 'Only python language is supported currently.' }, { status: 400 });
+    if (!language || !ALLOWED_LANGUAGES.has(language)) {
+      return NextResponse.json({ success: false, error: `Unsupported language: ${language}` }, { status: 400 });
     }
 
     if (!code || typeof code !== 'string' || code.trim() === '') {
       return NextResponse.json({ success: false, error: 'Code is required and cannot be empty.' }, { status: 400 });
+    }
+
+    if (typeof problemId === 'string' && problemId.startsWith('practical_')) {
+      const { runDynamicPractical } = await import('@/lib/execution/runDynamicPractical');
+      const dbId = parseInt(problemId.replace('practical_', ''));
+      const result = await runDynamicPractical({ language, code, dbId, userId: user.id, isSubmit: true });
+      return NextResponse.json(result, { status: 200 });
     }
 
     // ── 3. Find problem statically ──
@@ -53,13 +60,14 @@ export async function POST(request) {
       expected: tc.expected,
     }));
 
-    // ── 5. Call execution engine (handles local docker or standalone remote compiler service) ──
+    // ── 5. Call execution engine ──
     let result;
     const compilerUrl = process.env.COMPILER_SERVICE_URL;
 
     if (compilerUrl) {
       try {
-        const response = await fetch(`${compilerUrl.replace(/\/$/, '')}/run-python`, {
+        const endpoint = language === 'python' ? '/run-python' : '/run-cpp';
+        const response = await fetch(`${compilerUrl.replace(/\/$/, '')}${endpoint}`, {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
@@ -89,12 +97,9 @@ export async function POST(request) {
         }, { status: 200 });
       }
     } else {
-      // Local development fallback
-      result = await runPython({
-        code,
-        problem,
-        testCases: runnerTestCases,
-      });
+      // Local development runner dispatch
+      const runner = RUNNERS[language] || RUNNERS.python;
+      result = await runner({ code, problem, testCases: runnerTestCases });
     }
 
     // ── 6. If compile error, strictly report it ──
