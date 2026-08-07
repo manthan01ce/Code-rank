@@ -2,11 +2,12 @@
 
 import { useState, useEffect } from 'react';
 import LoadingOverlay from '@/components/LoadingOverlay';
+import { useAdminAuth } from '@/hooks/useAdminAuth';
 
 export default function CourseMapping() {
   const [courses, setCourses] = useState([]);
   const [faculties, setFaculties] = useState([]);
-  const [mappings, setMappings] = useState({}); // { course_id: [faculty_id_1, ...] }
+  const [mappings, setMappings] = useState({}); // { course_id: { faculty_ids: [...], co_coordinator_id: null } }
   const [loading, setLoading] = useState(true);
   const [processing, setProcessing] = useState(false);
   const [toast, setToast] = useState(null);
@@ -16,14 +17,16 @@ export default function CourseMapping() {
     setTimeout(() => setToast(null), 3000);
   };
 
+  const { token: authToken, isReady } = useAdminAuth();
+
   useEffect(() => {
-    fetchData();
-  }, []);
+    if (isReady) fetchData();
+  }, [isReady]);
 
   const fetchData = async () => {
     setLoading(true);
     try {
-      const token = localStorage.getItem('token');
+      const token = authToken;
       const headers = { 'Authorization': `Bearer ${token}` };
 
       // Fetch courses, faculties, and current mappings in parallel
@@ -38,9 +41,12 @@ export default function CourseMapping() {
       if (mRes.ok) {
         const mappingData = await mRes.json();
         const initialMap = {};
-        // mappingData is an object grouped by course_id
         for (const [cid, facs] of Object.entries(mappingData)) {
-          initialMap[cid] = facs.map(f => f.id);
+          const co = facs.find(f => f.is_co_coordinator);
+          initialMap[cid] = {
+            faculty_ids: facs.map(f => f.id),
+            co_coordinator_id: co ? co.id : (facs[0]?.id || null)
+          };
         }
         setMappings(initialMap);
       }
@@ -56,24 +62,55 @@ export default function CourseMapping() {
     if (!facultyId) return; // Empty selection
     
     setMappings(prev => {
-      const current = prev[courseId] || [];
+      const current = prev[courseId] || { faculty_ids: [], co_coordinator_id: null };
       // If already added, don't add again
-      if (current.includes(facultyId)) return prev;
+      if (current.faculty_ids.includes(facultyId)) return prev;
       
       // Limit to 4
-      if (current.length >= 4) {
+      if (current.faculty_ids.length >= 4) {
         showToast('error', 'You can assign a maximum of 4 faculties per course.');
         return prev;
       }
       
-      return { ...prev, [courseId]: [...current, facultyId] };
+      const newFids = [...current.faculty_ids, facultyId];
+      return { 
+        ...prev, 
+        [courseId]: {
+          faculty_ids: newFids,
+          co_coordinator_id: current.co_coordinator_id || facultyId
+        }
+      };
     });
   };
 
   const handleRemoveFaculty = (courseId, facultyId) => {
     setMappings(prev => {
-      const current = prev[courseId] || [];
-      return { ...prev, [courseId]: current.filter(id => id !== facultyId) };
+      const current = prev[courseId] || { faculty_ids: [], co_coordinator_id: null };
+      const newFids = current.faculty_ids.filter(id => id !== facultyId);
+      let newCo = current.co_coordinator_id;
+      if (newCo === facultyId) {
+        newCo = newFids[0] || null;
+      }
+      return { 
+        ...prev, 
+        [courseId]: {
+          faculty_ids: newFids,
+          co_coordinator_id: newCo
+        }
+      };
+    });
+  };
+
+  const handleSetCoCoordinator = (courseId, facultyId) => {
+    setMappings(prev => {
+      const current = prev[courseId] || { faculty_ids: [], co_coordinator_id: null };
+      return {
+        ...prev,
+        [courseId]: {
+          ...current,
+          co_coordinator_id: facultyId
+        }
+      };
     });
   };
 
@@ -81,9 +118,11 @@ export default function CourseMapping() {
     setProcessing(true);
     try {
       const token = localStorage.getItem('token');
+      const current = mappings[courseId] || { faculty_ids: [], co_coordinator_id: null };
       const payload = {
         course_id: courseId,
-        faculty_ids: mappings[courseId] || []
+        faculty_ids: current.faculty_ids,
+        co_coordinator_id: current.co_coordinator_id
       };
 
       const res = await fetch('/api/mapping', {
@@ -96,7 +135,7 @@ export default function CourseMapping() {
       });
 
       if (res.ok) {
-        showToast('success', 'Mapping saved successfully');
+        showToast('success', 'Mapping and Co-coordinator saved successfully');
       } else {
         const data = await res.json();
         showToast('error', data.error || 'Failed to save mapping');
@@ -157,7 +196,8 @@ export default function CourseMapping() {
             </thead>
             <tbody>
               {courses.map(c => {
-                const assigned = mappings[c.id] || [];
+                const current = mappings[c.id] || { faculty_ids: [], co_coordinator_id: null };
+                const assigned = current.faculty_ids;
                 return (
                   <tr key={c.id}>
                     <td style={{ fontWeight: 600 }}>
@@ -167,19 +207,35 @@ export default function CourseMapping() {
                     <td>{c.semester}</td>
                     <td>
                       <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px', marginBottom: '10px' }}>
-                        {assigned.map(fid => (
-                          <div key={fid} style={{ 
-                            display: 'flex', alignItems: 'center', gap: '5px', 
-                            padding: '4px 8px', borderRadius: '4px', 
-                            backgroundColor: '#eff6ff', border: '1px solid #bfdbfe', fontSize: '13px', color: '#1e40af' 
-                          }}>
-                            {getFacultyName(fid)}
-                            <button 
-                              onClick={() => handleRemoveFaculty(c.id, fid)}
-                              style={{ background: 'none', border: 'none', color: '#ef4444', cursor: 'pointer', fontWeight: 'bold' }}
-                            >×</button>
-                          </div>
-                        ))}
+                        {assigned.map(fid => {
+                          const isCo = current.co_coordinator_id === fid;
+                          return (
+                            <div key={fid} style={{ 
+                              display: 'flex', alignItems: 'center', gap: '8px', 
+                              padding: '6px 12px', borderRadius: '6px', 
+                              backgroundColor: isCo ? '#fef3c7' : '#eff6ff', 
+                              border: `1px solid ${isCo ? '#fde68a' : '#bfdbfe'}`, 
+                              fontSize: '13px', color: isCo ? '#92400e' : '#1e40af' 
+                            }}>
+                              <span style={{ fontWeight: isCo ? 'bold' : 'normal' }}>
+                                {isCo ? '👑 ' : ''}{getFacultyName(fid)}
+                              </span>
+                              {!isCo && (
+                                <button
+                                  onClick={() => handleSetCoCoordinator(c.id, fid)}
+                                  title="Make Co-coordinator"
+                                  style={{ background: 'none', border: 'none', color: '#b45309', cursor: 'pointer', fontSize: '11px', textDecoration: 'underline', padding: 0 }}
+                                >
+                                  Make Co
+                                </button>
+                              )}
+                              <button 
+                                onClick={() => handleRemoveFaculty(c.id, fid)}
+                                style={{ background: 'none', border: 'none', color: '#ef4444', cursor: 'pointer', fontWeight: 'bold', marginLeft: '4px' }}
+                              >×</button>
+                            </div>
+                          );
+                        })}
                         {assigned.length === 0 && <span style={{ color: '#94a3b8', fontSize: '13px', fontStyle: 'italic' }}>Unassigned</span>}
                       </div>
                       

@@ -1,3 +1,27 @@
-/usr/bin/ld: /lib/x86_64-linux-gnu/crt1.o: in function `_start':
-(.text+0x17): undefined reference to `main'
-collect2: error: ld returned 1 exit status
+solution.cpp:18:5: error: 'cin' does not name a type
+   18 |     cin>>n;
+      |     ^~~
+solution.cpp:19:13: error: invalid use of non-static data member 'Solution::n'
+   19 |     int arr[n];
+      |             ^
+solution.cpp:17:9: note: declared here
+   17 |     int n;
+      |         ^
+solution.cpp:20:5: error: expected unqualified-id before 'for'
+   20 |     for(int i =0;i<n;i++)
+      |     ^~~
+solution.cpp:20:18: error: 'i' does not name a type
+   20 |     for(int i =0;i<n;i++)
+      |                  ^
+solution.cpp:20:22: error: 'i' does not name a type
+   20 |     for(int i =0;i<n;i++)
+      |                      ^
+solution.cpp:24:5: error: expected unqualified-id before 'for'
+   24 |     for(int i =n-1;i>=0;i--)
+      |     ^~~
+solution.cpp:24:20: error: 'i' does not name a type
+   24 |     for(int i =n-1;i>=0;i--)
+      |                    ^
+solution.cpp:24:25: error: 'i' does not name a type
+   24 |     for(int i =n-1;i>=0;i--)
+      |                         ^

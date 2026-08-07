@@ -20,6 +20,74 @@ import { Play, ChevronRight, Settings, User, List } from 'lucide-react';
 import { DEFAULT_LANGUAGE, LANGUAGES } from './LanguageConfig';
 import { STATIC_PROBLEMS } from '@/lib/problems';
 
+// ── Stdin/Stdout boilerplates for practicals (main() style) ──────────────────
+// Practicals use stdin/stdout execution, NOT the class-based function runner.
+// Students must use main() / input() patterns — NOT class Solution.
+const PRACTICAL_BOILERPLATES = {
+  python: `# Read input using input() or sys.stdin
+# Print output using print()
+import sys
+
+def main():
+    # Write your Python solution here
+    # Example: n = int(input())
+    pass
+
+if __name__ == '__main__':
+    main()
+`,
+  cpp: `#include <iostream>
+#include <vector>
+#include <string>
+#include <algorithm>
+#include <sstream>
+#include <cmath>
+using namespace std;
+
+int main() {
+    // Read input using cin
+    // Print output using cout
+    // Example: int n; cin >> n;
+    
+    return 0;
+}
+`,
+  c: `#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+#include <math.h>
+
+int main() {
+    // Read input using scanf
+    // Print output using printf
+    // Example: int n; scanf("%d", &n);
+    
+    return 0;
+}
+`,
+  java: `import java.util.*;
+import java.io.*;
+
+public class Solution {
+    public static void main(String[] args) throws IOException {
+        Scanner sc = new Scanner(System.in);
+        // Read input using sc.nextInt(), sc.nextLine(), etc.
+        // Print output using System.out.println()
+    }
+}
+`,
+  javascript: `const readline = require('readline');
+const rl = readline.createInterface({ input: process.stdin });
+const lines = [];
+rl.on('line', line => lines.push(line.trim()));
+rl.on('close', () => {
+    // Process input from 'lines' array
+    // Example: const n = parseInt(lines[0]);
+    // Print output using console.log()
+});
+`,
+};
+
 // Module-level in-memory cache to guarantee persistence in all runtimes
 const inMemoryCache = {};
 
@@ -36,6 +104,7 @@ export default function WorkspaceLayout({ problem }) {
   const [selectedLang, setSelectedLang] = useState(DEFAULT_LANGUAGE);
   const [isListOpen, setIsListOpen] = useState(false);
   const [practicals, setPracticals] = useState([]);
+  const [selectedCourse, setSelectedCourse] = useState('All');
 
   // Profile, Settings, and Submissions Modals states
   const [isUserDropdownOpen, setIsUserDropdownOpen] = useState(false);
@@ -188,8 +257,20 @@ export default function WorkspaceLayout({ problem }) {
       }
     }
 
-    // 3. Fallback to default boilerplate code for this question/language
+    // 3. Fallback to boilerplate — use practical (stdin/stdout) boilerplate if this is a practical
     const activeProblemConfig = resolvedProblem;
+
+    // Check if the DB provides a starter_code for this language
+    if (activeProblemConfig?.isPractical && activeProblemConfig?.starter_code?.[lang]) {
+      return activeProblemConfig.starter_code[lang];
+    }
+
+    // For practicals, use stdin/stdout style boilerplate
+    if (activeProblemConfig?.isPractical && PRACTICAL_BOILERPLATES[lang]) {
+      return PRACTICAL_BOILERPLATES[lang];
+    }
+
+    // For static problems, use the problem-specific boilerplate or language default
     return activeProblemConfig?.boilerplates?.[lang] || LANGUAGES[lang]?.boilerplate || '';
   };
 
@@ -273,7 +354,14 @@ export default function WorkspaceLayout({ problem }) {
 
   function handleResetCode() {
     if (window.confirm('Reset code to default template?')) {
-      const bp = resolvedProblem.boilerplates?.[selectedLang] || LANGUAGES[selectedLang]?.boilerplate || '';
+      let bp;
+      if (resolvedProblem.isPractical && resolvedProblem.starter_code?.[selectedLang]) {
+        bp = resolvedProblem.starter_code[selectedLang];
+      } else if (resolvedProblem.isPractical && PRACTICAL_BOILERPLATES[selectedLang]) {
+        bp = PRACTICAL_BOILERPLATES[selectedLang];
+      } else {
+        bp = resolvedProblem.boilerplates?.[selectedLang] || LANGUAGES[selectedLang]?.boilerplate || '';
+      }
       saveDraft(resolvedProblem.id, selectedLang, bp);
       setCodeByLang((prev) => ({ ...prev, [selectedLang]: bp }));
     }
@@ -414,7 +502,7 @@ export default function WorkspaceLayout({ problem }) {
   };
 
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', height: '100vh', width: '100%', overflow: 'hidden', background: '#000000', color: '#ffffff', fontFamily: 'Inter, sans-serif' }}>
+    <div style={{ display: 'flex', flexDirection: 'column', height: '100vh', width: '100%', overflow: 'hidden', background: '#000000', color: '#ffffff', fontFamily: 'Inter, sans-serif', userSelect: 'none' }}>
 
       {/* ── Top Navigation Bar — 64px, true black ── */}
       <div style={{ height: '64px', background: '#000000', borderBottom: '1px solid #262626', display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '0 24px', flexShrink: 0 }}>
@@ -453,12 +541,49 @@ export default function WorkspaceLayout({ problem }) {
                 zIndex: 1000,
                 padding: '8px 0'
               }}>
-                {practicals.length > 0 && (
+                {practicals.length > 0 && (() => {
+                  const availableCourses = [...new Set(practicals.map(p => p.course_name).filter(Boolean))];
+                  const filteredPracticals = selectedCourse === 'All' 
+                    ? practicals 
+                    : practicals.filter(p => p.course_name === selectedCourse);
+
+                  return (
                   <>
-                    <div style={{ padding: '8px 16px', fontSize: '9px', color: '#00b8a3', fontWeight: 700, letterSpacing: '1px', textTransform: 'uppercase', borderBottom: '1px solid #262626', marginBottom: '6px' }}>
-                      Assigned Coding Practicals ({practicals.length})
+                    <div style={{ padding: '8px 16px', borderBottom: '1px solid #262626', marginBottom: '6px' }}>
+                      <div style={{ fontSize: '9px', color: '#00b8a3', fontWeight: 700, letterSpacing: '1px', textTransform: 'uppercase', marginBottom: '8px' }}>
+                        Assigned Coding Practicals ({filteredPracticals.length})
+                      </div>
+                      <select 
+                        value={selectedCourse} 
+                        onChange={(e) => {
+                          e.stopPropagation();
+                          setSelectedCourse(e.target.value);
+                        }}
+                        onClick={(e) => e.stopPropagation()}
+                        style={{
+                          width: '100%',
+                          background: '#1a1a1a',
+                          color: '#ffffff',
+                          border: '1px solid #3c3c3c',
+                          padding: '6px 8px',
+                          fontSize: '11px',
+                          borderRadius: '4px',
+                          outline: 'none',
+                          cursor: 'pointer'
+                        }}
+                      >
+                        <option value="All">All Subjects</option>
+                        {availableCourses.map(c => (
+                          <option key={c} value={c}>{c}</option>
+                        ))}
+                      </select>
                     </div>
-                    {practicals.map((p) => {
+                    {filteredPracticals.length === 0 && (
+                      <div style={{ padding: '16px', fontSize: '11px', color: '#7e7e7e', textAlign: 'center' }}>
+                        No practicals found for {selectedCourse}.
+                      </div>
+                    )}
+                    {filteredPracticals.map((p) => {
                       const isActive = `practical_${p.id}` === resolvedProblem.id;
                       const diffColor = p.difficulty === 'Easy' ? '#00b8a3' : p.difficulty === 'Medium' ? '#ffb01f' : '#ff375f';
                       return (
@@ -503,7 +628,8 @@ export default function WorkspaceLayout({ problem }) {
                     })}
                     <div style={{ height: '1px', background: '#262626', margin: '8px 0' }} />
                   </>
-                )}
+                  );
+                })()}
                 {practicals.length === 0 && (
                   <div style={{ padding: '16px', fontSize: '11px', color: '#7e7e7e', textAlign: 'center' }}>
                     No practicals assigned currently.
@@ -877,8 +1003,6 @@ export default function WorkspaceLayout({ problem }) {
             </div>
           </div>
         </div>
-      )}
-
       )}
 
       <style>{`

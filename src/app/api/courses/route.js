@@ -11,6 +11,7 @@ export async function GET(request) {
 
     const { searchParams } = new URL(request.url);
     const search = searchParams.get('search');
+    const semester = searchParams.get('semester');
 
     let query;
     if (search) {
@@ -18,6 +19,12 @@ export async function GET(request) {
       query = sql`
         SELECT * FROM courses 
         WHERE name ILIKE ${searchPattern} OR course_code ILIKE ${searchPattern}
+        ORDER BY created_at DESC
+      `;
+    } else if (semester) {
+      query = sql`
+        SELECT * FROM courses 
+        WHERE semester = ${parseInt(semester)}
         ORDER BY created_at DESC
       `;
     } else {

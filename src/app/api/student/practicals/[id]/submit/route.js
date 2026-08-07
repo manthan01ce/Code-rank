@@ -2,6 +2,8 @@ import { NextResponse } from 'next/server';
 import sql from '@/lib/db';
 import { getUserFromRequest } from '@/lib/auth';
 import { runStdinStdout } from '@/lib/execution/runStdinStdout';
+import fs from 'fs/promises';
+import path from 'path';
 
 export async function POST(request, { params }) {
   try {
@@ -33,6 +35,13 @@ export async function POST(request, { params }) {
     }
 
     const practical = practicals[0];
+
+    // Check start_time
+    if (practical.start_time && new Date() < new Date(practical.start_time)) {
+      return NextResponse.json({ error: 'This practical has not started yet.' }, { status: 403 });
+    }
+
+    const isLate = !!(practical.end_time && new Date() > new Date(practical.end_time));
 
     // Fetch student profile details
     const students = await sql`
@@ -98,13 +107,25 @@ export async function POST(request, { params }) {
     if (isCompileError) {
       const savedSub = await sql`
         INSERT INTO practical_submissions (
-          student_id, practical_id, code, language, status, raw_marks, normalized_marks
+          student_id, practical_id, code, language, status, raw_marks, normalized_marks, is_late
         )
         VALUES (
-          ${user.id}, ${practicalId}, ${code}, ${language}, 'Compile Error', 0, 0
+          ${user.id}, ${practicalId}, ${code}, ${language}, 'Compile Error', 0, 0, ${isLate}
         )
         RETURNING *
       `;
+      // Save final submission to disk
+      try {
+        const ext = language === 'python' ? 'py' : language === 'cpp' ? 'cpp' : language === 'java' ? 'java' : language === 'javascript' ? 'js' : 'txt';
+        const storageDir = path.join(process.cwd(), 'code-storage', `subject-${practical.course_id}`, `practical-${practicalId}`, `student-${user.id}`);
+        await fs.mkdir(storageDir, { recursive: true });
+        const timestamp = new Date().toISOString().replace(/:/g, '-');
+        const filename = `submission-${timestamp}.${ext}`;
+        await fs.writeFile(path.join(storageDir, filename), code, 'utf-8');
+      } catch (fsErr) {
+        console.error('Failed to write submission to disk:', fsErr);
+      }
+
       return NextResponse.json({
         success: false,
         status: 'compile_error',
@@ -123,15 +144,27 @@ export async function POST(request, { params }) {
     // Save submission
     const savedSub = await sql`
       INSERT INTO practical_submissions (
-        student_id, practical_id, code, language, status, raw_marks, normalized_marks, execution_time_ms
+        student_id, practical_id, code, language, status, raw_marks, normalized_marks, execution_time_ms, is_late
       )
       VALUES (
-        ${user.id}, ${practicalId}, ${code}, ${language}, ${overallStatus}, ${rawMarks}, ${normalizedMarks}, ${totalTime}
+        ${user.id}, ${practicalId}, ${code}, ${language}, ${overallStatus}, ${rawMarks}, ${normalizedMarks}, ${totalTime}, ${isLate}
       )
       RETURNING *
     `;
 
     const submissionId = savedSub[0].id;
+
+    // Save final submission to disk
+    try {
+      const ext = language === 'python' ? 'py' : language === 'cpp' ? 'cpp' : language === 'java' ? 'java' : language === 'javascript' ? 'js' : 'txt';
+      const storageDir = path.join(process.cwd(), 'code-storage', `subject-${practical.course_id}`, `practical-${practicalId}`, `student-${user.id}`);
+      await fs.mkdir(storageDir, { recursive: true });
+      const timestamp = new Date().toISOString().replace(/:/g, '-');
+      const filename = `submission-${timestamp}.${ext}`;
+      await fs.writeFile(path.join(storageDir, filename), code, 'utf-8');
+    } catch (fsErr) {
+      console.error('Failed to write submission to disk:', fsErr);
+    }
 
     // Save case by case details
     for (const sc of submissionCasesToInsert) {

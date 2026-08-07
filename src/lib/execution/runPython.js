@@ -293,21 +293,23 @@ export async function runPython({
       'utf-8'
     );
 
-    // ── 3. Docker execution command ───────────────────────────────────────
-    const volumePath    = sessionDir.replace(/\\/g, '/');
-    const containerName = `coderank_py_runner_${uuid.slice(0, 8)}`;
-
+    // ── 3. Execute via persistent daemon ─────────────────────────────────
+    const codeB64 = Buffer.from(code).toString('base64');
+    const runnerB64 = Buffer.from(runnerPyTemplate).toString('base64');
+    const testCasesB64 = Buffer.from(JSON.stringify({ entry: problem?.entry, testCases })).toString('base64');
+    
+    const workdir = `/app/exec_${uuid.slice(0, 8)}`;
+    
+    // Write files and run using docker exec
     const cmd = [
-      'docker run',
-      '--rm',
-      `--name ${containerName}`,
-      `--memory=${memoryMb}m`,
-      '--cpus=0.5',
-      '--network none',
-      `--volume "${volumePath}:/app"`,
-      '--workdir /app',
-      'coderank-python:latest',
+      'docker exec coderank-python-daemon',
+      'bash -c "',
+      `mkdir -p ${workdir} && cd ${workdir} && `,
+      `echo '${codeB64}' | base64 -d > solution.py && `,
+      `echo '${runnerB64}' | base64 -d > runner.py && `,
+      `echo '${testCasesB64}' | base64 -d > test_cases.json && `,
       'python runner.py',
+      '"'
     ].join(' ');
 
     // ── 4. Run execution with hard timeout ────────────────────────────────

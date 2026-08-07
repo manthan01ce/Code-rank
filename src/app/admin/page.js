@@ -2,20 +2,21 @@
 
 import { useState, useEffect } from 'react';
 import LoadingOverlay from '@/components/LoadingOverlay';
+import { useAdminAuth } from '@/hooks/useAdminAuth';
 
 export default function AdminDashboard() {
   const [stats, setStats] = useState({ faculty: 0, students: 0, courses: 0 });
   const [logs, setLogs] = useState([]);
   const [loading, setLoading] = useState(true);
 
+  const { token, isReady } = useAdminAuth();
+
   useEffect(() => {
-    fetchDashboardData();
-  }, []);
+    if (isReady) fetchDashboardData();
+  }, [isReady]);
 
   const fetchDashboardData = async () => {
     try {
-      const token = localStorage.getItem('token');
-      
       const [statsRes, logsRes] = await Promise.all([
         fetch('/api/stats', { headers: { 'Authorization': `Bearer ${token}` } }),
         fetch('/api/logs?limit=8', { headers: { 'Authorization': `Bearer ${token}` } })

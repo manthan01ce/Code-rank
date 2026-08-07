@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import LoadingOverlay from '@/components/LoadingOverlay';
+import { useAdminAuth } from '@/hooks/useAdminAuth';
 
 export default function CoursesManagement() {
   const [courses, setCourses] = useState([]);
@@ -17,14 +18,16 @@ export default function CoursesManagement() {
   const [newCourseName, setNewCourseName] = useState('');
   const [newCourseSem, setNewCourseSem] = useState('');
 
+  const { token: authToken, isReady } = useAdminAuth();
+
   useEffect(() => {
-    fetchCourses();
-  }, [search]);
+    if (isReady) fetchCourses();
+  }, [search, isReady]);
 
   const fetchCourses = async () => {
     setLoading(true);
     try {
-      const token = localStorage.getItem('token');
+      const token = authToken;
       const url = search ? `/api/courses?search=${search}` : '/api/courses';
       const res = await fetch(url, {
         headers: { 'Authorization': `Bearer ${token}` }

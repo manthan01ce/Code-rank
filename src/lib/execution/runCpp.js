@@ -141,22 +141,21 @@ export async function runCpp({ code, problem, testCases }) {
     const mainCpp = generateMainCpp(problem.id, problem.entry || { methodName: 'solution', className: 'Solution' }, testCases);
     await fs.writeFile(path.join(sessionDir, 'main.cpp'), mainCpp, 'utf-8');
 
-    // 3. Docker execution command
-    // We mount the volume, compile, and if compile succeeds, run the executable.
-    const volumePath = sessionDir.replace(/\\/g, '/');
-    const containerName = `coderank_cpp_runner_${uuid.slice(0, 8)}`;
-
+    // 3. Execute via persistent daemon
+    const codeB64 = Buffer.from(code).toString('base64');
+    const mainB64 = Buffer.from(mainCpp).toString('base64');
+    
+    const workdir = `/app/exec_${uuid.slice(0, 8)}`;
+    
+    // Write files and run using docker exec
     const cmd = [
-      'docker run',
-      '--rm',
-      `--name ${containerName}`,
-      `--memory=${memoryMb}m`,
-      '--cpus=0.5',
-      '--network none',
-      `--volume "${volumePath}:/app"`,
-      '--workdir /app',
-      'coderank-cpp:latest',
-      'bash -c "g++ -O2 main.cpp -o run_tests 2> compile_err.txt && ./run_tests || (echo \'\\nRUNTIME_ERROR:\' && cat compile_err.txt)"',
+      'docker exec coderank-cpp-daemon',
+      'bash -c "',
+      `mkdir -p ${workdir} && cd ${workdir} && `,
+      `echo '${codeB64}' | base64 -d > solution.cpp && `,
+      `echo '${mainB64}' | base64 -d > main.cpp && `,
+      `g++ -O2 main.cpp -o run_tests 2> compile_err.txt && ./run_tests || (echo \'\\nRUNTIME_ERROR:\' && cat compile_err.txt)`,
+      '"'
     ].join(' ');
 
     // 4. Run execution

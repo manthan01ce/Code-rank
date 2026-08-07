@@ -146,20 +146,18 @@ export async function runJava({ code, problem, testCases = [], timeoutMs = 10000
       const mainJava = generateMainJava(problem?.id, problem?.entry, testCases);
       await fs.writeFile(path.join(sessionDir, 'Main.java'), mainJava, 'utf-8');
 
-      const volumePath = sessionDir.replace(/\\/g, '/');
-      const containerName = `coderank_java_runner_${uuid.slice(0, 8)}`;
+      const codeB64 = Buffer.from(userCode).toString('base64');
+      const mainB64 = Buffer.from(mainJava).toString('base64');
+      const workdir = `/app/exec_${uuid.slice(0, 8)}`;
 
       const cmd = [
-        'docker run',
-        '--rm',
-        `--name ${containerName}`,
-        `--memory=${memoryMb}m`,
-        '--cpus=0.5',
-        '--network none',
-        `--volume "${volumePath}:/app"`,
-        '--workdir /app',
-        'coderank-java:latest',
-        'bash -c "javac Solution.java Main.java 2> compile_err.txt && java Main || (echo \'\\nRUNTIME_ERROR:\' && cat compile_err.txt)"'
+        'docker exec coderank-java-daemon',
+        'bash -c "',
+        `mkdir -p ${workdir} && cd ${workdir} && `,
+        `echo '${codeB64}' | base64 -d > Solution.java && `,
+        `echo '${mainB64}' | base64 -d > Main.java && `,
+        `javac Solution.java Main.java 2> compile_err.txt && java Main || (echo \'\\nRUNTIME_ERROR:\' && cat compile_err.txt)`,
+        '"'
       ].join(' ');
 
       try {

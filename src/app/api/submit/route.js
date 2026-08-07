@@ -1,7 +1,10 @@
 import { NextResponse } from 'next/server';
 import sql from '@/lib/db';
 import { getUserFromRequest } from '@/lib/auth';
-import { RUNNERS, ALLOWED_LANGUAGES } from '@/lib/execution/index';
+import { ALLOWED_LANGUAGES } from '@/lib/execution/index';
+import { runPython } from '@/lib/execution/runPython';
+import { runCpp } from '@/lib/execution/runCpp';
+const RUNNERS = { python: runPython, cpp: runCpp };
 import { STATIC_PROBLEMS } from '@/lib/problems';
 
 export async function POST(request) {

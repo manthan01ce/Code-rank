@@ -1,7 +1,7 @@
 'use client';
 
 import Editor from '@monaco-editor/react';
-import { useRef } from 'react';
+import { useRef, useEffect } from 'react';
 import { Code2, RotateCcw, Maximize2 } from 'lucide-react';
 import { LANGUAGES } from './LanguageConfig';
 
@@ -21,12 +21,14 @@ export default function MonacoEditorPanel({
   const langConfig = LANGUAGES[selectedLang];
   const onRunRef = useRef(onRun);
   const onSubmitRef = useRef(onSubmit);
+  const editorContainerRef = useRef(null);
 
   // Keep refs updated to avoid stale closures in Monaco actions
   onRunRef.current = onRun;
   onSubmitRef.current = onSubmit;
 
   function handleEditorDidMount(editor, monaco) {
+    // ── Run & Submit keyboard shortcuts ──
     editor.addAction({
       id: 'run-code',
       label: 'Run Code',
@@ -44,6 +46,39 @@ export default function MonacoEditorPanel({
         if (onSubmitRef.current) onSubmitRef.current();
       }
     });
+
+    // ── Copy-Paste restrictions ──
+    // Block Ctrl+V / Cmd+V inside Monaco
+    editor.addCommand(monaco.KeyMod.CtrlCmd | monaco.KeyCode.KeyV, () => {
+      // no-op: paste is disabled
+    });
+
+    // Block Ctrl+C / Cmd+C (optional — prevents copying out as well)
+    editor.addCommand(monaco.KeyMod.CtrlCmd | monaco.KeyCode.KeyC, () => {
+      // no-op: copy is disabled
+    });
+    
+    // Block Ctrl+X / Cmd+X
+    editor.addCommand(monaco.KeyMod.CtrlCmd | monaco.KeyCode.KeyX, () => {
+      // no-op: cut is disabled
+    });
+
+    // Block browser-level paste, copy, and cut events on the editor DOM element
+    const domNode = editor.getDomNode();
+    if (domNode) {
+      domNode.addEventListener('paste', (e) => {
+        e.preventDefault();
+        e.stopPropagation();
+      }, true);
+      domNode.addEventListener('copy', (e) => {
+        e.preventDefault();
+        e.stopPropagation();
+      }, true);
+      domNode.addEventListener('cut', (e) => {
+        e.preventDefault();
+        e.stopPropagation();
+      }, true);
+    }
   }
 
   function handleReset() {
@@ -162,10 +197,11 @@ export default function MonacoEditorPanel({
             smoothScrolling: true,
             cursorBlinking: 'smooth',
             cursorSmoothCaretAnimation: 'on',
-            formatOnPaste: true,
+            formatOnPaste: false,
             readOnly: isRunning,
             wordWrap: 'on',
             automaticLayout: true,
+            contextmenu: false,
             scrollbar: {
               vertical: 'auto',
               horizontal: 'auto',

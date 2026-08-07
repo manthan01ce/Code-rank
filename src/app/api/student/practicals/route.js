@@ -17,6 +17,9 @@ export async function GET(request) {
       return NextResponse.json({ error: 'Student profile not found' }, { status: 404 });
     }
 
+    const { searchParams } = new URL(request.url);
+    const courseId = searchParams.get('course_id');
+
     const extra = students[0].extra_info || {};
     const batch = extra.batch || '';
     const semester = parseInt(extra.semester) || 0;
@@ -26,10 +29,10 @@ export async function GET(request) {
     }
 
     // Fetch practicals where practical batch matches and course semester matches student semester
-    const practicals = await sql`
+    let query = sql`
       SELECT p.id, p.title, p.description, p.instructions, p.total_marks, p.difficulty, 
              p.is_challenge, p.input_format, p.output_format, p.constraints, 
-             p.sample_input, p.sample_output, p.starter_code,
+             p.sample_input, p.sample_output, p.starter_code, p.start_time, p.end_time,
              c.name as course_name, c.course_code, u.name as faculty_name,
              s.status as my_status, s.normalized_marks as my_marks, s.submitted_at as my_submitted_at
       FROM practicals p
@@ -45,8 +48,15 @@ export async function GET(request) {
       WHERE (p.batch_id = ${batch} OR p.batch_id = 'All')
         AND c.semester = ${semester}
         AND p.status = 'active'
-      ORDER BY p.created_at DESC
     `;
+
+    if (courseId) {
+      query = sql`${query} AND p.course_id = ${parseInt(courseId)}`;
+    }
+
+    query = sql`${query} ORDER BY p.created_at DESC`;
+
+    const practicals = await query;
 
     return NextResponse.json(practicals);
   } catch (error) {

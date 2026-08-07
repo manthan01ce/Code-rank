@@ -4,22 +4,10 @@
  * Routes { language, code, input } to the correct runner function.
  */
 
-import { runPython }     from './runPython.js';
-import { runCpp }        from './runCpp.js';
-import { runC }          from './runC.js';
-import { runJava }       from './runJava.js';
-import { runJavaScript } from './runJavaScript.js';
+import { Executor } from './Executor.js';
 
 /** Set of language keys accepted by /api/execute */
 export const ALLOWED_LANGUAGES = new Set(['python', 'cpp', 'c', 'java', 'javascript']);
-
-export const RUNNERS = {
-  python:     runPython,
-  cpp:        runCpp,
-  c:          runC,
-  java:       runJava,
-  javascript: runJavaScript,
-};
 
 /**
  * Route execution to the correct language runner.
@@ -39,5 +27,24 @@ export async function executeCode(language, code, input = '') {
     };
   }
 
-  return RUNNERS[language]({ code });
+  const executor = new Executor(language, code);
+  const compileRes = await executor.compile();
+
+  if (!compileRes.success) {
+    return {
+      success: false,
+      stdout: '',
+      stderr: compileRes.error,
+      exitCode: 1
+    };
+  }
+
+  const res = await executor.runOneTestCase(input, '', 'playground', 0);
+
+  return {
+    success: !res.errorMessage,
+    stdout: res.actualOutput,
+    stderr: res.errorMessage,
+    exitCode: res.errorMessage ? 1 : 0
+  };
 }

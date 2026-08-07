@@ -1,5 +1,5 @@
 import sql from '@/lib/db';
-import { runStdinStdout } from './runStdinStdout';
+import { Executor } from './Executor';
 
 export async function runDynamicPractical({ language, code, dbId, userId, isSubmit = false }) {
   try {
@@ -49,52 +49,11 @@ export async function runDynamicPractical({ language, code, dbId, userId, isSubm
     const casesReport = [];
     const submissionCasesToInsert = [];
 
-    // 3. Execute each case
-    for (let i = 0; i < testCases.length; i++) {
-      const tc = testCases[i];
-      const result = await runStdinStdout({
-        language: language.toLowerCase(),
-        code,
-        input: tc.input
-      });
+    // 3. Compile code once using Executor
+    const executor = new Executor(language.toLowerCase(), code);
+    const compileResult = await executor.compile();
 
-      if (result.status === 'compile_error') {
-        isCompileError = true;
-        compileErrorData = result.compileError;
-        break;
-      }
-
-      const trimmedActual = (result.stdout || '').trim();
-      const trimmedExpected = (tc.expected || '').trim();
-      const passed = result.success && (trimmedActual === trimmedExpected);
-      const marksAwarded = passed ? parseFloat(tc.marks) : 0;
-      rawMarks += marksAwarded;
-      totalTime += result.runtimeMs || 0;
-
-      const caseStatus = passed ? 'passed' : 'wrong_answer';
-
-      casesReport.push({
-        index: i + 1,
-        status: caseStatus,
-        input: { args: [tc.input], kwargs: {} },
-        expected: tc.expected,
-        actual: result.stdout || '',
-        stdout: result.stdout || '',
-        stderr: result.stderr || '',
-        runtimeMs: Math.round((result.runtimeMs || 0) * 100) / 100
-      });
-
-      submissionCasesToInsert.push({
-        test_case_id: tc.id,
-        passed,
-        marks_awarded: marksAwarded,
-        actual_output: result.stdout || '',
-        error_message: result.stderr || (result.success ? '' : result.status || 'Execution failed'),
-        execution_time_ms: result.runtimeMs || 0
-      });
-    }
-
-    if (isCompileError) {
+    if (!compileResult.success) {
       if (isSubmit && userId) {
         await sql`
           INSERT INTO practical_submissions (
@@ -109,10 +68,43 @@ export async function runDynamicPractical({ language, code, dbId, userId, isSubm
         status: 'compile_error',
         summary: 'Compile Error',
         exitCode: 1,
-        compileError: compileErrorData || 'Compilation failed',
+        compileError: compileResult.error || 'Compilation failed',
         runtimeError: null,
         cases: []
       };
+    }
+
+    // 4. Run all test cases in batch
+    const results = await executor.runBatch(testCases);
+
+    for (let i = 0; i < results.length; i++) {
+      const tc = testCases[i];
+      const result = results[i];
+
+      rawMarks += result.marksAwarded;
+      totalTime += result.runtimeMs || 0;
+
+      const caseStatus = result.passed ? 'passed' : 'wrong_answer';
+
+      casesReport.push({
+        index: i + 1,
+        status: caseStatus,
+        input: { args: [tc.input], kwargs: {} },
+        expected: tc.expected,
+        actual: result.actualOutput,
+        stdout: result.actualOutput,
+        stderr: result.errorMessage,
+        runtimeMs: Math.round((result.runtimeMs || 0) * 100) / 100
+      });
+
+      submissionCasesToInsert.push({
+        test_case_id: tc.id,
+        passed: result.passed,
+        marks_awarded: result.marksAwarded,
+        actual_output: result.actualOutput,
+        error_message: result.errorMessage,
+        execution_time_ms: result.runtimeMs || 0
+      });
     }
 
     const totalPracticalMarks = parseFloat(practical.total_marks) || 1;
@@ -141,6 +133,26 @@ export async function runDynamicPractical({ language, code, dbId, userId, isSubm
             ${submissionId}, ${sc.test_case_id}, ${sc.passed}, ${sc.marks_awarded}, ${sc.actual_output}, ${sc.error_message}, ${sc.execution_time_ms}
           )
         `;
+      }
+    }
+
+    // ── Emit real-time Socket.IO event to the faculty room ──
+    if (isSubmit && userId && global.io) {
+      try {
+        const userRes = await sql`SELECT name, email FROM users WHERE id = ${userId}`;
+        const studentName = userRes.length > 0 ? userRes[0].name : 'Unknown Student';
+
+        global.io.to(`practical_${dbId}`).emit('new_submission', {
+          id: savedSub[0].id,
+          student_name: studentName,
+          status: overallStatus,
+          raw_marks: rawMarks,
+          normalized_marks: normalizedMarks,
+          language,
+          submitted_at: new Date().toISOString()
+        });
+      } catch (err) {
+        console.error('Failed to emit socket event:', err);
       }
     }
 

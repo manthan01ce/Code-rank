@@ -2,12 +2,14 @@
 
 import { useRouter, usePathname } from 'next/navigation';
 import { useEffect, useState } from 'react';
+import ChangePasswordModal from './ChangePasswordModal';
 
 export default function AdminSidebar() {
   const router = useRouter();
   const pathname = usePathname();
   const [user, setUser] = useState(null);
   const [showProfileMenu, setShowProfileMenu] = useState(false);
+  const [isChangePasswordOpen, setIsChangePasswordOpen] = useState(false);
 
   useEffect(() => {
     const userData = localStorage.getItem('user');
@@ -171,6 +173,28 @@ export default function AdminSidebar() {
                   👤 Profile
                 </button>
 
+                <button
+                  onClick={() => {
+                    setIsChangePasswordOpen(true);
+                    setShowProfileMenu(false);
+                  }}
+                  style={{
+                    width: '100%',
+                    padding: '12px 16px',
+                    border: 'none',
+                    background: 'none',
+                    textAlign: 'left',
+                    cursor: 'pointer',
+                    fontSize: '14px',
+                    color: '#1e293b',
+                    transition: 'background-color 0.2s'
+                  }}
+                  onMouseEnter={(e) => e.target.style.backgroundColor = '#f0f0f0'}
+                  onMouseLeave={(e) => e.target.style.backgroundColor = 'transparent'}
+                >
+                  🔑 Change Password
+                </button>
+
                 <div style={{ height: '1px', backgroundColor: 'var(--border-color)', margin: '8px 0' }} />
 
                 <button
@@ -241,6 +265,7 @@ export default function AdminSidebar() {
           </li>
         </ul>
       </div>
+      <ChangePasswordModal isOpen={isChangePasswordOpen} onClose={() => setIsChangePasswordOpen(false)} />
     </>
   );
 }

@@ -184,19 +184,21 @@ if (typeof Solution !== 'undefined') module.exports.Solution = Solution;
       };
       await fs.writeFile(path.join(sessionDir, 'test_cases.json'), JSON.stringify(casesPayload, null, 2), 'utf-8');
 
-      const volumePath = sessionDir.replace(/\\/g, '/');
-      const containerName = `coderank_js_runner_${uuid.slice(0, 8)}`;
+      const codeB64 = Buffer.from(modifiedCode).toString('base64');
+      const runnerB64 = Buffer.from(runnerJsTemplate).toString('base64');
+      const testCasesB64 = Buffer.from(JSON.stringify(casesPayload, null, 2)).toString('base64');
+      
+      const workdir = `/app/exec_${uuid.slice(0, 8)}`;
+      
       const cmd = [
-        'docker run',
-        '--rm',
-        `--name ${containerName}`,
-        `--memory=${memoryMb}m`,
-        '--cpus=0.5',
-        '--network none',
-        `--volume "${volumePath}:/app"`,
-        '--workdir /app',
-        'coderank-javascript:latest',
-        'node runner.js'
+        'docker exec coderank-javascript-daemon',
+        'bash -c "',
+        `mkdir -p ${workdir} && cd ${workdir} && `,
+        `echo '${codeB64}' | base64 -d > solution.js && `,
+        `echo '${runnerB64}' | base64 -d > runner.js && `,
+        `echo '${testCasesB64}' | base64 -d > test_cases.json && `,
+        'node runner.js',
+        '"'
       ].join(' ');
 
       try {

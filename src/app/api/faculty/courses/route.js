@@ -10,7 +10,7 @@ export async function GET(request) {
     }
 
     const courses = await sql`
-      SELECT c.id, c.course_code, c.name, c.semester 
+      SELECT c.id, c.course_code, c.name, c.semester, cf.is_co_coordinator 
       FROM course_faculty cf 
       JOIN courses c ON cf.course_id = c.id 
       WHERE cf.faculty_id = ${user.id}

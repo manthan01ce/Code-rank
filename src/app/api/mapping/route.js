@@ -11,7 +11,7 @@ export async function GET(request) {
 
     // Fetch all mappings
     const mappings = await sql`
-      SELECT cf.course_id, cf.faculty_id, u.name as faculty_name, u.email as faculty_email, u.first_name, u.last_name
+      SELECT cf.course_id, cf.faculty_id, cf.is_co_coordinator, u.name as faculty_name, u.email as faculty_email, u.first_name, u.last_name
       FROM course_faculty cf
       JOIN users u ON cf.faculty_id = u.id
     `;
@@ -23,7 +23,8 @@ export async function GET(request) {
       grouped[m.course_id].push({
         id: m.faculty_id,
         name: m.faculty_name || `${m.first_name} ${m.last_name}`,
-        email: m.faculty_email
+        email: m.faculty_email,
+        is_co_coordinator: !!m.is_co_coordinator
       });
     });
 
@@ -41,7 +42,7 @@ export async function POST(request) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
-    const { course_id, faculty_ids } = await request.json();
+    const { course_id, faculty_ids, co_coordinator_id } = await request.json();
 
     if (!course_id || !Array.isArray(faculty_ids)) {
       return NextResponse.json({ error: 'Invalid data' }, { status: 400 });
@@ -51,20 +52,22 @@ export async function POST(request) {
       return NextResponse.json({ error: 'At most 4 faculties can be mapped to a course.' }, { status: 400 });
     }
 
-    // Use a transaction if possible, but for Neon serverless a simple sequence of queries is ok if we are careful,
-    // or we can use the transaction API if available. Since it's neon, we can do multiple queries or a single plpgsql block.
-    // Let's just do sequential since the traffic for admin is low.
+    let coId = parseInt(co_coordinator_id);
+    if ((isNaN(coId) || !faculty_ids.includes(coId)) && faculty_ids.length > 0) {
+      coId = faculty_ids[0];
+    }
     
     await sql`DELETE FROM course_faculty WHERE course_id = ${course_id}`;
     
     for (const fid of faculty_ids) {
+      const isCo = fid === coId;
       await sql`
-        INSERT INTO course_faculty (course_id, faculty_id)
-        VALUES (${course_id}, ${fid})
+        INSERT INTO course_faculty (course_id, faculty_id, is_co_coordinator)
+        VALUES (${course_id}, ${fid}, ${isCo})
       `;
     }
 
-    await sql`INSERT INTO activity_logs (user_id, action, details) VALUES (${user.id}, 'UPDATE_MAPPING', ${`Updated mapping for course ${course_id}`})`;
+    await sql`INSERT INTO activity_logs (user_id, action, details) VALUES (${user.id}, 'UPDATE_MAPPING', ${`Updated mapping for course ${course_id}, co-coordinator ${coId}`})`;
 
     return NextResponse.json({ success: true });
   } catch (error) {

@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import LoadingOverlay from '@/components/LoadingOverlay';
+import { useAdminAuth } from '@/hooks/useAdminAuth';
 
 export default function DepartmentMaster() {
   const [departments, setDepartments] = useState([]);
@@ -15,7 +16,8 @@ export default function DepartmentMaster() {
 
   const [form, setForm] = useState({ name: '', institute_name: '' });
 
-  const token = () => localStorage.getItem('token');
+  const { token: authToken, isReady } = useAdminAuth();
+  const token = () => authToken;
 
   const showToast = (type, msg) => {
     setToast({ type, msg });
@@ -42,7 +44,7 @@ export default function DepartmentMaster() {
     }
   };
 
-  useEffect(() => { fetchDepartments(); }, [search]);
+  useEffect(() => { if (isReady) fetchDepartments(); }, [search, isReady]);
 
   const openAdd = () => {
     setEditTarget(null);

@@ -70,10 +70,11 @@ export async function POST(request) {
  */
 export async function GET() {
   const IMAGES = [
-    { image: 'python:3.12-slim',    lang: 'python'     },
-    { image: 'gcc:13',              lang: 'cpp'        },
-    { image: 'eclipse-temurin:21-jdk', lang: 'java'       },
-    { image: 'node:20-slim',        lang: 'javascript' },
+    { image: 'coderank-python:latest',    lang: 'python'     },
+    { image: 'coderank-cpp:latest',       lang: 'cpp'        },
+    { image: 'coderank-c:latest',         lang: 'c'          },
+    { image: 'coderank-java:latest',      lang: 'java'       },
+    { image: 'coderank-javascript:latest',lang: 'javascript' },
   ];
 
   try {

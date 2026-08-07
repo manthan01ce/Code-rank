@@ -48,7 +48,13 @@ export async function GET(request, { params }) {
 
     // Filter by status
     if (status && status !== 'all') {
-      query = sql`${query} AND s.status = ${status}`;
+      if (status === 'in-time') {
+        query = sql`${query} AND s.is_late = false`;
+      } else if (status === 'late') {
+        query = sql`${query} AND s.is_late = true`;
+      } else {
+        query = sql`${query} AND s.status = ${status}`;
+      }
     }
 
     // Filter by date range

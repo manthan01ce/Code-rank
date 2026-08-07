@@ -3,12 +3,16 @@
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import Editor from '@monaco-editor/react';
+import ChangePasswordModal from '@/components/ChangePasswordModal';
 
 export default function StudentPracticals() {
   const router = useRouter();
   const [user, setUser] = useState(null);
+  const [courses, setCourses] = useState([]);
+  const [selectedCourse, setSelectedCourse] = useState('');
   const [practicals, setPracticals] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [isChangePasswordOpen, setIsChangePasswordOpen] = useState(false);
 
   // Solving mode states
   const [activePractical, setActivePractical] = useState(null);
@@ -20,6 +24,7 @@ export default function StudentPracticals() {
 
   // Execution states
   const [executing, setExecuting] = useState(false);
+  const [saving, setSaving] = useState(false);
   const [execResult, setExecResult] = useState(null);
   const [execError, setExecError] = useState(null);
 
@@ -28,17 +33,71 @@ export default function StudentPracticals() {
   useEffect(() => {
     const userData = localStorage.getItem('user');
     if (userData) {
-      setUser(JSON.parse(userData));
-      fetchPracticals();
+      const parsed = JSON.parse(userData);
+      setUser(parsed);
+      const sem = parsed.extra_info?.semester;
+      if (sem) {
+        fetchStudentCourses(sem);
+      }
     } else {
       router.push('/');
     }
   }, []);
 
+  useEffect(() => {
+    const handleCopyCutPaste = (e) => {
+      e.preventDefault();
+      alert('Copying, cutting, or pasting code is disabled on this dashboard.');
+    };
+
+    const handleKeyDown = (e) => {
+      if (e.key === 'PrintScreen') {
+        navigator.clipboard.writeText('');
+        alert('Screenshots are discouraged on this platform.');
+      }
+      if ((e.ctrlKey || e.metaKey) && ['c', 'v', 'x'].includes(e.key.toLowerCase())) {
+        e.preventDefault();
+        alert('Copy, cut, and paste shortcuts are disabled.');
+      }
+    };
+
+    document.addEventListener('copy', handleCopyCutPaste);
+    document.addEventListener('cut', handleCopyCutPaste);
+    document.addEventListener('paste', handleCopyCutPaste);
+    document.addEventListener('keydown', handleKeyDown);
+
+    return () => {
+      document.removeEventListener('copy', handleCopyCutPaste);
+      document.removeEventListener('cut', handleCopyCutPaste);
+      document.removeEventListener('paste', handleCopyCutPaste);
+      document.removeEventListener('keydown', handleKeyDown);
+    };
+  }, []);
+
+  const fetchStudentCourses = async (sem) => {
+    try {
+      const res = await fetch(`/api/courses?semester=${sem}`, {
+        headers: { Authorization: `Bearer ${token()}` }
+      });
+      if (res.ok) {
+        setCourses(await res.json());
+      }
+    } catch (e) {
+      console.error('Error fetching courses:', e);
+    }
+  };
+
+  useEffect(() => {
+    if (selectedCourse) {
+      fetchPracticals();
+    }
+  }, [selectedCourse]);
+
   const fetchPracticals = async () => {
+    if (!selectedCourse) return;
     setLoading(true);
     try {
-      const res = await fetch('/api/student/practicals', {
+      const res = await fetch(`/api/student/practicals?course_id=${selectedCourse}`, {
         headers: { Authorization: `Bearer ${token()}` }
       });
       if (res.ok) {
@@ -51,7 +110,10 @@ export default function StudentPracticals() {
     }
   };
 
-  const getBoilerplate = (lang) => {
+  const getBoilerplate = (lang, p = activePractical) => {
+    if (p && p.starter_code && p.starter_code[lang]) {
+      return p.starter_code[lang];
+    }
     if (lang === 'python') {
       return `import sys
 
@@ -75,10 +137,31 @@ int main() {
     }
   };
 
-  const handleStartSolve = (p) => {
+  const handleStartSolve = async (p) => {
     setActivePractical(p);
-    setLanguage('python');
-    setCode(getBoilerplate('python'));
+    const allowed = p.starter_code?.allowed_languages || ['python', 'cpp'];
+    const defaultLang = allowed.includes('python') ? 'python' : (allowed[0] || 'python');
+    setLanguage(defaultLang);
+    
+    // Load from database if exists
+    try {
+      const res = await fetch(`/api/student/workspaces/load?practical_id=${p.id}&language=${defaultLang}`, {
+        headers: { Authorization: `Bearer ${token()}` }
+      });
+      if (res.ok) {
+        const data = await res.json();
+        if (data.latest_code) {
+          setCode(data.latest_code);
+        } else {
+          setCode(getBoilerplate(defaultLang, p));
+        }
+      } else {
+        setCode(getBoilerplate(defaultLang, p));
+      }
+    } catch {
+      setCode(getBoilerplate(defaultLang, p));
+    }
+
     setExecResult(null);
     setExecError(null);
     setViewingHistorySub(null);
@@ -102,11 +185,59 @@ int main() {
     }
   };
 
-  const handleLanguageChange = (lang) => {
+  const handleLanguageChange = async (lang) => {
     setLanguage(lang);
     if (activePractical) {
-      setCode(getBoilerplate(lang));
+      try {
+        const res = await fetch(`/api/student/workspaces/load?practical_id=${activePractical.id}&language=${lang}`, {
+          headers: { Authorization: `Bearer ${token()}` }
+        });
+        if (res.ok) {
+          const data = await res.json();
+          if (data.latest_code) {
+            setCode(data.latest_code);
+            return;
+          }
+        }
+      } catch (e) {
+        console.error(e);
+      }
+      setCode(getBoilerplate(lang, activePractical));
     }
+  };
+
+  const handleSaveWorkspace = async () => {
+    if (!activePractical || saving) return;
+    setSaving(true);
+    try {
+      const res = await fetch('/api/student/workspaces/save', {
+        method: 'POST',
+        headers: {
+          Authorization: `Bearer ${token()}`,
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+          practical_id: activePractical.id,
+          language,
+          code
+        })
+      });
+      if (res.ok) {
+        alert('Draft code saved to server successfully.');
+      } else {
+        alert('Failed to save draft code.');
+      }
+    } catch (e) {
+      alert('Network error saving code draft.');
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  const handleLogout = () => {
+    localStorage.removeItem('token');
+    localStorage.removeItem('user');
+    router.push('/');
   };
 
   const handleCodeReset = () => {
@@ -201,6 +332,14 @@ int main() {
             </button>
 
             <button
+              onClick={handleSaveWorkspace}
+              disabled={saving}
+              style={{ padding: '8px 20px', borderRadius: '6px', border: '1px solid #10b981', backgroundColor: '#10b981', color: 'white', cursor: 'pointer', fontWeight: 700, fontSize: '13px' }}
+            >
+              {saving ? 'Saving...' : '💾 Save Draft'}
+            </button>
+
+            <button
               onClick={handleRunSubmit}
               disabled={executing}
               style={{ padding: '8px 24px', borderRadius: '6px', border: 'none', backgroundColor: '#4f46e5', color: 'white', cursor: 'pointer', fontWeight: 700, fontSize: '13px' }}
@@ -263,6 +402,7 @@ int main() {
                     >
                       <div style={{ fontSize: '12px' }}>
                         <span style={{ fontWeight: 700, color: sub.status === 'Accepted' ? '#10b981' : '#ef4444' }}>{sub.status}</span>
+                        {sub.is_late && <span style={{ color: '#ef4444', fontWeight: 'bold', marginLeft: '8px', fontSize: '10px' }}>(LATE)</span>}
                         <span style={{ color: '#94a3b8', marginLeft: '10px' }}>{new Date(sub.submitted_at).toLocaleString()}</span>
                       </div>
                       <div style={{ fontSize: '12px', fontWeight: 700 }}>
@@ -359,13 +499,112 @@ int main() {
     );
   }
 
+  const renderStudentHeader = () => {
+    return (
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', backgroundColor: 'white', padding: '12px 24px', borderBottom: '1px solid var(--border-color)', marginBottom: '20px', borderRadius: '10px', boxShadow: '0 4px 6px -1px rgba(0,0,0,0.05)', color: '#1e293b' }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '15px' }}>
+          <div style={{ width: '40px', height: '40px', borderRadius: '50%', backgroundColor: '#4F46E5', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'white', fontWeight: 'bold' }}>
+            {user?.name?.charAt(0).toUpperCase() || 'S'}
+          </div>
+          <div>
+            <h3 style={{ margin: 0, fontSize: '15px', fontWeight: 600 }}>{user?.name}</h3>
+            <span style={{ fontSize: '12px', color: '#64748b' }}>Semester {user?.extra_info?.semester || 'N/A'} • Student Workspace</span>
+          </div>
+        </div>
+        <div style={{ display: 'flex', gap: '12px' }}>
+          <button 
+            onClick={() => setIsChangePasswordOpen(true)} 
+            style={{ padding: '8px 16px', borderRadius: '8px', border: '1px solid var(--border-color)', backgroundColor: 'white', cursor: 'pointer', fontWeight: 600, fontSize: '13px', color: '#475569' }}
+          >
+            🔑 Change Password
+          </button>
+          <button 
+            onClick={handleLogout} 
+            style={{ padding: '8px 16px', borderRadius: '8px', border: 'none', backgroundColor: '#ef4444', color: 'white', cursor: 'pointer', fontWeight: 600, fontSize: '13px' }}
+          >
+            🚪 Sign Out
+          </button>
+        </div>
+      </div>
+    );
+  };
+
+  // Render list of active subjects if no subject is selected
+  if (!selectedCourse) {
+    return (
+      <div style={{ padding: '20px', fontFamily: 'Inter, sans-serif' }}>
+        {renderStudentHeader()}
+        <div style={{ marginTop: '10px' }}>
+          <h2 style={{ fontSize: '22px', fontWeight: 700, marginBottom: '8px' }}>Select Course / Subject</h2>
+          <p style={{ color: 'var(--text-muted)', fontSize: '14px', marginBottom: '25px' }}>Select an assigned course to view its active coding practicals and workspace.</p>
+        </div>
+
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(280px, 1fr))', gap: '20px' }}>
+          {courses.map(c => (
+            <div 
+              key={c.id} 
+              onClick={() => setSelectedCourse(c.id.toString())}
+              style={{
+                background: 'white', border: '1px solid var(--border-color)', borderRadius: '12px', padding: '24px',
+                cursor: 'pointer', transition: 'transform 0.2s, box-shadow 0.2s',
+                boxShadow: '0 4px 6px -1px rgba(0,0,0,0.05)',
+                display: 'flex', flexDirection: 'column', justifyContent: 'space-between', height: '160px'
+              }}
+              onMouseEnter={(e) => {
+                e.currentTarget.style.transform = 'translateY(-4px)';
+                e.currentTarget.style.boxShadow = '0 10px 15px -3px rgba(0, 0, 0, 0.1)';
+                e.currentTarget.style.borderColor = 'var(--primary)';
+              }}
+              onMouseLeave={(e) => {
+                e.currentTarget.style.transform = 'translateY(0)';
+                e.currentTarget.style.boxShadow = '0 4px 6px -1px rgba(0,0,0,0.05)';
+                e.currentTarget.style.borderColor = 'var(--border-color)';
+              }}
+            >
+              <div>
+                <span style={{ fontSize: '11px', fontWeight: 700, color: 'var(--primary)', textTransform: 'uppercase', tracking: 'wide' }}>{c.course_code}</span>
+                <h3 style={{ fontSize: '17px', fontWeight: 600, marginTop: '8px', color: '#1e293b' }}>{c.name}</h3>
+              </div>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', fontSize: '12.5px', color: '#64748b' }}>
+                <span>Semester {c.semester}</span>
+                <span style={{ fontWeight: 600, color: 'var(--primary)' }}>Open Workspace &rarr;</span>
+              </div>
+            </div>
+          ))}
+          {courses.length === 0 && (
+            <div style={{ gridColumn: '1/-1', textAlign: 'center', padding: '40px', color: 'var(--text-muted)' }}>
+              No subjects mapped to your semester currently.
+            </div>
+          )}
+        </div>
+      </div>
+    );
+  }
+
+  const activeCourse = courses.find(c => c.id.toString() === selectedCourse);
+
   // Render list of active practicals
   return (
     <div style={{ padding: '20px', fontFamily: 'Inter, sans-serif' }}>
-      <div className="header" style={{ marginBottom: '20px' }}>
+      {renderStudentHeader()}
+      <div className="header" style={{ marginBottom: '25px', marginTop: '15px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
         <div>
-          <h2 style={{ fontSize: '22px', fontWeight: 700 }}>Assigned Coding Practicals</h2>
-          <p style={{ color: 'var(--text-muted)', fontSize: '13px' }}>Solve your coding assignments and view marks feedback.</p>
+          <span style={{ fontSize: '12px', fontWeight: 700, color: 'var(--primary)', textTransform: 'uppercase' }}>
+            {activeCourse?.course_code}
+          </span>
+          <h2 style={{ fontSize: '22px', fontWeight: 700, marginTop: '4px' }}>{activeCourse?.name}</h2>
+          <p style={{ color: 'var(--text-muted)', fontSize: '13px', marginTop: '2px' }}>Solve your coding assignments and view marks feedback.</p>
+        </div>
+        <div>
+          <button 
+            onClick={() => setSelectedCourse('')}
+            style={{
+              padding: '8px 16px', borderRadius: '8px', border: '1px solid var(--border-color)',
+              backgroundColor: 'white', cursor: 'pointer', fontWeight: 600, fontSize: '13px'
+            }}
+          >
+            🔄 Switch Subject
+          </button>
         </div>
       </div>
 
@@ -377,7 +616,7 @@ int main() {
             <thead>
               <tr>
                 <th>Practical Title</th>
-                <th>Course</th>
+                <th>Global Window (Start / End)</th>
                 <th>Difficulty</th>
                 <th>Type</th>
                 <th>Grading Score</th>
@@ -386,42 +625,74 @@ int main() {
               </tr>
             </thead>
             <tbody>
-              {practicals.map(p => (
-                <tr key={p.id}>
-                  <td style={{ fontWeight: 600, color: 'var(--primary)' }}>{p.title}</td>
-                  <td>{p.course_code} - {p.course_name}</td>
-                  <td>
-                    <span style={{
-                      padding: '4px 10px', borderRadius: '12px', fontSize: '11px', fontWeight: 600,
-                      backgroundColor: p.difficulty === 'Easy' ? '#ecfdf5' : p.difficulty === 'Medium' ? '#fef3c7' : '#fef2f2',
-                      color: p.difficulty === 'Easy' ? '#10b981' : p.difficulty === 'Medium' ? '#f59e0b' : '#ef4444'
-                    }}>
-                      {p.difficulty}
-                    </span>
-                  </td>
-                  <td>{p.is_challenge ? '🏆 Challenge' : '📘 Standard'}</td>
-                  <td style={{ fontWeight: 700, color: 'var(--primary)' }}>
-                    {p.my_marks !== null ? `${p.my_marks} / 10` : '—'}
-                  </td>
-                  <td>
-                    <span style={{
-                      padding: '4px 10px', borderRadius: '12px', fontSize: '11px', fontWeight: 600,
-                      backgroundColor: p.my_status === 'Accepted' ? '#ecfdf5' : p.my_status ? '#fef2f2' : '#f1f5f9',
-                      color: p.my_status === 'Accepted' ? '#10b981' : p.my_status ? '#ef4444' : '#64748b'
-                    }}>
-                      {p.my_status || 'Unattempted'}
-                    </span>
-                  </td>
-                  <td>
-                    <button
-                      onClick={() => handleStartSolve(p)}
-                      style={{ padding: '8px 16px', borderRadius: '6px', border: 'none', backgroundColor: '#4f46e5', color: 'white', cursor: 'pointer', fontWeight: 700, fontSize: '12px' }}
-                    >
-                      {p.my_status ? '🔄 Re-solve' : '🚀 Start Solve'}
-                    </button>
-                  </td>
-                </tr>
-              ))}
+              {practicals.map(p => {
+                const now = new Date();
+                const startTime = p.start_time ? new Date(p.start_time) : null;
+                const endTime = p.end_time ? new Date(p.end_time) : null;
+                
+                const notStartedYet = startTime && now < startTime;
+                const isLateSubmit = endTime && now > endTime;
+
+                return (
+                  <tr key={p.id}>
+                    <td style={{ fontWeight: 600, color: 'var(--primary)' }}>{p.title}</td>
+                    <td>
+                      <div style={{ fontSize: '12px', color: '#475569' }}>
+                        <div><strong>Start:</strong> {startTime ? startTime.toLocaleString() : 'Open'}</div>
+                        <div style={{ marginTop: '2px' }}><strong>End:</strong> {endTime ? endTime.toLocaleString() : 'Open'}</div>
+                      </div>
+                    </td>
+                    <td>
+                      <span style={{
+                        padding: '4px 10px', borderRadius: '12px', fontSize: '11px', fontWeight: 600,
+                        backgroundColor: p.difficulty === 'Easy' ? '#ecfdf5' : p.difficulty === 'Medium' ? '#fef3c7' : '#fef2f2',
+                        color: p.difficulty === 'Easy' ? '#10b981' : p.difficulty === 'Medium' ? '#f59e0b' : '#ef4444'
+                      }}>
+                        {p.difficulty}
+                      </span>
+                    </td>
+                    <td>{p.is_challenge ? '🏆 Challenge' : '📘 Standard'}</td>
+                    <td style={{ fontWeight: 700, color: 'var(--primary)' }}>
+                      {p.my_marks !== null ? `${p.my_marks} / 10` : '—'}
+                    </td>
+                    <td>
+                      <div style={{ display: 'flex', flexDirection: 'column', gap: '4px', alignItems: 'flex-start' }}>
+                        <span style={{
+                          padding: '4px 10px', borderRadius: '12px', fontSize: '11px', fontWeight: 600,
+                          backgroundColor: p.my_status === 'Accepted' ? '#ecfdf5' : p.my_status ? '#fef2f2' : '#f1f5f9',
+                          color: p.my_status === 'Accepted' ? '#10b981' : p.my_status ? '#ef4444' : '#64748b'
+                        }}>
+                          {p.my_status || 'Unattempted'}
+                        </span>
+                        {p.my_submitted_at && endTime && new Date(p.my_submitted_at) > endTime && (
+                          <span style={{ fontSize: '10px', color: '#ef4444', fontWeight: 'bold' }}>
+                            ⚠️ Late Submit
+                          </span>
+                        )}
+                      </div>
+                    </td>
+                    <td>
+                      {notStartedYet ? (
+                        <span style={{ fontSize: '12px', color: '#94a3b8', fontStyle: 'italic', fontWeight: 600 }}>
+                          🔒 Not Started Yet
+                        </span>
+                      ) : (
+                        <button
+                          onClick={() => handleStartSolve(p)}
+                          style={{ padding: '8px 16px', borderRadius: '6px', border: 'none', backgroundColor: '#4f46e5', color: 'white', cursor: 'pointer', fontWeight: 700, fontSize: '12px' }}
+                        >
+                          {p.my_status ? '🔄 Re-solve' : '🚀 Start Solve'}
+                        </button>
+                      )}
+                      {isLateSubmit && !p.my_status && (
+                        <div style={{ fontSize: '10px', color: '#b45309', fontWeight: '600', marginTop: '4px' }}>
+                          ⚠️ Late submission
+                        </div>
+                      )}
+                    </td>
+                  </tr>
+                );
+              })}
               {practicals.length === 0 && (
                 <tr><td colSpan="7" style={{ textAlign: 'center', color: '#888', padding: '40px' }}>No coding practicals assigned to your batch currently.</td></tr>
               )}
@@ -429,6 +700,7 @@ int main() {
           </table>
         )}
       </div>
+      <ChangePasswordModal isOpen={isChangePasswordOpen} onClose={() => setIsChangePasswordOpen(false)} />
     </div>
   );
 }

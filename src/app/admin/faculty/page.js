@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useRef } from 'react';
 import LoadingOverlay from '@/components/LoadingOverlay';
+import { useAdminAuth } from '@/hooks/useAdminAuth';
 
 // ─── PDF Generator ────────────────────────────────────────────────────────────
 async function downloadCredentialsPDF(users) {
@@ -59,6 +60,8 @@ async function parseFile(file) {
 
 // ─── Component ────────────────────────────────────────────────────────────────
 export default function FacultyManagement() {
+  const { token: authToken, isReady } = useAdminAuth();
+
   const [faculty, setFaculty]         = useState([]);
   const [departmentsList, setDepartmentsList] = useState([]);
   const [loading, setLoading]         = useState(true);
@@ -72,7 +75,7 @@ export default function FacultyManagement() {
 
   const [form, setForm] = useState({ facultyId: '', firstName: '', lastName: '', emailPrefix: '', department: '', designation: '' });
 
-  const token = () => localStorage.getItem('token');
+  const token = () => authToken;
 
   const showToast = (type, msg) => {
     setToast({ type, msg });
@@ -109,8 +112,8 @@ export default function FacultyManagement() {
     } catch (e) { console.error(e); }
   };
 
-  useEffect(() => { fetchFaculty(); }, [search, statusFilter]);
-  useEffect(() => { fetchDepartments(); }, []);
+  useEffect(() => { if (isReady) { fetchFaculty(); } }, [search, statusFilter, isReady]);
+  useEffect(() => { if (isReady) fetchDepartments(); }, [isReady]);
 
   // ── Open modal ──
   const openAdd = () => {

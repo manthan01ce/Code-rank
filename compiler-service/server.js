@@ -295,7 +295,7 @@ app.post('/run-python', requireAuth, async (req, res) => {
       '--network none',
       `--volume "${volumePath}:/app"`,
       '--workdir /app',
-      'python:3.12-slim',
+      'coderank-python:latest',
       'python runner.py',
     ].join(' ');
 

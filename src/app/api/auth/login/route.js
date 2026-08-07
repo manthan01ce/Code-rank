@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server';
 import sql from '@/lib/db';
 import { comparePassword, generateToken } from '@/lib/auth';
+import crypto from 'crypto';
 
 export async function POST(request) {
   try {
@@ -52,7 +53,6 @@ export async function POST(request) {
     
     // If it's the fallback admin, we compare timing-safely by hashing first to prevent timing attacks
     if (dbUser.id === 0) {
-      const crypto = require('crypto');
       const userHash = crypto.createHash('sha256').update(password).digest();
       const adminHash = crypto.createHash('sha256').update(dbUserPassword).digest();
       passwordMatch = crypto.timingSafeEqual(userHash, adminHash);

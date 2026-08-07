@@ -90,6 +90,39 @@ async function initDb() {
       )
     `;
 
+    // Ensure is_co_coordinator exists in course_faculty if table already existed
+    const courseFacColumns = await sql`
+      SELECT column_name 
+      FROM information_schema.columns 
+      WHERE table_name = 'course_faculty'
+    `;
+    const cfColNames = courseFacColumns.map(c => c.column_name);
+    if (!cfColNames.includes('is_co_coordinator')) {
+      console.log('Adding is_co_coordinator to course_faculty...');
+      await sql`ALTER TABLE course_faculty ADD COLUMN is_co_coordinator BOOLEAN DEFAULT FALSE`;
+    }
+
+    // Create unique index to guarantee at most one co-coordinator per course/subject
+    await sql`
+      CREATE UNIQUE INDEX IF NOT EXISTS idx_co_coordinator_unique 
+      ON course_faculty (course_id) 
+      WHERE is_co_coordinator = true
+    `;
+
+    // Create student_workspaces table
+    console.log('Creating student_workspaces table...');
+    await sql`
+      CREATE TABLE IF NOT EXISTS student_workspaces (
+        id SERIAL PRIMARY KEY,
+        student_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+        practical_id INTEGER NOT NULL REFERENCES practicals(id) ON DELETE CASCADE,
+        language VARCHAR(50) NOT NULL,
+        latest_code TEXT NOT NULL,
+        saved_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
+        UNIQUE (student_id, practical_id, language)
+      )
+    `;
+
     // 4. Create activity_logs table
     console.log('Creating activity_logs table...');
     await sql`
@@ -169,6 +202,55 @@ async function initDb() {
         traceback     TEXT
       )
     `;
+
+    // Ensure start_time and end_time exist in practicals
+    try {
+      const practicalColumns = await sql`
+        SELECT column_name 
+        FROM information_schema.columns 
+        WHERE table_name = 'practicals'
+      `;
+      const pracColNames = practicalColumns.map(c => c.column_name);
+      if (pracColNames.length > 0) {
+        if (!pracColNames.includes('start_time')) {
+          console.log('Adding start_time to practicals...');
+          await sql`ALTER TABLE practicals ADD COLUMN start_time TIMESTAMP WITH TIME ZONE`;
+        }
+        if (!pracColNames.includes('end_time')) {
+          console.log('Adding end_time to practicals...');
+          await sql`ALTER TABLE practicals ADD COLUMN end_time TIMESTAMP WITH TIME ZONE`;
+        }
+      }
+    } catch (e) {
+      console.log('Skipping practicals column checks (table may not exist yet):', e.message);
+    }
+
+    // Ensure is_late exists in practical_submissions
+    try {
+      const pracSubColumns = await sql`
+        SELECT column_name 
+        FROM information_schema.columns 
+        WHERE table_name = 'practical_submissions'
+      `;
+      const pracSubColNames = pracSubColumns.map(c => c.column_name);
+      if (pracSubColNames.length > 0) {
+        if (!pracSubColNames.includes('is_late')) {
+          console.log('Adding is_late to practical_submissions...');
+          await sql`ALTER TABLE practical_submissions ADD COLUMN is_late BOOLEAN DEFAULT FALSE`;
+        }
+      }
+    } catch (e) {
+      console.log('Skipping practical_submissions column checks:', e.message);
+    }
+
+    // 9. Create performance indexes
+    console.log('Creating database indexes...');
+    await sql`CREATE INDEX IF NOT EXISTS idx_users_role_status ON users(role, status)`;
+    await sql`CREATE INDEX IF NOT EXISTS idx_submissions_student_id ON submissions(student_id)`;
+    await sql`CREATE INDEX IF NOT EXISTS idx_submissions_problem_id ON submissions(problem_id)`;
+    await sql`CREATE INDEX IF NOT EXISTS idx_course_faculty_ids ON course_faculty(course_id, faculty_id)`;
+    await sql`CREATE INDEX IF NOT EXISTS idx_practicals_course_id ON practicals(course_id)`;
+    await sql`CREATE INDEX IF NOT EXISTS idx_practical_submissions_student_id ON practical_submissions(student_id)`;
 
     // Seed admin if defined in .env
     const adminEmail = process.env.ADMIN_EMAIL;

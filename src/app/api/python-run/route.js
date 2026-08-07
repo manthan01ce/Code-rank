@@ -113,11 +113,11 @@ export async function GET() {
       return NextResponse.json({ status: 'healthy', mode: 'remote', details: data });
     }
 
-    const { stdout } = await execAsync('docker images -q python:3.12-slim');
+    const { stdout } = await execAsync('docker images -q coderank-python:latest');
     if (stdout.trim()) {
-      return NextResponse.json({ status: 'healthy', mode: 'local', message: 'Docker is running and python:3.12-slim is available.' });
+      return NextResponse.json({ status: 'healthy', mode: 'local', message: 'Docker is running and coderank-python:latest is available.' });
     } else {
-      return NextResponse.json({ status: 'warning', mode: 'local', message: 'Docker is running but python:3.12-slim image is missing.' }, { status: 404 });
+      return NextResponse.json({ status: 'warning', mode: 'local', message: 'Docker is running but coderank-python:latest image is missing.' }, { status: 404 });
     }
   } catch (err) {
     return NextResponse.json({ status: 'error', message: 'Docker is not running or compiler service is offline.' }, { status: 503 });

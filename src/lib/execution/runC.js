@@ -159,29 +159,32 @@ export async function runC({ code, problem, testCases = [], timeoutMs = 5000, me
 
       const hasMain = code.includes('int main(') || code.includes('void main(');
 
+      const codeB64 = Buffer.from(code).toString('base64');
+      const workdir = `/app/exec_${uuid.slice(0, 8)}`;
+      let cmd;
+
       if (hasMain) {
-        await fs.writeFile(path.join(sessionDir, 'main.c'), code, 'utf-8');
+        cmd = [
+          'docker exec coderank-c-daemon',
+          'bash -c "',
+          `mkdir -p ${workdir} && cd ${workdir} && `,
+          `echo '${codeB64}' | base64 -d > main.c && `,
+          `gcc -O2 main.c -o run_tests 2> compile_err.txt && ./run_tests || (echo \'\\nRUNTIME_ERROR:\' && cat compile_err.txt)`,
+          '"'
+        ].join(' ');
       } else {
-        await fs.writeFile(path.join(sessionDir, 'solution.c'), code, 'utf-8');
         const mainC = generateMainC(problem?.id, problem?.entry, testCases);
-        await fs.writeFile(path.join(sessionDir, 'main.c'), mainC, 'utf-8');
+        const mainB64 = Buffer.from(mainC).toString('base64');
+        cmd = [
+          'docker exec coderank-c-daemon',
+          'bash -c "',
+          `mkdir -p ${workdir} && cd ${workdir} && `,
+          `echo '${codeB64}' | base64 -d > solution.c && `,
+          `echo '${mainB64}' | base64 -d > main.c && `,
+          `gcc -O2 main.c -o run_tests 2> compile_err.txt && ./run_tests || (echo \'\\nRUNTIME_ERROR:\' && cat compile_err.txt)`,
+          '"'
+        ].join(' ');
       }
-
-      const volumePath = sessionDir.replace(/\\/g, '/');
-      const containerName = `coderank_c_runner_${uuid.slice(0, 8)}`;
-
-      const cmd = [
-        'docker run',
-        '--rm',
-        `--name ${containerName}`,
-        `--memory=${memoryMb}m`,
-        '--cpus=0.5',
-        '--network none',
-        `--volume "${volumePath}:/app"`,
-        '--workdir /app',
-        'coderank-c:latest',
-        'bash -c "gcc -O2 main.c -o run_tests 2> compile_err.txt && ./run_tests || (echo \'\\nRUNTIME_ERROR:\' && cat compile_err.txt)"'
-      ].join(' ');
 
       try {
         const { stdout, stderr } = await execAsync(cmd, { timeout: timeoutMs, killSignal: 'SIGKILL', maxBuffer: 2 * 1024 * 1024 });

@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useRef } from 'react';
 import LoadingOverlay from '@/components/LoadingOverlay';
+import { useAdminAuth } from '@/hooks/useAdminAuth';
 
 // ─── PDF Generator (inline, no jspdf-autotable import issues) ───────────────
 async function downloadCredentialsPDF(users) {
@@ -63,6 +64,8 @@ async function parseFile(file) {
 
 // ─── Component ───────────────────────────────────────────────────────────────
 export default function StudentManagement() {
+  const { token: authToken, isReady } = useAdminAuth();
+
   const [students, setStudents]       = useState([]);
   const [departmentsList, setDepartmentsList] = useState([]);
   const [loading, setLoading]         = useState(true);
@@ -77,7 +80,7 @@ export default function StudentManagement() {
   // Form fields
   const [form, setForm] = useState({ firstName: '', lastName: '', roll: '', department: '', semester: '' });
 
-  const token = () => localStorage.getItem('token');
+  const token = () => authToken;
 
   const showToast = (type, msg) => {
     setToast({ type, msg });
@@ -124,8 +127,8 @@ export default function StudentManagement() {
     } catch (e) { console.error(e); }
   };
 
-  useEffect(() => { fetchStudents(); }, [search, statusFilter]);
-  useEffect(() => { fetchDepartments(); }, []);
+  useEffect(() => { if (isReady) { fetchStudents(); } }, [search, statusFilter, isReady]);
+  useEffect(() => { if (isReady) fetchDepartments(); }, [isReady]);
 
   // ── Open modal ──
   const openAdd = () => {

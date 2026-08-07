@@ -54,15 +54,26 @@ export async function PUT(request, { params }) {
       constraints = '',
       sample_input = '',
       sample_output = '',
+      start_time = null,
+      end_time = null,
       test_cases = []
     } = body;
 
-    // Check ownership
+    // Check practical
     const practicals = await sql`
-      SELECT * FROM practicals WHERE id = ${parseInt(id)} AND faculty_id = ${user.id}
+      SELECT * FROM practicals WHERE id = ${parseInt(id)}
     `;
     if (practicals.length === 0) {
-      return NextResponse.json({ error: 'Practical not found or not owned by you' }, { status: 404 });
+      return NextResponse.json({ error: 'Practical not found' }, { status: 404 });
+    }
+
+    // Verify co-coordinator mapping
+    const mapping = await sql`
+      SELECT is_co_coordinator FROM course_faculty 
+      WHERE course_id = ${practicals[0].course_id} AND faculty_id = ${user.id}
+    `;
+    if (mapping.length === 0 || !mapping[0].is_co_coordinator) {
+      return NextResponse.json({ error: 'Forbidden: Only the subject co-coordinator can modify practicals.' }, { status: 403 });
     }
 
     // Check if student submissions exist
@@ -112,7 +123,9 @@ export async function PUT(request, { params }) {
           constraints = ${constraints},
           sample_input = ${sample_input},
           sample_output = ${sample_output},
-          total_marks = ${totalMarks}
+          total_marks = ${totalMarks},
+          start_time = ${start_time ? new Date(start_time) : null},
+          end_time = ${end_time ? new Date(end_time) : null}
       WHERE id = ${parseInt(id)}
       RETURNING *
     `;
@@ -157,12 +170,21 @@ export async function DELETE(request, { params }) {
 
     const { id } = await params;
 
-    // Check ownership
+    // Check practical
     const practicals = await sql`
-      SELECT * FROM practicals WHERE id = ${parseInt(id)} AND faculty_id = ${user.id}
+      SELECT * FROM practicals WHERE id = ${parseInt(id)}
     `;
     if (practicals.length === 0) {
-      return NextResponse.json({ error: 'Practical not found or not owned by you' }, { status: 404 });
+      return NextResponse.json({ error: 'Practical not found' }, { status: 404 });
+    }
+
+    // Verify co-coordinator mapping
+    const mapping = await sql`
+      SELECT is_co_coordinator FROM course_faculty 
+      WHERE course_id = ${practicals[0].course_id} AND faculty_id = ${user.id}
+    `;
+    if (mapping.length === 0 || !mapping[0].is_co_coordinator) {
+      return NextResponse.json({ error: 'Forbidden: Only the subject co-coordinator can delete practicals.' }, { status: 403 });
     }
 
     // Check if student submissions exist

@@ -2,8 +2,10 @@
 
 import { useState, useEffect } from 'react';
 import LoadingOverlay from '@/components/LoadingOverlay';
+import { useSocket } from '@/hooks/useSocket';
 
 export default function FacultyDashboard() {
+  const socket = useSocket();
   const [courses, setCourses] = useState([]);
   const [batches, setBatches] = useState([]);
   
@@ -23,6 +25,8 @@ export default function FacultyDashboard() {
   // Practical Form
   const [pracTitle, setPracTitle] = useState('');
   const [pracDesc, setPracDesc] = useState('');
+  const [pracStartTime, setPracStartTime] = useState('');
+  const [pracEndTime, setPracEndTime] = useState('');
   const [pracInst, setPracInst] = useState('');
   const [pracDiff, setPracDiff] = useState('Easy');
   const [pracIsChallenge, setPracIsChallenge] = useState(false);
@@ -34,8 +38,8 @@ export default function FacultyDashboard() {
   const [allowedLanguages, setAllowedLanguages] = useState(['python', 'cpp']);
   
   // Starter code templates
-  const [pyTemplate, setPyTemplate] = useState('class Solution:\n    def solution(self):\n        pass');
-  const [cppTemplate, setCppTemplate] = useState('class Solution {\npublic:\n    void solution() {\n        \n    }\n};');
+  const [pyTemplate, setPyTemplate] = useState('# Write your Python code here\n# Read inputs using input() or sys.stdin\n');
+  const [cppTemplate, setCppTemplate] = useState('#include <iostream>\nusing namespace std;\n\nint main() {\n    // Write your C++ code here\n    // Read from cin and write to cout\n    return 0;\n}');
   
   // Test cases state
   const [testCases, setTestCases] = useState([{ input: '', expected: '', marks: '5', is_hidden: false, label: '' }]);
@@ -46,7 +50,7 @@ export default function FacultyDashboard() {
   const [submissions, setSubmissions] = useState([]);
   const [loadingSubmissions, setLoadingSubmissions] = useState(false);
   const [studentSearch, setStudentSearch] = useState('');
-  const [submissionStatusFilter, setSubmissionStatusFilter] = useState('all');
+  const [submissionStatusFilter, setSubmissionStatusFilter] = useState('in-time');
   const [submissionSortBy, setSubmissionSortBy] = useState('submission_time');
   const [submissionSortOrder, setSubmissionSortOrder] = useState('DESC');
   const [viewingSubmission, setViewingSubmission] = useState(null);
@@ -73,6 +77,21 @@ export default function FacultyDashboard() {
     fetchContextData();
   }, []);
 
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      const params = new URLSearchParams(window.location.search);
+      const tab = params.get('tab');
+      if (tab === 'submissions') {
+        setActiveTab('submissions');
+      } else if (tab === 'marks') {
+        setActiveTab('marks');
+      } else {
+        setActiveTab('practicals');
+        setSelectedCourse('');
+      }
+    }
+  }, [typeof window !== 'undefined' ? window.location.search : '']);
+
   const fetchContextData = async () => {
     setLoading(true);
     try {
@@ -84,7 +103,7 @@ export default function FacultyDashboard() {
       if (coursesRes.ok) {
         const courseList = await coursesRes.json();
         setCourses(courseList);
-        if (courseList.length > 0) setSelectedCourse(courseList[0].id.toString());
+        setSelectedCourse('');
       }
       if (batchesRes.ok) {
         const batchList = await batchesRes.json();
@@ -160,17 +179,37 @@ export default function FacultyDashboard() {
     }
   };
 
+  useEffect(() => {
+    if (!socket || !selectedPracticalId) return;
+    
+    socket.emit('join_practical_room', selectedPracticalId);
+    
+    const handleNewSubmission = (newSub) => {
+      setSubmissions(prev => {
+        if (prev.find(s => s.id === newSub.id)) return prev;
+        return [newSub, ...prev];
+      });
+    };
+    
+    socket.on('new_submission', handleNewSubmission);
+    
+    return () => {
+      socket.off('new_submission', handleNewSubmission);
+      socket.emit('leave_practical_room', selectedPracticalId);
+    };
+  }, [socket, selectedPracticalId]);
+
   // Load stats
   useEffect(() => {
-    if (selectedMarksPracticalId && activeTab === 'marks') {
+    if (selectedCourse && activeTab === 'marks') {
       fetchStats();
     }
-  }, [selectedMarksPracticalId, activeTab]);
+  }, [selectedCourse, activeTab]);
 
   const fetchStats = async () => {
     setLoadingStats(true);
     try {
-      const res = await fetch(`/api/faculty/practicals/${selectedMarksPracticalId}/stats`, {
+      const res = await fetch(`/api/faculty/courses/${selectedCourse}/stats`, {
         headers: { Authorization: `Bearer ${token()}` }
       });
       if (res.ok) {
@@ -189,15 +228,17 @@ export default function FacultyDashboard() {
     setPracDesc('');
     setPracInst('');
     setPracDiff('Easy');
-    setPracIsChallenge(false);
+    setPracIsChallenge(true);
     setPracInputFormat('');
     setPracOutputFormat('');
     setPracConstraints('');
     setPracSampleInput('');
     setPracSampleOutput('');
+    setPracStartTime('');
+    setPracEndTime('');
     setAllowedLanguages(['python', 'cpp']);
-    setPyTemplate('class Solution:\n    def solution(self):\n        pass');
-    setCppTemplate('class Solution {\npublic:\n    void solution() {\n        \n    }\n};');
+    setPyTemplate('# Write your Python code here\n# Read inputs using input() or sys.stdin\n');
+    setCppTemplate('#include <iostream>\nusing namespace std;\n\nint main() {\n    // Write your C++ code here\n    // Read from cin and write to cout\n    return 0;\n}');
     setTestCases([{ input: '', expected: '', marks: '5', is_hidden: false, label: '' }]);
     setHasSubmissions(false);
     setShowPracticalModal(true);
@@ -222,6 +263,17 @@ export default function FacultyDashboard() {
         setPracConstraints(data.constraints || '');
         setPracSampleInput(data.sample_input || '');
         setPracSampleOutput(data.sample_output || '');
+        
+        // Helper to format ISO string to datetime-local value (YYYY-MM-DDTHH:MM)
+        const formatLocalTime = (iso) => {
+          if (!iso) return '';
+          const d = new Date(iso);
+          const pad = (n) => n.toString().padStart(2, '0');
+          return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}T${pad(d.getHours())}:${pad(d.getMinutes())}`;
+        };
+        setPracStartTime(formatLocalTime(data.start_time));
+        setPracEndTime(formatLocalTime(data.end_time));
+
         setAllowedLanguages(data.starter_code?.allowed_languages || ['python', 'cpp']);
         setPyTemplate(data.starter_code?.python || 'class Solution:\n    def solution(self):\n        pass');
         setCppTemplate(data.starter_code?.cpp || 'class Solution {\npublic:\n    void solution() {\n        \n    }\n};');
@@ -278,6 +330,8 @@ export default function FacultyDashboard() {
       instructions: pracInst,
       difficulty: pracDiff,
       is_challenge: true,
+      start_time: pracStartTime || null,
+      end_time: pracEndTime || null,
       starter_code: {
         allowed_languages: allowedLanguages,
         python: pyTemplate,
@@ -376,21 +430,25 @@ export default function FacultyDashboard() {
   };
 
   const handleExportCSV = () => {
-    if (!statsData || statsData.students.length === 0) {
+    if (!statsData || !statsData.students || !statsData.practicals) {
       showToast('error', 'No data to export.');
       return;
     }
 
-    const headers = ['Roll Number', 'Student Name', 'Email', 'Status', 'Raw Marks', 'Normalized Marks (Out of 10)', 'Submitted At'];
-    const rows = statsData.students.map(s => [
-      s.roll_number,
-      s.name,
-      s.email,
-      s.status,
-      s.raw_marks,
-      s.normalized_marks,
-      s.submitted_at ? new Date(s.submitted_at).toLocaleString() : '—'
-    ]);
+    const headers = ['Roll Number', 'Student Name', 'Email', ...statsData.practicals.map((p, i) => `Practical ${i + 1} (${p.title})`)];
+    const rows = statsData.students.map(s => {
+      const row = [s.roll_number || '—', s.name, s.email];
+      statsData.practicals.forEach(p => {
+        const sub = statsData.submissions.find(sub => sub.student_id === s.id && sub.practical_id === p.id);
+        if (sub) {
+          const lateSuffix = sub.is_late ? ' (Late)' : '';
+          row.push(`${sub.normalized_marks}${lateSuffix}`);
+        } else {
+          row.push('Not Submitted');
+        }
+      });
+      return row;
+    });
 
     const csvContent = [
       headers.join(','),
@@ -401,11 +459,80 @@ export default function FacultyDashboard() {
     const url = URL.createObjectURL(blob);
     const link = document.createElement('a');
     link.setAttribute('href', url);
-    link.setAttribute('download', `${statsData.practical.title.replace(/\s+/g, '_')}_grades.csv`);
+    const courseCodeStr = statsData.course?.course_code || 'course';
+    link.setAttribute('download', `${courseCodeStr.replace(/\s+/g, '_')}_grades_matrix.csv`);
     document.body.appendChild(link);
     link.click();
     document.body.removeChild(link);
   };
+
+  if (!selectedCourse) {
+    return (
+      <div style={{ position: 'relative', minHeight: '80vh', padding: '20px' }}>
+        {processing && <LoadingOverlay />}
+
+        {/* Toast Alert */}
+        {toast && (
+          <div style={{
+            position: 'fixed', top: '20px', right: '20px', zIndex: 9999,
+            padding: '14px 20px', borderRadius: '10px', fontWeight: 600, fontSize: '14px',
+            backgroundColor: toast.type === 'success' ? '#ecfdf5' : '#fef2f2',
+            color: toast.type === 'success' ? '#065f46' : '#991b1b',
+            border: `1px solid ${toast.type === 'success' ? '#6ee7b7' : '#fca5a5'}`,
+            boxShadow: '0 4px 20px rgba(0,0,0,0.12)'
+          }}>
+            {toast.msg}
+          </div>
+        )}
+
+        <div>
+          <h2 style={{ fontSize: '24px', fontWeight: '700', color: 'var(--text-main)', marginBottom: '8px' }}>Select Allocated Subject</h2>
+          <p style={{ color: 'var(--text-muted)', fontSize: '14.5px', marginBottom: '30px' }}>Choose a course below to manage its assignments, view student grades, and download spreadsheets.</p>
+        </div>
+
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(280px, 1fr))', gap: '20px' }}>
+          {courses.map(c => (
+            <div 
+              key={c.id} 
+              onClick={() => setSelectedCourse(c.id.toString())}
+              style={{
+                background: 'white', border: '1px solid var(--border-color)', borderRadius: '12px', padding: '24px',
+                cursor: 'pointer', transition: 'transform 0.2s, box-shadow 0.2s',
+                boxShadow: '0 4px 6px -1px rgba(0,0,0,0.05)',
+                display: 'flex', flexDirection: 'column', justifyContent: 'space-between', height: '160px'
+              }}
+              onMouseEnter={(e) => {
+                e.currentTarget.style.transform = 'translateY(-4px)';
+                e.currentTarget.style.boxShadow = '0 10px 15px -3px rgba(0, 0, 0, 0.1)';
+                e.currentTarget.style.borderColor = 'var(--primary)';
+              }}
+              onMouseLeave={(e) => {
+                e.currentTarget.style.transform = 'translateY(0)';
+                e.currentTarget.style.boxShadow = '0 4px 6px -1px rgba(0,0,0,0.05)';
+                e.currentTarget.style.borderColor = 'var(--border-color)';
+              }}
+            >
+              <div>
+                <span style={{ fontSize: '12px', fontWeight: 700, color: 'var(--primary)', textTransform: 'uppercase', tracking: 'wide' }}>{c.course_code}</span>
+                <h3 style={{ fontSize: '18px', fontWeight: 600, marginTop: '8px', color: '#1e293b' }}>{c.name}</h3>
+              </div>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', fontSize: '13px', color: '#64748b' }}>
+                <span>Semester {c.semester}</span>
+                <span style={{ fontWeight: 600, color: 'var(--primary)' }}>Manage &rarr;</span>
+              </div>
+            </div>
+          ))}
+          {courses.length === 0 && (
+            <div style={{ gridColumn: '1/-1', textAlign: 'center', padding: '40px', color: 'var(--text-muted)' }}>
+              No allocated courses found for your faculty account.
+            </div>
+          )}
+        </div>
+      </div>
+    );
+  }
+
+  const activeCourse = courses.find(c => c.id.toString() === selectedCourse);
 
   return (
     <div style={{ position: 'relative', minHeight: '80vh' }}>
@@ -428,24 +555,45 @@ export default function FacultyDashboard() {
       {/* Header Selector Context */}
       <div className="header" style={{ borderBottom: '1px solid var(--border-color)', pb: '20px', mb: '20px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
         <div>
-          <h2 style={{ fontSize: '24px', fontWeight: '700', color: 'var(--text-main)' }}>Practical Management</h2>
-          <p style={{ color: 'var(--text-muted)', fontSize: '14px' }}>Scope coding challenges, view student grades, and manage test cases.</p>
+          <span style={{ fontSize: '12px', fontWeight: 700, color: 'var(--primary)', textTransform: 'uppercase' }}>
+            {activeCourse?.course_code}
+          </span>
+          <h2 style={{ fontSize: '24px', fontWeight: '700', color: 'var(--text-main)', marginTop: '4px' }}>
+            {activeCourse?.name}
+          </h2>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginTop: '6px' }}>
+            {activeCourse?.is_co_coordinator ? (
+              <span style={{
+                display: 'inline-flex', alignItems: 'center', gap: '5px',
+                backgroundColor: '#fefce8', border: '1px solid #fde68a',
+                color: '#92400e', fontSize: '12px', fontWeight: 700,
+                padding: '4px 10px', borderRadius: '20px'
+              }}>
+                👑 Co-coordinator &nbsp;·&nbsp; Can add / edit / delete practicals
+              </span>
+            ) : (
+              <span style={{
+                display: 'inline-flex', alignItems: 'center', gap: '5px',
+                backgroundColor: '#f1f5f9', border: '1px solid #cbd5e1',
+                color: '#64748b', fontSize: '12px', fontWeight: 600,
+                padding: '4px 10px', borderRadius: '20px'
+              }}>
+                👁️ View-only Access &nbsp;·&nbsp; Contact admin to assign co-coordinator rights
+              </span>
+            )}
+          </div>
         </div>
         
-        <div style={{ display: 'flex', gap: '15px' }}>
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
-            <span style={{ fontSize: '11px', fontWeight: 600, color: 'var(--text-muted)' }}>Course</span>
-            <select
-              value={selectedCourse}
-              onChange={e => setSelectedCourse(e.target.value)}
-              style={{ padding: '8px 12px', borderRadius: '6px', border: '1px solid var(--border-color)', backgroundColor: 'white', minWidth: '180px' }}
-            >
-              {courses.map(c => (
-                <option key={c.id} value={c.id}>{c.course_code} - {c.name}</option>
-              ))}
-              {courses.length === 0 && <option value="">No courses mapped</option>}
-            </select>
-          </div>
+        <div>
+          <button 
+            onClick={() => setSelectedCourse('')}
+            style={{
+              padding: '8px 16px', borderRadius: '8px', border: '1px solid var(--border-color)',
+              backgroundColor: 'white', cursor: 'pointer', fontWeight: 600, fontSize: '13px'
+            }}
+          >
+            🔄 Switch Subject
+          </button>
         </div>
       </div>
 
@@ -485,9 +633,11 @@ export default function FacultyDashboard() {
         <div>
           <div style={{ display: 'flex', justifyContent: 'space-between', mb: '20px', alignItems: 'center' }}>
             <h3 style={{ fontSize: '18px', fontWeight: 600 }}>Available Practicals</h3>
-            <button className="btn-primary" style={{ width: 'auto', padding: '10px 20px', margin: 0 }} onClick={handleOpenAddPractical}>
-              + Add Practical / Challenge
-            </button>
+            {activeCourse?.is_co_coordinator && (
+              <button className="btn-primary" style={{ width: 'auto', padding: '10px 20px', margin: 0 }} onClick={handleOpenAddPractical}>
+                + Add Practical / Challenge
+              </button>
+            )}
           </div>
 
           <div className="table-container" style={{ marginTop: '15px' }}>
@@ -522,20 +672,24 @@ export default function FacultyDashboard() {
                       <td>{p.test_cases_count} cases</td>
                       <td>{p.submissions_count} attempts</td>
                       <td>
-                        <div style={{ display: 'flex', gap: '8px' }}>
-                          <button
-                            onClick={() => handleOpenEditPractical(p)}
-                            style={{ padding: '6px 12px', borderRadius: '6px', border: 'none', backgroundColor: 'var(--primary)', color: 'white', cursor: 'pointer', fontWeight: 600, fontSize: '12px' }}
-                          >
-                            ✏️ Edit
-                          </button>
-                          <button
-                            onClick={() => handleDeletePractical(p)}
-                            style={{ padding: '6px 12px', borderRadius: '6px', border: 'none', backgroundColor: '#ef4444', color: 'white', cursor: 'pointer', fontWeight: 600, fontSize: '12px' }}
-                          >
-                            🗑️ Delete
-                          </button>
-                        </div>
+                        {activeCourse?.is_co_coordinator ? (
+                          <div style={{ display: 'flex', gap: '8px' }}>
+                            <button
+                              onClick={() => handleOpenEditPractical(p)}
+                              style={{ padding: '6px 12px', borderRadius: '6px', border: 'none', backgroundColor: 'var(--primary)', color: 'white', cursor: 'pointer', fontWeight: 600, fontSize: '12px' }}
+                            >
+                              ✏️ Edit
+                            </button>
+                            <button
+                              onClick={() => handleDeletePractical(p)}
+                              style={{ padding: '6px 12px', borderRadius: '6px', border: 'none', backgroundColor: '#ef4444', color: 'white', cursor: 'pointer', fontWeight: 600, fontSize: '12px' }}
+                            >
+                              🗑️ Delete
+                            </button>
+                          </div>
+                        ) : (
+                          <span style={{ color: '#94a3b8', fontStyle: 'italic', fontSize: '12px' }}>View-only</span>
+                        )}
                       </td>
                     </tr>
                   ))}
@@ -581,10 +735,8 @@ export default function FacultyDashboard() {
                 onChange={e => setSubmissionStatusFilter(e.target.value)}
                 style={{ padding: '8px 12px', borderRadius: '6px', border: '1px solid var(--border-color)', backgroundColor: 'white' }}
               >
-                <option value="all">All Statuses</option>
-                <option value="Accepted">Accepted Only</option>
-                <option value="Wrong Answer">Wrong Answer Only</option>
-                <option value="Compile Error">Compile Error Only</option>
+                <option value="in-time">In-Time Submission</option>
+                <option value="late">Late Submission</option>
               </select>
 
               <select
@@ -633,10 +785,10 @@ export default function FacultyDashboard() {
                       <td>
                         <span style={{
                           padding: '4px 10px', borderRadius: '12px', fontSize: '11px', fontWeight: 600,
-                          backgroundColor: s.status === 'Accepted' ? '#ecfdf5' : '#fef2f2',
-                          color: s.status === 'Accepted' ? '#10b981' : '#ef4444'
+                          backgroundColor: s.is_late ? '#fef2f2' : '#ecfdf5',
+                          color: s.is_late ? '#ef4444' : '#10b981'
                         }}>
-                          {s.status}
+                          {s.is_late ? 'Late' : 'In-Time'}
                         </span>
                       </td>
                       <td>{s.raw_marks} Marks</td>
@@ -665,18 +817,9 @@ export default function FacultyDashboard() {
       {activeTab === 'marks' && (
         <div>
           <div style={{ display: 'flex', justifyContent: 'space-between', gap: '15px', mb: '20px', alignItems: 'center' }}>
-            <div style={{ display: 'flex', gap: '12px', alignItems: 'center' }}>
-              <span style={{ fontSize: '14px', fontWeight: 600 }}>Select Practical:</span>
-              <select
-                value={selectedMarksPracticalId}
-                onChange={e => setSelectedMarksPracticalId(e.target.value)}
-                style={{ padding: '8px 12px', borderRadius: '6px', border: '1px solid var(--border-color)', backgroundColor: 'white', minWidth: '200px' }}
-              >
-                {practicals.map(p => (
-                  <option key={p.id} value={p.id}>{p.title}</option>
-                ))}
-                {practicals.length === 0 && <option value="">No practicals available</option>}
-              </select>
+            <div>
+              <h3 style={{ fontSize: '18px', fontWeight: 600 }}>Grades Matrix (Pivot View)</h3>
+              <p style={{ color: 'var(--text-muted)', fontSize: '13px' }}>Grid layout showing each student's score across all active course practicals.</p>
             </div>
 
             {statsData && (
@@ -690,61 +833,59 @@ export default function FacultyDashboard() {
             )}
           </div>
 
-          {loadingStats ? <p>Loading marks analytics...</p> : statsData && (
+          {loadingStats ? <p>Loading marks matrix...</p> : statsData && statsData.practicals && (
             <div>
-              {/* Stat Cards */}
-              <div className="stat-cards" style={{ display: 'flex', gap: '20px', marginBottom: '25px' }}>
-                <div className="stat-card" style={{ flex: 1, backgroundColor: 'white', padding: '20px', borderRadius: '8px', border: '1px solid var(--border-color)' }}>
-                  <h4 style={{ fontSize: '12px', color: 'var(--text-muted)', textTransform: 'uppercase' }}>Average Score</h4>
-                  <p style={{ fontSize: '28px', fontWeight: 800, color: 'var(--primary)', marginTop: '8px' }}>{statsData.stats.average_marks} / 10</p>
-                </div>
-                <div className="stat-card" style={{ flex: 1, backgroundColor: 'white', padding: '20px', borderRadius: '8px', border: '1px solid var(--border-color)' }}>
-                  <h4 style={{ fontSize: '12px', color: 'var(--text-muted)', textTransform: 'uppercase' }}>Attempted Students</h4>
-                  <p style={{ fontSize: '28px', fontWeight: 800, color: '#10b981', marginTop: '8px' }}>{statsData.stats.attempted_count} / {statsData.stats.total_students}</p>
-                </div>
-                <div className="stat-card" style={{ flex: 1, backgroundColor: 'white', padding: '20px', borderRadius: '8px', border: '1px solid var(--border-color)' }}>
-                  <h4 style={{ fontSize: '12px', color: 'var(--text-muted)', textTransform: 'uppercase' }}>Total Submissions</h4>
-                  <p style={{ fontSize: '28px', fontWeight: 800, color: '#f59e0b', marginTop: '8px' }}>{statsData.stats.submissions_count} runs</p>
-                </div>
-              </div>
-
-              {/* Student grade list */}
-              <div className="table-container">
-                <h3 style={{ fontSize: '16px', fontWeight: 600, marginBottom: '15px' }}>Batch Student Directory & Grades</h3>
+              <div className="table-container" style={{ overflowX: 'auto', marginTop: '15px' }}>
                 <table>
                   <thead>
                     <tr>
-                      <th>Roll Number</th>
-                      <th>Student Name</th>
-                      <th>Email</th>
-                      <th>Status</th>
-                      <th>Raw Score</th>
-                      <th>Normalized Grade (Out of 10)</th>
-                      <th>Last Attempted At</th>
+                      <th style={{ minWidth: '130px' }}>Roll Number</th>
+                      <th style={{ minWidth: '180px' }}>Student Name</th>
+                      {statsData.practicals.map((p, idx) => (
+                        <th key={p.id} style={{ textAlign: 'center', minWidth: '120px' }}>
+                          Prac {idx + 1}
+                          <div style={{ fontSize: '11px', fontWeight: 'normal', color: 'var(--text-muted)', marginTop: '4px' }}>
+                            {p.title.length > 20 ? p.title.substring(0, 18) + '..' : p.title}
+                          </div>
+                        </th>
+                      ))}
                     </tr>
                   </thead>
                   <tbody>
                     {statsData.students.map(s => (
                       <tr key={s.id}>
-                        <td style={{ fontWeight: 600, color: 'var(--primary)' }}>{s.roll_number}</td>
+                        <td style={{ fontWeight: 600, color: 'var(--primary)' }}>{s.roll_number || '—'}</td>
                         <td style={{ fontWeight: 500 }}>{s.name}</td>
-                        <td>{s.email}</td>
-                        <td>
-                          <span style={{
-                            padding: '4px 10px', borderRadius: '12px', fontSize: '11px', fontWeight: 600,
-                            backgroundColor: s.attempted ? '#ecfdf5' : '#fef2f2',
-                            color: s.attempted ? '#10b981' : '#ef4444'
-                          }}>
-                            {s.attempted ? 'Attempted' : 'Not Attempted'}
-                          </span>
-                        </td>
-                        <td>{s.raw_marks} Marks</td>
-                        <td style={{ fontWeight: 700, color: s.attempted ? 'var(--primary)' : '#64748b' }}>
-                          {s.attempted ? `${s.normalized_marks} / 10` : '—'}
-                        </td>
-                        <td>{s.submitted_at ? new Date(s.submitted_at).toLocaleString() : '—'}</td>
+                        {statsData.practicals.map(p => {
+                          const sub = statsData.submissions.find(sub => sub.student_id === s.id && sub.practical_id === p.id);
+                          return (
+                            <td key={p.id} style={{ textAlign: 'center' }}>
+                              {sub ? (
+                                <div>
+                                  <span style={{ fontWeight: 700, color: 'var(--primary)' }}>{sub.normalized_marks} / 10</span>
+                                  {sub.is_late && (
+                                    <span style={{
+                                      display: 'block', fontSize: '9px', fontWeight: 'bold', color: '#ef4444', marginTop: '2px'
+                                    }}>
+                                      LATE
+                                    </span>
+                                  )}
+                                </div>
+                              ) : (
+                                <span style={{ color: '#94a3b8', fontSize: '12px', fontStyle: 'italic' }}>Not Submitted</span>
+                              )}
+                            </td>
+                          );
+                        })}
                       </tr>
                     ))}
+                    {statsData.students.length === 0 && (
+                      <tr>
+                        <td colSpan={statsData.practicals.length + 2} style={{ textAlign: 'center', color: '#888', padding: '40px' }}>
+                          No students found in this course.
+                        </td>
+                      </tr>
+                    )}
                   </tbody>
                 </table>
               </div>
@@ -799,6 +940,27 @@ export default function FacultyDashboard() {
                     <option value="Medium">Medium</option>
                     <option value="Hard">Hard</option>
                   </select>
+                </div>
+              </div>
+
+              <div style={{ display: 'flex', gap: '15px' }}>
+                <div style={{ flex: 1 }}>
+                  <label style={{ fontSize: '12px', fontWeight: 600, color: 'var(--text-muted)' }}>Start Time (Optional)</label>
+                  <input
+                    type="datetime-local"
+                    className="input-field"
+                    value={pracStartTime}
+                    onChange={e => setPracStartTime(e.target.value)}
+                  />
+                </div>
+                <div style={{ flex: 1 }}>
+                  <label style={{ fontSize: '12px', fontWeight: 600, color: 'var(--text-muted)' }}>End Time (Optional)</label>
+                  <input
+                    type="datetime-local"
+                    className="input-field"
+                    value={pracEndTime}
+                    onChange={e => setPracEndTime(e.target.value)}
+                  />
                 </div>
               </div>
 

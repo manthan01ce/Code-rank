@@ -1,18 +1,20 @@
 'use client';
 
 import { useState, useEffect } from 'react';
+import { useAdminAuth } from '@/hooks/useAdminAuth';
 
 export default function ActivityLogs() {
   const [logs, setLogs] = useState([]);
   const [loading, setLoading] = useState(true);
 
+  const { token, isReady } = useAdminAuth();
+
   useEffect(() => {
-    fetchLogs();
-  }, []);
+    if (isReady) fetchLogs();
+  }, [isReady]);
 
   const fetchLogs = async () => {
     try {
-      const token = localStorage.getItem('token');
       const res = await fetch('/api/logs', {
         headers: { 'Authorization': `Bearer ${token}` }
       });

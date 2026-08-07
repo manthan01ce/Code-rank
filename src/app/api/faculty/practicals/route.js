@@ -64,6 +64,8 @@ export async function POST(request) {
       constraints = '',
       sample_input = '',
       sample_output = '',
+      start_time = null,
+      end_time = null,
       test_cases = []
     } = body;
 
@@ -74,13 +76,16 @@ export async function POST(request) {
       return NextResponse.json({ error: 'Missing required fields' }, { status: 400 });
     }
 
-    // Verify course-faculty mapping
-    const isMapped = await sql`
-      SELECT 1 FROM course_faculty 
+    // Verify co-coordinator mapping
+    const mapping = await sql`
+      SELECT is_co_coordinator FROM course_faculty 
       WHERE course_id = ${parseInt(course_id)} AND faculty_id = ${user.id}
     `;
-    if (isMapped.length === 0) {
+    if (mapping.length === 0) {
       return NextResponse.json({ error: 'You are not assigned to this course.' }, { status: 403 });
+    }
+    if (!mapping[0].is_co_coordinator) {
+      return NextResponse.json({ error: 'Forbidden: Only the subject co-coordinator can create practicals.' }, { status: 403 });
     }
 
     // Validate test cases
@@ -106,12 +111,14 @@ export async function POST(request) {
       INSERT INTO practicals (
         faculty_id, course_id, batch_id, title, description, instructions, 
         total_marks, difficulty, is_challenge, starter_code, 
-        input_format, output_format, constraints, sample_input, sample_output, status
+        input_format, output_format, constraints, sample_input, sample_output, status,
+        start_time, end_time
       )
       VALUES (
         ${user.id}, ${parseInt(course_id)}, ${batch_id}, ${title}, ${description}, ${instructions},
         ${totalMarks}, ${difficulty}, ${is_challenge}, ${JSON.stringify(starter_code)},
-        ${input_format}, ${output_format}, ${constraints}, ${sample_input}, ${sample_output}, 'active'
+        ${input_format}, ${output_format}, ${constraints}, ${sample_input}, ${sample_output}, 'active',
+        ${start_time ? new Date(start_time) : null}, ${end_time ? new Date(end_time) : null}
       )
       RETURNING *
     `;
