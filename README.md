@@ -23,10 +23,6 @@ npm run dev
 ### 3. Open Browser
 Navigate to: http://localhost:3000
 
-### 4. Login as Admin
-- **Email**: manthanraithatha01@gmail.com
-- **Password**: 12345678
-
 ---
 
 ## ✨ Features
@@ -165,17 +161,6 @@ Two CSV files are provided for testing bulk upload:
 - Railway
 - Render
 - AWS/Azure/GCP
-
----
-
-## 🔗 Insforge Integration
-
-MCP configuration is already set up:
-- Config: `.kiro/settings/mcp.json`
-- API Key: `ik_9c36de072e94aa6556c05bb06f578869`
-- Project URL: `https://z5vrvnw3.us-east.insforge.app`
-
-To activate: Open Command Palette → Search "MCP" → Reconnect Servers
 
 ---
 
