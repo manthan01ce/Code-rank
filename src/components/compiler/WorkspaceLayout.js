@@ -19,6 +19,7 @@ import ConsolePanel from './ConsolePanel';
 import { Play, ChevronRight, Settings, User, List } from 'lucide-react';
 import { DEFAULT_LANGUAGE, LANGUAGES } from './LanguageConfig';
 import { STATIC_PROBLEMS } from '@/lib/problems';
+import { useSocket } from '@/hooks/useSocket';
 
 // ── Stdin/Stdout boilerplates for practicals (main() style) ──────────────────
 // Practicals use stdin/stdout execution, NOT the class-based function runner.
@@ -105,6 +106,7 @@ export default function WorkspaceLayout({ problem }) {
   const [isListOpen, setIsListOpen] = useState(false);
   const [practicals, setPracticals] = useState([]);
   const [selectedCourse, setSelectedCourse] = useState('All');
+  const socket = useSocket();
 
   // Profile, Settings, and Submissions Modals states
   const [isUserDropdownOpen, setIsUserDropdownOpen] = useState(false);
@@ -125,6 +127,10 @@ export default function WorkspaceLayout({ problem }) {
   // Initial preferences loading
   useEffect(() => {
     if (typeof window !== 'undefined') {
+      const urlParams = new URLSearchParams(window.location.search);
+      const subject = urlParams.get('subject');
+      if (subject) setSelectedCourse(subject);
+
       const savedFontSize = localStorage.getItem('pref_font_size');
       if (savedFontSize) setEditorFontSize(parseInt(savedFontSize));
 
@@ -204,7 +210,7 @@ export default function WorkspaceLayout({ problem }) {
     }
   };
 
-  useEffect(() => {
+  const fetchPracticals = () => {
     const token = localStorage.getItem('token');
     if (!token) return;
     fetch('/api/student/practicals', {
@@ -217,7 +223,23 @@ export default function WorkspaceLayout({ problem }) {
         }
       })
       .catch(err => console.error('Error fetching student practicals:', err));
+  };
+
+  useEffect(() => {
+    fetchPracticals();
   }, []);
+
+  useEffect(() => {
+    if (!socket) return;
+    socket.on('practicalAdded', fetchPracticals);
+    socket.on('practicalUpdated', fetchPracticals);
+    socket.on('practicalDeleted', fetchPracticals);
+    return () => {
+      socket.off('practicalAdded', fetchPracticals);
+      socket.off('practicalUpdated', fetchPracticals);
+      socket.off('practicalDeleted', fetchPracticals);
+    };
+  }, [socket]);
 
   // Defensive fallback to avoid undefined crashes during Next.js build-time pre-render or hydration
   const resolvedProblem = problem || {
@@ -508,12 +530,39 @@ export default function WorkspaceLayout({ problem }) {
       <div style={{ height: '64px', background: '#000000', borderBottom: '1px solid #262626', display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '0 24px', flexShrink: 0 }}>
         {/* Left: Brand + Problem List Dropdown */}
         <div style={{ display: 'flex', alignItems: 'center', gap: '24px' }}>
-          {/* CODERANK wordmark */}
+          {/* Logo and Wordmark */}
           <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
-            <div style={{ width: '3px', height: '20px', background: 'linear-gradient(to bottom, #0066b1, #1c69d4, #e22718)', flexShrink: 0 }} />
-            <span style={{ color: '#ffffff', fontWeight: 700, fontSize: '14px', letterSpacing: '2px', textTransform: 'uppercase' }}>CodeRank</span>
+            <img src="/coderank-logo.png" alt="CodeRank Logo" onError={(e) => { e.target.src = '/coderank-logo.svg'; }} style={{ width: '28px', height: '28px', objectFit: 'contain' }} />
+            <span style={{ color: '#ffffff', fontWeight: 700, fontSize: '16px', letterSpacing: '1px', textTransform: 'uppercase' }}>CodeRank</span>
           </div>
           
+          {/* Switch Course Dropdown */}
+          <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginLeft: '12px', borderLeft: '1px solid #262626', paddingLeft: '24px' }}>
+            <span style={{ color: '#7e7e7e', fontSize: '11px', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '1px' }}>Course</span>
+            <select
+              value={selectedCourse}
+              onChange={(e) => {
+                const val = e.target.value;
+                setSelectedCourse(val);
+                if (val !== 'All') {
+                  router.push(`/student/code/1?subject=${encodeURIComponent(val)}`);
+                } else {
+                  router.push('/student/code/1?subject=All');
+                }
+              }}
+              style={{
+                background: '#1a1a1a', border: '1px solid #3c3c3c', color: '#ffffff',
+                padding: '6px 12px', borderRadius: '4px', fontSize: '12px', outline: 'none', cursor: 'pointer',
+                fontWeight: 600
+              }}
+            >
+              <option value="All">All Subjects</option>
+              {Array.from(new Set(practicals.map(p => p.course_name))).map(cName => (
+                <option key={cName} value={cName}>{cName}</option>
+              ))}
+            </select>
+          </div>
+
           {/* Problem List dropdown */}
           <div style={{ position: 'relative' }}>
             <button
@@ -550,33 +599,22 @@ export default function WorkspaceLayout({ problem }) {
                   return (
                   <>
                     <div style={{ padding: '8px 16px', borderBottom: '1px solid #262626', marginBottom: '6px' }}>
-                      <div style={{ fontSize: '9px', color: '#00b8a3', fontWeight: 700, letterSpacing: '1px', textTransform: 'uppercase', marginBottom: '8px' }}>
-                        Assigned Coding Practicals ({filteredPracticals.length})
+                      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '8px' }}>
+                        <div style={{ fontSize: '9px', color: '#00b8a3', fontWeight: 700, letterSpacing: '1px', textTransform: 'uppercase' }}>
+                          {selectedCourse !== 'All' ? selectedCourse : 'Assigned Coding Practicals'} ({filteredPracticals.length})
+                        </div>
+                        <button 
+                          onClick={() => router.push('/student')}
+                          style={{
+                            background: 'transparent', color: '#7e7e7e', border: '1px solid #3c3c3c', borderRadius: '4px',
+                            padding: '4px 8px', fontSize: '10px', cursor: 'pointer', transition: 'all 0.2s'
+                          }}
+                          onMouseEnter={e => { e.currentTarget.style.color = '#fff'; e.currentTarget.style.borderColor = '#555'; }}
+                          onMouseLeave={e => { e.currentTarget.style.color = '#7e7e7e'; e.currentTarget.style.borderColor = '#3c3c3c'; }}
+                        >
+                          ← Back
+                        </button>
                       </div>
-                      <select 
-                        value={selectedCourse} 
-                        onChange={(e) => {
-                          e.stopPropagation();
-                          setSelectedCourse(e.target.value);
-                        }}
-                        onClick={(e) => e.stopPropagation()}
-                        style={{
-                          width: '100%',
-                          background: '#1a1a1a',
-                          color: '#ffffff',
-                          border: '1px solid #3c3c3c',
-                          padding: '6px 8px',
-                          fontSize: '11px',
-                          borderRadius: '4px',
-                          outline: 'none',
-                          cursor: 'pointer'
-                        }}
-                      >
-                        <option value="All">All Subjects</option>
-                        {availableCourses.map(c => (
-                          <option key={c} value={c}>{c}</option>
-                        ))}
-                      </select>
                     </div>
                     {filteredPracticals.length === 0 && (
                       <div style={{ padding: '16px', fontSize: '11px', color: '#7e7e7e', textAlign: 'center' }}>

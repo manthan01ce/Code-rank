@@ -1,20 +1,15 @@
 'use client';
 
-/**
- * PURPOSE OF THIS FILE:
- * Entry component for /student page.
- * It checks credentials and redirects the student user immediately
- * to the unified coding workspace (/student/code/1) so they bypass the dashboard cards.
- */
-
 import { useRouter } from 'next/navigation';
 import { useEffect, useState } from 'react';
+import LoadingOverlay from '@/components/LoadingOverlay';
 
 export default function StudentDashboard() {
   const router = useRouter();
   const [user, setUser] = useState(null);
   const [profile, setProfile] = useState(null);
   const [loading, setLoading] = useState(true);
+  const [courses, setCourses] = useState([]);
 
   useEffect(() => {
     const userData = localStorage.getItem('user');
@@ -23,7 +18,45 @@ export default function StudentDashboard() {
       router.push('/');
       return;
     }
-    router.replace('/student/code/1');
+    
+    try {
+      setUser(JSON.parse(userData));
+    } catch {
+      router.push('/');
+      return;
+    }
+    
+    // Fetch user profile and courses
+    const fetchData = async () => {
+      try {
+        const res = await fetch('/api/auth/profile', {
+          headers: { 'Authorization': `Bearer ${token}` }
+        });
+        if (res.ok) {
+          const data = await res.json();
+          setProfile(data);
+          
+          const sem = data.user?.extra_info?.semester;
+          if (sem) {
+            const coursesRes = await fetch(`/api/courses?semester=${sem}`, {
+              headers: { 'Authorization': `Bearer ${token}` }
+            });
+            if (coursesRes.ok) {
+              const coursesData = await coursesRes.json();
+              setCourses(coursesData);
+            }
+          }
+        } else {
+          router.push('/');
+        }
+      } catch (err) {
+        console.error('Error fetching profile:', err);
+      } finally {
+        setLoading(false);
+      }
+    };
+    
+    fetchData();
   }, [router]);
 
   const handleLogout = () => {
@@ -34,167 +67,98 @@ export default function StudentDashboard() {
 
   if (!user) return null;
 
-  const semester = profile?.extra_info?.semester || '';
-  const is4thSemester = true;
+  const semester = profile?.user?.extra_info?.semester || '';
+  const batch = profile?.user?.extra_info?.batch || '';
 
   return (
-    <div style={{ 
-      display: 'flex', 
-      flexDirection: 'column', 
-      alignItems: 'center', 
-      justifyContent: 'center', 
-      minHeight: '100vh',
-      backgroundColor: '#f8fafc',
-      padding: '20px',
-      textAlign: 'center',
-      fontFamily: 'Inter, sans-serif'
-    }}>
+    <div style={{ minHeight: '100vh', backgroundColor: '#f8fafc', fontFamily: 'Inter, sans-serif' }}>
+      {loading && <LoadingOverlay />}
+      
+      {/* Top Navbar */}
       <div style={{
-        backgroundColor: 'white',
-        padding: '40px',
-        borderRadius: '16px',
-        boxShadow: '0 10px 25px rgba(0,0,0,0.05)',
-        maxWidth: '500px',
-        width: '100%'
+        height: '70px', backgroundColor: 'white', borderBottom: '1px solid var(--border-color)',
+        display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '0 40px',
+        position: 'sticky', top: 0, zIndex: 100
       }}>
-        <div style={{ 
-          width: '80px', 
-          height: '80px', 
-          backgroundColor: '#ecfdf5', 
-          borderRadius: '50%', 
-          display: 'flex', 
-          alignItems: 'center', 
-          justifyContent: 'center',
-          margin: '0 auto 20px',
-          color: '#10b981',
-          fontSize: '40px'
-        }}>
-          ✓
+        <div style={{ display: 'flex', alignItems: 'center', gap: '15px' }}>
+          <img src="/coderank-logo.png" alt="Logo" style={{ height: '40px' }} onError={(e) => { e.target.src = '/coderank-logo.svg'; }} />
+          <h2 style={{ margin: 0, fontSize: '20px', fontWeight: 700, color: '#1e293b' }}>CodeRank Student</h2>
         </div>
-        <h1 style={{ color: '#1e293b', marginBottom: '10px', fontSize: '28px', fontWeight: '700' }}>
-          Student Dashboard
-        </h1>
-        <p style={{ color: '#64748b', marginBottom: '30px', lineHeight: '1.6', fontSize: '15px' }}>
-          Welcome, <strong>{user.name}</strong>!<br/>
-          Your student account is active.
-        </p>
-        
-        <div style={{
-          backgroundColor: '#f8fafc',
-          padding: '20px',
-          borderRadius: '12px',
-          marginBottom: '30px',
-          textAlign: 'left'
-        }}>
-          <p style={{ color: '#475569', marginBottom: '8px', fontSize: '14px' }}>
-            <strong>Email:</strong> {user.email}
-          </p>
-          <p style={{ color: '#475569', marginBottom: '8px', fontSize: '14px' }}>
-            <strong>Registered Semester:</strong> {loading ? 'Loading…' : semester || 'Not Specified'}
-          </p>
-          <p style={{ color: '#475569', fontSize: '14px' }}>
-            <strong>Role:</strong> Student
-          </p>
-        </div>
-
-        {/* ── Dynamic Coding Workspace Access Card ── */}
-        {!loading && (
-          <div style={{
-            background: is4thSemester ? 'rgba(0,102,177,0.05)' : '#fdf2f2',
-            border: `1px solid ${is4thSemester ? 'rgba(0,102,177,0.15)' : '#fde2e2'}`,
-            borderRadius: '12px',
-            padding: '20px',
-            marginBottom: '20px',
-            textAlign: 'left'
-          }}>
-            <h4 style={{ color: is4thSemester ? '#0066b1' : '#ef4444', margin: '0 0 6px 0', fontSize: '15px', fontWeight: 700 }}>
-              {is4thSemester ? '🎓 Coding Workspace Enabled' : '🔒 Workspace Access Restricted'}
-            </h4>
-            <p style={{ color: '#64748b', fontSize: '12.5px', lineHeight: 1.5, margin: '0 0 16px 0' }}>
-              {is4thSemester 
-                ? 'Your 4th-semester profile authorizes you to enter the CodeRank Interactive Coding Workspace playground.'
-                : 'The CodeRank Interactive Coding Workspace playground is restricted strictly to students in the 4th semester.'}
-            </p>
-            {is4thSemester ? (
-              <button
-                onClick={() => router.push('/student/code/1')}
-                style={{
-                  background: '#0066b1',
-                  color: '#ffffff',
-                  border: 'none',
-                  borderRadius: '6px',
-                  padding: '10px 20px',
-                  fontSize: '12px',
-                  fontWeight: 700,
-                  cursor: 'pointer',
-                  width: '100%',
-                  transition: 'background 0.2s'
-                }}
-                onMouseEnter={e => e.currentTarget.style.background = '#1c69d4'}
-                onMouseLeave={e => e.currentTarget.style.background = '#0066b1'}
-              >
-                Enter Coding Workspace →
-              </button>
-            ) : (
-              <div style={{ fontSize: '11px', color: '#b91c1c', fontWeight: 600 }}>
-                Access Restricted (Current Semester: {semester || 'unspecified'})
-              </div>
-            )}
+        <div style={{ display: 'flex', alignItems: 'center', gap: '20px' }}>
+          <div style={{ textAlign: 'right' }}>
+            <div style={{ fontSize: '14px', fontWeight: 600, color: '#1e293b' }}>{user.name}</div>
+            <div style={{ fontSize: '12px', color: '#64748b' }}>Semester {semester} &bull; Batch {batch}</div>
           </div>
-        )}
-
-        {/* ── Assigned Practicals Section ── */}
-        {!loading && (
-          <div style={{
-            background: 'rgba(79,70,229,0.05)',
-            border: '1px solid rgba(79,70,229,0.15)',
-            borderRadius: '12px',
-            padding: '20px',
-            marginBottom: '30px',
-            textAlign: 'left'
-          }}>
-            <h4 style={{ color: '#4F46E5', margin: '0 0 6px 0', fontSize: '15px', fontWeight: 700 }}>
-              📝 Assigned Practicals & Challenges
-            </h4>
-            <p style={{ color: '#64748b', fontSize: '12.5px', lineHeight: 1.5, margin: '0 0 16px 0' }}>
-              Solve programming assignments assigned to your course/batch by faculty members.
-            </p>
-            <button
-              onClick={() => router.push('/student/code/1')}
-              style={{
-                background: '#4F46E5',
-                color: '#ffffff',
-                border: 'none',
-                borderRadius: '6px',
-                padding: '10px 20px',
-                fontSize: '12px',
-                fontWeight: 700,
-                cursor: 'pointer',
-                width: '100%',
-                transition: 'background 0.2s'
-              }}
-              onMouseEnter={e => e.currentTarget.style.background = '#4338ca'}
-              onMouseLeave={e => e.currentTarget.style.background = '#4F46E5'}
-            >
-              View Practical Assignments →
-            </button>
-          </div>
-        )}
-        
-        <div style={{ display: 'flex', gap: '15px', justifyContent: 'center' }}>
           <button 
-            className="btn-primary" 
-            style={{ width: 'auto', padding: '12px 30px', margin: 0, background: '#475569' }}
             onClick={handleLogout}
+            style={{ padding: '8px 16px', background: '#f1f5f9', border: '1px solid #cbd5e1', borderRadius: '8px', cursor: 'pointer', fontWeight: 600, color: '#475569', transition: 'all 0.2s' }}
+            onMouseEnter={e => e.currentTarget.style.background = '#e2e8f0'}
+            onMouseLeave={e => e.currentTarget.style.background = '#f1f5f9'}
           >
-            ← Logout
+            Logout
           </button>
         </div>
       </div>
-      
-      <p style={{ marginTop: '20px', color: '#94a3b8', fontSize: '14px' }}>
-        © 2026 CodeRank. All rights reserved.
-      </p>
+
+      <div style={{ maxWidth: '1200px', margin: '0 auto', padding: '40px 20px' }}>
+        <div style={{ marginBottom: '40px' }}>
+          <h1 style={{ fontSize: '28px', fontWeight: 700, color: '#1e293b', marginBottom: '10px' }}>My Subjects</h1>
+          <p style={{ color: '#64748b', fontSize: '15px' }}>Select a subject below to access your assigned practicals and coding workspace.</p>
+        </div>
+
+        {courses.length > 0 ? (
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(300px, 1fr))', gap: '25px' }}>
+            {courses.map(course => (
+              <div 
+                key={course.id}
+                onClick={() => router.push(`/student/code/1?subject=${encodeURIComponent(course.course_code)}`)}
+                style={{
+                  background: 'white', border: '1px solid var(--border-color)', borderRadius: '16px', padding: '24px',
+                  cursor: 'pointer', transition: 'transform 0.2s, box-shadow 0.2s, border-color 0.2s',
+                  boxShadow: '0 4px 6px -1px rgba(0,0,0,0.05)',
+                  display: 'flex', flexDirection: 'column', height: '160px', justifyContent: 'space-between'
+                }}
+                onMouseEnter={(e) => {
+                  e.currentTarget.style.transform = 'translateY(-4px)';
+                  e.currentTarget.style.boxShadow = '0 10px 15px -3px rgba(0, 0, 0, 0.1)';
+                  e.currentTarget.style.borderColor = '#0066b1';
+                }}
+                onMouseLeave={(e) => {
+                  e.currentTarget.style.transform = 'translateY(0)';
+                  e.currentTarget.style.boxShadow = '0 4px 6px -1px rgba(0,0,0,0.05)';
+                  e.currentTarget.style.borderColor = 'var(--border-color)';
+                }}
+              >
+                <div>
+                  <span style={{ fontSize: '12px', fontWeight: 700, color: '#0066b1', textTransform: 'uppercase', letterSpacing: '0.5px' }}>
+                    {course.course_code}
+                  </span>
+                  <h3 style={{ fontSize: '18px', fontWeight: 600, marginTop: '10px', color: '#1e293b', lineHeight: 1.3 }}>
+                    {course.name}
+                  </h3>
+                </div>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: 'auto' }}>
+                  <span style={{ fontSize: '13px', color: '#64748b', fontWeight: 500 }}>
+                    Semester {course.semester}
+                  </span>
+                  <span style={{ fontSize: '13px', fontWeight: 600, color: '#0066b1' }}>
+                    Open Workspace &rarr;
+                  </span>
+                </div>
+              </div>
+            ))}
+          </div>
+        ) : !loading && (
+          <div style={{ textAlign: 'center', padding: '60px 20px', background: 'white', borderRadius: '16px', border: '1px dashed #cbd5e1' }}>
+            <div style={{ fontSize: '40px', marginBottom: '15px' }}>📭</div>
+            <h3 style={{ fontSize: '18px', fontWeight: 600, color: '#1e293b', marginBottom: '8px' }}>No Subjects Found</h3>
+            <p style={{ color: '#64748b', fontSize: '14px', maxWidth: '400px', margin: '0 auto' }}>
+              We couldn't find any subjects assigned to your current semester ({semester || 'Unknown'}). 
+              Please contact your administrator if this is a mistake.
+            </p>
+          </div>
+        )}
+      </div>
     </div>
   );
 }

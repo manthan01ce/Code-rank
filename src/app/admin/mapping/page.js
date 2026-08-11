@@ -117,7 +117,7 @@ export default function CourseMapping() {
   const handleSaveMapping = async (courseId) => {
     setProcessing(true);
     try {
-      const token = localStorage.getItem('token');
+      const token = authToken;
       const current = mappings[courseId] || { faculty_ids: [], co_coordinator_id: null };
       const payload = {
         course_id: courseId,

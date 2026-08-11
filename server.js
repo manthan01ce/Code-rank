@@ -47,6 +47,18 @@ app.prepare().then(() => {
       console.log(`Socket ${socket.id} left room ${room}`);
     });
 
+    socket.on('join_course_room', (courseId) => {
+      const room = `course_${courseId}`;
+      socket.join(room);
+      console.log(`Socket ${socket.id} joined room ${room}`);
+    });
+
+    socket.on('leave_course_room', (courseId) => {
+      const room = `course_${courseId}`;
+      socket.leave(room);
+      console.log(`Socket ${socket.id} left room ${room}`);
+    });
+
     socket.on('disconnect', () => {
       console.log(`Socket disconnected: ${socket.id}`);
     });

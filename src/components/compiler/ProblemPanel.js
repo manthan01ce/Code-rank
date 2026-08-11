@@ -160,22 +160,48 @@ export default function ProblemPanel({ problem }) {
                     </div>
                   </div>
                 )}
-                {p.sampleInput && (
-                  <div>
-                    <p style={{ color: '#e6e6e6', fontWeight: 700, fontSize: '13px', marginBottom: '8px', letterSpacing: '0.5px' }}>Sample Input:</p>
-                    <pre style={{ background: '#1a1a1a', border: '1px solid #262626', padding: '14px 16px', fontFamily: 'monospace', fontSize: '13px', color: '#e6e6e6', overflowX: 'auto', margin: 0, whiteSpace: 'pre-wrap' }}>
-                      {p.sampleInput}
-                    </pre>
-                  </div>
-                )}
-                {p.sampleOutput && (
-                  <div>
-                    <p style={{ color: '#e6e6e6', fontWeight: 700, fontSize: '13px', marginBottom: '8px', letterSpacing: '0.5px' }}>Sample Output:</p>
-                    <pre style={{ background: '#1a1a1a', border: '1px solid #262626', padding: '14px 16px', fontFamily: 'monospace', fontSize: '13px', color: '#e6e6e6', overflowX: 'auto', margin: 0, whiteSpace: 'pre-wrap' }}>
-                      {p.sampleOutput}
-                    </pre>
-                  </div>
-                )}
+                {(() => {
+                  if (!p.sampleInput) return null;
+                  try {
+                    const parsed = JSON.parse(p.sampleInput);
+                    if (Array.isArray(parsed) && parsed.length > 0) {
+                      return (
+                        <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
+                          {parsed.map((ex, i) => (
+                            <div key={i}>
+                              <p style={{ color: '#e6e6e6', fontWeight: 700, fontSize: '13px', marginBottom: '8px', letterSpacing: '0.5px' }}>Sample {i + 1}:</p>
+                              <div style={{ background: '#1a1a1a', borderLeft: '3px solid #00b8a3', padding: '14px 16px', fontFamily: 'JetBrains Mono, Fira Code, Consolas, monospace', fontSize: '13px' }}>
+                                <div style={{ marginBottom: '4px' }}><span style={{ color: '#7e7e7e' }}>Input: </span><br/><span style={{ color: '#e6e6e6', whiteSpace: 'pre-wrap' }}>{ex.input}</span></div>
+                                <div style={{ marginTop: '10px' }}><span style={{ color: '#7e7e7e' }}>Output: </span><br/><span style={{ color: '#e6e6e6', whiteSpace: 'pre-wrap' }}>{ex.expected || ex.output}</span></div>
+                              </div>
+                            </div>
+                          ))}
+                        </div>
+                      );
+                    }
+                  } catch (e) {
+                    // fall back to old behavior
+                  }
+                  
+                  return (
+                    <>
+                      <div>
+                        <p style={{ color: '#e6e6e6', fontWeight: 700, fontSize: '13px', marginBottom: '8px', letterSpacing: '0.5px' }}>Sample Input:</p>
+                        <pre style={{ background: '#1a1a1a', border: '1px solid #262626', padding: '14px 16px', fontFamily: 'monospace', fontSize: '13px', color: '#e6e6e6', overflowX: 'auto', margin: 0, whiteSpace: 'pre-wrap' }}>
+                          {p.sampleInput}
+                        </pre>
+                      </div>
+                      {p.sampleOutput && (
+                        <div style={{ marginTop: '20px' }}>
+                          <p style={{ color: '#e6e6e6', fontWeight: 700, fontSize: '13px', marginBottom: '8px', letterSpacing: '0.5px' }}>Sample Output:</p>
+                          <pre style={{ background: '#1a1a1a', border: '1px solid #262626', padding: '14px 16px', fontFamily: 'monospace', fontSize: '13px', color: '#e6e6e6', overflowX: 'auto', margin: 0, whiteSpace: 'pre-wrap' }}>
+                            {p.sampleOutput}
+                          </pre>
+                        </div>
+                      )}
+                    </>
+                  );
+                })()}
               </div>
             )}
 

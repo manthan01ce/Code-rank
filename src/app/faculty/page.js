@@ -33,8 +33,7 @@ export default function FacultyDashboard() {
   const [pracInputFormat, setPracInputFormat] = useState('');
   const [pracOutputFormat, setPracOutputFormat] = useState('');
   const [pracConstraints, setPracConstraints] = useState('');
-  const [pracSampleInput, setPracSampleInput] = useState('');
-  const [pracSampleOutput, setPracSampleOutput] = useState('');
+  const [sampleTestCases, setSampleTestCases] = useState([{ input: '', expected: '' }]);
   const [allowedLanguages, setAllowedLanguages] = useState(['python', 'cpp']);
   
   // Starter code templates
@@ -204,7 +203,23 @@ export default function FacultyDashboard() {
     if (selectedCourse && activeTab === 'marks') {
       fetchStats();
     }
-  }, [selectedCourse, activeTab]);
+    
+    if (!socket || !selectedCourse || activeTab !== 'marks') return;
+    
+    socket.emit('join_course_room', selectedCourse);
+    
+    const handleNewSubmissionMarks = () => {
+      // Refresh stats on new submission
+      fetchStats();
+    };
+    
+    socket.on('new_submission_marks', handleNewSubmissionMarks);
+    
+    return () => {
+      socket.off('new_submission_marks', handleNewSubmissionMarks);
+      socket.emit('leave_course_room', selectedCourse);
+    };
+  }, [selectedCourse, activeTab, socket]);
 
   const fetchStats = async () => {
     setLoadingStats(true);
@@ -232,8 +247,7 @@ export default function FacultyDashboard() {
     setPracInputFormat('');
     setPracOutputFormat('');
     setPracConstraints('');
-    setPracSampleInput('');
-    setPracSampleOutput('');
+    setSampleTestCases([{ input: '', expected: '' }]);
     setPracStartTime('');
     setPracEndTime('');
     setAllowedLanguages(['python', 'cpp']);
@@ -261,8 +275,16 @@ export default function FacultyDashboard() {
         setPracInputFormat(data.input_format || '');
         setPracOutputFormat(data.output_format || '');
         setPracConstraints(data.constraints || '');
-        setPracSampleInput(data.sample_input || '');
-        setPracSampleOutput(data.sample_output || '');
+        try {
+          const parsed = JSON.parse(data.sample_input);
+          if (Array.isArray(parsed) && parsed.length > 0) {
+            setSampleTestCases(parsed);
+          } else {
+            setSampleTestCases([{ input: data.sample_input || '', expected: data.sample_output || '' }]);
+          }
+        } catch {
+          setSampleTestCases([{ input: data.sample_input || '', expected: data.sample_output || '' }]);
+        }
         
         // Helper to format ISO string to datetime-local value (YYYY-MM-DDTHH:MM)
         const formatLocalTime = (iso) => {
@@ -345,8 +367,8 @@ export default function FacultyDashboard() {
       input_format: pracInputFormat,
       output_format: pracOutputFormat,
       constraints: pracConstraints,
-      sample_input: pracSampleInput,
-      sample_output: pracSampleOutput,
+      sample_input: JSON.stringify(sampleTestCases),
+      sample_output: '', // Unused now but kept for DB compatibility
       test_cases: testCases.map((tc, idx) => ({
         input: tc.input,
         expected: tc.expected,
@@ -1072,15 +1094,54 @@ export default function FacultyDashboard() {
                     <textarea className="input-field" rows={2} value={pracOutputFormat} onChange={e => setPracOutputFormat(e.target.value)} required />
                   </div>
                 </div>
-                <div style={{ display: 'flex', gap: '15px' }}>
-                  <div style={{ flex: 1 }}>
-                    <label style={{ fontSize: '11px', color: 'var(--text-muted)' }}>Sample Input *</label>
-                    <textarea className="input-field" rows={2} value={pracSampleInput} onChange={e => setPracSampleInput(e.target.value)} required />
-                  </div>
-                  <div style={{ flex: 1 }}>
-                    <label style={{ fontSize: '11px', color: 'var(--text-muted)' }}>Sample Output *</label>
-                    <textarea className="input-field" rows={2} value={pracSampleOutput} onChange={e => setPracSampleOutput(e.target.value)} required />
-                  </div>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '15px' }}>
+                  <p style={{ fontWeight: 'bold', marginBottom: '8px', fontSize: '13px', color: '#1e293b' }}>Sample Test Cases (Shown to students)</p>
+                  {sampleTestCases.map((tc, idx) => (
+                    <div key={idx} style={{ display: 'flex', gap: '10px', alignItems: 'center', borderBottom: '1px solid #f1f5f9', pb: '10px', marginBottom: '10px' }}>
+                      <div style={{ flex: 1 }}>
+                        <textarea
+                          className="input-field"
+                          rows={2}
+                          placeholder={`Sample Input ${idx + 1}`}
+                          value={tc.input}
+                          onChange={e => {
+                            const updated = [...sampleTestCases];
+                            updated[idx].input = e.target.value;
+                            setSampleTestCases(updated);
+                          }}
+                          required
+                          style={{ padding: '6px', fontFamily: 'monospace', resize: 'vertical' }}
+                        />
+                      </div>
+                      <div style={{ flex: 1 }}>
+                        <textarea
+                          className="input-field"
+                          rows={2}
+                          placeholder={`Sample Output ${idx + 1}`}
+                          value={tc.expected}
+                          onChange={e => {
+                            const updated = [...sampleTestCases];
+                            updated[idx].expected = e.target.value;
+                            setSampleTestCases(updated);
+                          }}
+                          required
+                          style={{ padding: '6px', fontFamily: 'monospace', resize: 'vertical' }}
+                        />
+                      </div>
+                      <button type="button" style={{ border: 'none', background: 'none', color: '#ef4444', fontWeight: 'bold', cursor: 'pointer', fontSize: '18px', padding: '0 5px' }} onClick={() => {
+                        if (sampleTestCases.length <= 1) {
+                          alert('At least 1 sample test case must remain.');
+                          return;
+                        }
+                        setSampleTestCases(sampleTestCases.filter((_, i) => i !== idx));
+                      }}>
+                        ×
+                      </button>
+                    </div>
+                  ))}
+                  <button type="button" onClick={() => setSampleTestCases([...sampleTestCases, { input: '', expected: '' }])} style={{ background: '#f8fafc', color: '#0066b1', border: '1px dashed #cbd5e1', padding: '6px 12px', borderRadius: '6px', fontSize: '12px', fontWeight: 600, cursor: 'pointer' }}>
+                    + Add Sample Test Case
+                  </button>
                 </div>
               </div>
 
@@ -1123,17 +1184,18 @@ export default function FacultyDashboard() {
                         />
                       </div>
                       <div style={{ width: '80px' }}>
-                        <input
-                          type="number"
+                        <select
                           className="input-field"
-                          placeholder="Marks *"
                           value={tc.marks}
                           onChange={e => handleTestCaseChange(idx, 'marks', e.target.value)}
                           required
                           disabled={hasSubmissions}
-                          min="0"
                           style={{ padding: '6px' }}
-                        />
+                        >
+                          {[...Array(11).keys()].map(n => (
+                            <option key={n} value={n}>{n}</option>
+                          ))}
+                        </select>
                       </div>
                       {!hasSubmissions && (
                         <button type="button" style={{ border: 'none', background: 'none', color: '#ef4444', fontWeight: 'bold', cursor: 'pointer', fontSize: '18px', padding: '0 5px' }} onClick={() => handleRemoveTestCaseRow(idx)}>

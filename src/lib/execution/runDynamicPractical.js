@@ -25,19 +25,41 @@ export async function runDynamicPractical({ language, code, dbId, userId, isSubm
     const practical = practicals[0];
 
     // 2. Fetch test cases
-    const testCases = await sql`
-      SELECT * FROM practical_test_cases 
-      WHERE practical_id = ${dbId} 
-      ORDER BY order_index ASC
-    `;
+    let testCases = [];
+    if (isSubmit) {
+      testCases = await sql`
+        SELECT * FROM practical_test_cases 
+        WHERE practical_id = ${dbId} 
+        ORDER BY order_index ASC
+      `;
+    } else {
+      try {
+        if (practical.sample_input) {
+          const parsed = JSON.parse(practical.sample_input);
+          if (Array.isArray(parsed)) {
+            testCases = parsed.map((ex, i) => ({
+              id: `sample_${i}`,
+              input: ex.input || '',
+              expected: ex.expected || ex.output || '',
+              marks: 0,
+              is_hidden: false,
+              time_limit: 5.0,
+              label: `Sample ${i + 1}`
+            }));
+          }
+        }
+      } catch (e) {
+        console.warn('Failed to parse sample input:', e);
+      }
+    }
 
     if (testCases.length === 0) {
       return {
         status: 'runtime_error',
-        summary: 'No test cases configured',
+        summary: isSubmit ? 'No test cases configured' : 'No sample test cases configured',
         exitCode: 400,
         compileError: null,
-        runtimeError: 'No test cases configured for this practical',
+        runtimeError: isSubmit ? 'No test cases configured for this practical' : 'No sample test cases configured for this practical',
         cases: []
       };
     }
@@ -111,6 +133,8 @@ export async function runDynamicPractical({ language, code, dbId, userId, isSubm
     const normalizedMarks = Math.min(10, Math.round(((rawMarks / totalPracticalMarks) * 10) * 100) / 100);
     const overallStatus = rawMarks === totalPracticalMarks ? 'Accepted' : 'Wrong Answer';
 
+    let submissionId = null;
+
     // 4. Save to Database if it is a Submit
     if (isSubmit && userId) {
       const savedSub = await sql`
@@ -122,7 +146,7 @@ export async function runDynamicPractical({ language, code, dbId, userId, isSubm
         )
         RETURNING id
       `;
-      const submissionId = savedSub[0].id;
+      submissionId = savedSub[0].id;
 
       for (const sc of submissionCasesToInsert) {
         await sql`
@@ -137,13 +161,13 @@ export async function runDynamicPractical({ language, code, dbId, userId, isSubm
     }
 
     // ── Emit real-time Socket.IO event to the faculty room ──
-    if (isSubmit && userId && global.io) {
+    if (isSubmit && userId && global.io && submissionId) {
       try {
         const userRes = await sql`SELECT name, email FROM users WHERE id = ${userId}`;
         const studentName = userRes.length > 0 ? userRes[0].name : 'Unknown Student';
 
         global.io.to(`practical_${dbId}`).emit('new_submission', {
-          id: savedSub[0].id,
+          id: submissionId,
           student_name: studentName,
           status: overallStatus,
           raw_marks: rawMarks,
@@ -151,6 +175,15 @@ export async function runDynamicPractical({ language, code, dbId, userId, isSubm
           language,
           submitted_at: new Date().toISOString()
         });
+
+        if (practical && practical.course_id) {
+          global.io.to(`course_${practical.course_id}`).emit('new_submission_marks', {
+            id: submissionId,
+            practical_id: dbId,
+            student_id: userId,
+            normalized_marks: normalizedMarks
+          });
+        }
       } catch (err) {
         console.error('Failed to emit socket event:', err);
       }
@@ -168,12 +201,16 @@ export async function runDynamicPractical({ language, code, dbId, userId, isSubm
 
   } catch (error) {
     console.error('runDynamicPractical error:', error);
+    const errorMessage = error.message.includes('fetch failed') 
+      ? 'Error connecting to database: TypeError: fetch failed (Check your Neon DATABASE_URL or internet connection)' 
+      : error.message;
+
     return {
       status: 'runtime_error',
       summary: 'Execution Failure',
       exitCode: 500,
       compileError: null,
-      runtimeError: error.message,
+      runtimeError: errorMessage,
       cases: []
     };
   }
