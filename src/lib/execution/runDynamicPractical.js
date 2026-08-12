@@ -35,17 +35,32 @@ export async function runDynamicPractical({ language, code, dbId, userId, isSubm
     } else {
       try {
         if (practical.sample_input) {
-          const parsed = JSON.parse(practical.sample_input);
-          if (Array.isArray(parsed)) {
-            testCases = parsed.map((ex, i) => ({
-              id: `sample_${i}`,
-              input: ex.input || '',
-              expected: ex.expected || ex.output || '',
-              marks: 0,
-              is_hidden: false,
-              time_limit: 5.0,
-              label: `Sample ${i + 1}`
-            }));
+          try {
+            const parsed = JSON.parse(practical.sample_input);
+            if (Array.isArray(parsed)) {
+              testCases = parsed.map((ex, i) => ({
+                id: `sample_${i}`,
+                input: ex.input || '',
+                expected: ex.expected || ex.output || '',
+                marks: 0,
+                is_hidden: false,
+                time_limit: 5.0,
+                label: `Sample ${i + 1}`
+              }));
+            }
+          } catch (e) {
+            // Not a JSON array, treat as raw string if sample_output exists
+            if (practical.sample_output) {
+              testCases = [{
+                id: 'sample_0',
+                input: practical.sample_input.trim(),
+                expected: practical.sample_output.trim(),
+                marks: 0,
+                is_hidden: false,
+                time_limit: 5.0,
+                label: 'Sample 1'
+              }];
+            }
           }
         }
       } catch (e) {

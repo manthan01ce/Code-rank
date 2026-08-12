@@ -137,12 +137,13 @@ export default function ConsolePanel({
               letterSpacing: '1px',
               textTransform: 'uppercase',
               padding: '2px 10px',
-              color: currentStatus.color,
-              background: currentStatus.bg,
-              border: `1px solid ${currentStatus.border}`,
+              color: actionMode === 'run' && currentStatus.label === 'Wrong Answer' ? '#0fa336' : currentStatus.color,
+              background: actionMode === 'run' && currentStatus.label === 'Wrong Answer' ? 'rgba(15,163,54,0.1)' : currentStatus.bg,
+              border: `1px solid ${actionMode === 'run' && currentStatus.label === 'Wrong Answer' ? 'rgba(15,163,54,0.25)' : currentStatus.border}`,
+              borderRadius: '4px'
             }}>
-              {currentStatus.icon}
-              {currentStatus.label}
+              {actionMode === 'run' && currentStatus.label === 'Wrong Answer' ? <CheckCircle size={15} color="#0fa336" /> : currentStatus.icon}
+              {actionMode === 'run' && currentStatus.label === 'Wrong Answer' ? 'Run Completed' : currentStatus.label}
             </div>
           )}
         </div>
@@ -415,7 +416,7 @@ export default function ConsolePanel({
                             onMouseLeave={e => e.currentTarget.style.background = isExpanded ? '#111111' : 'transparent'}
                           >
                             <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
-                              {casePassed ? <CheckCircle size={15} color="#0fa336" /> : <XCircle size={15} color="#e22718" />}
+                              {casePassed || (actionMode === 'run' && c.status === 'wrong_answer') ? <CheckCircle size={15} color="#0fa336" /> : <XCircle size={15} color="#e22718" />}
                               <span style={{ fontSize: '12px', fontWeight: 600, color: '#ffffff' }}>
                                 {c.hidden ? `Hidden Test Case ${idx + 1}` : `Test Case ${idx + 1}`}
                               </span>
@@ -426,10 +427,10 @@ export default function ConsolePanel({
                                 fontSize: '10px',
                                 fontWeight: 700,
                                 textTransform: 'uppercase',
-                                color: casePassed ? '#0fa336' : '#e22718',
+                                color: casePassed || (actionMode === 'run' && c.status === 'wrong_answer') ? '#0fa336' : '#e22718',
                                 letterSpacing: '0.5px'
                               }}>
-                                {casePassed ? 'Passed' : c.status === 'wrong_answer' ? 'Wrong Answer' : c.status === 'runtime_error' ? 'Runtime Error' : c.status}
+                                {casePassed ? 'Passed' : actionMode === 'run' && c.status === 'wrong_answer' ? 'Executed' : c.status === 'wrong_answer' ? 'Wrong Answer' : c.status === 'runtime_error' ? 'Runtime Error' : c.status}
                               </span>
                               {c.runtimeMs !== undefined && (
                                 <span style={{ fontSize: '11px', color: '#7e7e7e', fontFamily: 'JetBrains Mono, monospace' }}>

@@ -26,10 +26,11 @@ export async function POST(request) {
     }
     const subjectId = practicals[0].course_id;
 
-    // 2. Persist to student_workspaces database table
+    // 2. Persist to student_workspaces database table as binary
+    const codeBuffer = Buffer.from(code, 'utf8');
     await sql`
       INSERT INTO student_workspaces (student_id, practical_id, language, latest_code, saved_at)
-      VALUES (${user.id}, ${parseInt(practical_id)}, ${language}, ${code}, CURRENT_TIMESTAMP)
+      VALUES (${user.id}, ${parseInt(practical_id)}, ${language}, ${codeBuffer}, CURRENT_TIMESTAMP)
       ON CONFLICT (student_id, practical_id, language) 
       DO UPDATE SET latest_code = EXCLUDED.latest_code, saved_at = CURRENT_TIMESTAMP
     `;

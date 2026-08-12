@@ -27,7 +27,11 @@ export async function GET(request) {
       return NextResponse.json({ latest_code: null });
     }
 
-    return NextResponse.json({ latest_code: workspace[0].latest_code });
+    let code = workspace[0].latest_code;
+    if (Buffer.isBuffer(code)) {
+      code = code.toString('utf8');
+    }
+    return NextResponse.json({ latest_code: code });
   } catch (error) {
     console.error('Load workspace error:', error);
     return NextResponse.json({ error: 'Internal server error: ' + error.message }, { status: 500 });

@@ -16,7 +16,7 @@ import { Panel, Group as PanelGroup, Separator as PanelResizeHandle } from 'reac
 import ProblemPanel from './ProblemPanel';
 import MonacoEditorPanel from './MonacoEditorPanel';
 import ConsolePanel from './ConsolePanel';
-import { Play, ChevronRight, Settings, User, List } from 'lucide-react';
+import { Play, ChevronRight, Settings, User, List, Save } from 'lucide-react';
 import { DEFAULT_LANGUAGE, LANGUAGES } from './LanguageConfig';
 import { STATIC_PROBLEMS } from '@/lib/problems';
 import { useSocket } from '@/hooks/useSocket';
@@ -89,8 +89,7 @@ rl.on('close', () => {
 `,
 };
 
-// Module-level in-memory cache to guarantee persistence in all runtimes
-const inMemoryCache = {};
+// Module-level cache removed per binary save implementation
 
 export default function WorkspaceLayout({ problem }) {
   const router = useRouter();
@@ -255,77 +254,24 @@ export default function WorkspaceLayout({ problem }) {
     constraints: '-'
   };
 
-  // Helper to read drafts from in-memory cache fallback or localStorage. Falls back to boilerplate code.
-  const getDraft = (pId, lang) => {
-    const user = typeof window !== 'undefined' ? JSON.parse(localStorage.getItem('user') || 'null') : null;
-    const userId = user?.id || 'guest';
-    const key = `draft_${userId}_${pId}_${lang}`;
-
-    // 1. Check in-memory cache
-    if (inMemoryCache[key] !== undefined) {
-      return inMemoryCache[key];
-    }
-
-    // 2. Check localStorage
-    if (typeof window !== 'undefined') {
-      try {
-        const saved = localStorage.getItem(`draft_code_${userId}_${pId}_${lang}`);
-        if (saved !== null) {
-          inMemoryCache[key] = saved;
-          return saved;
-        }
-      } catch (e) {
-        console.error('LocalStorage unavailable:', e);
-      }
-    }
-
-    // 3. Fallback to boilerplate — use practical (stdin/stdout) boilerplate if this is a practical
+  const getBoilerplate = (pId, lang) => {
     const activeProblemConfig = resolvedProblem;
-
-    // Check if the DB provides a starter_code for this language
     if (activeProblemConfig?.isPractical && activeProblemConfig?.starter_code?.[lang]) {
       return activeProblemConfig.starter_code[lang];
     }
-
-    // For practicals, use stdin/stdout style boilerplate
     if (activeProblemConfig?.isPractical && PRACTICAL_BOILERPLATES[lang]) {
       return PRACTICAL_BOILERPLATES[lang];
     }
-
-    // For static problems, use the problem-specific boilerplate or language default
     return activeProblemConfig?.boilerplates?.[lang] || LANGUAGES[lang]?.boilerplate || '';
   };
 
-  // Helper to save drafts to both cache structures
-  const saveDraft = (pId, lang, code) => {
-    const user = typeof window !== 'undefined' ? JSON.parse(localStorage.getItem('user') || 'null') : null;
-    const userId = user?.id || 'guest';
-    const key = `draft_${userId}_${pId}_${lang}`;
-
-    // 1. Save in-memory
-    inMemoryCache[key] = code;
-
-    // 2. Save localStorage
-    if (typeof window !== 'undefined') {
-      try {
-        localStorage.setItem(`draft_code_${userId}_${pId}_${lang}`, code);
-      } catch (e) {
-        console.error('LocalStorage save failed:', e);
-      }
-    }
-  };
-
-  const [codeByLang, setCodeByLang] = useState(() => {
-    const initialMap = {};
-    const langKeys = ['python', 'javascript', 'cpp', 'c', 'java'];
-    langKeys.forEach((l) => {
-      initialMap[l] = getDraft(resolvedProblem.id, l);
-    });
-    return initialMap;
-  });
+  const [codeByLang, setCodeByLang] = useState({});
+  const [hasUnsavedChanges, setHasUnsavedChanges] = useState(false);
+  const [isLoadingCode, setIsLoadingCode] = useState(false);
 
   const [isRunning, setIsRunning] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [isSavingCode, setIsSavingCode] = useState(false);
   const [output, setOutput] = useState(null);
 
   const [lastRunCode, setLastRunCode] = useState('');
@@ -337,6 +283,8 @@ export default function WorkspaceLayout({ problem }) {
 
   // Keep code state fully synchronized whenever the routed problem changes
   useEffect(() => {
+    if (!resolvedProblem?.id) return;
+    
     let currentLang = selectedLang;
     if (resolvedProblem.isPractical && resolvedProblem.allowedLanguages && resolvedProblem.allowedLanguages.length > 0) {
       if (!resolvedProblem.allowedLanguages.includes(selectedLang)) {
@@ -345,12 +293,38 @@ export default function WorkspaceLayout({ problem }) {
       }
     }
 
-    const updatedMap = {};
-    const langKeys = ['python', 'javascript', 'cpp', 'c', 'java'];
-    langKeys.forEach((l) => {
-      updatedMap[l] = getDraft(resolvedProblem.id, l);
-    });
-    setCodeByLang(updatedMap);
+    const fetchCodeFromDB = async () => {
+      setIsLoadingCode(true);
+      const token = localStorage.getItem('token');
+      const langKeys = ['python', 'javascript', 'cpp', 'c', 'java'];
+      const initialMap = {};
+      
+      for (const lang of langKeys) {
+        initialMap[lang] = getBoilerplate(resolvedProblem.id, lang);
+      }
+
+      if (token) {
+        try {
+          const res = await fetch(`/api/student/workspaces/load?practical_id=${resolvedProblem.id}&language=${currentLang}`, {
+            headers: { 'Authorization': `Bearer ${token}` }
+          });
+          if (res.ok) {
+            const data = await res.json();
+            if (data.latest_code) {
+              initialMap[currentLang] = data.latest_code;
+            }
+          }
+        } catch (err) {
+          console.error('Failed to load code from DB', err);
+        }
+      }
+      
+      setCodeByLang(initialMap);
+      setHasUnsavedChanges(false);
+      setIsLoadingCode(false);
+    };
+
+    fetchCodeFromDB();
     setOutput(null);
     setJudgeState('idle');
     setLastRunCode('');
@@ -359,33 +333,49 @@ export default function WorkspaceLayout({ problem }) {
 
   function handleCodeChange(newCode) {
     setCodeByLang((prev) => ({ ...prev, [selectedLang]: newCode }));
-    saveDraft(resolvedProblem.id, selectedLang, newCode);
+    setHasUnsavedChanges(true);
   }
 
-  function handleLangChange(lang) {
+  async function handleLangChange(lang) {
+    if (hasUnsavedChanges) {
+      alert('You have unsaved changes. Please save your code before switching languages.');
+      return;
+    }
     setSelectedLang(lang);
     setOutput(null);
     setJudgeState('idle');
     setLastRunCode('');
     setHasSuccessfulRun(false);
 
-    // Sync draft mapping on lang switch
-    const currentDraft = getDraft(resolvedProblem.id, lang);
-    setCodeByLang((prev) => ({ ...prev, [lang]: currentDraft }));
+    if (!codeByLang[lang]) {
+      setIsLoadingCode(true);
+      const token = localStorage.getItem('token');
+      let loadedCode = getBoilerplate(resolvedProblem.id, lang);
+      if (token) {
+        try {
+          const res = await fetch(`/api/student/workspaces/load?practical_id=${resolvedProblem.id}&language=${lang}`, {
+            headers: { 'Authorization': `Bearer ${token}` }
+          });
+          if (res.ok) {
+            const data = await res.json();
+            if (data.latest_code) {
+              loadedCode = data.latest_code;
+            }
+          }
+        } catch (err) {
+          console.error(err);
+        }
+      }
+      setCodeByLang(prev => ({ ...prev, [lang]: loadedCode }));
+      setIsLoadingCode(false);
+    }
   }
 
   function handleResetCode() {
     if (window.confirm('Reset code to default template?')) {
-      let bp;
-      if (resolvedProblem.isPractical && resolvedProblem.starter_code?.[selectedLang]) {
-        bp = resolvedProblem.starter_code[selectedLang];
-      } else if (resolvedProblem.isPractical && PRACTICAL_BOILERPLATES[selectedLang]) {
-        bp = PRACTICAL_BOILERPLATES[selectedLang];
-      } else {
-        bp = resolvedProblem.boilerplates?.[selectedLang] || LANGUAGES[selectedLang]?.boilerplate || '';
-      }
-      saveDraft(resolvedProblem.id, selectedLang, bp);
+      const bp = getBoilerplate(resolvedProblem.id, selectedLang);
       setCodeByLang((prev) => ({ ...prev, [selectedLang]: bp }));
+      setHasUnsavedChanges(true);
     }
   }
 
@@ -440,6 +430,41 @@ export default function WorkspaceLayout({ problem }) {
       setJudgeState('error');
     } finally {
       setIsRunning(false);
+    }
+  }
+
+  async function handleSaveCodeToDB() {
+    if (!resolvedProblem || !resolvedProblem.id) return;
+    const code = codeByLang[selectedLang];
+    if (!code?.trim()) return;
+
+    setIsSavingCode(true);
+    const token = localStorage.getItem('token');
+    
+    try {
+      const res = await fetch('/api/student/workspaces/save', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
+        },
+        body: JSON.stringify({
+          practical_id: resolvedProblem.id,
+          language: selectedLang,
+          code
+        }),
+      });
+
+      if (!res.ok) {
+        const err = await res.json();
+        throw new Error(err.error || 'Failed to save code');
+      }
+      setHasUnsavedChanges(false);
+    } catch (err) {
+      console.error('Failed to save workspace:', err);
+      alert('Failed to save code: ' + err.message);
+    } finally {
+      setIsSavingCode(false);
     }
   }
 
@@ -542,6 +567,10 @@ export default function WorkspaceLayout({ problem }) {
             <select
               value={selectedCourse}
               onChange={(e) => {
+                if (hasUnsavedChanges) {
+                  alert('You have unsaved changes. Please save your code before switching courses.');
+                  return;
+                }
                 const val = e.target.value;
                 setSelectedCourse(val);
                 if (val !== 'All') {
@@ -628,6 +657,10 @@ export default function WorkspaceLayout({ problem }) {
                         <div
                           key={`practical_${p.id}`}
                           onClick={() => {
+                            if (hasUnsavedChanges) {
+                              alert('You have unsaved changes. Please save your code before switching problems.');
+                              return;
+                            }
                             setIsListOpen(false);
                             router.push(`/student/code/practical_${p.id}`);
                           }}
@@ -708,6 +741,37 @@ export default function WorkspaceLayout({ problem }) {
             )}
             {isRunning ? 'Running…' : 'Run'}
             {!isRunning && <span style={{ opacity: 0.5, marginLeft: '4px', fontSize: '10px', textTransform: 'none', fontWeight: 500 }}>Ctrl+'</span>}
+          </button>
+
+          <button
+            id="btn-save-code"
+            onClick={handleSaveCodeToDB}
+            disabled={isSavingCode || isRunning || isSubmitting}
+            title="Save code to database"
+            style={{
+              background: 'transparent',
+              border: '1px solid #3c3c3c',
+              color: '#ffffff',
+              fontSize: '11px',
+              fontWeight: 700,
+              letterSpacing: '1.5px',
+              textTransform: 'uppercase',
+              padding: '0 24px',
+              height: '40px',
+              cursor: (isSavingCode || isRunning || isSubmitting) ? 'not-allowed' : 'pointer',
+              display: 'flex',
+              alignItems: 'center',
+              gap: '8px',
+            }}
+            onMouseEnter={e => { if(!isSavingCode && !isRunning && !isSubmitting) e.currentTarget.style.background = '#1a1a1a' }}
+            onMouseLeave={e => { e.currentTarget.style.background = 'transparent' }}
+          >
+            {isSavingCode ? (
+              <span style={{ width: '12px', height: '12px', border: '2px solid #7e7e7e', borderTopColor: 'transparent', borderRadius: '50%', display: 'inline-block', animation: 'spin 0.8s linear infinite' }} />
+            ) : (
+              <Save size={13} />
+            )}
+            {isSavingCode ? 'Saving…' : 'Save'}
           </button>
 
           <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>

@@ -657,7 +657,7 @@ export default function FacultyDashboard() {
             <h3 style={{ fontSize: '18px', fontWeight: 600 }}>Available Practicals</h3>
             {activeCourse?.is_co_coordinator && (
               <button className="btn-primary" style={{ width: 'auto', padding: '10px 20px', margin: 0 }} onClick={handleOpenAddPractical}>
-                + Add Practical / Challenge
+                + Add Practical
               </button>
             )}
           </div>
