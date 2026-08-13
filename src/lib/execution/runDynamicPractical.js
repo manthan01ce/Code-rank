@@ -87,7 +87,7 @@ export async function runDynamicPractical({ language, code, dbId, userId, isSubm
     const submissionCasesToInsert = [];
 
     // 3. Compile code once using Executor
-    const executor = new Executor(language.toLowerCase(), code);
+    const executor = new Executor(language.toLowerCase(), code, 3000, userId);
     const compileResult = await executor.compile();
 
     if (!compileResult.success) {

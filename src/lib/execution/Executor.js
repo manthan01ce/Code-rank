@@ -42,7 +42,7 @@ const LANGUAGES = {
 };
 
 export class Executor {
-  constructor(language, code, customTimeLimit = 3000) {
+  constructor(language, code, customTimeLimit = 3000, userId = null) {
     this.language = language;
     this.code = code;
     this.timeLimit = customTimeLimit;
@@ -52,10 +52,12 @@ export class Executor {
     }
 
     this.config = LANGUAGES[language];
-    this.daemon = DAEMONS[language];
+    // If a userId is provided, use their dedicated VPS container. Otherwise, fallback to shared daemon.
+    this.daemon = userId ? `coderank-student-${userId}` : DAEMONS[language];
 
     // Create a unique hash for caching the compiled binary
     this.hash = crypto.createHash('sha256').update(`${this.language}:${this.code}`).digest('hex');
+    // Inside the student's container, we create a unique folder for this execution
     this.workdir = `/app/exec_${this.hash}`;
   }
 

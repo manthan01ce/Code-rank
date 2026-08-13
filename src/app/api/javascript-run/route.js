@@ -20,7 +20,10 @@ export async function POST(request) {
     if (typeof problemId === 'string' && problemId.startsWith('practical_')) {
       const { runDynamicPractical } = await import('@/lib/execution/runDynamicPractical');
       const dbId = parseInt(problemId.replace('practical_', ''));
-      const result = await runDynamicPractical({ language: 'javascript', code, dbId, isSubmit: false });
+      const { getUserFromRequest } = await import('@/lib/auth');
+      const user = getUserFromRequest(request);
+      const userId = user ? user.id : null;
+      const result = await runDynamicPractical({ language: 'javascript', code, dbId, userId, isSubmit: false });
       return NextResponse.json(result, { status: 200 });
     }
 

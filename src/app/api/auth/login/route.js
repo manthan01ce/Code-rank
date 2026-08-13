@@ -89,6 +89,17 @@ export async function POST(request) {
       }
     }
 
+    // SPAN VPS-LIKE CONTAINER FOR STUDENT
+    if (dbUser.role === 'student') {
+      try {
+        const { spawnStudentContainer } = await import('@/lib/execution/containerManager');
+        // Spawn asynchronously without awaiting to not block login response
+        spawnStudentContainer(dbUser.id).catch(err => console.error('Error spawning container:', err));
+      } catch (e) {
+        console.error('Container Manager Error:', e);
+      }
+    }
+
     return NextResponse.json({
       token,
       user: {
