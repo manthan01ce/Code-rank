@@ -10,7 +10,7 @@
  * - Settings & Account menu: A User profile dropdown managing profile updates, password changes, preferences, and logout.
  */
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useRouter } from 'next/navigation';
 import { Panel, Group as PanelGroup, Separator as PanelResizeHandle } from 'react-resizable-panels';
 import ProblemPanel from './ProblemPanel';
@@ -109,6 +109,20 @@ export default function WorkspaceLayout({ problem }) {
 
   // Profile, Settings, and Submissions Modals states
   const [isUserDropdownOpen, setIsUserDropdownOpen] = useState(false);
+  const userDropdownRef = useRef(null);
+
+  useEffect(() => {
+    function handleClickOutside(event) {
+      if (userDropdownRef.current && !userDropdownRef.current.contains(event.target)) {
+        setIsUserDropdownOpen(false);
+      }
+    }
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => {
+      document.removeEventListener("mousedown", handleClickOutside);
+    };
+  }, []);
+
   const [showProfileModal, setShowProfileModal] = useState(false);
   const [showSettingsModal, setShowSettingsModal] = useState(false);
   const [showSubmissionsModal, setShowSubmissionsModal] = useState(false);
@@ -285,13 +299,13 @@ export default function WorkspaceLayout({ problem }) {
   useEffect(() => {
     if (!resolvedProblem?.id) return;
     
-    let currentLang = selectedLang;
+    let currentLang = localStorage.getItem(`coderank_selected_lang_${resolvedProblem.id}`) || selectedLang;
     if (resolvedProblem.isPractical && resolvedProblem.allowedLanguages && resolvedProblem.allowedLanguages.length > 0) {
-      if (!resolvedProblem.allowedLanguages.includes(selectedLang)) {
+      if (!resolvedProblem.allowedLanguages.includes(currentLang)) {
         currentLang = resolvedProblem.allowedLanguages[0];
-        setSelectedLang(currentLang);
       }
     }
+    setSelectedLang(currentLang);
 
     const fetchCodeFromDB = async () => {
       setIsLoadingCode(true);
@@ -342,33 +356,32 @@ export default function WorkspaceLayout({ problem }) {
       return;
     }
     setSelectedLang(lang);
+    localStorage.setItem(`coderank_selected_lang_${resolvedProblem.id}`, lang);
     setOutput(null);
     setJudgeState('idle');
     setLastRunCode('');
     setHasSuccessfulRun(false);
 
-    if (!codeByLang[lang]) {
-      setIsLoadingCode(true);
-      const token = localStorage.getItem('token');
-      let loadedCode = getBoilerplate(resolvedProblem.id, lang);
-      if (token) {
-        try {
-          const res = await fetch(`/api/student/workspaces/load?practical_id=${resolvedProblem.id}&language=${lang}`, {
-            headers: { 'Authorization': `Bearer ${token}` }
-          });
-          if (res.ok) {
-            const data = await res.json();
-            if (data.latest_code) {
-              loadedCode = data.latest_code;
-            }
+    setIsLoadingCode(true);
+    const token = localStorage.getItem('token');
+    let loadedCode = getBoilerplate(resolvedProblem.id, lang);
+    if (token) {
+      try {
+        const res = await fetch(`/api/student/workspaces/load?practical_id=${resolvedProblem.id}&language=${lang}`, {
+          headers: { 'Authorization': `Bearer ${token}` }
+        });
+        if (res.ok) {
+          const data = await res.json();
+          if (data.latest_code) {
+            loadedCode = data.latest_code;
           }
-        } catch (err) {
-          console.error(err);
         }
+      } catch (err) {
+        console.error(err);
       }
-      setCodeByLang(prev => ({ ...prev, [lang]: loadedCode }));
-      setIsLoadingCode(false);
     }
+    setCodeByLang((prev) => ({ ...prev, [lang]: loadedCode }));
+    setIsLoadingCode(false);
   }
 
   function handleResetCode() {
@@ -539,12 +552,10 @@ export default function WorkspaceLayout({ problem }) {
 
   const isExecutable = LANGUAGES[selectedLang]?.executableInPhase1;
   const canRun = isExecutable && !isRunning && !isSubmitting;
-  const canSubmit = isExecutable && !isRunning && !isSubmitting && isCodeUnchanged;
+  const canSubmit = isExecutable && !isRunning && !isSubmitting;
 
   const getSubmitTooltip = () => {
     if (!isExecutable) return `Language not yet executable`;
-    if (!hasSuccessfulRun) return 'Run code before submitting';
-    if (currentCode.trim() !== lastRunCode.trim()) return 'Code changed after last run — please run again';
     return null;
   };
 
@@ -823,7 +834,7 @@ export default function WorkspaceLayout({ problem }) {
         </div>
 
         {/* Right: Settings + User */}
-        <div style={{ display: 'flex', alignItems: 'center', gap: '8px', position: 'relative' }}>
+        <div ref={userDropdownRef} style={{ display: 'flex', alignItems: 'center', gap: '8px', position: 'relative' }}>
           <button
             onClick={() => setShowSettingsModal(true)}
             title="Settings"

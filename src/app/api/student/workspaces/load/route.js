@@ -17,10 +17,18 @@ export async function GET(request) {
       return NextResponse.json({ error: 'Missing required query parameters' }, { status: 400 });
     }
 
+    const cleanPracticalId = typeof practical_id === 'string' && practical_id.includes('practical_') 
+      ? parseInt(practical_id.replace('practical_', ''), 10) 
+      : parseInt(practical_id, 10);
+
+    if (isNaN(cleanPracticalId)) {
+      return NextResponse.json({ error: 'Invalid practical ID' }, { status: 400 });
+    }
+
     const workspace = await sql`
       SELECT latest_code 
       FROM student_workspaces 
-      WHERE student_id = ${user.id} AND practical_id = ${parseInt(practical_id)} AND language = ${language}
+      WHERE student_id = ${user.id} AND practical_id = ${cleanPracticalId} AND language = ${language}
     `;
 
     if (workspace.length === 0) {

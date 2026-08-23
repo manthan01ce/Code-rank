@@ -46,7 +46,9 @@ export default function StudentDashboard() {
               setCourses(coursesData);
             }
           }
-        } else {
+        } else if (res.status === 401) {
+          localStorage.removeItem('token');
+          localStorage.removeItem('user');
           router.push('/');
         }
       } catch (err) {

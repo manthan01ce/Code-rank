@@ -78,7 +78,7 @@ export default function StudentManagement() {
   const fileRef                       = useRef();
 
   // Form fields
-  const [form, setForm] = useState({ firstName: '', lastName: '', roll: '', department: '', semester: '' });
+  const [form, setForm] = useState({ firstName: '', lastName: '', roll: '', department: '', semester: '', password: '' });
 
   const token = () => authToken;
 
@@ -133,7 +133,7 @@ export default function StudentManagement() {
   // ── Open modal ──
   const openAdd = () => {
     setEditTarget(null);
-    setForm({ firstName: '', lastName: '', roll: '', department: '', semester: '' });
+    setForm({ firstName: '', lastName: '', roll: '', department: '', semester: '', password: '' });
     setShowModal(true);
   };
 
@@ -145,6 +145,7 @@ export default function StudentManagement() {
       roll: s.extra_info?.roll_number || '',
       department: s.extra_info?.department || '',
       semester: s.extra_info?.semester || '',
+      password: '',
     });
     setShowModal(true);
   };
@@ -167,6 +168,7 @@ export default function StudentManagement() {
             role: 'student',
             status: editTarget.status,
             extra_info: { roll_number: form.roll, department: form.department, semester: form.semester },
+            password: form.password || undefined,
           }),
         });
         const data = await res.json();
@@ -512,6 +514,16 @@ export default function StudentManagement() {
                   @charusat.edu.in
                 </span>
               </div>
+
+              {editTarget && (
+                <input
+                  type="password"
+                  className="input-field"
+                  placeholder="New Password (leave blank to keep unchanged)"
+                  value={form.password}
+                  onChange={e => setForm(f => ({ ...f, password: e.target.value }))}
+                />
+              )}
 
               {!editTarget && (
                 <p style={{ fontSize: '12px', color: '#64748b', background: '#f8fafc', padding: '10px', borderRadius: '8px' }}>

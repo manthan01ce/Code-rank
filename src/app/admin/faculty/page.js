@@ -73,7 +73,7 @@ export default function FacultyManagement() {
   const [toast, setToast]             = useState(null);
   const fileRef                       = useRef();
 
-  const [form, setForm] = useState({ facultyId: '', firstName: '', lastName: '', emailPrefix: '', department: '', designation: '' });
+  const [form, setForm] = useState({ facultyId: '', firstName: '', lastName: '', emailPrefix: '', department: '', designation: '', password: '' });
 
   const token = () => authToken;
 
@@ -118,7 +118,7 @@ export default function FacultyManagement() {
   // ── Open modal ──
   const openAdd = () => {
     setEditTarget(null);
-    setForm({ facultyId: '', firstName: '', lastName: '', emailPrefix: '', department: '', designation: '' });
+    setForm({ facultyId: '', firstName: '', lastName: '', emailPrefix: '', department: '', designation: '', password: '' });
     setShowModal(true);
   };
 
@@ -131,6 +131,7 @@ export default function FacultyManagement() {
       emailPrefix: f.email ? f.email.split('@')[0] : '',
       department: f.extra_info?.department || '',
       designation: f.extra_info?.designation || '',
+      password: '',
     });
     setShowModal(true);
   };
@@ -153,6 +154,7 @@ export default function FacultyManagement() {
             role: 'faculty',
             status: editTarget.status,
             extra_info: { facultyId: form.facultyId, department: form.department, designation: form.designation },
+            password: form.password || undefined,
           }),
         });
         const data = await res.json();
@@ -482,6 +484,16 @@ export default function FacultyManagement() {
                   style={{ flex: 1 }}
                 />
               </div>
+
+              {editTarget && (
+                <input
+                  type="password"
+                  className="input-field"
+                  placeholder="New Password (leave blank to keep unchanged)"
+                  value={form.password}
+                  onChange={e => setForm(f => ({ ...f, password: e.target.value }))}
+                />
+              )}
 
               {!editTarget && (
                 <p style={{ fontSize: '12px', color: '#64748b', background: '#f8fafc', padding: '10px', borderRadius: '8px' }}>

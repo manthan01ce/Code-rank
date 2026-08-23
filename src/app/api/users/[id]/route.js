@@ -1,6 +1,37 @@
 import { NextResponse } from 'next/server';
 import sql from '@/lib/db';
-import { getUserFromRequest } from '@/lib/auth';
+import { getUserFromRequest, hashPassword } from '@/lib/auth';
+
+async function handleFacultyDeactivation(facultyId) {
+  // 1. Get all courses where this faculty is mapped as co-coordinator
+  const coordinatedCourses = await sql`
+    SELECT course_id FROM course_faculty 
+    WHERE faculty_id = ${facultyId} AND is_co_coordinator = true
+  `;
+
+  // 2. Remove the faculty from mapping
+  await sql`DELETE FROM course_faculty WHERE faculty_id = ${facultyId}`;
+
+  // 3. For each affected course, automatically assign the co-coordinator to another available active faculty
+  for (const c of coordinatedCourses) {
+    const otherActiveFaculties = await sql`
+      SELECT cf.faculty_id 
+      FROM course_faculty cf
+      JOIN users u ON cf.faculty_id = u.id
+      WHERE cf.course_id = ${c.course_id} AND u.status = 'active'
+      ORDER BY cf.faculty_id ASC
+    `;
+
+    if (otherActiveFaculties.length > 0) {
+      const newCoId = otherActiveFaculties[0].faculty_id;
+      await sql`
+        UPDATE course_faculty 
+        SET is_co_coordinator = true 
+        WHERE course_id = ${c.course_id} AND faculty_id = ${newCoId}
+      `;
+    }
+  }
+}
 
 export async function PUT(request, { params }) {
   try {
@@ -11,12 +42,17 @@ export async function PUT(request, { params }) {
 
     const { id } = await params;
     const body = await request.json();
-    const { first_name, last_name, email, name, extra_info, status } = body;
+    const { first_name, last_name, email, name, extra_info, status, password } = body;
 
     // Use reconstructed name if first and last name provided, otherwise use name
     let finalName = name;
     if (first_name && last_name) {
       finalName = `${first_name} ${last_name}`;
+    }
+
+    let hashedPassword = null;
+    if (password && password.trim().length > 0) {
+      hashedPassword = await hashPassword(password);
     }
 
     // Build update in one query to return updated row
@@ -28,13 +64,18 @@ export async function PUT(request, { params }) {
         name = COALESCE(${finalName ?? null}, name),
         email = COALESCE(${email ?? null}, email),
         extra_info = COALESCE(${extra_info ? JSON.stringify(extra_info) : null}::jsonb, extra_info),
-        status = COALESCE(${status ?? null}, status)
+        status = COALESCE(${status ?? null}, status),
+        password = COALESCE(${hashedPassword ?? null}, password)
       WHERE id = ${parseInt(id)} AND role != 'admin'
       RETURNING id, first_name, last_name, name, email, role, status, extra_info
     `;
 
     if (result.length === 0) {
       return NextResponse.json({ error: 'User not found' }, { status: 404 });
+    }
+
+    if (result[0].role === 'faculty' && status === 'inactive') {
+      await handleFacultyDeactivation(parseInt(id));
     }
 
     const action = status === 'active' ? 'REACTIVATE_USER' : 'UPDATE_USER';
@@ -60,12 +101,12 @@ export async function DELETE(request, { params }) {
     const { id } = await params;  // Next.js 15: params must be awaited
 
     // Get user info before marking as inactive
-    const userRows = await sql`SELECT email, name FROM users WHERE id = ${parseInt(id)} AND role != 'admin'`;
+    const userRows = await sql`SELECT email, name, role FROM users WHERE id = ${parseInt(id)} AND role != 'admin'`;
     if (userRows.length === 0) {
       return NextResponse.json({ error: 'User not found or cannot be deleted' }, { status: 404 });
     }
 
-    const { email, name } = userRows[0];
+    const { email, name, role } = userRows[0];
 
     // Mark user as inactive instead of deleting
     const result = await sql`
@@ -77,6 +118,10 @@ export async function DELETE(request, { params }) {
 
     if (result.length === 0) {
       return NextResponse.json({ error: 'User not found or cannot be deactivated' }, { status: 404 });
+    }
+
+    if (role === 'faculty') {
+      await handleFacultyDeactivation(parseInt(id));
     }
 
     // Unassign from courses if faculty
