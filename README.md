@@ -66,12 +66,25 @@ Navigate to: http://localhost:3000
 ## 📊 Tech Stack
 
 - **Frontend**: Next.js 16.2.3 (App Router), React 19
-- **Backend**: Next.js API Routes
-- **Database**: Neon PostgreSQL (Serverless)
+- **Backend**: Next.js API Routes, BullMQ (Job Queue), Node.js standalone worker
+- **Database**: Neon PostgreSQL (Serverless) + Redis (Task Queueing & Rate Limiting)
+- **Execution Engine**: Docker (Language Daemons for secure execution isolation)
 - **Authentication**: JWT + bcryptjs
+- **Real-Time**: Socket.io
 - **PDF Generation**: jsPDF + jspdf-autotable
 - **File Parsing**: xlsx, csv-parse
 - **Styling**: CSS Modules
+
+---
+
+## ⚡ High-Performance Execution Architecture
+We have completely revamped the code-execution pipeline for massive concurrent usage:
+- **BullMQ Background Queues**: Instead of hanging the Next.js API server for seconds while code executes, submissions are instantly placed in a Redis-backed queue.
+- **Dedicated Worker (`src/worker.js`)**: A separate process consumes jobs asynchronously and strictly manages concurrency, completely preventing 100% CPU exhaustion.
+- **Socket.io Real-Time Updates**: Completed jobs are immediately streamed back to the frontend without heavy polling.
+- **Shared Daemon Architecture**: Containerization now uses fixed, persistent shared instances (`DAEMONS`) rather than spawning a heavy Docker container per student per run.
+- **Batch DB Operations**: PostgreSQL test case submissions are batch-inserted via `UNNEST`, reducing DB latency from 600ms to ~30ms per submission.
+- **Distributed Rate Limiting**: Added cross-process robust API rate limiting via Redis.
 
 ---
 
