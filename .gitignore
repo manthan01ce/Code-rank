@@ -45,5 +45,20 @@ yarn-error.log*
 *.tsbuildinfo
 next-env.d.ts
 
+# Antigravity & Agent system files
+.gemini/
+.agents/
+.kiro/
+.tmp/
+scratch/
+test_vol/
+logs/
+
+# Frontend/Backend specific
+frontend/node_modules/
+frontend/.next/
+frontend/out/
+backend/node_modules/
+
 coderank-backend/
 coderank-frontend/
