@@ -46,44 +46,46 @@ This guide explains how to host **CodeRank** on a single Linux server (e.g., Ubu
 
 ## 📋 Server Prerequisites
 
-On your Linux server (Ubuntu 20.04, 22.04, or 24.04 recommended):
+### For Linux Server (Ubuntu 20.04/22.04/24.04 recommended):
+1. **Install Node.js (v18+)**
+   ```bash
+   curl -fsSL https://deb.nodesource.com/setup_20.x | sudo -E bash -
+   sudo apt-get install -y nodejs
+   ```
+2. **Install Docker & Docker Compose**
+   ```bash
+   sudo apt update
+   sudo apt install -y docker.io docker-compose-v2
+   sudo usermod -aG docker $USER
+   ```
+   *(Log out and log back in to apply permissions).*
 
-### 1. Install Node.js (v18+)
-```bash
-curl -fsSL https://deb.nodesource.com/setup_20.x | sudo -E bash -
-sudo apt-get install -y nodejs
-node -v # Should be v18 or v20+
-```
-
-### 2. Install Docker & Docker Compose
-```bash
-sudo apt update
-sudo apt install -y docker.io docker-compose-v2
-```
-
-### 3. Grant Docker Permissions (No Sudo Needed)
-```bash
-sudo usermod -aG docker $USER
-```
-*(Log out and log back in, or run `newgrp docker` to apply permissions).*
+### For Windows Server / Laptop:
+1. Install [Node.js (v18+)](https://nodejs.org/) for Windows.
+2. Install [Docker Desktop](https://www.docker.com/products/docker-desktop/) for Windows and ensure it is running.
 
 ---
 
 ## 🌐 Network Setup & Firewall
 
 ### 1. Identify Your Server's LAN IP
-Run:
-```bash
-hostname -I | awk '{print $1}'
-```
-*(Example output: `192.168.1.50`)*
+- **Linux:** `hostname -I | awk '{print $1}'`
+- **Windows:** `ipconfig` (Look for the IPv4 Address under your Wi-Fi or Ethernet adapter)
 
-### 2. Configure Firewall (`ufw`)
+### 2. Configure Firewall
+
+**Linux (UFW):**
 Allow incoming traffic only on the frontend port:
 ```bash
 sudo ufw allow 3000/tcp
 sudo ufw reload
-sudo ufw status
+```
+
+**Windows Defender Firewall:**
+The `start-lab.bat` script will try to configure this for you if run as Administrator.
+Alternatively, open an Admin Command Prompt and run:
+```cmd
+netsh advfirewall firewall add rule name="CodeRank-Frontend" dir=in action=allow protocol=TCP localport=3000
 ```
 
 ### 3. ⚠️ Critical Note on University/College Wi-Fi
@@ -96,15 +98,22 @@ sudo ufw status
 ---
 
 ## 🚀 Starting the Server
-
 In the root directory of the project, run:
 
+### On Linux:
 ```bash
 chmod +x start-lab.sh
 ./start-lab.sh
 ```
 
-### What `start-lab.sh` does automatically:
+### On Windows:
+Double-click `start-lab.bat`, or run it from a Command Prompt:
+```cmd
+start-lab.bat
+```
+*(Tip: Right-click `start-lab.bat` and select **Run as Administrator** to automatically add the firewall rule!)*
+
+### What the startup scripts do automatically:
 1. Detects your server's primary LAN IPv4 address.
 2. Verifies Docker, Node.js, and dependencies.
 3. Copies `.env.local` to `frontend/` and `backend/` if needed.

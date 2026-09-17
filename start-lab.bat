@@ -18,12 +18,40 @@ echo  Localhost Access    : http://localhost:3000
 echo ========================================================
 echo.
 
+:: Check for Administrator privileges to configure firewall
+net session >nul 2>&1
+if %errorLevel% == 0 (
+    echo [INFO] Running as Administrator. Configuring Windows Firewall for Port 3000...
+    netsh advfirewall firewall show rule name="CodeRank-Frontend" >nul 2>&1
+    if not %errorLevel% == 0 (
+        netsh advfirewall firewall add rule name="CodeRank-Frontend" dir=in action=allow protocol=TCP localport=3000 >nul
+        echo [SUCCESS] Windows Firewall rule added for port 3000.
+    ) else (
+        echo [INFO] Windows Firewall rule already exists.
+    )
+) else (
+    echo [WARNING] Not running as Administrator.
+    echo If other PCs cannot connect, right-click this script and "Run as Administrator", or run this command in an Admin prompt:
+    echo netsh advfirewall firewall add rule name="CodeRank-Frontend" dir=in action=allow protocol=TCP localport=3000
+)
+echo.
+
 :: 1. Copy env if missing
 if not exist "frontend\.env.local" (
     if exist ".env.local" copy ".env.local" "frontend\.env.local" >nul
 )
 if not exist "backend\.env.local" (
     if exist ".env.local" copy ".env.local" "backend\.env.local" >nul
+)
+
+:: Check dependencies
+if not exist "frontend\node_modules" (
+    echo [INFO] Installing frontend dependencies...
+    cd frontend && npm install && cd ..
+)
+if not exist "backend\node_modules" (
+    echo [INFO] Installing backend dependencies...
+    cd backend && npm install && cd ..
 )
 
 :: 2. Start Redis and compiler daemons in Docker
