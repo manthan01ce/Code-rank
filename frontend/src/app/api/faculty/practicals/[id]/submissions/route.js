@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server';
 import sql from '@/lib/db';
 import { getUserFromRequest } from '@/lib/auth';
+import { decodeBinaryCode } from '@/lib/binaryCode';
 
 export async function GET(request, { params }) {
   try {
@@ -88,10 +89,12 @@ export async function GET(request, { params }) {
 
     const submissionsList = await query;
 
-    // Fetch test case results for the submissions
-    // For large lists we wouldn't fetch everything, but since we are showing a list of submissions
-    // and we'll load the full cases on "View Submission", we can just return submissions details.
-    return NextResponse.json(submissionsList);
+    const decodedList = submissionsList.map(s => ({
+      ...s,
+      code: decodeBinaryCode(s.code)
+    }));
+
+    return NextResponse.json(decodedList);
   } catch (error) {
     console.error('Fetch practical submissions error:', error);
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 });

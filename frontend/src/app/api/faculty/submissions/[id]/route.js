@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server';
 import sql from '@/lib/db';
 import { getUserFromRequest } from '@/lib/auth';
+import { decodeBinaryCode } from '@/lib/binaryCode';
 
 export async function GET(request, { params }) {
   try {
@@ -72,6 +73,7 @@ export async function GET(request, { params }) {
 
     return NextResponse.json({
       ...submission,
+      code: decodeBinaryCode(submission.code),
       cases: parsedCases
     });
   } catch (error) {

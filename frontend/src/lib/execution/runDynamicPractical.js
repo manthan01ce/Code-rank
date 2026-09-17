@@ -1,5 +1,6 @@
 import sql from '../db.js';
 import { Executor } from './Executor.js';
+import { encodeBinaryCode } from '../binaryCode.js';
 
 export async function runDynamicPractical({ language, code, dbId, userId, isSubmit = false }) {
   try {
@@ -106,14 +107,21 @@ export async function runDynamicPractical({ language, code, dbId, userId, isSubm
 
     if (!compileResult.success) {
       if (isSubmit && userId) {
-        await sql`
-          INSERT INTO practical_submissions (
-            student_id, practical_id, code, language, status, raw_marks, normalized_marks
-          )
-          VALUES (
-            ${userId}, ${dbId}, ${code}, ${language}, 'Compile Error', 0, 0
-          )
+        const binaryCode = encodeBinaryCode(code);
+        const existing = await sql`
+          SELECT id, normalized_marks FROM practical_submissions 
+          WHERE student_id = ${userId} AND practical_id = ${dbId}
         `;
+        if (existing.length === 0) {
+          await sql`
+            INSERT INTO practical_submissions (
+              student_id, practical_id, code, language, status, raw_marks, normalized_marks, is_late
+            )
+            VALUES (
+              ${userId}, ${dbId}, ${binaryCode}, ${language}, 'Compile Error', 0, 0, ${isLate}
+            )
+          `;
+        }
       }
       return {
         status: 'compile_error',
@@ -175,6 +183,8 @@ export async function runDynamicPractical({ language, code, dbId, userId, isSubm
         WHERE student_id = ${userId} AND practical_id = ${dbId}
       `;
 
+      const binaryCode = encodeBinaryCode(code);
+
       if (existing.length === 0) {
         // First submission for this student
         const savedSub = await sql`
@@ -182,7 +192,7 @@ export async function runDynamicPractical({ language, code, dbId, userId, isSubm
             student_id, practical_id, code, language, status, raw_marks, normalized_marks, execution_time_ms, is_late
           )
           VALUES (
-            ${userId}, ${dbId}, ${code}, ${language}, ${overallStatus}, ${rawMarks}, ${normalizedMarks}, ${totalTime}, ${isLate}
+            ${userId}, ${dbId}, ${binaryCode}, ${language}, ${overallStatus}, ${rawMarks}, ${normalizedMarks}, ${totalTime}, ${isLate}
           )
           RETURNING id
         `;
@@ -213,7 +223,7 @@ export async function runDynamicPractical({ language, code, dbId, userId, isSubm
           // Score improved! Update submission record and replace test case results
           await sql`
             UPDATE practical_submissions
-            SET code = ${code},
+            SET code = ${binaryCode},
                 language = ${language},
                 status = ${overallStatus},
                 raw_marks = ${rawMarks},

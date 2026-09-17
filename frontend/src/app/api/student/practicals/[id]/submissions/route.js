@@ -7,6 +7,7 @@
 import { NextResponse } from 'next/server';
 import sql from '@/lib/db';
 import { getUserFromRequest } from '@/lib/auth';
+import { decodeBinaryCode } from '@/lib/binaryCode';
 
 export async function GET(request, { params }) {
   try {
@@ -25,7 +26,12 @@ export async function GET(request, { params }) {
       ORDER BY s.submitted_at DESC
     `;
 
-    return NextResponse.json(submissions);
+    const decodedSubmissions = submissions.map(s => ({
+      ...s,
+      code: decodeBinaryCode(s.code)
+    }));
+
+    return NextResponse.json(decodedSubmissions);
   } catch (error) {
     console.error('Error fetching submissions for practical:', error);
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 });

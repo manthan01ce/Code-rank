@@ -4,6 +4,7 @@ import { getUserFromRequest } from '@/lib/auth';
 import { runStdinStdout } from '@/lib/execution/runStdinStdout';
 import fs from 'fs/promises';
 import path from 'path';
+import { encodeBinaryCode } from '@/lib/binaryCode';
 
 export async function POST(request, { params }) {
   try {
@@ -104,16 +105,26 @@ export async function POST(request, { params }) {
       });
     }
 
+    const binaryCode = encodeBinaryCode(code);
+
     if (isCompileError) {
-      const savedSub = await sql`
-        INSERT INTO practical_submissions (
-          student_id, practical_id, code, language, status, raw_marks, normalized_marks, is_late
-        )
-        VALUES (
-          ${user.id}, ${practicalId}, ${code}, ${language}, 'Compile Error', 0, 0, ${isLate}
-        )
-        RETURNING *
+      const existing = await sql`
+        SELECT id, normalized_marks FROM practical_submissions 
+        WHERE student_id = ${user.id} AND practical_id = ${practicalId}
       `;
+      let savedSubId = existing.length > 0 ? existing[0].id : null;
+      if (existing.length === 0) {
+        const savedSub = await sql`
+          INSERT INTO practical_submissions (
+            student_id, practical_id, code, language, status, raw_marks, normalized_marks, is_late
+          )
+          VALUES (
+            ${user.id}, ${practicalId}, ${binaryCode}, ${language}, 'Compile Error', 0, 0, ${isLate}
+          )
+          RETURNING id
+        `;
+        savedSubId = savedSub[0].id;
+      }
       // Save final submission to disk
       try {
         const ext = language === 'python' ? 'py' : language === 'cpp' ? 'cpp' : language === 'java' ? 'java' : language === 'javascript' ? 'js' : 'txt';
@@ -131,7 +142,7 @@ export async function POST(request, { params }) {
         status: 'compile_error',
         summary: 'Compile Error',
         compileError: compileErrorData || 'Compilation failed',
-        submissionId: savedSub[0].id
+        submissionId: savedSubId
       });
     }
 
@@ -141,18 +152,42 @@ export async function POST(request, { params }) {
 
     const overallStatus = rawMarks === totalPracticalMarks ? 'Accepted' : 'Wrong Answer';
 
-    // Save submission
-    const savedSub = await sql`
-      INSERT INTO practical_submissions (
-        student_id, practical_id, code, language, status, raw_marks, normalized_marks, execution_time_ms, is_late
-      )
-      VALUES (
-        ${user.id}, ${practicalId}, ${code}, ${language}, ${overallStatus}, ${rawMarks}, ${normalizedMarks}, ${totalTime}, ${isLate}
-      )
-      RETURNING *
+    // Save submission (preserve single highest marks)
+    const existing = await sql`
+      SELECT id, normalized_marks FROM practical_submissions 
+      WHERE student_id = ${user.id} AND practical_id = ${practicalId}
     `;
-
-    const submissionId = savedSub[0].id;
+    let submissionId;
+    if (existing.length === 0) {
+      const savedSub = await sql`
+        INSERT INTO practical_submissions (
+          student_id, practical_id, code, language, status, raw_marks, normalized_marks, execution_time_ms, is_late
+        )
+        VALUES (
+          ${user.id}, ${practicalId}, ${binaryCode}, ${language}, ${overallStatus}, ${rawMarks}, ${normalizedMarks}, ${totalTime}, ${isLate}
+        )
+        RETURNING id
+      `;
+      submissionId = savedSub[0].id;
+    } else {
+      submissionId = existing[0].id;
+      const prevNormalized = parseFloat(existing[0].normalized_marks) || 0;
+      if (normalizedMarks > prevNormalized) {
+        await sql`
+          UPDATE practical_submissions
+          SET code = ${binaryCode},
+              language = ${language},
+              status = ${overallStatus},
+              raw_marks = ${rawMarks},
+              normalized_marks = ${normalizedMarks},
+              execution_time_ms = ${totalTime},
+              is_late = ${isLate},
+              submitted_at = NOW()
+          WHERE id = ${submissionId}
+        `;
+        await sql`DELETE FROM practical_submission_cases WHERE submission_id = ${submissionId}`;
+      }
+    }
 
     // Save final submission to disk
     try {
