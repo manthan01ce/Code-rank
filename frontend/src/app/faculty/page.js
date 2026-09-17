@@ -54,6 +54,10 @@ export default function FacultyDashboard() {
   const [submissionSortOrder, setSubmissionSortOrder] = useState('DESC');
   const [viewingSubmission, setViewingSubmission] = useState(null);
   const [showSubmissionModal, setShowSubmissionModal] = useState(false);
+  const [extraTimePractical, setExtraTimePractical] = useState(null);
+  const [extraMinutesInput, setExtraMinutesInput] = useState(15);
+  const [customEndTimeInput, setCustomEndTimeInput] = useState('');
+  const [copyCodeSuccess, setCopyCodeSuccess] = useState(false);
 
   // Marks Overview state
   const [selectedMarksPracticalId, setSelectedMarksPracticalId] = useState('');
@@ -434,6 +438,92 @@ export default function FacultyDashboard() {
     }
   };
 
+  const handleApplyExtraTime = async (minutes, customDate) => {
+    if (!extraTimePractical) return;
+    setProcessing(true);
+    try {
+      const payload = customDate 
+        ? { newEndTime: customDate } 
+        : { extraMinutes: minutes !== undefined ? minutes : extraMinutesInput };
+
+      const res = await fetch(`/api/faculty/practicals/${extraTimePractical.id}/extra-time`, {
+        method: 'POST',
+        headers: {
+          Authorization: `Bearer ${token()}`,
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify(payload)
+      });
+
+      const data = await res.json();
+      if (res.ok) {
+        showToast('success', data.message || 'Extra time granted successfully!');
+        setExtraTimePractical(null);
+        setCustomEndTimeInput('');
+        fetchPracticals();
+      } else {
+        showToast('error', data.error || 'Failed to grant extra time.');
+      }
+    } catch (err) {
+      showToast('error', 'Network error.');
+    } finally {
+      setProcessing(false);
+    }
+  };
+
+  const renderTimelineBadge = (startTime, endTime) => {
+    if (!startTime && !endTime) {
+      return <span style={{ color: '#94a3b8', fontSize: '11px', fontStyle: 'italic' }}>No time limit</span>;
+    }
+
+    const now = new Date();
+    const start = startTime ? new Date(startTime) : null;
+    const end = endTime ? new Date(endTime) : null;
+
+    if (start && now < start) {
+      return (
+        <span style={{
+          display: 'inline-flex', alignItems: 'center', gap: '4px',
+          padding: '3px 8px', borderRadius: '12px', fontSize: '11px', fontWeight: 600,
+          backgroundColor: '#eff6ff', color: '#2563eb', border: '1px solid #bfdbfe'
+        }}>
+          ⏳ Starts: {start.toLocaleString([], { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' })}
+        </span>
+      );
+    }
+
+    if (end) {
+      if (now > end) {
+        return (
+          <span style={{
+            display: 'inline-flex', alignItems: 'center', gap: '4px',
+            padding: '3px 8px', borderRadius: '12px', fontSize: '11px', fontWeight: 600,
+            backgroundColor: '#fef2f2', color: '#ef4444', border: '1px solid #fecaca'
+          }}>
+            ⛔ Expired ({end.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })})
+          </span>
+        );
+      } else {
+        const diffMinutes = Math.round((end - now) / 60000);
+        const hours = Math.floor(diffMinutes / 60);
+        const mins = diffMinutes % 60;
+        const remainingStr = hours > 0 ? `${hours}h ${mins}m left` : `${mins}m left`;
+
+        return (
+          <span style={{
+            display: 'inline-flex', alignItems: 'center', gap: '4px',
+            padding: '3px 8px', borderRadius: '12px', fontSize: '11px', fontWeight: 600,
+            backgroundColor: '#ecfdf5', color: '#059669', border: '1px solid #a7f3d0'
+          }}>
+            ⏱️ Active ({remainingStr})
+          </span>
+        );
+      }
+    }
+
+    return <span style={{ color: '#94a3b8', fontSize: '11px' }}>Active</span>;
+  };
+
   const handleViewSubmission = async (s) => {
     setProcessing(true);
     try {
@@ -670,6 +760,7 @@ export default function FacultyDashboard() {
                     <th>Title</th>
                     <th>Difficulty</th>
                     <th>Type</th>
+                    <th>Timeline</th>
                     <th>Total Marks (Internal)</th>
                     <th>Test Cases</th>
                     <th>Submissions</th>
@@ -690,33 +781,48 @@ export default function FacultyDashboard() {
                         </span>
                       </td>
                       <td style={{ fontWeight: 500 }}>{p.is_challenge ? '🏆 Challenge' : '📘 Standard'}</td>
+                      <td>{renderTimelineBadge(p.start_time, p.end_time)}</td>
                       <td>{p.total_marks} Marks</td>
                       <td>{p.test_cases_count} cases</td>
                       <td>{p.submissions_count} attempts</td>
                       <td>
-                        {activeCourse?.is_co_coordinator ? (
-                          <div style={{ display: 'flex', gap: '8px' }}>
-                            <button
-                              onClick={() => handleOpenEditPractical(p)}
-                              style={{ padding: '6px 12px', borderRadius: '6px', border: 'none', backgroundColor: 'var(--primary)', color: 'white', cursor: 'pointer', fontWeight: 600, fontSize: '12px' }}
-                            >
-                              ✏️ Edit
-                            </button>
-                            <button
-                              onClick={() => handleDeletePractical(p)}
-                              style={{ padding: '6px 12px', borderRadius: '6px', border: 'none', backgroundColor: '#ef4444', color: 'white', cursor: 'pointer', fontWeight: 600, fontSize: '12px' }}
-                            >
-                              🗑️ Delete
-                            </button>
-                          </div>
-                        ) : (
-                          <span style={{ color: '#94a3b8', fontStyle: 'italic', fontSize: '12px' }}>View-only</span>
-                        )}
+                        <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
+                          <button
+                            onClick={() => setExtraTimePractical(p)}
+                            style={{
+                              padding: '6px 12px', borderRadius: '6px', border: '1px solid #cbd5e1',
+                              backgroundColor: '#f8fafc', color: '#1e293b', cursor: 'pointer',
+                              fontWeight: 600, fontSize: '12px', display: 'flex', alignItems: 'center', gap: '4px'
+                            }}
+                            title="Add extra time for solving this practical"
+                          >
+                            ⏰ + Time
+                          </button>
+
+                          {activeCourse?.is_co_coordinator ? (
+                            <>
+                              <button
+                                onClick={() => handleOpenEditPractical(p)}
+                                style={{ padding: '6px 12px', borderRadius: '6px', border: 'none', backgroundColor: 'var(--primary)', color: 'white', cursor: 'pointer', fontWeight: 600, fontSize: '12px' }}
+                              >
+                                ✏️ Edit
+                              </button>
+                              <button
+                                onClick={() => handleDeletePractical(p)}
+                                style={{ padding: '6px 12px', borderRadius: '6px', border: 'none', backgroundColor: '#ef4444', color: 'white', cursor: 'pointer', fontWeight: 600, fontSize: '12px' }}
+                              >
+                                🗑️ Delete
+                              </button>
+                            </>
+                          ) : (
+                            <span style={{ color: '#94a3b8', fontStyle: 'italic', fontSize: '12px' }}>View-only</span>
+                          )}
+                        </div>
                       </td>
                     </tr>
                   ))}
                   {practicals.length === 0 && (
-                    <tr><td colSpan="7" style={{ textAlign: 'center', color: '#888', padding: '40px' }}>No practicals found. Create one to get started.</td></tr>
+                    <tr><td colSpan="8" style={{ textAlign: 'center', color: '#888', padding: '40px' }}>No practicals found. Create one to get started.</td></tr>
                   )}
                 </tbody>
               </table>
@@ -740,6 +846,24 @@ export default function FacultyDashboard() {
                 ))}
                 {practicals.length === 0 && <option value="">No practicals available</option>}
               </select>
+
+              {selectedPracticalId && (
+                <button
+                  type="button"
+                  onClick={() => {
+                    const found = practicals.find(p => p.id === parseInt(selectedPracticalId));
+                    if (found) setExtraTimePractical(found);
+                  }}
+                  style={{
+                    padding: '8px 14px', borderRadius: '6px', border: '1px solid #bfdbfe',
+                    backgroundColor: '#eff6ff', color: '#1d4ed8', cursor: 'pointer',
+                    fontWeight: 600, fontSize: '12px', display: 'flex', alignItems: 'center', gap: '5px', whiteSpace: 'nowrap'
+                  }}
+                  title="Add extra time for this practical"
+                >
+                  ⏰ Grant Extra Time
+                </button>
+              )}
 
               <input
                 type="text"
@@ -1258,10 +1382,42 @@ export default function FacultyDashboard() {
 
             {/* Source code block */}
             <div style={{ marginBottom: '25px' }}>
-              <h4 style={{ fontSize: '14px', fontWeight: 600, marginBottom: '8px' }}>Submitted Source Code:</h4>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '8px' }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                  <h4 style={{ fontSize: '14px', fontWeight: 600, margin: 0 }}>Submitted Raw Code:</h4>
+                  <span style={{ fontSize: '11px', fontWeight: 700, backgroundColor: '#e2e8f0', color: '#334155', padding: '2px 8px', borderRadius: '4px', textTransform: 'uppercase' }}>
+                    {viewingSubmission.language}
+                  </span>
+                  <span style={{ fontSize: '12px', color: 'var(--text-muted)' }}>
+                    ({viewingSubmission.code ? viewingSubmission.code.split('\n').length : 0} lines)
+                  </span>
+                </div>
+                <div style={{ display: 'flex', gap: '8px' }}>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      if (viewingSubmission?.code) {
+                        navigator.clipboard.writeText(viewingSubmission.code);
+                        setCopyCodeSuccess(true);
+                        setTimeout(() => setCopyCodeSuccess(false), 2500);
+                      }
+                    }}
+                    style={{
+                      padding: '5px 12px', borderRadius: '6px', border: '1px solid #cbd5e1',
+                      backgroundColor: copyCodeSuccess ? '#ecfdf5' : '#ffffff',
+                      color: copyCodeSuccess ? '#059669' : '#1e293b',
+                      fontSize: '12px', fontWeight: 600, cursor: 'pointer',
+                      display: 'flex', alignItems: 'center', gap: '5px'
+                    }}
+                  >
+                    {copyCodeSuccess ? '✓ Copied!' : '📋 Copy Raw Code'}
+                  </button>
+                </div>
+              </div>
               <pre style={{
-                backgroundColor: '#1e293b', color: '#f8fafc', padding: '20px', borderRadius: '8px',
-                overflowX: 'auto', fontFamily: 'monospace', fontSize: '13px', maxHeight: '250px'
+                backgroundColor: '#0f172a', color: '#f8fafc', padding: '18px', borderRadius: '8px',
+                overflowX: 'auto', fontFamily: 'JetBrains Mono, Fira Code, Consolas, monospace',
+                fontSize: '13px', lineHeight: 1.6, maxHeight: '380px', border: '1px solid #1e293b'
               }}>
                 <code>{viewingSubmission.code}</code>
               </pre>
@@ -1320,6 +1476,141 @@ export default function FacultyDashboard() {
                 style={{ padding: '10px 24px', backgroundColor: 'var(--primary)', color: 'white', border: 'none', borderRadius: '6px', cursor: 'pointer', fontWeight: 600 }}
               >
                 Close Submission Window
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* MODAL: GRANT EXTRA TIME */}
+      {extraTimePractical && (
+        <div style={{
+          position: 'fixed', inset: 0, backgroundColor: 'rgba(0,0,0,0.5)',
+          display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 1100, padding: '20px'
+        }}>
+          <div style={{
+            background: 'white', borderRadius: '16px', padding: '28px',
+            width: '100%', maxWidth: '520px', boxShadow: '0 20px 60px rgba(0,0,0,0.25)'
+          }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '16px' }}>
+              <div>
+                <span style={{ fontSize: '11px', fontWeight: 700, color: 'var(--primary)', textTransform: 'uppercase', letterSpacing: '0.5px' }}>
+                  Extend Timeline
+                </span>
+                <h3 style={{ fontSize: '19px', fontWeight: 700, color: 'var(--text-main)', marginTop: '2px' }}>
+                  Grant Extra Time
+                </h3>
+              </div>
+              <button
+                onClick={() => setExtraTimePractical(null)}
+                style={{ background: 'none', border: 'none', fontSize: '20px', cursor: 'pointer', color: '#94a3b8' }}
+              >
+                ×
+              </button>
+            </div>
+
+            <p style={{ fontSize: '13.5px', color: 'var(--text-muted)', marginBottom: '16px' }}>
+              Practical: <strong style={{ color: 'var(--text-main)' }}>{extraTimePractical.title}</strong>
+            </p>
+
+            <div style={{ backgroundColor: '#f8fafc', border: '1px solid #e2e8f0', borderRadius: '10px', padding: '14px', marginBottom: '20px' }}>
+              <div style={{ fontSize: '12px', color: 'var(--text-muted)' }}>Current Status:</div>
+              <div style={{ marginTop: '4px' }}>
+                {renderTimelineBadge(extraTimePractical.start_time, extraTimePractical.end_time)}
+              </div>
+              {extraTimePractical.end_time && (
+                <div style={{ fontSize: '12px', color: '#64748b', marginTop: '6px' }}>
+                  Deadline: <strong>{new Date(extraTimePractical.end_time).toLocaleString()}</strong>
+                </div>
+              )}
+            </div>
+
+            <div style={{ marginBottom: '20px' }}>
+              <label style={{ fontSize: '12.5px', fontWeight: 600, color: 'var(--text-main)', display: 'block', marginBottom: '8px' }}>
+                ⚡ Quick Add Presets:
+              </label>
+              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '8px' }}>
+                {[10, 15, 30, 60].map(mins => (
+                  <button
+                    key={mins}
+                    type="button"
+                    onClick={() => handleApplyExtraTime(mins)}
+                    disabled={processing}
+                    style={{
+                      padding: '10px 8px', borderRadius: '8px', border: '1px solid #cbd5e1',
+                      backgroundColor: '#ffffff', color: '#1e293b', fontWeight: 600, fontSize: '13px',
+                      cursor: 'pointer', transition: 'all 0.15s', textAlign: 'center'
+                    }}
+                    onMouseEnter={e => { e.currentTarget.style.borderColor = 'var(--primary)'; e.currentTarget.style.color = 'var(--primary)'; }}
+                    onMouseLeave={e => { e.currentTarget.style.borderColor = '#cbd5e1'; e.currentTarget.style.color = '#1e293b'; }}
+                  >
+                    +{mins >= 60 ? `${mins / 60}h` : `${mins}m`}
+                  </button>
+                ))}
+              </div>
+            </div>
+
+            <div style={{ marginBottom: '20px' }}>
+              <label style={{ fontSize: '12.5px', fontWeight: 600, color: 'var(--text-main)', display: 'block', marginBottom: '8px' }}>
+                Or Add Custom Minutes:
+              </label>
+              <div style={{ display: 'flex', gap: '8px' }}>
+                <input
+                  type="number"
+                  min="1"
+                  max="1440"
+                  className="input-field"
+                  placeholder="e.g. 45"
+                  value={extraMinutesInput}
+                  onChange={e => setExtraMinutesInput(e.target.value)}
+                  style={{ flex: 1, padding: '8px 12px' }}
+                />
+                <button
+                  type="button"
+                  onClick={() => handleApplyExtraTime(parseInt(extraMinutesInput))}
+                  disabled={processing || !extraMinutesInput}
+                  className="btn-primary"
+                  style={{ width: 'auto', padding: '8px 18px', margin: 0, fontSize: '13px' }}
+                >
+                  Apply
+                </button>
+              </div>
+            </div>
+
+            <div style={{ marginBottom: '24px' }}>
+              <label style={{ fontSize: '12.5px', fontWeight: 600, color: 'var(--text-main)', display: 'block', marginBottom: '8px' }}>
+                Or Pick Exact New End Time:
+              </label>
+              <div style={{ display: 'flex', gap: '8px' }}>
+                <input
+                  type="datetime-local"
+                  className="input-field"
+                  value={customEndTimeInput}
+                  onChange={e => setCustomEndTimeInput(e.target.value)}
+                  style={{ flex: 1, padding: '8px 12px' }}
+                />
+                <button
+                  type="button"
+                  onClick={() => handleApplyExtraTime(null, customEndTimeInput)}
+                  disabled={processing || !customEndTimeInput}
+                  style={{
+                    padding: '8px 18px', borderRadius: '6px', border: '1px solid var(--primary)',
+                    backgroundColor: 'var(--primary)', color: 'white', fontWeight: 600, fontSize: '13px',
+                    cursor: 'pointer'
+                  }}
+                >
+                  Set
+                </button>
+              </div>
+            </div>
+
+            <div style={{ display: 'flex', justifyContent: 'flex-end', borderTop: '1px solid #f1f5f9', paddingTop: '16px' }}>
+              <button
+                type="button"
+                onClick={() => setExtraTimePractical(null)}
+                style={{ padding: '8px 20px', border: '1px solid #cbd5e1', borderRadius: '6px', background: 'transparent', cursor: 'pointer', fontWeight: 600, fontSize: '13px' }}
+              >
+                Close
               </button>
             </div>
           </div>

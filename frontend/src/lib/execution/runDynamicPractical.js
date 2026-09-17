@@ -24,6 +24,20 @@ export async function runDynamicPractical({ language, code, dbId, userId, isSubm
 
     const practical = practicals[0];
 
+    // Check timeline: start_time
+    if (practical.start_time && new Date() < new Date(practical.start_time)) {
+      return {
+        status: 'runtime_error',
+        summary: `Practical has not started yet. Starts at ${new Date(practical.start_time).toLocaleString()}`,
+        exitCode: 403,
+        compileError: null,
+        runtimeError: `This practical has not started yet. Scheduled start time: ${new Date(practical.start_time).toLocaleString()}`,
+        cases: []
+      };
+    }
+
+    const isLate = !!(practical.end_time && new Date() > new Date(practical.end_time));
+
     // 2. Fetch test cases
     let testCases = [];
     if (isSubmit) {
@@ -149,35 +163,90 @@ export async function runDynamicPractical({ language, code, dbId, userId, isSubm
     const overallStatus = rawMarks === totalPracticalMarks ? 'Accepted' : 'Wrong Answer';
 
     let submissionId = null;
+    let finalNormalizedMarks = normalizedMarks;
+    let finalOverallStatus = overallStatus;
+    let finalRawMarks = rawMarks;
 
-    // 4. Save to Database if it is a Submit
+    // 4. Save to Database if it is a Submit (Maintain only ONE submission per student with highest marks)
     if (isSubmit && userId) {
-      const savedSub = await sql`
-        INSERT INTO practical_submissions (
-          student_id, practical_id, code, language, status, raw_marks, normalized_marks, execution_time_ms
-        )
-        VALUES (
-          ${userId}, ${dbId}, ${code}, ${language}, ${overallStatus}, ${rawMarks}, ${normalizedMarks}, ${totalTime}
-        )
-        RETURNING id
+      const existing = await sql`
+        SELECT id, normalized_marks, raw_marks, status 
+        FROM practical_submissions 
+        WHERE student_id = ${userId} AND practical_id = ${dbId}
       `;
-      submissionId = savedSub[0].id;
 
-      if (submissionCasesToInsert.length > 0) {
-        await sql`
-          INSERT INTO practical_submission_cases (
-            submission_id, test_case_id, passed, marks_awarded, actual_output, error_message, execution_time_ms
+      if (existing.length === 0) {
+        // First submission for this student
+        const savedSub = await sql`
+          INSERT INTO practical_submissions (
+            student_id, practical_id, code, language, status, raw_marks, normalized_marks, execution_time_ms, is_late
           )
-          SELECT * FROM UNNEST(
-            ${submissionCasesToInsert.map(s => submissionId)}::int[],
-            ${submissionCasesToInsert.map(s => s.test_case_id)}::int[],
-            ${submissionCasesToInsert.map(s => s.passed)}::boolean[],
-            ${submissionCasesToInsert.map(s => s.marks_awarded)}::numeric[],
-            ${submissionCasesToInsert.map(s => s.actual_output)}::text[],
-            ${submissionCasesToInsert.map(s => s.error_message)}::text[],
-            ${submissionCasesToInsert.map(s => s.execution_time_ms)}::numeric[]
+          VALUES (
+            ${userId}, ${dbId}, ${code}, ${language}, ${overallStatus}, ${rawMarks}, ${normalizedMarks}, ${totalTime}, ${isLate}
           )
+          RETURNING id
         `;
+        submissionId = savedSub[0].id;
+
+        if (submissionCasesToInsert.length > 0) {
+          await sql`
+            INSERT INTO practical_submission_cases (
+              submission_id, test_case_id, passed, marks_awarded, actual_output, error_message, execution_time_ms
+            )
+            SELECT * FROM UNNEST(
+              ${submissionCasesToInsert.map(s => submissionId)}::int[],
+              ${submissionCasesToInsert.map(s => s.test_case_id)}::int[],
+              ${submissionCasesToInsert.map(s => s.passed)}::boolean[],
+              ${submissionCasesToInsert.map(s => s.marks_awarded)}::numeric[],
+              ${submissionCasesToInsert.map(s => s.actual_output)}::text[],
+              ${submissionCasesToInsert.map(s => s.error_message)}::text[],
+              ${submissionCasesToInsert.map(s => s.execution_time_ms)}::numeric[]
+            )
+          `;
+        }
+      } else {
+        // Existing submission found
+        submissionId = existing[0].id;
+        const prevNormalized = parseFloat(existing[0].normalized_marks) || 0;
+
+        if (normalizedMarks > prevNormalized) {
+          // Score improved! Update submission record and replace test case results
+          await sql`
+            UPDATE practical_submissions
+            SET code = ${code},
+                language = ${language},
+                status = ${overallStatus},
+                raw_marks = ${rawMarks},
+                normalized_marks = ${normalizedMarks},
+                execution_time_ms = ${totalTime},
+                is_late = ${isLate},
+                submitted_at = NOW()
+            WHERE id = ${submissionId}
+          `;
+
+          await sql`DELETE FROM practical_submission_cases WHERE submission_id = ${submissionId}`;
+          if (submissionCasesToInsert.length > 0) {
+            await sql`
+              INSERT INTO practical_submission_cases (
+                submission_id, test_case_id, passed, marks_awarded, actual_output, error_message, execution_time_ms
+              )
+              SELECT * FROM UNNEST(
+                ${submissionCasesToInsert.map(s => submissionId)}::int[],
+                ${submissionCasesToInsert.map(s => s.test_case_id)}::int[],
+                ${submissionCasesToInsert.map(s => s.passed)}::boolean[],
+                ${submissionCasesToInsert.map(s => s.marks_awarded)}::numeric[],
+                ${submissionCasesToInsert.map(s => s.actual_output)}::text[],
+                ${submissionCasesToInsert.map(s => s.error_message)}::text[],
+                ${submissionCasesToInsert.map(s => s.execution_time_ms)}::numeric[]
+              )
+            `;
+          }
+        } else {
+          // Lower or equal score: strictly preserve the highest marks!
+          finalNormalizedMarks = prevNormalized;
+          finalRawMarks = parseFloat(existing[0].raw_marks) || 0;
+          finalOverallStatus = existing[0].status;
+        }
       }
     }
 
@@ -190,9 +259,9 @@ export async function runDynamicPractical({ language, code, dbId, userId, isSubm
         global.io.to(`practical_${dbId}`).emit('new_submission', {
           id: submissionId,
           student_name: studentName,
-          status: overallStatus,
-          raw_marks: rawMarks,
-          normalized_marks: normalizedMarks,
+          status: finalOverallStatus,
+          raw_marks: finalRawMarks,
+          normalized_marks: finalNormalizedMarks,
           language,
           submitted_at: new Date().toISOString()
         });
@@ -202,7 +271,7 @@ export async function runDynamicPractical({ language, code, dbId, userId, isSubm
             id: submissionId,
             practical_id: dbId,
             student_id: userId,
-            normalized_marks: normalizedMarks
+            normalized_marks: finalNormalizedMarks
           });
         }
       } catch (err) {

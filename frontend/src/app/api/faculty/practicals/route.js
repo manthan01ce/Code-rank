@@ -148,9 +148,18 @@ export async function POST(request) {
       VALUES (${user.id}, 'CREATE_PRACTICAL', ${`Created practical "${title}" for course ${course_id}, batch ${batch_id}`})
     `;
 
-    const socket = socketClient(`http://127.0.0.1:${process.env.PORT || 3000}`);
-    socket.emit('faculty_practical_added', { course_id, practical: pResult[0] });
-    setTimeout(() => socket.disconnect(), 1000);
+    if (global.io) {
+      global.io.to(`course_${course_id}`).emit('practical_added', pResult[0]);
+      global.io.emit('practical_added', pResult[0]);
+    } else {
+      try {
+        const socket = socketClient(`http://127.0.0.1:${process.env.PORT || 3000}`);
+        socket.emit('faculty_practical_added', { course_id, practical: pResult[0] });
+        setTimeout(() => socket.disconnect(), 1000);
+      } catch (sockErr) {
+        console.warn('Socket relay error:', sockErr);
+      }
+    }
 
     return NextResponse.json({ success: true, practical: pResult[0] });
   } catch (error) {

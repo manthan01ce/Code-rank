@@ -66,6 +66,40 @@ app.prepare().then(() => {
       io.emit('practical_added', data.practical);
     });
 
+    socket.on('faculty_practical_updated', (data) => {
+      if (data?.course_id) {
+        io.to(`course_${data.course_id}`).emit('practical_updated', data.practical);
+      }
+      io.emit('practical_updated', data.practical);
+    });
+
+    socket.on('faculty_practical_deleted', (data) => {
+      if (data?.course_id) {
+        io.to(`course_${data.course_id}`).emit('practical_deleted', data.practicalId);
+      }
+      io.emit('practical_deleted', data.practicalId);
+    });
+
+    socket.on('watch_job', (jobId) => {
+      const room = `job_${jobId}`;
+      socket.join(room);
+      console.log(`Socket ${socket.id} joined room ${room}`);
+    });
+
+    socket.on('unwatch_job', (jobId) => {
+      const room = `job_${jobId}`;
+      socket.leave(room);
+      console.log(`Socket ${socket.id} left room ${room}`);
+    });
+
+    socket.on('worker_job_complete', (data) => {
+      console.log(`Relaying worker_job_complete for job ${data?.jobId}`);
+      if (data?.jobId) {
+        io.to(`job_${data.jobId}`).emit('job_complete', data.result);
+      }
+      io.emit('job_complete', data.result);
+    });
+
     socket.on('disconnect', () => {
       console.log(`Socket disconnected: ${socket.id}`);
     });

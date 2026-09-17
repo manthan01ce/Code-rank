@@ -106,6 +106,7 @@ export default function WorkspaceLayout({ problem }) {
   const [practicals, setPracticals] = useState([]);
   const [selectedCourse, setSelectedCourse] = useState('All');
   const socket = useSocket();
+  const hasAutoNavigated = useRef(false);
 
   // Profile, Settings, and Submissions Modals states
   const [isUserDropdownOpen, setIsUserDropdownOpen] = useState(false);
@@ -282,6 +283,24 @@ export default function WorkspaceLayout({ problem }) {
     constraints: '-'
   };
 
+  // If student entered with empty problem ID (e.g. /student/code/1?subject=...), auto-route to first available practical
+  useEffect(() => {
+    if (!resolvedProblem?.id && practicals.length > 0 && !hasAutoNavigated.current) {
+      const match = selectedCourse === 'All'
+        ? practicals[0]
+        : (practicals.find(p => 
+            p.course_code === selectedCourse || 
+            p.course_name === selectedCourse || 
+            String(p.course_id) === String(selectedCourse)
+          ) || practicals[0]);
+      if (match) {
+        hasAutoNavigated.current = true;
+        const targetCourse = selectedCourse !== 'All' ? selectedCourse : (match.course_code || '');
+        router.replace(`/student/code/practical_${match.id}${targetCourse ? `?subject=${encodeURIComponent(targetCourse)}` : ''}`);
+      }
+    }
+  }, [practicals, selectedCourse, resolvedProblem?.id, router]);
+
   const getBoilerplate = (pId, lang) => {
     const activeProblemConfig = resolvedProblem;
     if (activeProblemConfig?.isPractical && activeProblemConfig?.starter_code?.[lang]) {
@@ -408,6 +427,12 @@ export default function WorkspaceLayout({ problem }) {
 
   async function handleRun() {
     if (!canRun) return;
+
+    if (resolvedProblem.startTime && new Date() < new Date(resolvedProblem.startTime)) {
+      alert(`This practical has not started yet. Scheduled start time: ${new Date(resolvedProblem.startTime).toLocaleString()}`);
+      return;
+    }
+
     const code = codeByLang[selectedLang];
     if (!code?.trim()) return;
 
@@ -422,9 +447,13 @@ export default function WorkspaceLayout({ problem }) {
 
     try {
       const runEndpoint = `/api/${selectedLang}-run`;
+      const token = localStorage.getItem('token');
+      const runHeaders = { 'Content-Type': 'application/json' };
+      if (token) runHeaders['Authorization'] = `Bearer ${token}`;
+
       const res = await fetch(runEndpoint, {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: runHeaders,
         body: JSON.stringify({
           code,
           problemId: resolvedProblem.id,
@@ -550,6 +579,12 @@ export default function WorkspaceLayout({ problem }) {
 
   async function handleSubmit() {
     if (!canSubmit) return;
+
+    if (resolvedProblem.startTime && new Date() < new Date(resolvedProblem.startTime)) {
+      alert(`This practical has not started yet. Scheduled start time: ${new Date(resolvedProblem.startTime).toLocaleString()}`);
+      return;
+    }
+
     const code = codeByLang[selectedLang];
     if (!code?.trim()) return;
 
@@ -720,10 +755,22 @@ export default function WorkspaceLayout({ problem }) {
                 padding: '8px 0'
               }}>
                 {practicals.length > 0 && (() => {
-                  const availableCourses = [...new Set(practicals.map(p => p.course_name).filter(Boolean))];
+                  const courseMap = new Map();
+                  practicals.forEach(p => {
+                    const key = p.course_code || p.course_name;
+                    if (key && !courseMap.has(key)) {
+                      courseMap.set(key, { code: p.course_code, name: p.course_name, id: p.course_id });
+                    }
+                  });
+                  const availableCourses = Array.from(courseMap.values());
+
                   const filteredPracticals = selectedCourse === 'All' 
                     ? practicals 
-                    : practicals.filter(p => p.course_name === selectedCourse);
+                    : practicals.filter(p => 
+                        p.course_code === selectedCourse || 
+                        p.course_name === selectedCourse || 
+                        String(p.course_id) === String(selectedCourse)
+                      );
 
                   return (
                   <>
@@ -744,6 +791,40 @@ export default function WorkspaceLayout({ problem }) {
                           ← Back
                         </button>
                       </div>
+
+                      {/* Course Switcher in Dropdown */}
+                      {availableCourses.length > 1 && (
+                        <select
+                          value={selectedCourse}
+                          onChange={(e) => setSelectedCourse(e.target.value)}
+                          style={{
+                            width: '100%',
+                            background: '#1a1a1a',
+                            color: '#ffffff',
+                            border: '1px solid #3c3c3c',
+                            borderRadius: '4px',
+                            padding: '4px 8px',
+                            fontSize: '11px',
+                            outline: 'none',
+                            cursor: 'pointer',
+                            marginBottom: '4px'
+                          }}
+                        >
+                          <option value="All">All Subjects ({practicals.length})</option>
+                          {availableCourses.map((c) => {
+                            const count = practicals.filter(p => 
+                              p.course_code === c.code || 
+                              p.course_name === c.name || 
+                              String(p.course_id) === String(c.id)
+                            ).length;
+                            return (
+                              <option key={c.code || c.name} value={c.code || c.name}>
+                                {c.code ? `${c.code} - ${c.name}` : c.name} ({count})
+                              </option>
+                            );
+                          })}
+                        </select>
+                      )}
                     </div>
                     {filteredPracticals.length === 0 && (
                       <div style={{ padding: '16px', fontSize: '11px', color: '#7e7e7e', textAlign: 'center' }}>
@@ -762,7 +843,8 @@ export default function WorkspaceLayout({ problem }) {
                               return;
                             }
                             setIsListOpen(false);
-                            router.push(`/student/code/practical_${p.id}`);
+                            const targetSubject = selectedCourse !== 'All' ? selectedCourse : (p.course_code || '');
+                            router.push(`/student/code/practical_${p.id}${targetSubject ? `?subject=${encodeURIComponent(targetSubject)}` : ''}`);
                           }}
                           style={{
                             padding: '10px 16px',

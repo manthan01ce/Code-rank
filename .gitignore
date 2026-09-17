@@ -58,6 +58,8 @@ logs/
 frontend/node_modules/
 frontend/.next/
 frontend/out/
+frontend/code-storage/
+code-storage/
 backend/node_modules/
 
 coderank-backend/

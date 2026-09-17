@@ -70,6 +70,8 @@ export default async function StudentCodingPage({ params }) {
           constraints: p.constraints,
           instructions: p.instructions,
           allowedLanguages: p.starter_code?.allowed_languages || ['python', 'cpp'],
+          startTime: p.start_time,
+          endTime: p.end_time,
           testCases: []
         };
       }

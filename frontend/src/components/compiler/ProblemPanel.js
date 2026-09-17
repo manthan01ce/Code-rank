@@ -12,6 +12,7 @@
 
 import { useState, useEffect } from 'react';
 import { AlignLeft, Lightbulb, MessageSquare, Clock } from 'lucide-react';
+import { useSocket } from '@/hooks/useSocket';
 
 const STATIC_PROBLEM = {
   id: 1,
@@ -51,6 +52,92 @@ export default function ProblemPanel({ problem }) {
   const [activeTab, setActiveTab] = useState('description');
   const [submissions, setSubmissions] = useState([]);
   const [loading, setLoading] = useState(false);
+  const [extraTimeAlert, setExtraTimeAlert] = useState(null);
+
+  const socket = useSocket();
+
+  // Timeline state
+  const [currentStartTime, setCurrentStartTime] = useState(problem?.startTime || null);
+  const [currentEndTime, setCurrentEndTime] = useState(problem?.endTime || null);
+  const [countdownStr, setCountdownStr] = useState('');
+  const [isExpired, setIsExpired] = useState(false);
+  const [isUpcoming, setIsUpcoming] = useState(false);
+
+  useEffect(() => {
+    setCurrentStartTime(problem?.startTime || null);
+    setCurrentEndTime(problem?.endTime || null);
+  }, [problem?.startTime, problem?.endTime]);
+
+  // Real-time listener for timeline extensions / extra time
+  useEffect(() => {
+    if (!socket || !problem?.dbId) return;
+
+    const handlePracticalUpdated = (updated) => {
+      if (updated && updated.id === problem.dbId) {
+        if (updated.end_time) {
+          setCurrentEndTime(updated.end_time);
+          setExtraTimeAlert(`Faculty updated deadline: Extra time granted until ${new Date(updated.end_time).toLocaleTimeString()}!`);
+          setTimeout(() => setExtraTimeAlert(null), 8000);
+        }
+        if (updated.start_time) {
+          setCurrentStartTime(updated.start_time);
+        }
+      }
+    };
+
+    socket.on('practical_updated', handlePracticalUpdated);
+    return () => {
+      socket.off('practical_updated', handlePracticalUpdated);
+    };
+  }, [socket, problem?.dbId]);
+
+  // Live ticking countdown timer
+  useEffect(() => {
+    if (!currentEndTime && !currentStartTime) {
+      setCountdownStr('');
+      setIsExpired(false);
+      setIsUpcoming(false);
+      return;
+    }
+
+    const tick = () => {
+      const now = Date.now();
+      const startMs = currentStartTime ? new Date(currentStartTime).getTime() : 0;
+      const endMs = currentEndTime ? new Date(currentEndTime).getTime() : 0;
+
+      if (startMs && now < startMs) {
+        setIsUpcoming(true);
+        setIsExpired(false);
+        const diffSecs = Math.floor((startMs - now) / 1000);
+        const h = Math.floor(diffSecs / 3600);
+        const m = Math.floor((diffSecs % 3600) / 60);
+        const s = diffSecs % 60;
+        setCountdownStr(`Starts in ${h}h ${m}m ${s}s`);
+        return;
+      }
+
+      setIsUpcoming(false);
+
+      if (endMs) {
+        if (now > endMs) {
+          setIsExpired(true);
+          setCountdownStr('00:00:00');
+        } else {
+          setIsExpired(false);
+          const diffSecs = Math.floor((endMs - now) / 1000);
+          const h = Math.floor(diffSecs / 3600);
+          const m = Math.floor((diffSecs % 3600) / 60);
+          const s = diffSecs % 60;
+          const pad = (n) => n.toString().padStart(2, '0');
+          setCountdownStr(`${pad(h)}:${pad(m)}:${pad(s)}`);
+        }
+      }
+    };
+
+    tick();
+    const interval = setInterval(tick, 1000);
+    return () => clearInterval(interval);
+  }, [currentStartTime, currentEndTime]);
 
   useEffect(() => {
     if (activeTab === 'submissions' && problem?.dbId) {
@@ -106,17 +193,61 @@ export default function ProblemPanel({ problem }) {
       <div style={{ flex: 1, overflowY: 'auto', padding: '28px 24px' }}>
         {activeTab === 'description' && (
           <div style={{ maxWidth: '680px' }}>
+            {/* Real-time extra time alert notification */}
+            {extraTimeAlert && (
+              <div style={{
+                backgroundColor: '#064e3b', border: '1px solid #059669', color: '#a7f3d0',
+                padding: '10px 16px', borderRadius: '8px', fontSize: '12.5px', fontWeight: 600,
+                marginBottom: '16px', display: 'flex', alignItems: 'center', gap: '8px'
+              }}>
+                🎉 {extraTimeAlert}
+              </div>
+            )}
+
             {/* Problem number + title */}
             <h1 style={{ color: '#ffffff', fontSize: '22px', fontWeight: 700, marginBottom: '16px', lineHeight: 1.2 }}>{p.title}</h1>
 
             {/* Difficulty + tags */}
-            <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '24px', flexWrap: 'wrap' }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '16px', flexWrap: 'wrap' }}>
               <span style={{ color: diff.color, background: diff.bg, border: `1px solid ${diff.border}`, fontSize: '10px', fontWeight: 700, letterSpacing: '1px', textTransform: 'uppercase', padding: '3px 10px' }}>
                 {p.difficulty}
               </span>
               <button style={{ background: '#1a1a1a', border: '1px solid #262626', color: '#7e7e7e', fontSize: '10px', fontWeight: 700, letterSpacing: '1px', textTransform: 'uppercase', padding: '3px 10px', cursor: 'pointer' }}>Topics</button>
               <button style={{ background: '#1a1a1a', border: '1px solid #262626', color: '#7e7e7e', fontSize: '10px', fontWeight: 700, letterSpacing: '1px', textTransform: 'uppercase', padding: '3px 10px', cursor: 'pointer' }}>Companies</button>
             </div>
+
+            {/* TIMELINE / COUNTDOWN TIMER BANNER */}
+            {p.isPractical && (currentStartTime || currentEndTime) && (
+              <div style={{
+                backgroundColor: isUpcoming ? '#1e1b4b' : isExpired ? '#450a0a' : '#022c22',
+                border: `1px solid ${isUpcoming ? '#3730a3' : isExpired ? '#991b1b' : '#065f46'}`,
+                borderRadius: '8px', padding: '12px 18px', marginBottom: '24px',
+                display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '10px'
+              }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+                  <span style={{ fontSize: '20px' }}>{isUpcoming ? '⏳' : isExpired ? '⛔' : '⏱️'}</span>
+                  <div>
+                    <div style={{
+                      color: isUpcoming ? '#a5b4fc' : isExpired ? '#fca5a5' : '#6ee7b7',
+                      fontWeight: 700, fontSize: '13px', textTransform: 'uppercase', letterSpacing: '0.5px'
+                    }}>
+                      {isUpcoming ? 'Scheduled Practical' : isExpired ? 'Deadline Passed' : 'Time Remaining to Submit'}
+                    </div>
+                    <div style={{ color: '#94a3b8', fontSize: '11.5px', marginTop: '2px' }}>
+                      {isUpcoming ? `Starts: ${new Date(currentStartTime).toLocaleString()}` : currentEndTime ? `Deadline: ${new Date(currentEndTime).toLocaleString()}` : 'No deadline'}
+                    </div>
+                  </div>
+                </div>
+
+                <div style={{
+                  fontSize: '20px', fontWeight: 800, fontFamily: 'monospace',
+                  color: isUpcoming ? '#c7d2fe' : isExpired ? '#ef4444' : '#10b981',
+                  letterSpacing: '1px'
+                }}>
+                  {countdownStr}
+                </div>
+              </div>
+            )}
 
             {/* Description */}
             <div
@@ -234,42 +365,74 @@ export default function ProblemPanel({ problem }) {
 
         {activeTab === 'submissions' && (
           <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
-            <h3 style={{ fontSize: '16px', fontWeight: 700, color: '#ffffff', marginBottom: '8px' }}>Your Submission History</h3>
+            <div>
+              <h3 style={{ fontSize: '16px', fontWeight: 700, color: '#ffffff', marginBottom: '4px' }}>Recorded Submission & Grade</h3>
+              <p style={{ fontSize: '12px', color: '#7e7e7e', margin: 0 }}>
+                Your single highest marks achieved are permanently preserved and shown here.
+              </p>
+            </div>
             
             {loading ? (
               <div style={{ display: 'flex', justifyContent: 'center', padding: '30px', color: '#7e7e7e', fontSize: '13px' }}>
-                Loading submissions...
+                Loading submission record...
               </div>
             ) : submissions.length === 0 ? (
               <div style={{ padding: '30px', textAlign: 'center', color: '#5e5e5e', fontSize: '13px', background: '#111', borderRadius: '6px' }}>
-                No submissions found for this practical. Solve and submit!
+                No submissions recorded yet for this practical. Write your solution and click <strong>Submit Code</strong>!
               </div>
             ) : (
               <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
                 {submissions.map((sub) => {
-                  const isSuccess = sub.status === 'success' || sub.status === 'Passed';
+                  const isAccepted = sub.status === 'Accepted' || sub.status === 'Passed' || sub.status === 'success';
                   return (
-                    <div key={sub.id} style={{ backgroundColor: '#141414', border: '1px solid #222', borderRadius: '8px', padding: '15px' }}>
-                      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '8px' }}>
-                        <span style={{ fontSize: '12px', fontWeight: 600, color: '#888', textTransform: 'uppercase' }}>{sub.language}</span>
+                    <div key={sub.id} style={{ backgroundColor: '#141414', border: '1px solid #262626', borderRadius: '10px', padding: '18px' }}>
+                      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '12px' }}>
+                        <span style={{ fontSize: '12px', fontWeight: 700, color: '#93c5fd', textTransform: 'uppercase', backgroundColor: 'rgba(59,130,246,0.1)', border: '1px solid rgba(59,130,246,0.3)', padding: '3px 8px', borderRadius: '4px' }}>
+                          {sub.language}
+                        </span>
                         <span style={{
                           fontSize: '11px',
                           fontWeight: 700,
-                          padding: '2px 8px',
-                          borderRadius: '4px',
-                          backgroundColor: isSuccess ? 'rgba(16,185,129,0.1)' : 'rgba(239,68,68,0.1)',
-                          color: isSuccess ? '#10b981' : '#ef4444',
+                          padding: '3px 10px',
+                          borderRadius: '12px',
+                          backgroundColor: isAccepted ? 'rgba(16,185,129,0.15)' : 'rgba(239,68,68,0.15)',
+                          color: isAccepted ? '#10b981' : '#ef4444',
                         }}>
                           {sub.status.toUpperCase()}
                         </span>
                       </div>
-                      <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '13px', color: '#ccc', marginBottom: '4px' }}>
-                        <span>Raw Score: <strong style={{ color: '#fff' }}>{sub.raw_marks}</strong></span>
-                        <span>Normalized: <strong style={{ color: '#10b981' }}>{sub.normalized_marks} / 10</strong></span>
+
+                      <div style={{
+                        backgroundColor: '#0a0a0a', border: '1px solid #1e1e1e', borderRadius: '8px',
+                        padding: '14px', marginBottom: '12px', display: 'flex', justifyContent: 'space-between', alignItems: 'center'
+                      }}>
+                        <div>
+                          <div style={{ fontSize: '11px', color: '#888', textTransform: 'uppercase', fontWeight: 600 }}>Highest Stored Marks</div>
+                          <div style={{ fontSize: '24px', fontWeight: 800, color: '#10b981', marginTop: '2px' }}>
+                            {sub.normalized_marks} <span style={{ fontSize: '14px', fontWeight: 500, color: '#777' }}>/ 10</span>
+                          </div>
+                        </div>
+
+                        <div style={{ textAlign: 'right' }}>
+                          <div style={{ fontSize: '11px', color: '#888' }}>Raw Points: <strong style={{ color: '#fff' }}>{sub.raw_marks}</strong></div>
+                          <div style={{ fontSize: '11px', color: '#666', marginTop: '4px' }}>
+                            {new Date(sub.submitted_at).toLocaleString()}
+                          </div>
+                        </div>
                       </div>
-                      <div style={{ fontSize: '11px', color: '#555', textAlign: 'right' }}>
-                        {new Date(sub.submitted_at).toLocaleString()}
-                      </div>
+
+                      {sub.code && (
+                        <div>
+                          <div style={{ fontSize: '12px', fontWeight: 600, color: '#888', marginBottom: '6px' }}>Submitted Source Code:</div>
+                          <pre style={{
+                            backgroundColor: '#09090b', color: '#e4e4e7', padding: '12px', borderRadius: '6px',
+                            overflowX: 'auto', fontFamily: 'JetBrains Mono, monospace', fontSize: '12px',
+                            maxHeight: '180px', margin: 0, border: '1px solid #18181b'
+                          }}>
+                            <code>{sub.code}</code>
+                          </pre>
+                        </div>
+                      )}
                     </div>
                   );
                 })}

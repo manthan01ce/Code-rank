@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server';
 import sql from '@/lib/db';
 import { getUserFromRequest } from '@/lib/auth';
+import { io as socketClient } from 'socket.io-client';
 
 export async function GET(request, { params }) {
   try {
@@ -12,11 +13,15 @@ export async function GET(request, { params }) {
     const { id } = await params;
 
     const practicals = await sql`
-      SELECT * FROM practicals WHERE id = ${parseInt(id)} AND faculty_id = ${user.id}
+      SELECT p.*,
+             (SELECT COUNT(*)::int FROM practical_submissions s WHERE s.practical_id = p.id) as submissions_count
+      FROM practicals p
+      JOIN course_faculty cf ON cf.course_id = p.course_id
+      WHERE p.id = ${parseInt(id)} AND cf.faculty_id = ${user.id}
     `;
 
     if (practicals.length === 0) {
-      return NextResponse.json({ error: 'Practical not found' }, { status: 404 });
+      return NextResponse.json({ error: 'Practical not found or you are not assigned to this subject' }, { status: 404 });
     }
 
     const testCases = await sql`
@@ -154,7 +159,22 @@ export async function PUT(request, { params }) {
       VALUES (${user.id}, 'UPDATE_PRACTICAL', ${`Updated practical "${title}" (ID: ${id})`})
     `;
 
-    return NextResponse.json({ success: true, practical: updated[0] });
+    const updatedPractical = updated[0];
+    const courseId = practicals[0].course_id;
+    if (global.io) {
+      global.io.to(`course_${courseId}`).emit('practical_updated', updatedPractical);
+      global.io.emit('practical_updated', updatedPractical);
+    } else {
+      try {
+        const socket = socketClient(`http://127.0.0.1:${process.env.PORT || 3000}`);
+        socket.emit('faculty_practical_updated', { course_id: courseId, practical: updatedPractical });
+        setTimeout(() => socket.disconnect(), 1000);
+      } catch (sockErr) {
+        console.warn('Socket relay error:', sockErr);
+      }
+    }
+
+    return NextResponse.json({ success: true, practical: updatedPractical });
   } catch (error) {
     console.error('Update practical error:', error);
     return NextResponse.json({ error: 'Internal server error: ' + error.message }, { status: 500 });
@@ -178,10 +198,12 @@ export async function DELETE(request, { params }) {
       return NextResponse.json({ error: 'Practical not found' }, { status: 404 });
     }
 
+    const courseId = practicals[0].course_id;
+
     // Verify co-coordinator mapping
     const mapping = await sql`
       SELECT is_co_coordinator FROM course_faculty 
-      WHERE course_id = ${practicals[0].course_id} AND faculty_id = ${user.id}
+      WHERE course_id = ${courseId} AND faculty_id = ${user.id}
     `;
     if (mapping.length === 0 || !mapping[0].is_co_coordinator) {
       return NextResponse.json({ error: 'Forbidden: Only the subject co-coordinator can delete practicals.' }, { status: 403 });
@@ -202,7 +224,6 @@ export async function DELETE(request, { params }) {
         INSERT INTO activity_logs (user_id, action, details)
         VALUES (${user.id}, 'SOFT_DELETE_PRACTICAL', ${`Marked practical "${practicals[0].title}" (ID: ${id}) as inactive`})
       `;
-      return NextResponse.json({ success: true, message: 'Practical marked as inactive due to existing submissions.' });
     } else {
       // Hard delete
       await sql`
@@ -212,8 +233,25 @@ export async function DELETE(request, { params }) {
         INSERT INTO activity_logs (user_id, action, details)
         VALUES (${user.id}, 'DELETE_PRACTICAL', ${`Deleted practical "${practicals[0].title}" (ID: ${id})`})
       `;
-      return NextResponse.json({ success: true, message: 'Practical deleted permanently.' });
     }
+
+    if (global.io) {
+      global.io.to(`course_${courseId}`).emit('practical_deleted', parseInt(id));
+      global.io.emit('practical_deleted', parseInt(id));
+    } else {
+      try {
+        const socket = socketClient(`http://127.0.0.1:${process.env.PORT || 3000}`);
+        socket.emit('faculty_practical_deleted', { course_id: courseId, practicalId: parseInt(id) });
+        setTimeout(() => socket.disconnect(), 1000);
+      } catch (sockErr) {
+        console.warn('Socket relay error:', sockErr);
+      }
+    }
+
+    return NextResponse.json({ 
+      success: true, 
+      message: submissionsCount > 0 ? 'Practical marked as inactive due to existing submissions.' : 'Practical deleted permanently.' 
+    });
   } catch (error) {
     console.error('Delete practical error:', error);
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 });

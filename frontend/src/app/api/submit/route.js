@@ -4,6 +4,7 @@ import { enqueueJob } from '@/lib/queue/jobQueue';
 import { checkRateLimit } from '@/lib/queue/rateLimiter';
 import { getUserFromRequest } from '@/lib/auth';
 import { STATIC_PROBLEMS } from '@/lib/problems';
+import sql from '@/lib/db';
 
 export async function POST(request) {
   try {
@@ -32,6 +33,17 @@ export async function POST(request) {
 
     if (typeof problemId === 'string' && problemId.startsWith('practical_')) {
       const dbId = parseInt(problemId.replace('practical_', ''));
+
+      // Check start_time before queueing
+      const practicals = await sql`
+        SELECT start_time FROM practicals WHERE id = ${dbId} AND status = 'active'
+      `;
+      if (practicals.length > 0 && practicals[0].start_time && new Date() < new Date(practicals[0].start_time)) {
+        return NextResponse.json({ 
+          error: `This practical has not started yet. Starts at ${new Date(practicals[0].start_time).toLocaleString()}` 
+        }, { status: 403 });
+      }
+
       try {
         const jobId = await enqueueJob('dynamic', { language, code, dbId, userId: user.id, isSubmit: true }, user.id);
         return NextResponse.json({ jobId, status: 'queued' }, { status: 202 });

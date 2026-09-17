@@ -27,12 +27,19 @@ export async function GET(request, { params }) {
 
     const submission = submissions[0];
 
-    // Authorization: if faculty, verify they own the practical. If student, verify they own the submission.
-    if (user.role === 'faculty' && submission.faculty_id !== user.id) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    // Authorization: if faculty, verify they are mapped to the course or created the practical. If student, verify they own the submission.
+    if (user.role === 'faculty') {
+      const mapping = await sql`
+        SELECT 1 FROM course_faculty cf
+        JOIN practicals p ON p.course_id = cf.course_id
+        WHERE p.id = ${submission.practical_id} AND cf.faculty_id = ${user.id}
+      `;
+      if (mapping.length === 0 && submission.faculty_id !== user.id) {
+        return NextResponse.json({ error: 'Unauthorized: You are not assigned to this course.' }, { status: 403 });
+      }
     }
     if (user.role === 'student' && submission.student_id !== user.id) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 403 });
     }
 
     // Fetch submission cases joined with test cases to get inputs/expected/hidden flags

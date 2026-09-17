@@ -32,10 +32,10 @@ export async function GET(request) {
 
     // Fetch practicals where practical batch matches and course semester matches student semester
     let query = sql`
-      SELECT p.id, p.title, p.description, p.instructions, p.total_marks, p.difficulty, 
+      SELECT p.id, p.course_id, p.batch_id, p.title, p.description, p.instructions, p.total_marks, p.difficulty, 
              p.is_challenge, p.input_format, p.output_format, p.constraints, 
              p.sample_input, p.sample_output, p.starter_code, p.start_time, p.end_time,
-             c.name as course_name, c.course_code, u.name as faculty_name,
+             c.name as course_name, c.course_code, c.semester as course_semester, u.name as faculty_name,
              s.status as my_status, s.normalized_marks as my_marks, s.submitted_at as my_submitted_at
       FROM practicals p
       JOIN courses c ON p.course_id = c.id
@@ -47,13 +47,22 @@ export async function GET(request) {
         WHERE student_id = ${user.id}
         ORDER BY practical_id, normalized_marks DESC, submitted_at DESC
       ) s ON s.practical_id = p.id
-      WHERE (p.batch_id = ${batch} OR p.batch_id = 'All')
+      WHERE (
+        p.batch_id IS NULL 
+        OR p.batch_id = '' 
+        OR p.batch_id ILIKE 'all' 
+        OR (${batch} != '' AND p.batch_id ILIKE ${batch})
+      )
         AND c.semester = ${semester}
         AND p.status = 'active'
     `;
 
     if (courseId) {
-      query = sql`${query} AND p.course_id = ${parseInt(courseId)}`;
+      if (!isNaN(parseInt(courseId))) {
+        query = sql`${query} AND (p.course_id = ${parseInt(courseId)} OR c.course_code = ${courseId})`;
+      } else {
+        query = sql`${query} AND c.course_code = ${courseId}`;
+      }
     }
 
     query = sql`${query} ORDER BY p.created_at DESC`;
