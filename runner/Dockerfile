@@ -1,0 +1,23 @@
+FROM alpine:3.19
+
+# Install base shell, compilers, and runtimes:
+# - bash & coreutils (for reliable scripting & base64 piping)
+# - gcc, g++, make, libc-dev (for C and C++)
+# - python3 (for Python)
+# - openjdk17 (contains javac compiler and java runtime)
+# - nodejs (for JavaScript)
+RUN apk add --no-cache \
+    bash \
+    coreutils \
+    gcc \
+    g++ \
+    make \
+    libc-dev \
+    python3 \
+    openjdk17 \
+    nodejs
+
+WORKDIR /app
+
+# Idle indefinitely, waiting for commands via `docker exec`
+CMD ["tail", "-f", "/dev/null"]

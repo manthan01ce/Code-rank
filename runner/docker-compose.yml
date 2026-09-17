@@ -1,7 +1,37 @@
-version: '3.8'
+x-daemon-config: &daemon-config
+  build:
+    context: .
+    dockerfile: Dockerfile
+  image: coderank-base:latest
+  restart: unless-stopped
+  network_mode: "none"
+  mem_limit: 512m
+  cpus: 1.0
+
 services:
   redis:
     image: redis:alpine
-    ports:
-      - "6379:6379"
     container_name: coderank-redis
+    restart: unless-stopped
+    ports:
+      - "127.0.0.1:6379:6379"
+
+  coderank-python-daemon:
+    <<: *daemon-config
+    container_name: coderank-python-daemon
+
+  coderank-cpp-daemon:
+    <<: *daemon-config
+    container_name: coderank-cpp-daemon
+
+  coderank-c-daemon:
+    <<: *daemon-config
+    container_name: coderank-c-daemon
+
+  coderank-java-daemon:
+    <<: *daemon-config
+    container_name: coderank-java-daemon
+
+  coderank-javascript-daemon:
+    <<: *daemon-config
+    container_name: coderank-javascript-daemon
