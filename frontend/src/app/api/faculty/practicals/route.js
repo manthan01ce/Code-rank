@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server';
 import sql from '@/lib/db';
 import { getUserFromRequest } from '@/lib/auth';
+import { io as socketClient } from 'socket.io-client';
 
 export async function GET(request) {
   try {
@@ -145,9 +146,9 @@ export async function POST(request) {
       VALUES (${user.id}, 'CREATE_PRACTICAL', ${`Created practical "${title}" for course ${course_id}, batch ${batch_id}`})
     `;
 
-    if (global.io) {
-      global.io.to(`course_${course_id}`).emit('practical_added', pResult[0]);
-    }
+    const socket = socketClient(`http://127.0.0.1:${process.env.PORT || 3000}`);
+    socket.emit('faculty_practical_added', { course_id, practical: pResult[0] });
+    setTimeout(() => socket.disconnect(), 1000);
 
     return NextResponse.json({ success: true, practical: pResult[0] });
   } catch (error) {

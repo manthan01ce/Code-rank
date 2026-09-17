@@ -59,6 +59,10 @@ app.prepare().then(() => {
       console.log(`Socket ${socket.id} left room ${room}`);
     });
 
+    socket.on('faculty_practical_added', (data) => {
+      io.to(`course_${data.course_id}`).emit('practical_added', data.practical);
+    });
+
     socket.on('disconnect', () => {
       console.log(`Socket disconnected: ${socket.id}`);
     });
