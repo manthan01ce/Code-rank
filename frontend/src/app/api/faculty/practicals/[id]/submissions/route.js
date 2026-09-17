@@ -24,7 +24,9 @@ export async function GET(request, { params }) {
 
     // Verify ownership of practical
     const owned = await sql`
-      SELECT 1 FROM practicals WHERE id = ${parseInt(id)} AND faculty_id = ${user.id}
+      SELECT 1 FROM practicals p
+      JOIN course_faculty cf ON p.course_id = cf.course_id
+      WHERE p.id = ${parseInt(id)} AND cf.faculty_id = ${user.id}
     `;
     if (owned.length === 0) {
       return NextResponse.json({ error: 'Practical not found or not owned by you' }, { status: 404 });

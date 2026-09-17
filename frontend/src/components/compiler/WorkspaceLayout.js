@@ -256,13 +256,15 @@ export default function WorkspaceLayout({ problem }) {
 
   useEffect(() => {
     if (!socket) return;
-    socket.on('practicalAdded', fetchPracticals);
-    socket.on('practicalUpdated', fetchPracticals);
-    socket.on('practicalDeleted', fetchPracticals);
+    socket.on('practical_added', fetchPracticals);
+    socket.on('practical_updated', fetchPracticals);
+    socket.on('practical_deleted', fetchPracticals);
+    socket.on('practicalAdded', fetchPracticals); // fallback
     return () => {
+      socket.off('practical_added', fetchPracticals);
+      socket.off('practical_updated', fetchPracticals);
+      socket.off('practical_deleted', fetchPracticals);
       socket.off('practicalAdded', fetchPracticals);
-      socket.off('practicalUpdated', fetchPracticals);
-      socket.off('practicalDeleted', fetchPracticals);
     };
   }, [socket]);
 

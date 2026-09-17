@@ -21,7 +21,8 @@ export async function GET(request) {
                (SELECT COUNT(*)::int FROM practical_submissions s WHERE s.practical_id = p.id) as submissions_count
         FROM practicals p
         JOIN courses c ON p.course_id = c.id
-        WHERE p.faculty_id = ${user.id}
+        JOIN course_faculty cf ON cf.course_id = c.id
+        WHERE cf.faculty_id = ${user.id}
           AND p.course_id = ${parseInt(courseId)}
         ORDER BY p.created_at DESC
       `;
@@ -32,7 +33,8 @@ export async function GET(request) {
                (SELECT COUNT(*)::int FROM practical_submissions s WHERE s.practical_id = p.id) as submissions_count
         FROM practicals p
         JOIN courses c ON p.course_id = c.id
-        WHERE p.faculty_id = ${user.id}
+        JOIN course_faculty cf ON cf.course_id = c.id
+        WHERE cf.faculty_id = ${user.id}
         ORDER BY p.created_at DESC
       `;
     }

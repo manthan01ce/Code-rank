@@ -60,7 +60,10 @@ app.prepare().then(() => {
     });
 
     socket.on('faculty_practical_added', (data) => {
+      // Emit to the specific course room
       io.to(`course_${data.course_id}`).emit('practical_added', data.practical);
+      // Also broadcast globally so all students in the Workspace receive it
+      io.emit('practical_added', data.practical);
     });
 
     socket.on('disconnect', () => {
