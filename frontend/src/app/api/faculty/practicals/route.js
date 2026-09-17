@@ -145,6 +145,10 @@ export async function POST(request) {
       VALUES (${user.id}, 'CREATE_PRACTICAL', ${`Created practical "${title}" for course ${course_id}, batch ${batch_id}`})
     `;
 
+    if (global.io) {
+      global.io.to(`course_${course_id}`).emit('practical_added', pResult[0]);
+    }
+
     return NextResponse.json({ success: true, practical: pResult[0] });
   } catch (error) {
     console.error('Create practical error:', error);

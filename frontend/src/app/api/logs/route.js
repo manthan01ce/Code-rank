@@ -12,6 +12,9 @@ export async function GET(request) {
     const { searchParams } = new URL(request.url);
     const limit = parseInt(searchParams.get('limit')) || 50;
     
+    // Clean up logs older than 7 days
+    await sql`DELETE FROM activity_logs WHERE created_at < NOW() - INTERVAL '7 days'`;
+
     // Fetch recent logs mapping user details
     const logs = await sql`
       SELECT 

@@ -83,7 +83,7 @@ export default function StudentDashboard() {
         position: 'sticky', top: 0, zIndex: 100
       }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: '15px' }}>
-          <img src="/coderank-logo.png" alt="Logo" style={{ height: '40px' }} onError={(e) => { e.target.src = '/coderank-logo.svg'; }} />
+          <img src="/coderank-logo.svg" alt="Logo" style={{ height: '40px' }} onError={(e) => { e.target.src = '/coderank-logo.svg'; }} />
           <h2 style={{ margin: 0, fontSize: '20px', fontWeight: 700, color: '#1e293b' }}>CodeRank Student</h2>
         </div>
         <div style={{ display: 'flex', alignItems: 'center', gap: '20px' }}>

@@ -15,7 +15,7 @@ export function proxy(request) {
   response.headers.set('Strict-Transport-Security', 'max-age=31536000; includeSubDomains');
 
   // Handle CORS
-  const origin = process.env.ALLOWED_ORIGIN || 'http://localhost:3000';
+  const origin = request.headers.get('origin') || '*';
   response.headers.set('Access-Control-Allow-Origin', origin);
   response.headers.set('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS');
   response.headers.set('Access-Control-Allow-Headers', 'Content-Type, Authorization, x-compiler-secret');

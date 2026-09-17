@@ -4,9 +4,11 @@ import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import Editor from '@monaco-editor/react';
 import ChangePasswordModal from '@/components/ChangePasswordModal';
+import { useSocket } from '@/hooks/useSocket';
 
 export default function StudentPracticals() {
   const router = useRouter();
+  const socket = useSocket();
   const [user, setUser] = useState(null);
   const [courses, setCourses] = useState([]);
   const [selectedCourse, setSelectedCourse] = useState('');
@@ -90,8 +92,22 @@ export default function StudentPracticals() {
   useEffect(() => {
     if (selectedCourse) {
       fetchPracticals();
+      if (socket) {
+        socket.emit('join_course_room', selectedCourse);
+        
+        const handlePracticalAdded = (newPractical) => {
+          setPracticals(prev => [newPractical, ...prev]);
+        };
+
+        socket.on('practical_added', handlePracticalAdded);
+
+        return () => {
+          socket.emit('leave_course_room', selectedCourse);
+          socket.off('practical_added', handlePracticalAdded);
+        };
+      }
     }
-  }, [selectedCourse]);
+  }, [selectedCourse, socket]);
 
   const fetchPracticals = async () => {
     if (!selectedCourse) return;

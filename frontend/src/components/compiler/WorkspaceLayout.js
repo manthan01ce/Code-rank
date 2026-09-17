@@ -684,7 +684,7 @@ export default function WorkspaceLayout({ problem }) {
             style={{ display: 'flex', alignItems: 'center', gap: '12px', cursor: 'pointer' }}
             title="Go to Student Dashboard"
           >
-            <img src="/coderank-logo.png" alt="CodeRank Logo" onError={(e) => { e.target.src = '/coderank-logo.svg'; }} style={{ width: '28px', height: '28px', objectFit: 'contain' }} />
+            <img src="/coderank-logo.svg" alt="CodeRank Logo" onError={(e) => { e.target.src = '/coderank-logo.svg'; }} style={{ width: '28px', height: '28px', objectFit: 'contain' }} />
             <span style={{ color: '#ffffff', fontWeight: 700, fontSize: '16px', letterSpacing: '1px', textTransform: 'uppercase' }}>CodeRank</span>
           </div>
           

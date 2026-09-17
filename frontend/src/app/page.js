@@ -67,7 +67,7 @@ export default function Login() {
       <div className="login-card">
         <div className="logo-container">
           <img 
-            src="/coderank-logo.png" 
+            src="/coderank-logo.svg" 
             alt="CodeRank Logo" 
             onError={(e) => { e.target.src = '/coderank-logo.svg'; }}
             style={{ width: '100px', height: '100px', objectFit: 'contain' }}
