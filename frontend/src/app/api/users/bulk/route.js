@@ -3,6 +3,22 @@ import sql from '@/lib/db';
 import { getUserFromRequest, hashPassword, generateSecurePassword } from '@/lib/auth';
 import * as XLSX from 'xlsx';
 
+function validateDivision(division) {
+  if (!division || typeof division !== 'string' || !division.trim()) {
+    return { valid: false, error: 'Division is compulsory for students.' };
+  }
+  const trimmed = division.trim();
+  const alphaMatches = trimmed.match(/[a-zA-Z]/g) || [];
+  const digitMatches = trimmed.match(/[0-9]/g) || [];
+  if (alphaMatches.length < 2) {
+    return { valid: false, error: 'Division must contain at least 2 alphabetic letters (e.g., CE1, IT2).' };
+  }
+  if (digitMatches.length < 1) {
+    return { valid: false, error: 'Division must contain at least 1 numeric digit (e.g., CE1, IT2).' };
+  }
+  return { valid: true };
+}
+
 export async function POST(request) {
   try {
     const admin = getUserFromRequest(request);
@@ -81,10 +97,24 @@ export async function POST(request) {
       // Build extra_info
       let extra_info = {};
       if (role === 'student') {
+        const division = getVal(row, ['Division', 'division', 'Div', 'div', 'Section', 'section']);
+        const valRes = validateDivision(division);
+        if (!valRes.valid) {
+          skipped.push({ 
+            name, 
+            email, 
+            reason: `Invalid or missing division "${division}": ${valRes.error}` 
+          });
+          continue;
+        }
+
         extra_info = {
           roll_number: getVal(row, ['Roll Number', 'RollNumber', 'Roll No', 'RollNo', 'Roll', 'roll_number', 'Enrollment', 'Enrollment No', 'EnrollmentNo']),
           branch:      getVal(row, ['Branch', 'branch', 'Dept', 'Department', 'Stream']),
+          department:  getVal(row, ['Department', 'department', 'Branch', 'branch', 'Dept', 'Stream']),
+          semester:    getVal(row, ['Semester', 'semester', 'Sem', 'sem']),
           batch:       getVal(row, ['Batch', 'batch', 'Year', 'year', 'Passing Year', 'PassingYear', 'Graduation Year']),
+          division:    division.trim().toUpperCase(),
         };
       } else if (role === 'faculty') {
         extra_info = {

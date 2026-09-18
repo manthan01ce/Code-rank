@@ -94,17 +94,54 @@ export async function runDynamicPractical({ language, code, dbId, userId, isSubm
       };
     }
 
-    // 3. Execute test cases
-    const casesReport = [];
     let rawMarks = 0;
     let totalTime = 0;
+    const casesReport = [];
     const submissionCasesToInsert = [];
 
-    for (const tc of testCases) {
-      const result = await Executor.runTestCase(language, code, tc.input, tc.expected, tc.marks, tc.time_limit || 5.0);
+    // 3. Compile code once using Executor
+    const executor = new Executor(language.toLowerCase(), code, 3000, userId);
+    const compileResult = await executor.compile();
+
+    if (!compileResult.success) {
+      if (isSubmit && userId) {
+        const binaryCode = encodeBinaryCode(code);
+        const existing = await sql`
+          SELECT id, normalized_marks FROM practical_submissions 
+          WHERE student_id = ${userId} AND practical_id = ${dbId}
+        `;
+        if (existing.length === 0) {
+          await sql`
+            INSERT INTO practical_submissions (
+              student_id, practical_id, code, language, status, raw_marks, normalized_marks, is_late
+            )
+            VALUES (
+              ${userId}, ${dbId}, ${binaryCode}, ${language}, 'Compile Error', 0, 0, ${isLate}
+            )
+          `;
+        }
+      }
+      return {
+        status: 'compile_error',
+        summary: 'Compile Error',
+        exitCode: 1,
+        compileError: compileResult.error || 'Compilation failed',
+        runtimeError: null,
+        cases: []
+      };
+    }
+
+    // 4. Run all test cases in batch
+    const results = await executor.runBatch(testCases);
+
+    for (let i = 0; i < results.length; i++) {
+      const tc = testCases[i];
+      const result = results[i];
 
       rawMarks += result.marksAwarded;
       totalTime += (result.runtimeMs || 0);
+
+      const caseStatus = result.passed ? 'passed' : 'wrong_answer';
 
       casesReport.push({
         id: tc.id,
@@ -116,7 +153,7 @@ export async function runDynamicPractical({ language, code, dbId, userId, isSubm
         actual_output: tc.is_hidden ? '[Hidden Test Case]' : result.actualOutput,
         error_message: tc.is_hidden ? (result.passed ? null : 'Hidden test case failed') : result.errorMessage,
         execution_time_ms: result.runtimeMs,
-        status: result.status
+        status: caseStatus
       });
 
       submissionCasesToInsert.push({

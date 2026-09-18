@@ -35,7 +35,9 @@ export async function GET(request, { params }) {
     const students = await sql`
       SELECT id, name, email, 
              extra_info->>'roll_number' as roll_number,
-             extra_info->>'batch' as batch
+             extra_info->>'batch' as batch,
+             extra_info->>'department' as department,
+             extra_info->>'division' as division
       FROM users 
       WHERE role = 'student' 
         AND (extra_info->>'semester')::int = ${parseInt(course.semester)}

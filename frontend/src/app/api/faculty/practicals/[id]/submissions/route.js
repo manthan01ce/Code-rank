@@ -14,7 +14,8 @@ export async function GET(request, { params }) {
     const { searchParams } = new URL(request.url);
 
     // Filters
-    const studentSearch = searchParams.get('studentSearch'); // Name or email or roll no
+    const studentSearch = searchParams.get('studentSearch'); // Name or email or roll no or division
+    const divisionFilter = searchParams.get('division');
     const status = searchParams.get('status'); // e.g. Accepted, Wrong Answer
     const fromDate = searchParams.get('fromDate');
     const toDate = searchParams.get('toDate');
@@ -37,16 +38,23 @@ export async function GET(request, { params }) {
     let query = sql`
       SELECT s.*, u.name as student_name, u.email as student_email,
              u.extra_info->>'roll_number' as roll_number,
-             u.extra_info->>'batch' as batch
+             u.extra_info->>'batch' as batch,
+             u.extra_info->>'division' as division,
+             u.extra_info->>'department' as department
       FROM practical_submissions s
       JOIN users u ON s.student_id = u.id
       WHERE s.practical_id = ${parseInt(id)}
     `;
 
-    // Filter by student name / email / roll no
+    // Filter by student name / email / roll no / division
     if (studentSearch) {
       const searchPattern = `%${studentSearch}%`;
-      query = sql`${query} AND (u.name ILIKE ${searchPattern} OR u.email ILIKE ${searchPattern} OR u.extra_info->>'roll_number' ILIKE ${searchPattern})`;
+      query = sql`${query} AND (u.name ILIKE ${searchPattern} OR u.email ILIKE ${searchPattern} OR u.extra_info->>'roll_number' ILIKE ${searchPattern} OR u.extra_info->>'division' ILIKE ${searchPattern})`;
+    }
+
+    // Filter by specific division
+    if (divisionFilter && divisionFilter !== 'all') {
+      query = sql`${query} AND u.extra_info->>'division' = ${divisionFilter}`;
     }
 
     // Filter by status

@@ -33,6 +33,22 @@ async function handleFacultyDeactivation(facultyId) {
   }
 }
 
+function validateDivision(division) {
+  if (!division || typeof division !== 'string' || !division.trim()) {
+    return { valid: false, error: 'Division is compulsory for students.' };
+  }
+  const trimmed = division.trim();
+  const alphaMatches = trimmed.match(/[a-zA-Z]/g) || [];
+  const digitMatches = trimmed.match(/[0-9]/g) || [];
+  if (alphaMatches.length < 2) {
+    return { valid: false, error: 'Division must contain at least 2 alphabetic letters (e.g., CE1, IT2).' };
+  }
+  if (digitMatches.length < 1) {
+    return { valid: false, error: 'Division must contain at least 1 numeric digit (e.g., CE1, IT2).' };
+  }
+  return { valid: true };
+}
+
 export async function PUT(request, { params }) {
   try {
     const admin = getUserFromRequest(request);
@@ -42,7 +58,17 @@ export async function PUT(request, { params }) {
 
     const { id } = await params;
     const body = await request.json();
-    const { first_name, last_name, email, name, extra_info, status, password } = body;
+    const { first_name, last_name, email, name, extra_info, status, password, role } = body;
+
+    if (extra_info && (role === 'student' || extra_info.division !== undefined)) {
+      if (extra_info.division !== undefined || role === 'student') {
+        const val = validateDivision(extra_info.division);
+        if (!val.valid) {
+          return NextResponse.json({ error: val.error }, { status: 400 });
+        }
+        extra_info.division = extra_info.division.trim().toUpperCase();
+      }
+    }
 
     // Use reconstructed name if first and last name provided, otherwise use name
     let finalName = name;

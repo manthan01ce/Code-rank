@@ -59,6 +59,19 @@ export default function FacultyDashboard() {
   const [customEndTimeInput, setCustomEndTimeInput] = useState('');
   const [copyCodeSuccess, setCopyCodeSuccess] = useState(false);
 
+  // Live timer tick for real-time countdown
+  const [currentTime, setCurrentTime] = useState(Date.now());
+  useEffect(() => {
+    const timer = setInterval(() => {
+      setCurrentTime(Date.now());
+    }, 1000);
+    return () => clearInterval(timer);
+  }, []);
+
+  // Department & Division filter state
+  const [selectedDepartmentFilter, setSelectedDepartmentFilter] = useState('all');
+  const [submissionDivisionFilter, setSubmissionDivisionFilter] = useState('all');
+
   // Marks Overview state
   const [selectedMarksPracticalId, setSelectedMarksPracticalId] = useState('');
   const [statsData, setStatsData] = useState(null);
@@ -163,12 +176,15 @@ export default function FacultyDashboard() {
     if (selectedPracticalId && activeTab === 'submissions') {
       fetchSubmissions();
     }
-  }, [selectedPracticalId, activeTab, studentSearch, submissionStatusFilter, submissionSortBy, submissionSortOrder]);
+  }, [selectedPracticalId, activeTab, studentSearch, submissionStatusFilter, submissionSortBy, submissionSortOrder, submissionDivisionFilter]);
 
   const fetchSubmissions = async () => {
     setLoadingSubmissions(true);
     try {
-      const url = `/api/faculty/practicals/${selectedPracticalId}/submissions?studentSearch=${studentSearch}&status=${submissionStatusFilter}&sortBy=${submissionSortBy}&sortOrder=${submissionSortOrder}`;
+      let url = `/api/faculty/practicals/${selectedPracticalId}/submissions?studentSearch=${encodeURIComponent(studentSearch)}&status=${submissionStatusFilter}&sortBy=${submissionSortBy}&sortOrder=${submissionSortOrder}`;
+      if (submissionDivisionFilter && submissionDivisionFilter !== 'all') {
+        url += `&division=${encodeURIComponent(submissionDivisionFilter)}`;
+      }
       const res = await fetch(url, {
         headers: { Authorization: `Bearer ${token()}` }
       });
@@ -476,38 +492,52 @@ export default function FacultyDashboard() {
       return <span style={{ color: '#94a3b8', fontSize: '11px', fontStyle: 'italic' }}>No time limit</span>;
     }
 
-    const now = new Date();
-    const start = startTime ? new Date(startTime) : null;
-    const end = endTime ? new Date(endTime) : null;
+    const start = startTime ? new Date(startTime).getTime() : null;
+    const end = endTime ? new Date(endTime).getTime() : null;
 
-    if (start && now < start) {
+    if (start && currentTime < start) {
+      const diffSecs = Math.max(0, Math.floor((start - currentTime) / 1000));
+      const hours = Math.floor(diffSecs / 3600);
+      const mins = Math.floor((diffSecs % 3600) / 60);
+      const secs = diffSecs % 60;
+      const startsInStr = hours > 0
+        ? `${hours}h ${mins}m ${secs}s`
+        : mins > 0
+          ? `${mins}m ${secs}s`
+          : `${secs}s`;
+
       return (
         <span style={{
           display: 'inline-flex', alignItems: 'center', gap: '4px',
           padding: '3px 8px', borderRadius: '12px', fontSize: '11px', fontWeight: 600,
           backgroundColor: '#eff6ff', color: '#2563eb', border: '1px solid #bfdbfe'
         }}>
-          ⏳ Starts: {start.toLocaleString([], { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' })}
+          ⏳ Starts in {startsInStr} ({new Date(start).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })})
         </span>
       );
     }
 
     if (end) {
-      if (now > end) {
+      if (currentTime > end) {
         return (
           <span style={{
             display: 'inline-flex', alignItems: 'center', gap: '4px',
             padding: '3px 8px', borderRadius: '12px', fontSize: '11px', fontWeight: 600,
             backgroundColor: '#fef2f2', color: '#ef4444', border: '1px solid #fecaca'
           }}>
-            ⛔ Expired ({end.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })})
+            ⛔ Expired ({new Date(end).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })})
           </span>
         );
       } else {
-        const diffMinutes = Math.round((end - now) / 60000);
-        const hours = Math.floor(diffMinutes / 60);
-        const mins = diffMinutes % 60;
-        const remainingStr = hours > 0 ? `${hours}h ${mins}m left` : `${mins}m left`;
+        const diffSecs = Math.max(0, Math.floor((end - currentTime) / 1000));
+        const hours = Math.floor(diffSecs / 3600);
+        const mins = Math.floor((diffSecs % 3600) / 60);
+        const secs = diffSecs % 60;
+        const remainingStr = hours > 0
+          ? `${hours}h ${mins}m ${secs}s left`
+          : mins > 0
+            ? `${mins}m ${secs}s left`
+            : `${secs}s left`;
 
         return (
           <span style={{
@@ -541,15 +571,57 @@ export default function FacultyDashboard() {
     }
   };
 
+  const handleDeleteSubmission = async (s) => {
+    if (!confirm(`Are you sure you want to delete the submission for student "${s.student_name || 'Student'}" (Score: ${s.normalized_marks}/10)? This cannot be undone.`)) {
+      return;
+    }
+
+    setProcessing(true);
+    try {
+      const res = await fetch(`/api/faculty/submissions/${s.id}`, {
+        method: 'DELETE',
+        headers: { Authorization: `Bearer ${token()}` }
+      });
+      const data = await res.json();
+      if (res.ok) {
+        showToast('success', 'Submission deleted successfully.');
+        setShowSubmissionModal(false);
+        setViewingSubmission(null);
+        fetchSubmissions();
+        fetchPracticals();
+        if (selectedCourse && activeTab === 'marks') fetchStats();
+      } else {
+        showToast('error', data.error || 'Failed to delete submission.');
+      }
+    } catch (e) {
+      showToast('error', 'Network error deleting submission.');
+    } finally {
+      setProcessing(false);
+    }
+  };
+
   const handleExportCSV = () => {
     if (!statsData || !statsData.students || !statsData.practicals) {
       showToast('error', 'No data to export.');
       return;
     }
 
-    const headers = ['Roll Number', 'Student Name', 'Email', ...statsData.practicals.map((p, i) => `Practical ${i + 1} (${p.title})`)];
-    const rows = statsData.students.map(s => {
-      const row = [s.roll_number || '—', s.name, s.email];
+    const studentsToExport = selectedDepartmentFilter === 'all'
+      ? statsData.students
+      : statsData.students.filter(s => (s.department || '').toUpperCase() === selectedDepartmentFilter.toUpperCase());
+
+    if (studentsToExport.length === 0) {
+      showToast('error', 'No students found for the selected department.');
+      return;
+    }
+
+    const headers = [
+      'Roll Number', 'Student Name', 'Email', 'Department', 'Division',
+      ...statsData.practicals.map((p, i) => `Practical ${i + 1} (${p.title})`)
+    ];
+
+    const rows = studentsToExport.map(s => {
+      const row = [s.roll_number || '—', s.name, s.email, s.department || '—', s.division || '—'];
       statsData.practicals.forEach(p => {
         const sub = statsData.submissions.find(sub => sub.student_id === s.id && sub.practical_id === p.id);
         if (sub) {
@@ -572,7 +644,8 @@ export default function FacultyDashboard() {
     const link = document.createElement('a');
     link.setAttribute('href', url);
     const courseCodeStr = statsData.course?.course_code || 'course';
-    link.setAttribute('download', `${courseCodeStr.replace(/\s+/g, '_')}_grades_matrix.csv`);
+    const deptSuffix = selectedDepartmentFilter === 'all' ? 'All_Departments' : selectedDepartmentFilter.replace(/\s+/g, '_');
+    link.setAttribute('download', `${courseCodeStr.replace(/\s+/g, '_')}_${deptSuffix}_grades_matrix.csv`);
     document.body.appendChild(link);
     link.click();
     document.body.removeChild(link);
@@ -867,12 +940,23 @@ export default function FacultyDashboard() {
 
               <input
                 type="text"
-                placeholder="Search Student name or Roll No..."
+                placeholder="Search Student, Roll No, Division..."
                 className="input-field"
                 value={studentSearch}
                 onChange={e => setStudentSearch(e.target.value)}
-                style={{ maxWidth: '280px', padding: '8px 12px' }}
+                style={{ maxWidth: '260px', padding: '8px 12px' }}
               />
+
+              <select
+                value={submissionDivisionFilter}
+                onChange={e => setSubmissionDivisionFilter(e.target.value)}
+                style={{ padding: '8px 12px', borderRadius: '6px', border: '1px solid var(--border-color)', backgroundColor: 'white', fontSize: '13px' }}
+              >
+                <option value="all">All Divisions</option>
+                {Array.from(new Set(submissions.map(s => s.division).filter(Boolean))).sort().map(div => (
+                  <option key={div} value={div}>Div: {div}</option>
+                ))}
+              </select>
             </div>
 
             <div style={{ display: 'flex', gap: '12px' }}>
@@ -913,6 +997,7 @@ export default function FacultyDashboard() {
                   <tr>
                     <th>Roll Number</th>
                     <th>Student Name</th>
+                    <th>Division</th>
                     <th>Submission Time</th>
                     <th>Language</th>
                     <th>Status</th>
@@ -926,6 +1011,11 @@ export default function FacultyDashboard() {
                     <tr key={s.id}>
                       <td style={{ fontWeight: 600, color: 'var(--primary)' }}>{s.roll_number || '—'}</td>
                       <td style={{ fontWeight: 500 }}>{s.student_name}</td>
+                      <td>
+                        <span style={{ fontSize: '12px', fontWeight: 600, backgroundColor: '#eff6ff', color: '#1d4ed8', padding: '2px 8px', borderRadius: '4px' }}>
+                          {s.division || '—'}
+                        </span>
+                      </td>
                       <td>{new Date(s.submitted_at).toLocaleString()}</td>
                       <td>{s.language.toUpperCase()}</td>
                       <td>
@@ -940,17 +1030,26 @@ export default function FacultyDashboard() {
                       <td>{s.raw_marks} Marks</td>
                       <td style={{ fontWeight: 700, color: 'var(--primary)' }}>{s.normalized_marks} / 10</td>
                       <td>
-                        <button
-                          onClick={() => handleViewSubmission(s)}
-                          style={{ padding: '6px 12px', borderRadius: '6px', border: 'none', backgroundColor: '#475569', color: 'white', cursor: 'pointer', fontWeight: 600, fontSize: '12px' }}
-                        >
-                          👁️ View Details
-                        </button>
+                        <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
+                          <button
+                            onClick={() => handleViewSubmission(s)}
+                            style={{ padding: '6px 12px', borderRadius: '6px', border: 'none', backgroundColor: '#475569', color: 'white', cursor: 'pointer', fontWeight: 600, fontSize: '12px' }}
+                          >
+                            👁️ View Details
+                          </button>
+                          <button
+                            onClick={() => handleDeleteSubmission(s)}
+                            style={{ padding: '6px 10px', borderRadius: '6px', border: 'none', backgroundColor: '#ef4444', color: 'white', cursor: 'pointer', fontWeight: 600, fontSize: '12px' }}
+                            title="Delete this student submission"
+                          >
+                            🗑️ Delete
+                          </button>
+                        </div>
                       </td>
                     </tr>
                   ))}
                   {submissions.length === 0 && (
-                    <tr><td colSpan="8" style={{ textAlign: 'center', color: '#888', padding: '40px' }}>No student submissions found.</td></tr>
+                    <tr><td colSpan="9" style={{ textAlign: 'center', color: '#888', padding: '40px' }}>No student submissions found.</td></tr>
                   )}
                 </tbody>
               </table>
@@ -962,81 +1061,118 @@ export default function FacultyDashboard() {
       {/* TAB 3: MARKS OVERVIEW */}
       {activeTab === 'marks' && (
         <div>
-          <div style={{ display: 'flex', justifyContent: 'space-between', gap: '15px', mb: '20px', alignItems: 'center' }}>
+          <div style={{ display: 'flex', justifyContent: 'space-between', gap: '15px', mb: '20px', alignItems: 'center', flexWrap: 'wrap' }}>
             <div>
               <h3 style={{ fontSize: '18px', fontWeight: 600 }}>Grades Matrix (Pivot View)</h3>
               <p style={{ color: 'var(--text-muted)', fontSize: '13px' }}>Grid layout showing each student's score across all active course practicals.</p>
             </div>
 
             {statsData && (
-              <button
-                className="btn-primary"
-                style={{ width: 'auto', padding: '10px 20px', backgroundColor: '#10b981', margin: 0 }}
-                onClick={handleExportCSV}
-              >
-                ⬆ Export CSV / Excel
-              </button>
+              <div style={{ display: 'flex', gap: '12px', alignItems: 'center', flexWrap: 'wrap' }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                  <label style={{ fontSize: '12px', fontWeight: 600, color: 'var(--text-muted)' }}>Department:</label>
+                  <select
+                    value={selectedDepartmentFilter}
+                    onChange={e => setSelectedDepartmentFilter(e.target.value)}
+                    style={{ padding: '8px 12px', borderRadius: '6px', border: '1px solid var(--border-color)', backgroundColor: 'white', fontSize: '13px', fontWeight: 600 }}
+                  >
+                    <option value="all">All Departments ({statsData.students?.length || 0})</option>
+                    {Array.from(new Set((statsData?.students || []).map(s => s.department).filter(Boolean))).sort().map(dept => (
+                      <option key={dept} value={dept}>
+                        {dept} ({(statsData.students || []).filter(s => s.department === dept).length})
+                      </option>
+                    ))}
+                  </select>
+                </div>
+
+                <button
+                  className="btn-primary"
+                  style={{ width: 'auto', padding: '10px 18px', backgroundColor: '#10b981', margin: 0, display: 'flex', alignItems: 'center', gap: '6px' }}
+                  onClick={handleExportCSV}
+                >
+                  ⬆ {selectedDepartmentFilter === 'all' ? 'Export All Marks (CSV)' : `Export ${selectedDepartmentFilter} Marks (CSV)`}
+                </button>
+              </div>
             )}
           </div>
 
-          {loadingStats ? <p>Loading marks matrix...</p> : statsData && statsData.practicals && (
-            <div>
-              <div className="table-container" style={{ overflowX: 'auto', marginTop: '15px' }}>
-                <table>
-                  <thead>
-                    <tr>
-                      <th style={{ minWidth: '130px' }}>Roll Number</th>
-                      <th style={{ minWidth: '180px' }}>Student Name</th>
-                      {statsData.practicals.map((p, idx) => (
-                        <th key={p.id} style={{ textAlign: 'center', minWidth: '120px' }}>
-                          Prac {idx + 1}
-                          <div style={{ fontSize: '11px', fontWeight: 'normal', color: 'var(--text-muted)', marginTop: '4px' }}>
-                            {p.title.length > 20 ? p.title.substring(0, 18) + '..' : p.title}
-                          </div>
-                        </th>
-                      ))}
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {statsData.students.map(s => (
-                      <tr key={s.id}>
-                        <td style={{ fontWeight: 600, color: 'var(--primary)' }}>{s.roll_number || '—'}</td>
-                        <td style={{ fontWeight: 500 }}>{s.name}</td>
-                        {statsData.practicals.map(p => {
-                          const sub = statsData.submissions.find(sub => sub.student_id === s.id && sub.practical_id === p.id);
-                          return (
-                            <td key={p.id} style={{ textAlign: 'center' }}>
-                              {sub ? (
-                                <div>
-                                  <span style={{ fontWeight: 700, color: 'var(--primary)' }}>{sub.normalized_marks} / 10</span>
-                                  {sub.is_late && (
-                                    <span style={{
-                                      display: 'block', fontSize: '9px', fontWeight: 'bold', color: '#ef4444', marginTop: '2px'
-                                    }}>
-                                      LATE
-                                    </span>
-                                  )}
-                                </div>
-                              ) : (
-                                <span style={{ color: '#94a3b8', fontSize: '12px', fontStyle: 'italic' }}>Not Submitted</span>
-                              )}
-                            </td>
-                          );
-                        })}
-                      </tr>
-                    ))}
-                    {statsData.students.length === 0 && (
+          {loadingStats ? <p>Loading marks matrix...</p> : statsData && statsData.practicals && (() => {
+            const filteredStatsStudents = (statsData.students || []).filter(s => {
+              if (selectedDepartmentFilter === 'all') return true;
+              return (s.department || '').toUpperCase() === selectedDepartmentFilter.toUpperCase();
+            });
+
+            return (
+              <div>
+                <div className="table-container" style={{ overflowX: 'auto', marginTop: '15px' }}>
+                  <table>
+                    <thead>
                       <tr>
-                        <td colSpan={statsData.practicals.length + 2} style={{ textAlign: 'center', color: '#888', padding: '40px' }}>
-                          No students found in this course.
-                        </td>
+                        <th style={{ minWidth: '120px' }}>Roll Number</th>
+                        <th style={{ minWidth: '170px' }}>Student Name</th>
+                        <th style={{ minWidth: '110px' }}>Department</th>
+                        <th style={{ minWidth: '90px' }}>Division</th>
+                        {statsData.practicals.map((p, idx) => (
+                          <th key={p.id} style={{ textAlign: 'center', minWidth: '120px' }}>
+                            Prac {idx + 1}
+                            <div style={{ fontSize: '11px', fontWeight: 'normal', color: 'var(--text-muted)', marginTop: '4px' }}>
+                              {p.title.length > 20 ? p.title.substring(0, 18) + '..' : p.title}
+                            </div>
+                          </th>
+                        ))}
                       </tr>
-                    )}
-                  </tbody>
-                </table>
+                    </thead>
+                    <tbody>
+                      {filteredStatsStudents.map(s => (
+                        <tr key={s.id}>
+                          <td style={{ fontWeight: 600, color: 'var(--primary)' }}>{s.roll_number || '—'}</td>
+                          <td style={{ fontWeight: 500 }}>{s.name}</td>
+                          <td>
+                            <span style={{ fontSize: '12px', fontWeight: 600, backgroundColor: '#f1f5f9', padding: '2px 8px', borderRadius: '4px' }}>
+                              {s.department || '—'}
+                            </span>
+                          </td>
+                          <td>
+                            <span style={{ fontSize: '12px', fontWeight: 600, backgroundColor: '#eff6ff', color: '#1d4ed8', padding: '2px 8px', borderRadius: '4px' }}>
+                              {s.division || '—'}
+                            </span>
+                          </td>
+                          {statsData.practicals.map(p => {
+                            const sub = statsData.submissions.find(sub => sub.student_id === s.id && sub.practical_id === p.id);
+                            return (
+                              <td key={p.id} style={{ textAlign: 'center' }}>
+                                {sub ? (
+                                  <div>
+                                    <span style={{ fontWeight: 700, color: 'var(--primary)' }}>{sub.normalized_marks} / 10</span>
+                                    {sub.is_late && (
+                                      <span style={{
+                                        display: 'block', fontSize: '9px', fontWeight: 'bold', color: '#ef4444', marginTop: '2px'
+                                      }}>
+                                        LATE
+                                      </span>
+                                    )}
+                                  </div>
+                                ) : (
+                                  <span style={{ color: '#94a3b8', fontSize: '12px', fontStyle: 'italic' }}>Not Submitted</span>
+                                )}
+                              </td>
+                            );
+                          })}
+                        </tr>
+                      ))}
+                      {filteredStatsStudents.length === 0 && (
+                        <tr>
+                          <td colSpan={statsData.practicals.length + 4} style={{ textAlign: 'center', color: '#888', padding: '40px' }}>
+                            No students found for department "{selectedDepartmentFilter}".
+                          </td>
+                        </tr>
+                      )}
+                    </tbody>
+                  </table>
+                </div>
               </div>
-            </div>
-          )}
+            );
+          })()}
         </div>
       )}
 
@@ -1470,7 +1606,14 @@ export default function FacultyDashboard() {
             </div>
 
             {/* Modal action */}
-            <div style={{ display: 'flex', justifyContent: 'flex-end', marginTop: '20px' }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: '20px' }}>
+              <button
+                type="button"
+                onClick={() => handleDeleteSubmission(viewingSubmission)}
+                style={{ padding: '10px 18px', backgroundColor: '#ef4444', color: 'white', border: 'none', borderRadius: '6px', cursor: 'pointer', fontWeight: 600, fontSize: '13px' }}
+              >
+                🗑️ Delete Submission
+              </button>
               <button
                 onClick={() => setShowSubmissionModal(false)}
                 style={{ padding: '10px 24px', backgroundColor: 'var(--primary)', color: 'white', border: 'none', borderRadius: '6px', cursor: 'pointer', fontWeight: 600 }}

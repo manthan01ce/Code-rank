@@ -20,12 +20,13 @@ async function downloadCredentialsPDF(users) {
 
   autoTable(doc, {
     startY: 35,
-    head: [['Name', 'Email', 'Roll No', 'Department', 'Semester', 'Password']],
+    head: [['Name', 'Email', 'Roll No', 'Department', 'Division', 'Semester', 'Password']],
     body: users.map(u => [
       u.name,
       u.email,
       u.extra_info?.roll_number || '-',
       u.extra_info?.department || '-',
+      u.extra_info?.division || '-',
       u.extra_info?.semester || '-',
       u.rawPassword,
     ]),
@@ -72,13 +73,14 @@ export default function StudentManagement() {
   const [processing, setProcessing]   = useState(false);
   const [search, setSearch]           = useState('');
   const [statusFilter, setStatusFilter] = useState('all'); // Show all users by default
+  const [divisionFilter, setDivisionFilter] = useState('all');
   const [showModal, setShowModal]     = useState(false);
   const [editTarget, setEditTarget]   = useState(null); // null = create mode
   const [toast, setToast]             = useState(null); // { type: 'success'|'error', msg }
   const fileRef                       = useRef();
 
   // Form fields
-  const [form, setForm] = useState({ firstName: '', lastName: '', roll: '', department: '', semester: '', password: '' });
+  const [form, setForm] = useState({ firstName: '', lastName: '', roll: '', department: '', semester: '', division: '', password: '' });
 
   const token = () => authToken;
 
@@ -87,12 +89,22 @@ export default function StudentManagement() {
     setTimeout(() => setToast(null), 5000);
   };
 
+  const validateDivision = (div) => {
+    if (!div || !div.trim()) return 'Division is compulsory.';
+    const alphaMatches = div.match(/[a-zA-Z]/g) || [];
+    const digitMatches = div.match(/[0-9]/g) || [];
+    if (alphaMatches.length < 2) return 'Division must contain at least 2 alphabetic letters (e.g., CE1, IT2).';
+    if (digitMatches.length < 1) return 'Division must contain at least 1 numeric digit (e.g., CE1, IT2).';
+    return null;
+  };
+
   // ── Fetch ──
   const fetchStudents = async () => {
     setLoading(true);
     try {
       let url = `/api/users?role=student&status=${statusFilter}`;
       if (search) url += `&search=${encodeURIComponent(search)}`;
+      if (divisionFilter && divisionFilter !== 'all') url += `&division=${encodeURIComponent(divisionFilter)}`;
       const res = await fetch(url, { headers: { Authorization: `Bearer ${token()}` } });
       if (res.ok) {
         const data = await res.json();
@@ -127,13 +139,13 @@ export default function StudentManagement() {
     } catch (e) { console.error(e); }
   };
 
-  useEffect(() => { if (isReady) { fetchStudents(); } }, [search, statusFilter, isReady]);
+  useEffect(() => { if (isReady) { fetchStudents(); } }, [search, statusFilter, divisionFilter, isReady]);
   useEffect(() => { if (isReady) fetchDepartments(); }, [isReady]);
 
   // ── Open modal ──
   const openAdd = () => {
     setEditTarget(null);
-    setForm({ firstName: '', lastName: '', roll: '', department: '', semester: '', password: '' });
+    setForm({ firstName: '', lastName: '', roll: '', department: '', semester: '', division: '', password: '' });
     setShowModal(true);
   };
 
@@ -145,6 +157,7 @@ export default function StudentManagement() {
       roll: s.extra_info?.roll_number || '',
       department: s.extra_info?.department || '',
       semester: s.extra_info?.semester || '',
+      division: s.extra_info?.division || '',
       password: '',
     });
     setShowModal(true);
@@ -153,9 +166,18 @@ export default function StudentManagement() {
   // ── Submit form ──
   const handleSubmit = async (e) => {
     e.preventDefault();
+
+    const divErr = validateDivision(form.division);
+    if (divErr) {
+      showToast('error', divErr);
+      return;
+    }
+
     setProcessing(true);
     try {
       const email = form.roll ? `${form.roll.toLowerCase()}@charusat.edu.in` : '';
+      const cleanDivision = form.division.trim().toUpperCase();
+
       if (editTarget) {
         // ── EDIT ──
         const res = await fetch(`/api/users/${editTarget.id}`, {
@@ -167,7 +189,7 @@ export default function StudentManagement() {
             email: email,
             role: 'student',
             status: editTarget.status,
-            extra_info: { roll_number: form.roll, department: form.department, semester: form.semester },
+            extra_info: { roll_number: form.roll, department: form.department, semester: form.semester, division: cleanDivision },
             password: form.password || undefined,
           }),
         });
@@ -191,7 +213,7 @@ export default function StudentManagement() {
             last_name: form.lastName,
             email: email,
             role: 'student',
-            extra_info: { roll_number: form.roll, department: form.department, semester: form.semester },
+            extra_info: { roll_number: form.roll, department: form.department, semester: form.semester, division: cleanDivision },
           }),
         });
         const data = await res.json();
@@ -213,7 +235,7 @@ export default function StudentManagement() {
       showToast('error', 'Network error — please try again');
     } finally {
       setProcessing(false);
-      setForm({ firstName: '', lastName: '', roll: '', department: '', semester: '' });
+      setForm({ firstName: '', lastName: '', roll: '', department: '', semester: '', division: '', password: '' });
     }
   };
 
@@ -393,10 +415,23 @@ export default function StudentManagement() {
             <option value="active">Active Only</option>
             <option value="inactive">Inactive Only</option>
           </select>
+          <select
+            value={divisionFilter}
+            onChange={e => setDivisionFilter(e.target.value)}
+            style={{
+              padding: '8px 12px', borderRadius: '6px', border: '1px solid var(--border-color)',
+              backgroundColor: 'white', fontSize: '14px', minWidth: '130px'
+            }}
+          >
+            <option value="all">All Divisions</option>
+            {Array.from(new Set(students.map(s => s.extra_info?.division).filter(Boolean))).sort().map(d => (
+              <option key={d} value={d}>Div: {d}</option>
+            ))}
+          </select>
           <input
             type="text"
             className="search-bar"
-            placeholder="Search name or email..."
+            placeholder="Search name, email, roll, division..."
             value={search}
             onChange={e => setSearch(e.target.value)}
           />
@@ -431,7 +466,7 @@ export default function StudentManagement() {
 
       {/* Hint */}
       <p style={{ fontSize: '12px', color: '#94a3b8', marginBottom: '16px' }}>
-        Bulk Upload expects columns: <strong>Name, RollNumber, Department, Semester</strong>. Emails and Passwords are auto-generated and included in the downloaded PDF.
+        Bulk Upload expects columns: <strong>Name, RollNumber, Department, Semester, Division</strong>. Emails and Passwords are auto-generated and included in the downloaded PDF.
       </p>
 
       {/* Modal */}
@@ -442,7 +477,7 @@ export default function StudentManagement() {
         }}>
           <div style={{
             background: 'white', borderRadius: '16px', padding: '32px',
-            width: '100%', maxWidth: '520px', boxShadow: '0 20px 60px rgba(0,0,0,0.2)',
+            width: '100%', maxWidth: '560px', boxShadow: '0 20px 60px rgba(0,0,0,0.2)',
           }}>
             <h3 style={{ marginBottom: '20px', fontSize: '20px', fontWeight: 700 }}>
               {editTarget ? `Edit ${editTarget.name}` : 'Add New Student'}
@@ -476,6 +511,15 @@ export default function StudentManagement() {
                   pattern="^[dD]?\d+[a-zA-Z]{2,3}\d+$"
                   title="Roll number must start with D (optional) or digits, followed by 2-3 letters, and end with digits (e.g. 25ce097 or D25ce097)"
                   required
+                  style={{ flex: 1.2 }}
+                />
+                <input
+                  className="input-field"
+                  placeholder="Division (e.g. CE1, IT2) *"
+                  value={form.division}
+                  onChange={e => setForm(f => ({ ...f, division: e.target.value.toUpperCase() }))}
+                  title="Division must contain at least 2 letters and at least 1 digit (e.g., CE1, IT2)"
+                  required
                   style={{ flex: 1 }}
                 />
                 <select
@@ -483,7 +527,7 @@ export default function StudentManagement() {
                   value={form.semester}
                   onChange={e => setForm(f => ({ ...f, semester: e.target.value }))}
                   required
-                  style={{ flex: 1 }}
+                  style={{ flex: 0.9 }}
                 >
                   <option value="" disabled>Select Semester *</option>
                   {[1, 2, 3, 4, 5, 6, 7, 8].map(s => <option key={s} value={s}>{s}</option>)}
@@ -493,7 +537,7 @@ export default function StudentManagement() {
                   value={form.department}
                   onChange={e => setForm(f => ({ ...f, department: e.target.value }))}
                   required
-                  style={{ flex: 1 }}
+                  style={{ flex: 1.2 }}
                 >
                   <option value="" disabled>Select Department *</option>
                   {departmentsList.map(d => (
@@ -501,6 +545,9 @@ export default function StudentManagement() {
                   ))}
                 </select>
               </div>
+              <p style={{ fontSize: '11.5px', color: '#64748b', margin: '-4px 0 4px 2px' }}>
+                ℹ️ <strong>Division is compulsory:</strong> must contain at least 2 alphabets and at least 1 digit (e.g., <strong>CE1</strong>, <strong>IT2</strong>, <strong>CSE1</strong>).
+              </p>
               
               <div style={{ display: 'flex', alignItems: 'center', border: '1px solid var(--border-color)', borderRadius: '6px', overflow: 'hidden' }}>
                 <input
@@ -560,6 +607,7 @@ export default function StudentManagement() {
                 <th>Name</th>
                 <th>Email</th>
                 <th>Branch</th>
+                <th>Division</th>
                 <th>Semester</th>
                 <th>Status</th>
                 <th>Actions</th>
@@ -574,6 +622,11 @@ export default function StudentManagement() {
                     <td style={{ fontWeight: 500 }}>{s.name}</td>
                     <td style={{ color: '#64748b' }}>{s.email}</td>
                     <td>{info.department || '—'}</td>
+                    <td>
+                      <span style={{ fontSize: '12px', fontWeight: 600, backgroundColor: '#eff6ff', color: '#1d4ed8', padding: '2px 8px', borderRadius: '4px' }}>
+                        {info.division || '—'}
+                      </span>
+                    </td>
                     <td>{info.semester || '—'}</td>
                     <td>
                       <span style={{
@@ -614,7 +667,7 @@ export default function StudentManagement() {
               })}
               {!loading && students.length === 0 && (
                 <tr>
-                  <td colSpan={7} style={{ textAlign: 'center', color: '#94a3b8', padding: '40px' }}>
+                  <td colSpan={8} style={{ textAlign: 'center', color: '#94a3b8', padding: '40px' }}>
                     No students found for the selected filter.
                   </td>
                 </tr>

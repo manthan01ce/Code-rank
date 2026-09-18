@@ -81,3 +81,64 @@ export async function GET(request, { params }) {
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
   }
 }
+
+export async function DELETE(request, { params }) {
+  try {
+    const user = getUserFromRequest(request);
+    if (!user || user.role !== 'faculty') {
+      return NextResponse.json({ error: 'Unauthorized: Only faculty can delete submissions.' }, { status: 401 });
+    }
+
+    const { id } = await params;
+    const subId = parseInt(id);
+
+    // Verify submission exists and faculty is assigned to the course or created the practical
+    const submissions = await sql`
+      SELECT s.*, p.title as practical_title, p.faculty_id
+      FROM practical_submissions s
+      JOIN practicals p ON s.practical_id = p.id
+      WHERE s.id = ${subId}
+    `;
+
+    if (submissions.length === 0) {
+      return NextResponse.json({ error: 'Submission not found' }, { status: 404 });
+    }
+
+    const submission = submissions[0];
+
+    const mapping = await sql`
+      SELECT 1 FROM course_faculty cf
+      JOIN practicals p ON p.course_id = cf.course_id
+      WHERE p.id = ${submission.practical_id} AND cf.faculty_id = ${user.id}
+    `;
+    if (mapping.length === 0 && submission.faculty_id !== user.id) {
+      return NextResponse.json({ error: 'Unauthorized: You are not assigned to this course.' }, { status: 403 });
+    }
+
+    // Delete submission cases first
+    await sql`DELETE FROM practical_submission_cases WHERE submission_id = ${subId}`;
+
+    // Delete the submission
+    await sql`DELETE FROM practical_submissions WHERE id = ${subId}`;
+
+    // Audit log
+    try {
+      await sql`
+        INSERT INTO activity_logs (user_id, action, details)
+        VALUES (${user.id}, 'DELETE_SUBMISSION', ${JSON.stringify({
+          submission_id: subId,
+          student_id: submission.student_id,
+          practical_id: submission.practical_id,
+          practical_title: submission.practical_title
+        })})
+      `;
+    } catch (logErr) {
+      console.warn('Could not write activity log:', logErr);
+    }
+
+    return NextResponse.json({ success: true, message: 'Submission deleted successfully' });
+  } catch (error) {
+    console.error('Delete submission error:', error);
+    return NextResponse.json({ error: 'Failed to delete submission' }, { status: 500 });
+  }
+}

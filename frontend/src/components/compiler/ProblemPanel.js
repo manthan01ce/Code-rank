@@ -216,39 +216,6 @@ export default function ProblemPanel({ problem }) {
               <button style={{ background: '#1a1a1a', border: '1px solid #262626', color: '#7e7e7e', fontSize: '10px', fontWeight: 700, letterSpacing: '1px', textTransform: 'uppercase', padding: '3px 10px', cursor: 'pointer' }}>Companies</button>
             </div>
 
-            {/* TIMELINE / COUNTDOWN TIMER BANNER */}
-            {p.isPractical && (currentStartTime || currentEndTime) && (
-              <div style={{
-                backgroundColor: isUpcoming ? '#1e1b4b' : isExpired ? '#450a0a' : '#022c22',
-                border: `1px solid ${isUpcoming ? '#3730a3' : isExpired ? '#991b1b' : '#065f46'}`,
-                borderRadius: '8px', padding: '12px 18px', marginBottom: '24px',
-                display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '10px'
-              }}>
-                <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-                  <span style={{ fontSize: '20px' }}>{isUpcoming ? '⏳' : isExpired ? '⛔' : '⏱️'}</span>
-                  <div>
-                    <div style={{
-                      color: isUpcoming ? '#a5b4fc' : isExpired ? '#fca5a5' : '#6ee7b7',
-                      fontWeight: 700, fontSize: '13px', textTransform: 'uppercase', letterSpacing: '0.5px'
-                    }}>
-                      {isUpcoming ? 'Scheduled Practical' : isExpired ? 'Deadline Passed' : 'Time Remaining to Submit'}
-                    </div>
-                    <div style={{ color: '#94a3b8', fontSize: '11.5px', marginTop: '2px' }}>
-                      {isUpcoming ? `Starts: ${new Date(currentStartTime).toLocaleString()}` : currentEndTime ? `Deadline: ${new Date(currentEndTime).toLocaleString()}` : 'No deadline'}
-                    </div>
-                  </div>
-                </div>
-
-                <div style={{
-                  fontSize: '20px', fontWeight: 800, fontFamily: 'monospace',
-                  color: isUpcoming ? '#c7d2fe' : isExpired ? '#ef4444' : '#10b981',
-                  letterSpacing: '1px'
-                }}>
-                  {countdownStr}
-                </div>
-              </div>
-            )}
-
             {/* Description */}
             <div
               style={{ fontSize: '15px', fontWeight: 300, lineHeight: 1.7, color: '#bbbbbb', marginBottom: '32px' }}
