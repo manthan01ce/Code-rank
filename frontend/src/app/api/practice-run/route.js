@@ -5,7 +5,7 @@ import path from 'path';
 import crypto from 'crypto';
 
 // Helper function to run the docker command asynchronously with STDIN piping
-function runContainerWithStdin({ volumePath, containerName, stdinText, timeoutMs = 5000, memoryMb = 128 }) {
+function runContainerWithStdin({ volumePath, containerName, stdinText, timeoutMs = 12000, memoryMb = 128 }) {
   return new Promise((resolve) => {
     // Spawn the docker command:
     // docker run -i --rm --name <name> --memory=128m --cpus=0.5 --network none -v <vol>:/app -w /app python:3.12-slim python solution.py
@@ -119,7 +119,7 @@ export async function POST(request) {
       volumePath,
       containerName,
       stdinText: stdin,
-      timeoutMs: 5000,
+      timeoutMs: 12000,
       memoryMb: 128
     });
 

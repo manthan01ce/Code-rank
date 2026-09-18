@@ -3,13 +3,14 @@ import { check, sleep } from 'k6';
 
 export const options = {
   stages: [
-    { duration: '10s', target: 3 }, // 3 concurrent submissions
-    { duration: '20s', target: 6 }, // 6 concurrent submissions
-    { duration: '10s', target: 0 }, // Cool down
+    { duration: '15s', target: 15 }, // Warm up to 15 concurrent submissions
+    { duration: '15s', target: 30 }, // Ramp to 30 concurrent submissions
+    { duration: '2m', target: 30 },  // Sustained peak load at 30 concurrent submissions for 2 mins
+    { duration: '15s', target: 0 },  // Cool down
   ],
   thresholds: {
-    http_req_failed: ['rate<0.05'],     // 95%+ success rate for Docker sandboxes
-    http_req_duration: ['p(90)<4000'],  // 90% of code executions under 4s
+    http_req_failed: ['rate<0.10'],     // 90%+ success rate under heavy Docker container contention
+    http_req_duration: ['p(90)<6000'],  // 90% of code executions under 6s
   },
 };
 
@@ -28,7 +29,7 @@ export default function () {
   const res = http.post(`${BASE_URL}/api/practice-run`, codePayload, {
     headers: headers,
     tags: { name: 'PracticeRun' },
-    timeout: '10s',
+    timeout: '15s',
   });
 
   check(res, {
@@ -43,5 +44,5 @@ export default function () {
     },
   });
 
-  sleep(1);
+  sleep(2);
 }

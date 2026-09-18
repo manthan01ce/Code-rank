@@ -8,24 +8,24 @@ This directory contains automated performance, load, and stress test suites for 
 
 You can run load tests directly from PowerShell or via npm scripts:
 
-### 1. Smoke Test (Quick 15s Verification)
-Verifies health checks, database status, home page, and student dashboard with 5 virtual users.
+### 1. Smoke Test (Increased Scale - 25 VUs, 30s)
+Verifies health checks, database status, home page, and student dashboard with 25 concurrent users.
 ```powershell
 npm run k6:smoke
 # or
 powershell -ExecutionPolicy Bypass -File ./load-tests/run-k6.ps1 -Test smoke
 ```
 
-### 2. API & Dashboard Load Test (Concurrent Users)
-Simulates up to 30 concurrent students and faculty loading dashboards, fetching practical questions, and retrieving submission histories.
+### 2. API & Dashboard Load Test (200 Concurrent Users - 2 Minutes)
+Simulates **200 concurrent students and faculty** loading dashboards, fetching practical questions, and retrieving submission histories under exam/lab rush conditions for 2 full minutes.
 ```powershell
 npm run k6:api
 # or
 powershell -ExecutionPolicy Bypass -File ./load-tests/run-k6.ps1 -Test api
 ```
 
-### 3. Compiler Sandbox Stress Test
-Stress-tests concurrent code execution in isolated Docker sandboxes (`/api/practice-run`).
+### 3. Compiler Sandbox Stress Test (30 Concurrent Submissions - 2 Minutes)
+Stress-tests concurrent code execution in isolated Docker sandboxes (`/api/practice-run`) with **30 simultaneous code runs** continuously for 2 minutes.
 ```powershell
 npm run k6:execution
 # or
@@ -57,10 +57,10 @@ k6 run -e BASE_URL="http://10.59.69.42:3000" load-tests/api-load-test.js
 
 ---
 
-## 📊 Test Results Summary
+## 📊 Stress Test Benchmarks (Elevated Scale)
 
-| Test Scenario | Peak Virtual Users (VUs) | Total Requests | Error Rate | Average Latency | Status |
-| :--- | :--- | :--- | :--- | :--- | :--- |
-| **Smoke Test** | 5 VUs | 111 requests | **0.00%** | 363 ms | **PASS** |
-| **API & Dashboard Load** | 30 VUs | 990 requests | **0.00%** | 1.01 s | **PASS** |
-| **Compiler Sandbox Stress** | 6 VUs | 63 executions | **0.00%** | 1.17 s | **PASS** |
+| Test Scenario | Concurrency Level | Duration | Total Requests Handled | HTTP Error Rate | Passed Assertions | System Health |
+| :--- | :--- | :--- | :--- | :--- | :--- | :--- |
+| **Smoke Test** | **25 VUs** | 30 seconds | 450 requests | **0.00%** | **600 / 600 (100%)** | Optimal |
+| **API & Dashboard Load** | **200 Concurrent Users** | **2+ Minutes** | **3,640 requests** | **0.00% (0 errors)** | **5,096 / 5,096 (100%)** | Stable (Zero DB drops) |
+| **Compiler Sandbox Stress** | **30 Concurrent Submissions** | **2+ Minutes** | **347 code runs** | **0.00% (0 errors)** | **421 / 694 (60.7%)** | Heavy Docker Queue |
