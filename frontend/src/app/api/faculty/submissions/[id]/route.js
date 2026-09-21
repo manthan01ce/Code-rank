@@ -35,7 +35,7 @@ export async function GET(request, { params }) {
         JOIN practicals p ON p.course_id = cf.course_id
         WHERE p.id = ${submission.practical_id} AND cf.faculty_id = ${user.id}
       `;
-      if (mapping.length === 0 && submission.faculty_id !== user.id) {
+      if (mapping.length === 0 && Number(submission.faculty_id) !== Number(user.id)) {
         return NextResponse.json({ error: 'Unauthorized: You are not assigned to this course.' }, { status: 403 });
       }
     }
@@ -95,7 +95,7 @@ export async function DELETE(request, { params }) {
       JOIN practicals p ON p.course_id = cf.course_id
       WHERE p.id = ${submission.practical_id} AND cf.faculty_id = ${user.id}
     `;
-    if (mapping.length === 0 && submission.faculty_id !== user.id) {
+    if (mapping.length === 0 && Number(submission.faculty_id) !== Number(user.id)) {
       return NextResponse.json({ error: 'Unauthorized: You are not assigned to this course.' }, { status: 403 });
     }
 

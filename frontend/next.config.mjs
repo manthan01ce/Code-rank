@@ -14,6 +14,7 @@ const nextConfig = {
     '*.lan',
     'increase-cabinet-indicate-austin.trycloudflare.com',
     '*.trycloudflare.com',
+    'joan-theta-creator-amendments.trycloudflare.com',
     'slight-keyboards-tobago-growth.trycloudflare.com',
     'calcium-presentations-delight-signed.trycloudflare.com',
     'reminder-landscape-begun-panels.trycloudflare.com'

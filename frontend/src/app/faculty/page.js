@@ -566,9 +566,13 @@ export default function FacultyDashboard() {
         headers: { Authorization: `Bearer ${token()}` }
       });
       if (res.ok) {
-        setViewingSubmission(await res.json());
-        setShowSubmissionModal(true);
-      }
+          setViewingSubmission(await res.json());
+          setShowSubmissionModal(true);
+        } else {
+          const errData = await res.text();
+          console.error("Submission fetch failed:", errData);
+          showToast('error', 'Error: ' + errData.substring(0, 50));
+        }
     } catch (e) {
       showToast('error', 'Could not fetch submission details.');
     } finally {
@@ -1500,7 +1504,7 @@ export default function FacultyDashboard() {
             <div style={{ display: 'flex', gap: '20px', backgroundColor: '#f8fafc', padding: '15px', borderRadius: '10px', marginBottom: '20px' }}>
               <div style={{ flex: 1 }}>
                 <p style={{ fontSize: '13px', color: 'var(--text-muted)' }}>Roll Number: <strong>{viewingSubmission.roll_number || '—'}</strong></p>
-                <p style={{ fontSize: '13px', color: 'var(--text-muted)', mt: '5px' }}>Language: <strong>{viewingSubmission.language.toUpperCase()}</strong></p>
+                <p style={{ fontSize: '13px', color: 'var(--text-muted)', mt: '5px' }}>Language: <strong>{(viewingSubmission.language || 'txt').toUpperCase()}</strong></p>
               </div>
               <div style={{ flex: 1 }}>
                 <p style={{ fontSize: '13px', color: 'var(--text-muted)' }}>Status: <strong style={{ color: viewingSubmission.status === 'Accepted' ? '#10b981' : '#ef4444' }}>{viewingSubmission.status}</strong></p>
@@ -1547,7 +1551,7 @@ export default function FacultyDashboard() {
                   </button>
                 </div>
               </div>
-              <div style={{ height: '380px', borderRadius: '8px', overflow: 'hidden', border: '1px solid #1e293b' }}><Editor height="100%" language={viewingSubmission.language === 'c' || viewingSubmission.language === 'cpp' ? 'cpp' : viewingSubmission.language} theme="vs-dark" value={viewingSubmission.code} options={{ readOnly: true, minimap: { enabled: false }, scrollBeyondLastLine: false, fontSize: 13, fontFamily: 'JetBrains Mono, Fira Code, Consolas, monospace' }} /></div>
+              <div style={{ height: '380px', borderRadius: '8px', overflow: 'hidden', border: '1px solid #1e293b' }}><Editor height="100%" language={(viewingSubmission.language || 'txt') === 'c' || (viewingSubmission.language || 'txt') === 'cpp' ? 'cpp' : viewingSubmission.language} theme="vs-dark" value={viewingSubmission.code} options={{ readOnly: true, minimap: { enabled: false }, scrollBeyondLastLine: false, fontSize: 13, fontFamily: 'JetBrains Mono, Fira Code, Consolas, monospace' }} /></div>
             </div>
 
             {/* Test case analysis */}
