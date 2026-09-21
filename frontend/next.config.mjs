@@ -14,6 +14,7 @@ const nextConfig = {
     '*.lan',
     'increase-cabinet-indicate-austin.trycloudflare.com',
     '*.trycloudflare.com',
+    'oscar-upgrading-shower-soma.trycloudflare.com',
     'joan-theta-creator-amendments.trycloudflare.com',
     'slight-keyboards-tobago-growth.trycloudflare.com',
     'calcium-presentations-delight-signed.trycloudflare.com',
