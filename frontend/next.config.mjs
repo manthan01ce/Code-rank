@@ -11,7 +11,12 @@ const nextConfig = {
     '172.24.32.1', 
     '0.0.0.0',
     '*.local',
-    '*.lan'
+    '*.lan',
+    'increase-cabinet-indicate-austin.trycloudflare.com',
+    '*.trycloudflare.com',
+    'slight-keyboards-tobago-growth.trycloudflare.com',
+    'calcium-presentations-delight-signed.trycloudflare.com',
+    'reminder-landscape-begun-panels.trycloudflare.com'
   ],
 };
 

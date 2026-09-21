@@ -375,18 +375,39 @@ export default function ConsolePanel({
                       const isExpanded = !!expandedCases[idx];
                       
                       const formatInput = () => {
-                        if (c.hidden) return 'Hidden Test Case — Details hidden.';
-                        const args = c.input?.args || [];
-                        const kwargs = c.input?.kwargs || {};
-                        const lines = [];
-                        args.forEach((val, i) => {
-                          lines.push(`Arg ${i + 1} = ${JSON.stringify(val)}`);
-                        });
-                        Object.entries(kwargs).forEach(([key, val]) => {
-                          lines.push(`${key} = ${JSON.stringify(val)}`);
-                        });
-                        return lines.join('\n');
+                        if (false) return 'Hidden Test Case — Details hidden.';
+                        const raw = c.input !== undefined ? c.input : (c.input_data !== undefined ? c.input_data : c.rawInput);
+                        if (typeof raw === 'string') return raw || 'None';
+                        if (raw && typeof raw === 'object') {
+                          if (Array.isArray(raw.args) && raw.args.length > 0) {
+                            if (raw.args.length === 1 && typeof raw.args[0] === 'string') {
+                              return raw.args[0] || 'None';
+                            }
+                            const lines = [];
+                            raw.args.forEach((val, i) => {
+                              lines.push(typeof val === 'string' ? val : `Arg ${i + 1} = ${JSON.stringify(val)}`);
+                            });
+                            if (raw.kwargs) {
+                              Object.entries(raw.kwargs).forEach(([k, v]) => {
+                                lines.push(`${k} = ${typeof v === 'string' ? v : JSON.stringify(v)}`);
+                              });
+                            }
+                            return lines.join('\n');
+                          }
+                          return JSON.stringify(raw, null, 2);
+                        }
+                        return raw !== undefined && raw !== null ? String(raw) : 'None';
                       };
+
+                      const formatOutputValue = (val) => {
+                        if (val === undefined || val === null) return '—';
+                        if (typeof val === 'string') return val === '' ? '(empty)' : val;
+                        return JSON.stringify(val, null, 2);
+                      };
+
+                      const expectedVal = c.expected !== undefined ? c.expected : (c.expected_output !== undefined ? c.expected_output : c.expectedOutput);
+                      const actualVal = c.actual !== undefined ? c.actual : (c.actual_output !== undefined ? c.actual_output : c.actualOutput);
+                      const runtimeVal = c.runtimeMs !== undefined ? c.runtimeMs : (c.execution_time_ms !== undefined ? c.execution_time_ms : null);
 
                       return (
                         <div
@@ -418,7 +439,7 @@ export default function ConsolePanel({
                             <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
                               {casePassed || (actionMode === 'run' && c.status === 'wrong_answer') ? <CheckCircle size={15} color="#0fa336" /> : <XCircle size={15} color="#e22718" />}
                               <span style={{ fontSize: '12px', fontWeight: 600, color: '#ffffff' }}>
-                                {c.hidden ? `Hidden Test Case ${idx + 1}` : `Test Case ${idx + 1}`}
+                                {false ? `Hidden Test Case ${idx + 1}` : `Test Case ${idx + 1}`}
                               </span>
                             </div>
 
@@ -432,9 +453,9 @@ export default function ConsolePanel({
                               }}>
                                 {casePassed ? 'Passed' : actionMode === 'run' && c.status === 'wrong_answer' ? 'Executed' : c.status === 'wrong_answer' ? 'Wrong Answer' : c.status === 'runtime_error' ? 'Runtime Error' : c.status}
                               </span>
-                              {c.runtimeMs !== undefined && (
+                              {runtimeVal !== null && (
                                 <span style={{ fontSize: '11px', color: '#7e7e7e', fontFamily: 'JetBrains Mono, monospace' }}>
-                                  {c.runtimeMs} ms
+                                  {runtimeVal} ms
                                 </span>
                               )}
                               {isExpanded ? <ChevronUp size={14} color="#7e7e7e" /> : <ChevronDown size={14} color="#7e7e7e" />}
@@ -444,7 +465,7 @@ export default function ConsolePanel({
                           {/* Row Expanded Details */}
                           {isExpanded && (
                             <div style={{ padding: '16px', borderTop: '1px solid #1a1a1a', background: '#070707', display: 'flex', flexDirection: 'column', gap: '12px' }}>
-                              {c.hidden ? (
+                              {false ? (
                                 <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
                                   <div style={{ fontSize: '12px', color: '#7e7e7e', fontStyle: 'italic', display: 'flex', alignItems: 'center', gap: '8px' }}>
                                     <Terminal size={14} />
@@ -458,11 +479,11 @@ export default function ConsolePanel({
                                       </pre>
                                     </div>
                                   )}
-                                  {(c.stderr || c.traceback) && (
+                                  {(c.stderr || c.traceback || c.error_message) && (
                                     <div>
                                       <div style={{ fontSize: '9px', fontWeight: 700, color: '#e22718', letterSpacing: '1.5px', textTransform: 'uppercase', marginBottom: '4px' }}>Error Details / Stderr</div>
                                       <pre style={{ color: '#e22718', background: '#0d0d0d', border: '1px solid #1a1a1a', padding: '10px 12px', fontSize: '11px', fontFamily: 'JetBrains Mono, monospace', whiteSpace: 'pre-wrap', lineHeight: 1.5 }}>
-                                        {c.traceback || c.stderr}
+                                        {c.traceback || c.stderr || c.error_message}
                                       </pre>
                                     </div>
                                   )}
@@ -482,7 +503,7 @@ export default function ConsolePanel({
                                     <div>
                                       <div style={{ fontSize: '9px', fontWeight: 700, color: '#7e7e7e', letterSpacing: '1.5px', textTransform: 'uppercase', marginBottom: '4px' }}>Expected Output</div>
                                       <pre style={{ color: '#0fa336', background: '#0d0d0d', border: '1px solid #1a1a1a', padding: '10px 12px', fontSize: '11px', fontFamily: 'JetBrains Mono, monospace', whiteSpace: 'pre-wrap' }}>
-                                        {JSON.stringify(c.expected)}
+                                        {formatOutputValue(expectedVal)}
                                       </pre>
                                     </div>
                                     <div>
@@ -496,7 +517,7 @@ export default function ConsolePanel({
                                         fontFamily: 'JetBrains Mono, monospace',
                                         whiteSpace: 'pre-wrap'
                                       }}>
-                                        {c.status === 'runtime_error' ? 'Runtime Exception' : JSON.stringify(c.actual)}
+                                        {c.status === 'runtime_error' ? 'Runtime Exception' : formatOutputValue(actualVal)}
                                       </pre>
                                     </div>
                                   </div>
@@ -512,11 +533,11 @@ export default function ConsolePanel({
                                   )}
 
                                   {/* Traceback error details */}
-                                  {(c.stderr || c.traceback) && (
+                                  {(c.stderr || c.traceback || c.error_message) && (
                                     <div>
                                       <div style={{ fontSize: '9px', fontWeight: 700, color: '#e22718', letterSpacing: '1.5px', textTransform: 'uppercase', marginBottom: '4px' }}>Error Details / Stderr</div>
                                       <pre style={{ color: '#e22718', background: '#0d0d0d', border: '1px solid #1a1a1a', padding: '10px 12px', fontSize: '11px', fontFamily: 'JetBrains Mono, monospace', whiteSpace: 'pre-wrap', lineHeight: 1.5 }}>
-                                        {c.traceback || c.stderr}
+                                        {c.traceback || c.stderr || c.error_message}
                                       </pre>
                                     </div>
                                   )}
@@ -576,17 +597,39 @@ export default function ConsolePanel({
                         if (!c) return null;
 
                         const formatInput = () => {
-                          const args = c.input?.args || [];
-                          const kwargs = c.input?.kwargs || {};
-                          const lines = [];
-                          args.forEach((val, i) => {
-                            lines.push(`Arg ${i + 1} = ${JSON.stringify(val)}`);
-                          });
-                          Object.entries(kwargs).forEach(([key, val]) => {
-                            lines.push(`${key} = ${JSON.stringify(val)}`);
-                          });
-                          return lines.join('\n');
+                          if (false) return 'Hidden Test Case — Details hidden.';
+                          const raw = c.input !== undefined ? c.input : (c.input_data !== undefined ? c.input_data : c.rawInput);
+                          if (typeof raw === 'string') return raw || 'None';
+                          if (raw && typeof raw === 'object') {
+                            if (Array.isArray(raw.args) && raw.args.length > 0) {
+                              if (raw.args.length === 1 && typeof raw.args[0] === 'string') {
+                                return raw.args[0] || 'None';
+                              }
+                              const lines = [];
+                              raw.args.forEach((val, i) => {
+                                lines.push(typeof val === 'string' ? val : `Arg ${i + 1} = ${JSON.stringify(val)}`);
+                              });
+                              if (raw.kwargs) {
+                                Object.entries(raw.kwargs).forEach(([k, v]) => {
+                                  lines.push(`${k} = ${typeof v === 'string' ? v : JSON.stringify(v)}`);
+                                });
+                              }
+                              return lines.join('\n');
+                            }
+                            return JSON.stringify(raw, null, 2);
+                          }
+                          return raw !== undefined && raw !== null ? String(raw) : 'None';
                         };
+
+                        const formatOutputValue = (val) => {
+                          if (val === undefined || val === null) return '—';
+                          if (typeof val === 'string') return val === '' ? '(empty)' : val;
+                          return JSON.stringify(val, null, 2);
+                        };
+
+                        const expectedVal = c.expected !== undefined ? c.expected : (c.expected_output !== undefined ? c.expected_output : c.expectedOutput);
+                        const actualVal = c.actual !== undefined ? c.actual : (c.actual_output !== undefined ? c.actual_output : c.actualOutput);
+                        const runtimeVal = c.runtimeMs !== undefined ? c.runtimeMs : (c.execution_time_ms !== undefined ? c.execution_time_ms : null);
 
                         return (
                           <>
@@ -611,7 +654,7 @@ export default function ConsolePanel({
                               <div>
                                 <div style={{ fontSize: '10px', fontWeight: 700, color: '#7e7e7e', letterSpacing: '1.5px', textTransform: 'uppercase', marginBottom: '6px' }}>Expected Output</div>
                                 <pre style={{ color: '#0fa336', background: '#0d0d0d', border: '1px solid #1a1a1a', padding: '10px 12px', fontSize: '12px', fontFamily: 'JetBrains Mono, monospace', whiteSpace: 'pre-wrap' }}>
-                                  {JSON.stringify(c.expected)}
+                                  {formatOutputValue(expectedVal)}
                                 </pre>
                               </div>
                               <div>
@@ -625,7 +668,7 @@ export default function ConsolePanel({
                                   fontFamily: 'JetBrains Mono, monospace',
                                   whiteSpace: 'pre-wrap'
                                 }}>
-                                  {c.status === 'runtime_error' ? 'Runtime Exception' : JSON.stringify(c.actual)}
+                                  {c.status === 'runtime_error' ? 'Runtime Exception' : formatOutputValue(actualVal)}
                                 </pre>
                               </div>
                             </div>
@@ -643,7 +686,9 @@ export default function ConsolePanel({
                             {/* Runtime */}
                             <div style={{ display: 'flex', gap: '8px', fontSize: '11px', color: '#7e7e7e' }}>
                               <span style={{ fontWeight: 700, textTransform: 'uppercase', letterSpacing: '1px' }}>Runtime:</span>
-                              <span style={{ color: '#ffffff', fontFamily: 'JetBrains Mono, monospace' }}>{c.runtimeMs} ms</span>
+                              <span style={{ color: '#ffffff', fontFamily: 'JetBrains Mono, monospace' }}>
+                                {runtimeVal !== null ? `${runtimeVal} ms` : '—'}
+                              </span>
                             </div>
 
                             {/* Stdout */}
@@ -657,11 +702,11 @@ export default function ConsolePanel({
                             )}
 
                             {/* Stderr */}
-                            {(c.stderr || c.traceback) && (
+                            {(c.stderr || c.traceback || c.error_message) && (
                               <div>
                                 <div style={{ fontSize: '10px', fontWeight: 700, color: '#e22718', letterSpacing: '1.5px', textTransform: 'uppercase', marginBottom: '6px' }}>Error Details / Stderr</div>
                                 <pre style={{ color: '#e22718', background: '#0d0d0d', border: '1px solid #1a1a1a', padding: '10px 12px', fontSize: '12px', fontFamily: 'JetBrains Mono, monospace', whiteSpace: 'pre-wrap', lineHeight: 1.5 }}>
-                                  {c.traceback || c.stderr}
+                                  {c.traceback || c.stderr || c.error_message}
                                 </pre>
                               </div>
                             )}

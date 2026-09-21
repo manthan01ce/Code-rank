@@ -68,7 +68,7 @@ export async function POST(request) {
       sample_input = '',
       sample_output = '',
       start_time = null,
-      end_time = null,
+      end_time = null, topics = '',
       test_cases = []
     } = body;
 
@@ -114,13 +114,13 @@ export async function POST(request) {
       INSERT INTO practicals (
         faculty_id, course_id, batch_id, title, description, instructions, 
         total_marks, difficulty, is_challenge, starter_code, 
-        input_format, output_format, constraints, sample_input, sample_output, status,
+        input_format, output_format, constraints, sample_input, sample_output, status, topics,
         start_time, end_time
       )
       VALUES (
         ${user.id}, ${parseInt(course_id)}, ${batch_id}, ${title}, ${description}, ${instructions},
         ${totalMarks}, ${difficulty}, ${is_challenge}, ${JSON.stringify(starter_code)},
-        ${input_format}, ${output_format}, ${constraints}, ${sample_input}, ${sample_output}, 'active',
+        ${input_format}, ${output_format}, ${constraints}, ${sample_input}, ${sample_output}, 'active', ${topics},
         ${start_time ? new Date(start_time) : null}, ${end_time ? new Date(end_time) : null}
       )
       RETURNING *

@@ -3,9 +3,9 @@ import { check, sleep } from 'k6';
 
 export const options = {
   stages: [
-    { duration: '15s', target: 15 }, // Warm up to 15 concurrent submissions
-    { duration: '15s', target: 30 }, // Ramp to 30 concurrent submissions
-    { duration: '2m', target: 30 },  // Sustained peak load at 30 concurrent submissions for 2 mins
+    { duration: '15s', target: 50 }, // Warm up to 50 concurrent submissions
+    { duration: '15s', target: 100 }, // Ramp to 100 concurrent submissions
+    { duration: '2m', target: 100 },  // Sustained peak load at 100 concurrent submissions for 2 mins
     { duration: '15s', target: 0 },  // Cool down
   ],
   thresholds: {

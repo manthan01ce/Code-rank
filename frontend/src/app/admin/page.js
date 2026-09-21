@@ -22,6 +22,13 @@ export default function AdminDashboard() {
         fetch('/api/logs?limit=8', { headers: { 'Authorization': `Bearer ${token}` } })
       ]);
 
+      if (statsRes.status === 401 || logsRes.status === 401) {
+        localStorage.removeItem('token');
+        localStorage.removeItem('user');
+        window.location.href = '/';
+        return;
+      }
+
       if (statsRes.ok) setStats(await statsRes.json());
       if (logsRes.ok) setLogs(await logsRes.json());
     } catch (e) {

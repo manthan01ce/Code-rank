@@ -60,7 +60,7 @@ export async function PUT(request, { params }) {
       sample_input = '',
       sample_output = '',
       start_time = null,
-      end_time = null,
+      end_time = null, topics = '',
       test_cases = []
     } = body;
 
@@ -92,11 +92,7 @@ export async function PUT(request, { params }) {
     const isUpdatingTestCases = Array.isArray(test_cases) && test_cases.length > 0;
 
     if (isUpdatingTestCases) {
-      if (submissionsCount > 0) {
-        return NextResponse.json({ 
-          error: 'Editing test cases is disabled because students have already submitted.' 
-        }, { status: 400 });
-      }
+      
 
       if (test_cases.length > 20) {
         return NextResponse.json({ error: 'Maximum 20 test cases allowed per practical.' }, { status: 400 });
@@ -127,7 +123,7 @@ export async function PUT(request, { params }) {
           output_format = ${output_format},
           constraints = ${constraints},
           sample_input = ${sample_input},
-          sample_output = ${sample_output},
+          sample_output = ${sample_output}, topics = ${topics},
           total_marks = ${totalMarks},
           start_time = ${start_time ? new Date(start_time) : null},
           end_time = ${end_time ? new Date(end_time) : null}
@@ -136,7 +132,7 @@ export async function PUT(request, { params }) {
     `;
 
     // Recreate test cases if they were updated and allowed
-    if (isUpdatingTestCases && submissionsCount === 0) {
+    if (isUpdatingTestCases) {
       await sql`DELETE FROM practical_test_cases WHERE practical_id = ${parseInt(id)}`;
 
       for (let i = 0; i < test_cases.length; i++) {

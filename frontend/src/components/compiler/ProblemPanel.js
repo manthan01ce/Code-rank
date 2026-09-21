@@ -164,7 +164,7 @@ export default function ProblemPanel({ problem }) {
       {/* Tab Bar */}
       <div style={{ display: 'flex', alignItems: 'flex-end', background: '#000000', borderBottom: '1px solid #262626', padding: '0 20px', flexShrink: 0, overflowX: 'auto' }}>
         {TABS.map(({ id, icon, label }) => (
-          <button
+          <button suppressHydrationWarning
             key={id}
             onClick={() => setActiveTab(id)}
             style={{
@@ -212,8 +212,7 @@ export default function ProblemPanel({ problem }) {
               <span style={{ color: diff.color, background: diff.bg, border: `1px solid ${diff.border}`, fontSize: '10px', fontWeight: 700, letterSpacing: '1px', textTransform: 'uppercase', padding: '3px 10px' }}>
                 {p.difficulty}
               </span>
-              <button style={{ background: '#1a1a1a', border: '1px solid #262626', color: '#7e7e7e', fontSize: '10px', fontWeight: 700, letterSpacing: '1px', textTransform: 'uppercase', padding: '3px 10px', cursor: 'pointer' }}>Topics</button>
-              <button style={{ background: '#1a1a1a', border: '1px solid #262626', color: '#7e7e7e', fontSize: '10px', fontWeight: 700, letterSpacing: '1px', textTransform: 'uppercase', padding: '3px 10px', cursor: 'pointer' }}>Companies</button>
+              {p.topics && p.topics.split(",").map(topic => <button suppressHydrationWarning key={topic.trim()} style={{ background: '#1a1a1a', border: '1px solid #262626', color: '#7e7e7e', fontSize: '10px', fontWeight: 700, letterSpacing: '1px', textTransform: 'uppercase', padding: '3px 10px', cursor: 'default' }}>{topic.trim()}</button>)}
             </div>
 
             {/* Description */}
@@ -354,9 +353,7 @@ export default function ProblemPanel({ problem }) {
                   return (
                     <div key={sub.id} style={{ backgroundColor: '#141414', border: '1px solid #262626', borderRadius: '10px', padding: '18px' }}>
                       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '12px' }}>
-                        <span style={{ fontSize: '12px', fontWeight: 700, color: '#93c5fd', textTransform: 'uppercase', backgroundColor: 'rgba(59,130,246,0.1)', border: '1px solid rgba(59,130,246,0.3)', padding: '3px 8px', borderRadius: '4px' }}>
-                          {sub.language}
-                        </span>
+                        
                         <span style={{
                           fontSize: '11px',
                           fontWeight: 700,
@@ -388,18 +385,7 @@ export default function ProblemPanel({ problem }) {
                         </div>
                       </div>
 
-                      {sub.code && (
-                        <div>
-                          <div style={{ fontSize: '12px', fontWeight: 600, color: '#888', marginBottom: '6px' }}>Submitted Source Code:</div>
-                          <pre style={{
-                            backgroundColor: '#09090b', color: '#e4e4e7', padding: '12px', borderRadius: '6px',
-                            overflowX: 'auto', fontFamily: 'JetBrains Mono, monospace', fontSize: '12px',
-                            maxHeight: '180px', margin: 0, border: '1px solid #18181b'
-                          }}>
-                            <code>{sub.code}</code>
-                          </pre>
-                        </div>
-                      )}
+                      
                     </div>
                   );
                 })}

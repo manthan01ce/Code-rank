@@ -52,7 +52,7 @@ export async function runDynamicPractical({ language, code, dbId, userId, isSubm
         if (practical.sample_input) {
           try {
             const parsed = JSON.parse(practical.sample_input);
-            if (Array.isArray(parsed)) {
+            if (Array.isArray(parsed) && parsed.length > 0) {
               testCases = parsed.map((ex, i) => ({
                 id: `sample_${i}`,
                 input: ex.input || '',
@@ -80,6 +80,29 @@ export async function runDynamicPractical({ language, code, dbId, userId, isSubm
         }
       } catch (err) {
         console.warn('Failed to parse sample input:', err);
+      }
+
+      // Fallback: If no valid sample_input test cases, fetch non-hidden test cases from practical_test_cases table
+      if (testCases.length === 0) {
+        const dbCases = await sql`
+          SELECT * FROM practical_test_cases 
+          WHERE practical_id = ${dbId} AND is_hidden = false 
+          ORDER BY order_index ASC
+        `;
+        if (dbCases.length > 0) {
+          testCases = dbCases;
+        } else {
+          // If all test cases are marked hidden, take the first test case for sample running
+          const fallbackCases = await sql`
+            SELECT * FROM practical_test_cases 
+            WHERE practical_id = ${dbId} 
+            ORDER BY order_index ASC 
+            LIMIT 1
+          `;
+          if (fallbackCases.length > 0) {
+            testCases = fallbackCases.map(c => ({ ...c, is_hidden: false }));
+          }
+        }
       }
     }
 
@@ -142,18 +165,28 @@ export async function runDynamicPractical({ language, code, dbId, userId, isSubm
       totalTime += (result.runtimeMs || 0);
 
       const caseStatus = result.passed ? 'passed' : 'wrong_answer';
+      const roundedRuntime = Math.round((result.runtimeMs || 0) * 100) / 100;
 
       casesReport.push({
+        index: i + 1,
         id: tc.id,
-        label: tc.label,
-        is_hidden: !!tc.is_hidden,
+        label: tc.label || `Test Case ${i + 1}`,
+        status: caseStatus,
         passed: result.passed,
+        is_hidden: !!tc.is_hidden,
+        hidden: !!tc.is_hidden,
+        input: tc.input,
+        expected: tc.expected,
+        expected_output: tc.expected,
+        actual: result.actualOutput,
+        actual_output: result.actualOutput,
+        stdout: (result.actualOutput || ''),
+        stderr: (result.errorMessage || ''),
+        error_message: result.errorMessage,
         marks_awarded: result.marksAwarded,
         max_marks: tc.marks,
-        actual_output: tc.is_hidden ? '[Hidden Test Case]' : result.actualOutput,
-        error_message: tc.is_hidden ? (result.passed ? null : 'Hidden test case failed') : result.errorMessage,
-        execution_time_ms: result.runtimeMs,
-        status: caseStatus
+        runtimeMs: roundedRuntime,
+        execution_time_ms: roundedRuntime
       });
 
       submissionCasesToInsert.push({

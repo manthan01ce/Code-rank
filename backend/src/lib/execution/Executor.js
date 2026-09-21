@@ -41,6 +41,16 @@ const LANGUAGES = {
   }
 };
 
+function normalizeOutput(str) {
+  if (str === null || str === undefined) return '';
+  return String(str)
+    .replace(/\r\n/g, '\n')
+    .split('\n')
+    .map(line => line.trimEnd())
+    .join('\n')
+    .trim();
+}
+
 export class Executor {
   constructor(language, code, customTimeLimit = 3000, userId = null) {
     this.language = language;
@@ -109,20 +119,23 @@ export class Executor {
       const { stdout, stderr } = await execAsync(runCmd, { timeout: this.timeLimit, killSignal: 'SIGKILL' });
       
       const runtimeMs = performance.now() - start;
-      const actual = (stdout || '').trim();
-      const expected = (expectedOutput || '').trim();
-      const passed = actual === expected;
+      const actualNorm = normalizeOutput(stdout);
+      const expectedNorm = normalizeOutput(expectedOutput);
+      const passed = actualNorm === expectedNorm;
       const marksAwarded = passed ? parseFloat(marksAwardedMax) : 0;
       
+      // Cleanup temporary input file
+      execAsync(`docker exec ${this.daemon} rm -f ${this.workdir}/${inputFilename}`).catch(() => {});
+
       return {
         testCaseId: tcId,
         idx,
         passed,
         marksAwarded,
-        actualOutput: stdout || '',
-        errorMessage: stderr || '',
+        actualOutput: (stdout || '').trim(),
+        errorMessage: (stderr || '').trim(),
         runtimeMs,
-        expectedOutput: expected,
+        expectedOutput: (expectedOutput || '').trim(),
         input: input
       };
     } catch (err) {
@@ -130,13 +143,16 @@ export class Executor {
       let errMsg = err.stderr || err.message;
       if (err.killed) errMsg = "Time Limit Exceeded";
       
+      // Cleanup temporary input file on error
+      execAsync(`docker exec ${this.daemon} rm -f ${this.workdir}/${inputFilename}`).catch(() => {});
+
       return {
         testCaseId: tcId,
         idx,
         passed: false,
         marksAwarded: 0,
-        actualOutput: err.stdout || '',
-        errorMessage: errMsg,
+        actualOutput: (err.stdout || '').trim(),
+        errorMessage: (errMsg || '').trim(),
         runtimeMs,
         expectedOutput: (expectedOutput || '').trim(),
         input: input
@@ -145,13 +161,17 @@ export class Executor {
   }
 
   async runBatch(testCases) {
-    // Run all test cases concurrently against the cached binary!
-    // Since each test case uses a unique input_idx.txt, they won't clash!
-    const promises = testCases.map((tc, idx) => 
-      this.runOneTestCase(tc.input, tc.expected, tc.id, idx, tc.marks || 0)
-    );
-    
-    const results = await Promise.all(promises);
+    // Run test cases in chunks of 3 to avoid overwhelming the Docker daemon under load
+    const results = [];
+    const BATCH_SIZE = 3;
+    for (let i = 0; i < testCases.length; i += BATCH_SIZE) {
+      const chunk = testCases.slice(i, i + BATCH_SIZE);
+      const chunkPromises = chunk.map((tc, idx) =>
+        this.runOneTestCase(tc.input, tc.expected, tc.id, i + idx, tc.marks || 0)
+      );
+      const chunkResults = await Promise.all(chunkPromises);
+      results.push(...chunkResults);
+    }
     return results;
   }
 }

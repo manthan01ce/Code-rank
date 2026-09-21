@@ -1,4 +1,5 @@
 'use client';
+import Editor from '@monaco-editor/react';
 
 import { useState, useEffect } from 'react';
 import LoadingOverlay from '@/components/LoadingOverlay';
@@ -25,6 +26,7 @@ export default function FacultyDashboard() {
   // Practical Form
   const [pracTitle, setPracTitle] = useState('');
   const [pracDesc, setPracDesc] = useState('');
+  const [pracTopics, setPracTopics] = useState('');
   const [pracStartTime, setPracStartTime] = useState('');
   const [pracEndTime, setPracEndTime] = useState('');
   const [pracInst, setPracInst] = useState('');
@@ -261,6 +263,7 @@ export default function FacultyDashboard() {
     setEditingPractical(null);
     setPracTitle('');
     setPracDesc('');
+    setPracTopics('');
     setPracInst('');
     setPracDiff('Easy');
     setPracIsChallenge(true);
@@ -289,6 +292,7 @@ export default function FacultyDashboard() {
         setEditingPractical(data);
         setPracTitle(data.title || '');
         setPracDesc(data.description || '');
+        setPracTopics(data.topics || '');
         setPracInst(data.instructions || '');
         setPracDiff(data.difficulty || 'Easy');
         setPracIsChallenge(data.is_challenge || false);
@@ -369,6 +373,7 @@ export default function FacultyDashboard() {
       batch_id: 'All',
       title: pracTitle,
       description: pracDesc,
+      topics: pracTopics,
       instructions: pracInst,
       difficulty: pracDiff,
       is_challenge: true,
@@ -1192,11 +1197,7 @@ export default function FacultyDashboard() {
               {editingPractical ? `Edit Practical: ${editingPractical.title}` : 'Add New Coding Practical'}
             </h3>
 
-            {hasSubmissions && (
-              <div style={{ backgroundColor: '#fffbeb', border: '1px solid #fef3c7', padding: '12px', borderRadius: '8px', marginBottom: '15px', color: '#b45309', fontSize: '13px' }}>
-                ⚠️ <strong>Editing test cases is disabled</strong> because students have already submitted solutions. You can still modify the metadata such as title, description, and templates.
-              </div>
-            )}
+            
 
             <form onSubmit={handleSubmitPractical} style={{ display: 'flex', flexDirection: 'column', gap: '15px' }}>
               <div style={{ display: 'flex', gap: '15px' }}>
@@ -1324,11 +1325,7 @@ export default function FacultyDashboard() {
                   rows={4}
                   placeholder="Describe the coding challenge in detail (Supports HTML/Markdown)..."
                   value={pracDesc}
-                  onChange={e => setPracDesc(e.target.value)}
-                  required
-                  style={{ fontFamily: 'monospace' }}
-                />
-              </div>
+                  onChange={e => setPracDesc(e.target.value)} required style={{ fontFamily: 'monospace' }} /> </div> <div style={{ marginTop: '15px' }}> <label style={{ fontSize: '12px', fontWeight: 600, color: 'var(--text-muted)' }}>Topics (comma separated)</label> <input type="text" className="input-field" placeholder="e.g. Arrays, Sorting, Dynamic Programming" value={pracTopics} onChange={e => setPracTopics(e.target.value)} /> </div>
 
               <div>
                 <label style={{ fontSize: '12px', fontWeight: 600, color: 'var(--text-muted)' }}>Instructions / Constraints (Optional)</label>
@@ -1409,7 +1406,7 @@ export default function FacultyDashboard() {
               <div style={{ border: '1px solid var(--border-color)', borderRadius: '8px', padding: '15px' }}>
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '10px' }}>
                   <h4 style={{ fontSize: '14px', fontWeight: 600 }}>Test Cases Config ({testCases.length} / 20)</h4>
-                  {!hasSubmissions && (
+                  {true && (
                     <button type="button" className="btn-small" style={{ backgroundColor: 'var(--primary)', color: 'white' }} onClick={handleAddTestCaseRow}>
                       + Add Case Row
                     </button>
@@ -1427,7 +1424,7 @@ export default function FacultyDashboard() {
                           value={tc.input}
                           onChange={e => handleTestCaseChange(idx, 'input', e.target.value)}
                           required
-                          disabled={hasSubmissions}
+                          
                           style={{ padding: '6px', fontFamily: 'monospace', resize: 'vertical' }}
                         />
                       </div>
@@ -1439,7 +1436,7 @@ export default function FacultyDashboard() {
                           value={tc.expected}
                           onChange={e => handleTestCaseChange(idx, 'expected', e.target.value)}
                           required
-                          disabled={hasSubmissions}
+                          
                           style={{ padding: '6px', fontFamily: 'monospace', resize: 'vertical' }}
                         />
                       </div>
@@ -1449,7 +1446,7 @@ export default function FacultyDashboard() {
                           value={tc.marks}
                           onChange={e => handleTestCaseChange(idx, 'marks', e.target.value)}
                           required
-                          disabled={hasSubmissions}
+                          
                           style={{ padding: '6px' }}
                         >
                           {[...Array(11).keys()].map(n => (
@@ -1457,7 +1454,7 @@ export default function FacultyDashboard() {
                           ))}
                         </select>
                       </div>
-                      {!hasSubmissions && (
+                      {true && (
                         <button type="button" style={{ border: 'none', background: 'none', color: '#ef4444', fontWeight: 'bold', cursor: 'pointer', fontSize: '18px', padding: '0 5px' }} onClick={() => handleRemoveTestCaseRow(idx)}>
                           ×
                         </button>
@@ -1550,13 +1547,7 @@ export default function FacultyDashboard() {
                   </button>
                 </div>
               </div>
-              <pre style={{
-                backgroundColor: '#0f172a', color: '#f8fafc', padding: '18px', borderRadius: '8px',
-                overflowX: 'auto', fontFamily: 'JetBrains Mono, Fira Code, Consolas, monospace',
-                fontSize: '13px', lineHeight: 1.6, maxHeight: '380px', border: '1px solid #1e293b'
-              }}>
-                <code>{viewingSubmission.code}</code>
-              </pre>
+              <div style={{ height: '380px', borderRadius: '8px', overflow: 'hidden', border: '1px solid #1e293b' }}><Editor height="100%" language={viewingSubmission.language === 'c' || viewingSubmission.language === 'cpp' ? 'cpp' : viewingSubmission.language} theme="vs-dark" value={viewingSubmission.code} options={{ readOnly: true, minimap: { enabled: false }, scrollBeyondLastLine: false, fontSize: 13, fontFamily: 'JetBrains Mono, Fira Code, Consolas, monospace' }} /></div>
             </div>
 
             {/* Test case analysis */}

@@ -3,13 +3,13 @@ import { check, sleep, group } from 'k6';
 
 export const options = {
   stages: [
-    { duration: '15s', target: 100 }, // Warm up to 100 concurrent users
-    { duration: '20s', target: 200 }, // Ramp to 200 concurrent users
-    { duration: '2m', target: 200 },  // Sustained peak load at 200 concurrent users for 2 mins
+    { duration: '15s', target: 250 }, // Warm up to 250 concurrent users
+    { duration: '20s', target: 500 }, // Ramp to 500 concurrent users
+    { duration: '2m', target: 500 },  // Sustained peak load at 500 concurrent users for 2 mins
     { duration: '15s', target: 0 },   // Ramp down to 0
   ],
   thresholds: {
-    http_req_failed: ['rate<0.05'],       // Error rate under 5% under heavy 200 VU load
+    http_req_failed: ['rate<0.05'],       // Error rate under 5% under heavy 500 VU load
     http_req_duration: ['p(95)<3000'],    // 95% of requests under 3s
   },
 };

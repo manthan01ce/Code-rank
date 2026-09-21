@@ -729,7 +729,7 @@ export default function WorkspaceLayout({ problem }) {
 
           {/* Problem List dropdown */}
           <div style={{ position: 'relative' }}>
-            <button
+            <button suppressHydrationWarning
               onClick={() => setIsListOpen(!isListOpen)}
               style={{ background: '#1a1a1a', border: '1px solid #3c3c3c', color: '#bbbbbb', fontSize: '11px', fontWeight: 700, letterSpacing: '1.5px', textTransform: 'uppercase', padding: '8px 16px', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '6px', outline: 'none' }}
               onMouseEnter={e => { e.currentTarget.style.background = '#262626'; e.currentTarget.style.color = '#ffffff'; }}
@@ -779,7 +779,7 @@ export default function WorkspaceLayout({ problem }) {
                         <div style={{ fontSize: '9px', color: '#00b8a3', fontWeight: 700, letterSpacing: '1px', textTransform: 'uppercase' }}>
                           {selectedCourse !== 'All' ? selectedCourse : 'Assigned Coding Practicals'} ({filteredPracticals.length})
                         </div>
-                        <button 
+                        <button suppressHydrationWarning 
                           onClick={() => router.push('/student')}
                           style={{
                             background: 'transparent', color: '#7e7e7e', border: '1px solid #3c3c3c', borderRadius: '4px',
@@ -895,7 +895,7 @@ export default function WorkspaceLayout({ problem }) {
 
         {/* Center: Run + Submit */}
         <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-          <button
+          <button suppressHydrationWarning
             id="btn-run-code"
             onClick={handleRun}
             disabled={!canRun}
@@ -925,7 +925,7 @@ export default function WorkspaceLayout({ problem }) {
             {!isRunning && <span style={{ opacity: 0.5, marginLeft: '4px', fontSize: '10px', textTransform: 'none', fontWeight: 500 }}>Ctrl+'</span>}
           </button>
 
-          <button
+          <button suppressHydrationWarning
             id="btn-save-code"
             onClick={handleSaveCodeToDB}
             disabled={isSavingCode || isRunning || isSubmitting}
@@ -957,7 +957,7 @@ export default function WorkspaceLayout({ problem }) {
           </button>
 
           <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-            <button
+            <button suppressHydrationWarning
               id="btn-submit-code"
               onClick={handleSubmit}
               disabled={!canSubmit}
@@ -1006,7 +1006,7 @@ export default function WorkspaceLayout({ problem }) {
 
         {/* Right: Settings + User */}
         <div ref={userDropdownRef} style={{ display: 'flex', alignItems: 'center', gap: '8px', position: 'relative' }}>
-          <button
+          <button suppressHydrationWarning
             onClick={() => setShowSettingsModal(true)}
             title="Settings"
             style={{ width: '40px', height: '40px', background: '#1a1a1a', border: '1px solid #262626', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#7e7e7e', cursor: 'pointer' }}
@@ -1015,7 +1015,7 @@ export default function WorkspaceLayout({ problem }) {
           >
             <Settings size={16} />
           </button>
-          <button
+          <button suppressHydrationWarning
             onClick={() => setIsUserDropdownOpen(!isUserDropdownOpen)}
             title="Profile Menu"
             style={{ width: '40px', height: '40px', background: '#1a1a1a', border: '1px solid #262626', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#7e7e7e', cursor: 'pointer' }}
@@ -1044,7 +1044,7 @@ export default function WorkspaceLayout({ problem }) {
                 Signed in as <br />
                 <strong style={{ color: '#ffffff' }}>{profileForm.name || 'Student'}</strong>
               </div>
-              <button
+              <button suppressHydrationWarning
                 onClick={() => { setShowProfileModal(true); setIsUserDropdownOpen(false); }}
                 style={{ background: 'transparent', border: 'none', color: '#cccccc', textAlign: 'left', padding: '10px 16px', fontSize: '13px', cursor: 'pointer' }}
                 onMouseEnter={e => e.currentTarget.style.backgroundColor = '#2a2a2a'}
@@ -1052,7 +1052,7 @@ export default function WorkspaceLayout({ problem }) {
               >
                 👤 Edit Profile
               </button>
-              <button
+              <button suppressHydrationWarning
                 onClick={() => { setShowSettingsModal(true); setIsUserDropdownOpen(false); }}
                 style={{ background: 'transparent', border: 'none', color: '#cccccc', textAlign: 'left', padding: '10px 16px', fontSize: '13px', cursor: 'pointer' }}
                 onMouseEnter={e => e.currentTarget.style.backgroundColor = '#2a2a2a'}
@@ -1061,7 +1061,7 @@ export default function WorkspaceLayout({ problem }) {
                 ⚙️ Workspace Settings
               </button>
               <div style={{ height: '1px', backgroundColor: '#333333', margin: '4px 0' }} />
-              <button
+              <button suppressHydrationWarning
                 onClick={handleLogout}
                 style={{ background: 'transparent', border: 'none', color: '#ef4444', textAlign: 'left', padding: '10px 16px', fontSize: '13px', cursor: 'pointer', fontWeight: '600' }}
                 onMouseEnter={e => e.currentTarget.style.backgroundColor = '#2a2a2a'}
@@ -1148,7 +1148,7 @@ export default function WorkspaceLayout({ problem }) {
           <div style={{ backgroundColor: '#161616', border: '1px solid #333', borderRadius: '12px', padding: '30px', width: '450px', display: 'flex', flexDirection: 'column', gap: '20px' }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
               <h3 style={{ fontSize: '18px', fontWeight: 700, color: '#ffffff', margin: 0 }}>👤 Student Profile settings</h3>
-              <button onClick={() => { setShowProfileModal(false); setProfileMsg({ type: '', text: '' }); }} style={{ border: 'none', background: 'transparent', color: '#888', cursor: 'pointer', fontSize: '18px' }}>×</button>
+              <button suppressHydrationWarning onClick={() => { setShowProfileModal(false); setProfileMsg({ type: '', text: '' }); }} style={{ border: 'none', background: 'transparent', color: '#888', cursor: 'pointer', fontSize: '18px' }}>×</button>
             </div>
             
             {profileMsg.text && (
@@ -1209,10 +1209,10 @@ export default function WorkspaceLayout({ problem }) {
                 />
               </div>
               <div style={{ display: 'flex', gap: '12px', marginTop: '10px' }}>
-                <button type="submit" style={{ flex: 1, padding: '12px', borderRadius: '6px', border: 'none', backgroundColor: '#4f46e5', color: '#fff', fontSize: '14px', fontWeight: 600, cursor: 'pointer' }}>
+                <button suppressHydrationWarning type="submit" style={{ flex: 1, padding: '12px', borderRadius: '6px', border: 'none', backgroundColor: '#4f46e5', color: '#fff', fontSize: '14px', fontWeight: 600, cursor: 'pointer' }}>
                   Save Changes
                 </button>
-                <button type="button" onClick={() => { setShowProfileModal(false); setProfileMsg({ type: '', text: '' }); }} style={{ flex: 1, padding: '12px', borderRadius: '6px', border: '1px solid #333', backgroundColor: 'transparent', color: '#ccc', fontSize: '14px', cursor: 'pointer' }}>
+                <button suppressHydrationWarning type="button" onClick={() => { setShowProfileModal(false); setProfileMsg({ type: '', text: '' }); }} style={{ flex: 1, padding: '12px', borderRadius: '6px', border: '1px solid #333', backgroundColor: 'transparent', color: '#ccc', fontSize: '14px', cursor: 'pointer' }}>
                   Cancel
                 </button>
               </div>
@@ -1227,7 +1227,7 @@ export default function WorkspaceLayout({ problem }) {
           <div style={{ backgroundColor: '#161616', border: '1px solid #333', borderRadius: '12px', padding: '30px', width: '450px', display: 'flex', flexDirection: 'column', gap: '20px' }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
               <h3 style={{ fontSize: '18px', fontWeight: 700, color: '#ffffff', margin: 0 }}>⚙️ Workspace Customization</h3>
-              <button onClick={() => setShowSettingsModal(false)} style={{ border: 'none', background: 'transparent', color: '#888', cursor: 'pointer', fontSize: '18px' }}>×</button>
+              <button suppressHydrationWarning onClick={() => setShowSettingsModal(false)} style={{ border: 'none', background: 'transparent', color: '#888', cursor: 'pointer', fontSize: '18px' }}>×</button>
             </div>
 
             <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
@@ -1333,7 +1333,7 @@ export default function WorkspaceLayout({ problem }) {
             </div>
 
             <div style={{ display: 'flex', justifyContent: 'flex-end', marginTop: '10px' }}>
-              <button onClick={() => setShowSettingsModal(false)} style={{ padding: '10px 24px', borderRadius: '6px', border: 'none', backgroundColor: '#4f46e5', color: '#fff', fontSize: '14px', fontWeight: 600, cursor: 'pointer' }}>
+              <button suppressHydrationWarning onClick={() => setShowSettingsModal(false)} style={{ padding: '10px 24px', borderRadius: '6px', border: 'none', backgroundColor: '#4f46e5', color: '#fff', fontSize: '14px', fontWeight: 600, cursor: 'pointer' }}>
                 Apply Preferences
               </button>
             </div>

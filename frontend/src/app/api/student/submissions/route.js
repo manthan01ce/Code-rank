@@ -22,7 +22,7 @@ export async function GET(request) {
         p.title as practical_title
       FROM practical_submissions s
       JOIN practicals p ON s.practical_id = p.id
-      WHERE s.student_id = ${user.id}
+      WHERE s.student_id = ${user.id} AND p.status = 'active'
       ORDER BY s.submitted_at DESC
     `;
 

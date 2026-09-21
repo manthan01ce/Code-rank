@@ -22,6 +22,7 @@ export async function GET(request) {
         u.name as user_name, u.role as user_role, u.email as user_email
       FROM activity_logs l
       LEFT JOIN users u ON l.user_id = u.id
+      WHERE l.action NOT IN ('SAVE_WORKSPACE', 'RUN_CODE', 'VIEW_PRACTICAL', 'VIEW_COURSE')
       ORDER BY l.created_at DESC
       LIMIT ${limit}
     `;

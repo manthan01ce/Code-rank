@@ -52,24 +52,8 @@ export async function GET(request, { params }) {
       ORDER BY tc.order_index ASC
     `;
 
-    // Filter hidden test case input/output for students
-    const parsedCases = cases.map(c => {
-      if (user.role === 'student' && c.is_hidden) {
-        return {
-          id: c.id,
-          submission_id: c.submission_id,
-          test_case_id: c.test_case_id,
-          passed: c.passed,
-          marks_awarded: c.marks_awarded,
-          is_hidden: true,
-          label: c.label,
-          actual_output: '[Hidden Test Case Output]',
-          input: '[Hidden]',
-          expected: '[Hidden]'
-        };
-      }
-      return c;
-    });
+    // (Hidden test cases are now fully visible to students as requested)
+    const parsedCases = cases;
 
     return NextResponse.json({
       ...submission,
@@ -115,11 +99,17 @@ export async function DELETE(request, { params }) {
       return NextResponse.json({ error: 'Unauthorized: You are not assigned to this course.' }, { status: 403 });
     }
 
-    // Delete submission cases first
-    await sql`DELETE FROM practical_submission_cases WHERE submission_id = ${subId}`;
+        const studentId = submission.student_id;
+    const practicalId = submission.practical_id;
 
-    // Delete the submission
-    await sql`DELETE FROM practical_submissions WHERE id = ${subId}`;
+    // Delete all submission cases for this student/practical
+    await sql`DELETE FROM practical_submission_cases WHERE submission_id IN (SELECT id FROM practical_submissions WHERE student_id = ${studentId} AND practical_id = ${practicalId})`;
+
+    // Delete all submissions for this student/practical
+    await sql`DELETE FROM practical_submissions WHERE student_id = ${studentId} AND practical_id = ${practicalId}`;
+
+    // Delete workspace code so student can't see it again
+    await sql`DELETE FROM student_workspaces WHERE student_id = ${studentId} AND practical_id = ${practicalId}`;
 
     // Audit log
     try {
