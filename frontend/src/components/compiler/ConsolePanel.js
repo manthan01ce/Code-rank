@@ -507,7 +507,7 @@ export default function ConsolePanel({
                                       </pre>
                                     </div>
                                     <div>
-                                      <div style={{ fontSize: '9px', fontWeight: 700, color: '#7e7e7e', letterSpacing: '1.5px', textTransform: 'uppercase', marginBottom: '4px' }}>Actual Output</div>
+                                      <div style={{ fontSize: '9px', fontWeight: 700, color: '#7e7e7e', letterSpacing: '1.5px', textTransform: 'uppercase', marginBottom: '4px' }}>YOUR OUTPUT</div>
                                       <pre style={{
                                         color: casePassed ? '#0fa336' : '#e22718',
                                         background: '#0d0d0d',
@@ -658,7 +658,7 @@ export default function ConsolePanel({
                                 </pre>
                               </div>
                               <div>
-                                <div style={{ fontSize: '10px', fontWeight: 700, color: '#7e7e7e', letterSpacing: '1.5px', textTransform: 'uppercase', marginBottom: '6px' }}>Actual Output</div>
+                                <div style={{ fontSize: '10px', fontWeight: 700, color: '#7e7e7e', letterSpacing: '1.5px', textTransform: 'uppercase', marginBottom: '6px' }}>YOUR OUTPUT</div>
                                 <pre style={{
                                   color: c.status === 'passed' ? '#0fa336' : '#e22718',
                                   background: '#0d0d0d',

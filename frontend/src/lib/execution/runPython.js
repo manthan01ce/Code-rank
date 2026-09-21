@@ -350,7 +350,7 @@ export async function runPython({
         };
       }
 
-      // 🛑 Out Of Memory / Memory Limit Exceeded
+      //  Out Of Memory / Memory Limit Exceeded
       // Exit 137 indicates the container process was killed by SIGKILL (usually OOM)
       if (execErr.code === 137) {
         return {

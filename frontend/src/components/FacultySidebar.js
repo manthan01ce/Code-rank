@@ -53,6 +53,8 @@ export default function FacultySidebar() {
   }, [pathname]);
 
   const handleLogout = () => {
+    if (!window.confirm("Are you sure you want to log out?")) return;
+
     localStorage.removeItem('token');
     localStorage.removeItem('user');
     router.push('/');
@@ -217,7 +219,7 @@ export default function FacultySidebar() {
                   onMouseEnter={(e) => e.target.style.backgroundColor = '#fef2f2'}
                   onMouseLeave={(e) => e.target.style.backgroundColor = 'transparent'}
                 >
-                  🚪 Sign Out
+                   Sign Out
                 </button>
               </div>
             </div>
@@ -240,16 +242,16 @@ export default function FacultySidebar() {
  
         <ul className="sidebar-nav">
           <li className={activeMenu === 'dashboard' ? 'active' : ''} onClick={() => router.push('/faculty')}>
-            📋 Dashboard
+             Dashboard
           </li>
           <li className={activeMenu === 'submissions' ? 'active' : ''} onClick={() => router.push('/faculty?tab=submissions')}>
             📥 Student submissions
           </li>
           <li className={activeMenu === 'marks' ? 'active' : ''} onClick={() => router.push('/faculty?tab=marks')}>
-            📊 Marks overview
+             Marks overview
           </li>
           <li style={{ marginTop: 'auto', color: '#ef4444', cursor: 'pointer', fontWeight: '600' }} onClick={handleLogout}>
-            🚪 Logout
+             Logout
           </li>
         </ul>
       </div>

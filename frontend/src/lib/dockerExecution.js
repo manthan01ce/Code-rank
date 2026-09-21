@@ -56,7 +56,7 @@ export async function executePythonCode(code, customInput = '') {
         maxBuffer: 1024 * 1024, // 1MB output buffer
       });
 
-      console.log(`[DockerExec] ✅ Success — stdout: ${stdout.slice(0, 80)}`);
+      console.log(`[DockerExec]  Success — stdout: ${stdout.slice(0, 80)}`);
 
       return {
         success: true,
@@ -82,7 +82,7 @@ export async function executePythonCode(code, customInput = '') {
 
       // Python runtime error (syntax error, exception, etc.) — exit code != 0
       const stderr = execError.stderr || execError.message || 'Unknown runtime error';
-      console.warn(`[DockerExec] ❌ Runtime error — exit code: ${execError.code}\n${stderr.slice(0, 200)}`);
+      console.warn(`[DockerExec]  Runtime error — exit code: ${execError.code}\n${stderr.slice(0, 200)}`);
 
       return {
         success:  false,
@@ -94,7 +94,7 @@ export async function executePythonCode(code, customInput = '') {
 
   } catch (sysErr) {
     // Filesystem / Docker spawn failure
-    console.error('[DockerExec] 🔥 System error:', sysErr.message);
+    console.error('[DockerExec]  System error:', sysErr.message);
     return {
       success:  false,
       stdout:   '',

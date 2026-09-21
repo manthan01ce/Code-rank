@@ -208,92 +208,40 @@ export async function runDynamicPractical({ language, code, dbId, userId, isSubm
     let finalOverallStatus = overallStatus;
     let finalRawMarks = rawMarks;
 
-    // 4. Save to Database if it is a Submit (Maintain only ONE submission per student with highest marks)
+    // 4. Save to Database if it is a Submit (Keep all submissions for history)
     if (isSubmit && userId) {
-      const existing = await sql`
-        SELECT id, normalized_marks, raw_marks, status 
-        FROM practical_submissions 
-        WHERE student_id = ${userId} AND practical_id = ${dbId}
-      `;
-
       const binaryCode = encodeBinaryCode(code);
 
-      if (existing.length === 0) {
-        // First submission for this student
-        const savedSub = await sql`
-          INSERT INTO practical_submissions (
-            student_id, practical_id, code, language, status, raw_marks, normalized_marks, execution_time_ms, is_late
+      const savedSub = await sql`
+        INSERT INTO practical_submissions (
+          student_id, practical_id, code, language, status, raw_marks, normalized_marks, execution_time_ms, is_late
+        )
+        VALUES (
+          ${userId}, ${dbId}, ${binaryCode}, ${language}, ${overallStatus}, ${rawMarks}, ${normalizedMarks}, ${totalTime}, ${isLate}
+        )
+        RETURNING id
+      `;
+      submissionId = savedSub[0].id;
+
+      if (submissionCasesToInsert.length > 0) {
+        await sql`
+          INSERT INTO practical_submission_cases (
+            submission_id, test_case_id, passed, marks_awarded, actual_output, error_message, execution_time_ms
           )
-          VALUES (
-            ${userId}, ${dbId}, ${binaryCode}, ${language}, ${overallStatus}, ${rawMarks}, ${normalizedMarks}, ${totalTime}, ${isLate}
+          SELECT * FROM UNNEST(
+            ${submissionCasesToInsert.map(s => submissionId)}::int[],
+            ${submissionCasesToInsert.map(s => s.test_case_id)}::int[],
+            ${submissionCasesToInsert.map(s => s.passed)}::boolean[],
+            ${submissionCasesToInsert.map(s => s.marks_awarded)}::numeric[],
+            ${submissionCasesToInsert.map(s => s.actual_output)}::text[],
+            ${submissionCasesToInsert.map(s => s.error_message)}::text[],
+            ${submissionCasesToInsert.map(s => s.execution_time_ms)}::numeric[]
           )
-          RETURNING id
         `;
-        submissionId = savedSub[0].id;
-
-        if (submissionCasesToInsert.length > 0) {
-          await sql`
-            INSERT INTO practical_submission_cases (
-              submission_id, test_case_id, passed, marks_awarded, actual_output, error_message, execution_time_ms
-            )
-            SELECT * FROM UNNEST(
-              ${submissionCasesToInsert.map(s => submissionId)}::int[],
-              ${submissionCasesToInsert.map(s => s.test_case_id)}::int[],
-              ${submissionCasesToInsert.map(s => s.passed)}::boolean[],
-              ${submissionCasesToInsert.map(s => s.marks_awarded)}::numeric[],
-              ${submissionCasesToInsert.map(s => s.actual_output)}::text[],
-              ${submissionCasesToInsert.map(s => s.error_message)}::text[],
-              ${submissionCasesToInsert.map(s => s.execution_time_ms)}::numeric[]
-            )
-          `;
-        }
-      } else {
-        // Existing submission found
-        submissionId = existing[0].id;
-        const prevNormalized = parseFloat(existing[0].normalized_marks) || 0;
-
-        if (normalizedMarks > prevNormalized) {
-          // Score improved! Update submission record and replace test case results
-          await sql`
-            UPDATE practical_submissions
-            SET code = ${binaryCode},
-                language = ${language},
-                status = ${overallStatus},
-                raw_marks = ${rawMarks},
-                normalized_marks = ${normalizedMarks},
-                execution_time_ms = ${totalTime},
-                is_late = ${isLate},
-                submitted_at = NOW()
-            WHERE id = ${submissionId}
-          `;
-
-          await sql`DELETE FROM practical_submission_cases WHERE submission_id = ${submissionId}`;
-          if (submissionCasesToInsert.length > 0) {
-            await sql`
-              INSERT INTO practical_submission_cases (
-                submission_id, test_case_id, passed, marks_awarded, actual_output, error_message, execution_time_ms
-              )
-              SELECT * FROM UNNEST(
-                ${submissionCasesToInsert.map(s => submissionId)}::int[],
-                ${submissionCasesToInsert.map(s => s.test_case_id)}::int[],
-                ${submissionCasesToInsert.map(s => s.passed)}::boolean[],
-                ${submissionCasesToInsert.map(s => s.marks_awarded)}::numeric[],
-                ${submissionCasesToInsert.map(s => s.actual_output)}::text[],
-                ${submissionCasesToInsert.map(s => s.error_message)}::text[],
-                ${submissionCasesToInsert.map(s => s.execution_time_ms)}::numeric[]
-              )
-            `;
-          }
-        } else {
-          // Lower or equal score: strictly preserve the highest marks!
-          finalNormalizedMarks = prevNormalized;
-          finalRawMarks = parseFloat(existing[0].raw_marks) || 0;
-          finalOverallStatus = existing[0].status;
-        }
       }
     }
 
-    // ── Emit real-time Socket.IO event to the faculty room ──
+    //     // ── Emit real-time Socket.IO event to the faculty room ──
     if (isSubmit && userId && global.io && submissionId) {
       try {
         const userRes = await sql`SELECT name, email FROM users WHERE id = ${userId}`;

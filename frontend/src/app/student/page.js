@@ -107,6 +107,8 @@ export default function StudentDashboard() {
   }, [socket, fetchStudentPracticals]);
 
   const handleLogout = () => {
+    if (!window.confirm("Are you sure you want to log out?")) return;
+
     localStorage.removeItem('token');
     localStorage.removeItem('user');
     router.push('/');
@@ -239,7 +241,7 @@ export default function StudentDashboard() {
                           if (isUpcoming) {
                             timeBadge = (
                               <div style={{ display: 'inline-flex', alignItems: 'center', gap: '4px', fontSize: '11px', color: '#2563eb', backgroundColor: '#eff6ff', border: '1px solid #bfdbfe', padding: '3px 8px', borderRadius: '6px', fontWeight: 600, marginTop: '6px' }}>
-                                ⏳ Starts: {startTime.toLocaleString([], { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' })}
+                                 Starts: {startTime.toLocaleString([], { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' })}
                               </div>
                             );
                           } else if (isExpired) {
@@ -255,7 +257,7 @@ export default function StudentDashboard() {
                             const timeStr = hours > 0 ? `${hours}h ${mins}m left` : `${mins}m left`;
                             timeBadge = (
                               <div style={{ display: 'inline-flex', alignItems: 'center', gap: '4px', fontSize: '11px', color: '#059669', backgroundColor: '#ecfdf5', border: '1px solid #a7f3d0', padding: '3px 8px', borderRadius: '6px', fontWeight: 600, marginTop: '6px' }}>
-                                ⏱️ Time Limit: {timeStr} (Deadline: {endTime.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })})
+                                 Time Limit: {timeStr} (Deadline: {endTime.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })})
                               </div>
                             );
                           }

@@ -251,6 +251,8 @@ int main() {
   };
 
   const handleLogout = () => {
+    if (!window.confirm("Are you sure you want to log out?")) return;
+
     localStorage.removeItem('token');
     localStorage.removeItem('user');
     router.push('/');
@@ -538,7 +540,7 @@ int main() {
             onClick={handleLogout} 
             style={{ padding: '8px 16px', borderRadius: '8px', border: 'none', backgroundColor: '#ef4444', color: 'white', cursor: 'pointer', fontWeight: 600, fontSize: '13px' }}
           >
-            🚪 Sign Out
+             Sign Out
           </button>
         </div>
       </div>
@@ -667,7 +669,7 @@ int main() {
                         {p.difficulty}
                       </span>
                     </td>
-                    <td>{p.is_challenge ? '🏆 Challenge' : '📘 Standard'}</td>
+                    <td>{p.is_challenge ? ' Challenge' : '📘 Standard'}</td>
                     <td style={{ fontWeight: 700, color: 'var(--primary)' }}>
                       {p.my_marks !== null ? `${p.my_marks} / 10` : '—'}
                     </td>
@@ -682,7 +684,7 @@ int main() {
                         </span>
                         {p.my_submitted_at && endTime && new Date(p.my_submitted_at) > endTime && (
                           <span style={{ fontSize: '10px', color: '#ef4444', fontWeight: 'bold' }}>
-                            ⚠️ Late Submit
+                             Late Submit
                           </span>
                         )}
                       </div>
@@ -690,19 +692,19 @@ int main() {
                     <td>
                       {notStartedYet ? (
                         <span style={{ fontSize: '12px', color: '#94a3b8', fontStyle: 'italic', fontWeight: 600 }}>
-                          🔒 Not Started Yet
+                           Not Started Yet
                         </span>
                       ) : (
                         <button
                           onClick={() => handleStartSolve(p)}
                           style={{ padding: '8px 16px', borderRadius: '6px', border: 'none', backgroundColor: '#4f46e5', color: 'white', cursor: 'pointer', fontWeight: 700, fontSize: '12px' }}
                         >
-                          {p.my_status ? '🔄 Re-solve' : '🚀 Start Solve'}
+                          {p.my_status ? '🔄 Re-solve' : ' Start Solve'}
                         </button>
                       )}
                       {isLateSubmit && !p.my_status && (
                         <div style={{ fontSize: '10px', color: '#b45309', fontWeight: '600', marginTop: '4px' }}>
-                          ⚠️ Late submission
+                           Late submission
                         </div>
                       )}
                     </td>

@@ -38,6 +38,8 @@ export default function AdminSidebar() {
   }, []);
 
   const handleLogout = () => {
+    if (!window.confirm("Are you sure you want to log out?")) return;
+
     localStorage.removeItem('token');
     localStorage.removeItem('user');
     router.push('/');
@@ -160,7 +162,7 @@ export default function AdminSidebar() {
                   onMouseEnter={(e) => e.target.style.backgroundColor = '#f0f0f0'}
                   onMouseLeave={(e) => e.target.style.backgroundColor = 'transparent'}
                 >
-                  ⚙️ Settings
+                   Settings
                 </button>
 
                 <button
@@ -227,7 +229,7 @@ export default function AdminSidebar() {
                   onMouseEnter={(e) => e.target.style.backgroundColor = '#fef2f2'}
                   onMouseLeave={(e) => e.target.style.backgroundColor = 'transparent'}
                 >
-                  🚪 Sign Out
+                   Sign Out
                 </button>
               </div>
             </div>
@@ -274,7 +276,7 @@ export default function AdminSidebar() {
             Settings
           </li>
           <li style={{ marginTop: 'auto', color: '#ef4444', cursor: 'pointer', fontWeight: '600' }} onClick={handleLogout}>
-            🚪 Logout
+             Logout
           </li>
         </ul>
       </div>

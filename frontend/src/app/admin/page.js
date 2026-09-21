@@ -123,7 +123,7 @@ export default function AdminDashboard() {
           <div>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '15px' }}>
                 <h3>Faculty Members</h3>
-                <span style={{ fontSize: '20px' }}>👨‍🏫</span>
+                <span style={{ fontSize: '20px' }}></span>
             </div>
             <p style={{ fontSize: '32px', fontWeight: '800', color: 'var(--primary)' }}>
               {stats.faculty}
@@ -138,7 +138,7 @@ export default function AdminDashboard() {
           <div>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '15px' }}>
                 <h3>Active Students</h3>
-                <span style={{ fontSize: '20px' }}>🎓</span>
+                <span style={{ fontSize: '20px' }}></span>
             </div>
             <p style={{ fontSize: '32px', fontWeight: '800', color: '#10b981' }}>
               {stats.students}
@@ -153,7 +153,7 @@ export default function AdminDashboard() {
           <div>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '15px' }}>
                 <h3>Ongoing Courses</h3>
-                <span style={{ fontSize: '20px' }}>📚</span>
+                <span style={{ fontSize: '20px' }}></span>
             </div>
             <p style={{ fontSize: '32px', fontWeight: '800', color: '#f59e0b' }}>
               {stats.courses}

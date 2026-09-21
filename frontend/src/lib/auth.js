@@ -9,7 +9,7 @@ if (!JWT_SECRET) {
 
 export function generateToken(user) {
   return jwt.sign(
-    { id: user.id, email: user.email, role: user.role, name: user.name },
+    { id: user.id, email: user.email, role: user.role, name: user.name, session_token: user.session_token },
     JWT_SECRET,
     { expiresIn: '7d' }
   );

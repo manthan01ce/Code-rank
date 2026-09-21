@@ -48,7 +48,7 @@ const TABS = [
   { id: 'submissions', icon: <Clock size={13} />,         label: 'SUBMISSIONS' }
 ];
 
-export default function ProblemPanel({ problem }) {
+export default function ProblemPanel({ problem, onLoadSubmissionCode }) {
   const [activeTab, setActiveTab] = useState('description');
   const [submissions, setSubmissions] = useState([]);
   const [loading, setLoading] = useState(false);

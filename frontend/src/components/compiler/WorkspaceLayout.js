@@ -313,6 +313,15 @@ export default function WorkspaceLayout({ problem }) {
   };
 
   const [codeByLang, setCodeByLang] = useState({});
+
+  const handleLoadSubmissionCode = (code, language) => {
+    if (confirm("Are you sure you want to load this past submission? Your current editor code will be replaced.")) {
+        setSelectedLang(language || 'txt');
+        setCodeByLang(prev => ({ ...prev, [language || 'txt']: code }));
+        setHasUnsavedChanges(true);
+    }
+  };
+
   const [hasUnsavedChanges, setHasUnsavedChanges] = useState(false);
   const [isLoadingCode, setIsLoadingCode] = useState(false);
 
@@ -1058,7 +1067,7 @@ export default function WorkspaceLayout({ problem }) {
                 onMouseEnter={e => e.currentTarget.style.backgroundColor = '#2a2a2a'}
                 onMouseLeave={e => e.currentTarget.style.backgroundColor = 'transparent'}
               >
-                ⚙️ Workspace Settings
+                 Workspace Settings
               </button>
               <div style={{ height: '1px', backgroundColor: '#333333', margin: '4px 0' }} />
               <button suppressHydrationWarning
@@ -1067,7 +1076,7 @@ export default function WorkspaceLayout({ problem }) {
                 onMouseEnter={e => e.currentTarget.style.backgroundColor = '#2a2a2a'}
                 onMouseLeave={e => e.currentTarget.style.backgroundColor = 'transparent'}
               >
-                🚪 Sign Out
+                 Sign Out
               </button>
             </div>
           )}
@@ -1084,7 +1093,7 @@ export default function WorkspaceLayout({ problem }) {
           {/* LEFT: Problem Panel */}
           <Panel defaultSize={40} minSize={25}>
             <div style={{ height: '100%', background: '#0d0d0d', overflow: 'hidden', display: 'flex', flexDirection: 'column' }}>
-              <ProblemPanel problem={resolvedProblem} />
+              <ProblemPanel problem={resolvedProblem} onLoadSubmissionCode={handleLoadSubmissionCode} />
             </div>
           </Panel>
 
@@ -1226,7 +1235,7 @@ export default function WorkspaceLayout({ problem }) {
         <div style={{ position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, backgroundColor: 'rgba(0,0,0,0.85)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 10000, backdropFilter: 'blur(4px)' }}>
           <div style={{ backgroundColor: '#161616', border: '1px solid #333', borderRadius: '12px', padding: '30px', width: '450px', display: 'flex', flexDirection: 'column', gap: '20px' }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-              <h3 style={{ fontSize: '18px', fontWeight: 700, color: '#ffffff', margin: 0 }}>⚙️ Workspace Customization</h3>
+              <h3 style={{ fontSize: '18px', fontWeight: 700, color: '#ffffff', margin: 0 }}> Workspace Customization</h3>
               <button suppressHydrationWarning onClick={() => setShowSettingsModal(false)} style={{ border: 'none', background: 'transparent', color: '#888', cursor: 'pointer', fontSize: '18px' }}>×</button>
             </div>
 

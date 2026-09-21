@@ -298,7 +298,7 @@ export default function FacultyManagement() {
 
       // Show detailed skipped users in console and alert
       if (skipped.length > 0) {
-        console.group('⚠️ Skipped Users Details:');
+        console.group(' Skipped Users Details:');
         skipped.forEach((skip, idx) => {
           console.log(`${idx + 1}. ${skip.name} (${skip.email})`);
           console.log(`   Reason: ${skip.reason}`);
@@ -310,7 +310,7 @@ export default function FacultyManagement() {
           `${i + 1}. ${s.name} (${s.email})\n   → ${s.reason}`
         ).join('\n\n');
         
-        alert(`⚠️ ${skippedCount} user(s) were skipped:\n\n${skippedDetails}\n\nCheck console for full details.`);
+        alert(` ${skippedCount} user(s) were skipped:\n\n${skippedDetails}\n\nCheck console for full details.`);
       }
 
       if (errors.length > 0 && created.length === 0 && updated.length === 0) {
@@ -344,7 +344,7 @@ export default function FacultyManagement() {
           boxShadow: '0 4px 20px rgba(0,0,0,0.12)',
           maxWidth: '360px',
         }}>
-          {toast.type === 'success' ? '✅ ' : '❌ '}{toast.msg}
+          {toast.type === 'success' ? ' ' : ' '}{toast.msg}
         </div>
       )}
 
@@ -503,7 +503,7 @@ export default function FacultyManagement() {
 
               <div style={{ display: 'flex', gap: '10px', marginTop: '8px' }}>
                 <button type="submit" className="btn-primary" style={{ flex: 1, margin: 0 }} disabled={processing}>
-                  {processing ? 'Saving...' : editTarget ? '💾 Save Changes' : '✅ Create Faculty'}
+                  {processing ? 'Saving...' : editTarget ? '💾 Save Changes' : ' Create Faculty'}
                 </button>
                 <button
                   type="button"
@@ -581,7 +581,7 @@ export default function FacultyManagement() {
                             onClick={() => handleReactivate(f)}
                             style={{ padding: '6px 14px', borderRadius: '6px', border: 'none', backgroundColor: '#06B6D4', color: 'white', cursor: 'pointer', fontWeight: 600, fontSize: '12px' }}
                           >
-                            ✅ Reactivate
+                             Reactivate
                           </button>
                         )}
                       </div>

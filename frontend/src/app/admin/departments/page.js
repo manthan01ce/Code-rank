@@ -198,7 +198,7 @@ export default function DepartmentMaster() {
 
               <div style={{ display: 'flex', gap: '10px', marginTop: '15px' }}>
                 <button type="submit" className="btn-primary" style={{ flex: 1, margin: 0 }} disabled={processing}>
-                  {processing ? 'Saving...' : editTarget ? '💾 Save Changes' : '✅ Create'}
+                  {processing ? 'Saving...' : editTarget ? '💾 Save Changes' : ' Create'}
                 </button>
                 <button
                   type="button"

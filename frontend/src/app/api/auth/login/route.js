@@ -73,9 +73,20 @@ export async function POST(request) {
       return NextResponse.json({ error: 'Account is inactive' }, { status: 403 });
     }
 
+    
+    let sessionToken = crypto.randomUUID();
+    if (dbUser.id !== 0) {
+      try {
+         await sql`UPDATE users SET session_token = ${sessionToken} WHERE id = ${dbUser.id}`;
+      } catch (e) {
+         console.error('Session Update Error:', e);
+      }
+    }
+    
     let token;
     try {
-       token = generateToken({ id: dbUser.id, email: dbUser.email, role: dbUser.role, name: dbUser.name });
+       token = generateToken({ id: dbUser.id, email: dbUser.email, role: dbUser.role, name: dbUser.name, session_token: sessionToken });
+
     } catch (e) {
        console.error('JWT Error:', e);
        return NextResponse.json({ error: 'Token generation failed' }, { status: 500 });
