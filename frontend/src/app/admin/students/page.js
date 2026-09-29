@@ -3,6 +3,7 @@
 import { useState, useEffect, useRef } from 'react';
 import LoadingOverlay from '@/components/LoadingOverlay';
 import { useAdminAuth } from '@/hooks/useAdminAuth';
+import { usePolling } from '@/hooks/usePolling';
 
 // ─── PDF Generator (inline, no jspdf-autotable import issues) ───────────────
 async function downloadCredentialsPDF(users) {
@@ -139,6 +140,9 @@ export default function StudentManagement() {
 
   useEffect(() => { if (isReady) { fetchStudents(); } }, [search, statusFilter, divisionFilter, isReady]);
   useEffect(() => { if (isReady) fetchDepartments(); }, [isReady]);
+
+  // Auto-refresh students list every 15s (pauses while modal is open)
+  usePolling(() => { if (!showModal) fetchStudents(); }, 15_000, isReady);
 
   // ── Open modal ──
   const openAdd = () => {

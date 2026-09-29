@@ -3,6 +3,7 @@
 import { useState, useEffect, useRef } from 'react';
 import LoadingOverlay from '@/components/LoadingOverlay';
 import { useAdminAuth } from '@/hooks/useAdminAuth';
+import { usePolling } from '@/hooks/usePolling';
 
 // ─── PDF Generator ────────────────────────────────────────────────────────────
 async function downloadCredentialsPDF(users) {
@@ -113,6 +114,9 @@ export default function FacultyManagement() {
 
   useEffect(() => { if (isReady) { fetchFaculty(); } }, [search, statusFilter, isReady]);
   useEffect(() => { if (isReady) fetchDepartments(); }, [isReady]);
+
+  // Auto-refresh faculty list every 15s (pauses while modal is open)
+  usePolling(() => { if (!showModal) fetchFaculty(); }, 15_000, isReady);
 
   // ── Open modal ──
   const openAdd = () => {

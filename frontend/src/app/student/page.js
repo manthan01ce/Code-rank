@@ -108,8 +108,8 @@ export default function StudentDashboard() {
     };
   }, [socket, fetchStudentPracticals]);
 
-  // Polling fallback – refresh practicals every 30s (supplements socket events)
-  usePolling(fetchStudentPracticals, 30_000, !!user);
+  // Polling fallback – refresh practicals every 15s (supplements socket events)
+  usePolling(fetchStudentPracticals, 15_000, !!user);
 
   const [showLogoutModal, setShowLogoutModal] = useState(false);
 

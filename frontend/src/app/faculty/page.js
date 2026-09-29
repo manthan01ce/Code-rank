@@ -4,6 +4,7 @@ import Editor from '@monaco-editor/react';
 import { useState, useEffect } from 'react';
 import LoadingOverlay from '@/components/LoadingOverlay';
 import { useSocket } from '@/hooks/useSocket';
+import { usePolling } from '@/hooks/usePolling';
 
 export default function FacultyDashboard() {
   const socket = useSocket();
@@ -275,6 +276,17 @@ export default function FacultyDashboard() {
       setLoadingStats(false);
     }
   };
+
+  // Auto-refresh active tab data every 15s (practicals, submissions, marks)
+  usePolling(() => {
+    if (selectedCourse && activeTab === 'practicals') {
+      fetchPracticals();
+    } else if (selectedPracticalId && activeTab === 'submissions') {
+      fetchSubmissions();
+    } else if (selectedCourse && activeTab === 'marks') {
+      fetchStats();
+    }
+  }, 15_000, Boolean(selectedCourse || selectedPracticalId));
 
   const handleOpenAddPractical = () => {
     setEditingPractical(null);

@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react';
 import LoadingOverlay from '@/components/LoadingOverlay';
 import { useAdminAuth } from '@/hooks/useAdminAuth';
+import { usePolling } from '@/hooks/usePolling';
 
 export default function CourseMapping() {
   const [courses, setCourses] = useState([]);
@@ -57,6 +58,9 @@ export default function CourseMapping() {
       setLoading(false);
     }
   };
+
+  // Auto-refresh courses and mappings every 15s (pauses while processing changes)
+  usePolling(() => { if (!processing) fetchData(); }, 15_000, isReady);
 
   const handleSelectFaculty = (courseId, facultyId) => {
     if (!facultyId) return; // Empty selection

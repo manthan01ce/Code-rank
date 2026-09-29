@@ -39,8 +39,8 @@ export default function AdminDashboard() {
     if (isReady) fetchDashboardData();
   }, [isReady, fetchDashboardData]);
 
-  // Auto-refresh every 30 seconds
-  usePolling(fetchDashboardData, 30_000, isReady);
+  // Auto-refresh every 15 seconds
+  usePolling(fetchDashboardData, 15_000, isReady);
 
   const formatDate = (dateString) => {
     return new Date(dateString).toLocaleString();

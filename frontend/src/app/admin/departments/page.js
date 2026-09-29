@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react';
 import LoadingOverlay from '@/components/LoadingOverlay';
 import { useAdminAuth } from '@/hooks/useAdminAuth';
+import { usePolling } from '@/hooks/usePolling';
 
 export default function DepartmentMaster() {
   const [departments, setDepartments] = useState([]);
@@ -45,6 +46,9 @@ export default function DepartmentMaster() {
   };
 
   useEffect(() => { if (isReady) fetchDepartments(); }, [search, isReady]);
+
+  // Auto-refresh departments list every 15s
+  usePolling(() => { if (!showModal) fetchDepartments(); }, 15_000, isReady);
 
   const openAdd = () => {
     setEditTarget(null);

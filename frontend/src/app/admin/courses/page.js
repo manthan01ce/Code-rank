@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react';
 import LoadingOverlay from '@/components/LoadingOverlay';
 import { useAdminAuth } from '@/hooks/useAdminAuth';
+import { usePolling } from '@/hooks/usePolling';
 
 export default function CoursesManagement() {
   const [courses, setCourses] = useState([]);
@@ -39,6 +40,9 @@ export default function CoursesManagement() {
       setLoading(false);
     }
   };
+
+  // Auto-refresh courses list every 15s (pauses while modal is open)
+  usePolling(() => { if (!showAddModal) fetchCourses(); }, 15_000, isReady);
 
 
 

@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation';
 import Editor from '@monaco-editor/react';
 import ChangePasswordModal from '@/components/ChangePasswordModal';
 import { useSocket } from '@/hooks/useSocket';
+import { usePolling } from '@/hooks/usePolling';
 
 export default function StudentPracticals() {
   const router = useRouter();
@@ -125,6 +126,9 @@ export default function StudentPracticals() {
       setLoading(false);
     }
   };
+
+  // Auto-refresh practicals list every 15 seconds
+  usePolling(fetchPracticals, 15_000, Boolean(selectedCourse && !activePractical));
 
   const getBoilerplate = (lang, p = activePractical) => {
     if (p && p.starter_code && p.starter_code[lang]) {

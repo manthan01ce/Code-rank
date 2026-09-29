@@ -15,13 +15,13 @@ import { useEffect, useRef, useCallback } from 'react';
  *  - Stable callback via useRef (no need to memoize callback at call site)
  *
  * Usage:
- *   usePolling(fetchDashboardData, 30_000); // poll every 30 seconds
+ *   usePolling(fetchDashboardData, 15_000); // poll every 15 seconds
  *
  * @param {function} callback   – Async or sync function to call on each tick
- * @param {number}   intervalMs – Polling interval in milliseconds (default: 30000)
+ * @param {number}   intervalMs – Polling interval in milliseconds (default: 15000)
  * @param {boolean}  enabled    – Set to false to pause polling (default: true)
  */
-export function usePolling(callback, intervalMs = 30_000, enabled = true) {
+export function usePolling(callback, intervalMs = 15_000, enabled = true) {
   const callbackRef = useRef(callback);
   const timerRef = useRef(null);
 

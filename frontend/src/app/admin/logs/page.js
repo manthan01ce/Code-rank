@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import { useAdminAuth } from '@/hooks/useAdminAuth';
+import { usePolling } from '@/hooks/usePolling';
 
 export default function ActivityLogs() {
   const [logs, setLogs] = useState([]);
@@ -25,6 +26,9 @@ export default function ActivityLogs() {
       setLoading(false);
     }
   };
+
+  // Auto-refresh activity logs every 15s
+  usePolling(fetchLogs, 15_000, isReady);
 
   const formatDate = (dateString) => {
     const d = new Date(dateString);
