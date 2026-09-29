@@ -78,7 +78,6 @@ export default function HomePage() {
             <a href="#features" style={{ textDecoration: 'none', color: '#475569', fontSize: '14px', fontWeight: 500, transition: 'color 0.2s' }}>Features</a>
             <a href="#roles" style={{ textDecoration: 'none', color: '#475569', fontSize: '14px', fontWeight: 500, transition: 'color 0.2s' }}>Portals</a>
             <a href="#sandbox" style={{ textDecoration: 'none', color: '#475569', fontSize: '14px', fontWeight: 500, transition: 'color 0.2s' }}>Execution Engine</a>
-            <Link href="/practice" style={{ textDecoration: 'none', color: '#475569', fontSize: '14px', fontWeight: 500, transition: 'color 0.2s' }}>Practice Sandbox</Link>
           </nav>
         </div>
 
@@ -215,7 +214,7 @@ export default function HomePage() {
             </Link>
 
             <Link
-              href="/practice"
+              href="/login"
               style={{
                 display: 'inline-flex',
                 alignItems: 'center',
@@ -231,7 +230,7 @@ export default function HomePage() {
                 boxShadow: '0 2px 4px rgba(0,0,0,0.03)'
               }}
             >
-              Try Practice Sandbox
+              Sign In to Account
             </Link>
           </div>
 
@@ -758,21 +757,6 @@ export default function HomePage() {
               }}
             >
               Sign In to Your Account
-            </Link>
-            <Link
-              href="/practice"
-              style={{
-                padding: '12px 24px',
-                backgroundColor: 'rgba(255,255,255,0.15)',
-                color: '#ffffff',
-                border: '1px solid rgba(255,255,255,0.3)',
-                borderRadius: '10px',
-                fontSize: '15px',
-                fontWeight: 600,
-                textDecoration: 'none'
-              }}
-            >
-              Explore Sandbox
             </Link>
           </div>
         </div>

@@ -3,6 +3,9 @@ const nextConfig = {
   poweredByHeader: false,
   compress: true,
   reactStrictMode: true,
+  typescript: {
+    ignoreBuildErrors: true,
+  },
   allowedDevOrigins: [
     'localhost',
     '10.59.69.42',

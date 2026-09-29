@@ -3,7 +3,7 @@
 import { useRouter, usePathname } from 'next/navigation';
 import { useEffect, useState, useRef } from 'react';
 import ChangePasswordModal from './ChangePasswordModal';
-import LogoutConfirmModal from './LogoutConfirmModal';
+
 
 export default function FacultySidebar() {
   const router = useRouter();
@@ -11,7 +11,6 @@ export default function FacultySidebar() {
   const [user, setUser] = useState(null);
   const [showProfileMenu, setShowProfileMenu] = useState(false);
   const [isChangePasswordOpen, setIsChangePasswordOpen] = useState(false);
-  const [showLogoutModal, setShowLogoutModal] = useState(false);
   const profileRef = useRef(null);
 
   useEffect(() => {
@@ -54,12 +53,12 @@ export default function FacultySidebar() {
     }
   }, [pathname]);
 
-  const handleLogout = () => setShowLogoutModal(true);
-
-  const confirmLogout = () => {
-    localStorage.removeItem('token');
-    localStorage.removeItem('user');
-    router.push('/');
+  const handleLogout = () => {
+    if (window.confirm("Are you sure you want to log out?")) {
+      localStorage.removeItem('token');
+      localStorage.removeItem('user');
+      router.push('/');
+    }
   };
 
   return (
@@ -258,11 +257,7 @@ export default function FacultySidebar() {
         </ul>
       </div>
       <ChangePasswordModal isOpen={isChangePasswordOpen} onClose={() => setIsChangePasswordOpen(false)} />
-      <LogoutConfirmModal
-        isOpen={showLogoutModal}
-        onConfirm={confirmLogout}
-        onCancel={() => setShowLogoutModal(false)}
-      />
+
     </>
   );
 }

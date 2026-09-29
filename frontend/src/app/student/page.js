@@ -3,7 +3,6 @@
 import { useRouter } from 'next/navigation';
 import { useEffect, useState, useCallback } from 'react';
 import LoadingOverlay from '@/components/LoadingOverlay';
-import LogoutConfirmModal from '@/components/LogoutConfirmModal';
 import { useSocket } from '@/hooks/useSocket';
 import { usePolling } from '@/hooks/usePolling';
 
@@ -111,14 +110,12 @@ export default function StudentDashboard() {
   // Polling fallback – refresh practicals every 15s (supplements socket events)
   usePolling(fetchStudentPracticals, 15_000, !!user);
 
-  const [showLogoutModal, setShowLogoutModal] = useState(false);
-
-  const handleLogout = () => setShowLogoutModal(true);
-
-  const confirmLogout = () => {
-    localStorage.removeItem('token');
-    localStorage.removeItem('user');
-    router.push('/');
+  const handleLogout = () => {
+    if (window.confirm("Are you sure you want to log out?")) {
+      localStorage.removeItem('token');
+      localStorage.removeItem('user');
+      router.push('/');
+    }
   };
 
   if (!user) return null;
@@ -357,11 +354,7 @@ export default function StudentDashboard() {
           </div>
         )}
       </div>
-      <LogoutConfirmModal
-        isOpen={showLogoutModal}
-        onConfirm={confirmLogout}
-        onCancel={() => setShowLogoutModal(false)}
-      />
+
     </div>
   );
 }
