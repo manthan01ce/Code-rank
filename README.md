@@ -43,48 +43,23 @@ Navigate to: http://localhost:3000
 
 ## 📚 Documentation
 
-- **[SUMMARY.md](SUMMARY.md)** - Complete overview of fixes and features
-- **[TESTING_GUIDE.md](TESTING_GUIDE.md)** - Step-by-step testing instructions
-- **[FIXES_APPLIED.md](FIXES_APPLIED.md)** - Technical details of all fixes
-- **[ARCHITECTURE.md](ARCHITECTURE.md)** - System architecture and data flow
-- **[CHECKLIST.md](CHECKLIST.md)** - Complete verification checklist
-
----
-
-## 🧪 Quick Test
-
-1. Go to **Student Management**
-2. Click **"+ Add Student"**
-3. Fill in any details
-4. Click **"Create Student"**
-5. **Result**: Student appears immediately + PDF downloads
-
-**If this works, everything is working! 🎉**
+- **[ARCHITECTURE.md](ARCHITECTURE.md)** - System architecture, PgBouncer pooling, and execution pipeline
+- **[TEST_GUIDE.md](TEST_GUIDE.md)** - Step-by-step testing instructions
+- **[LAN_TESTING_GUIDE.md](LAN_TESTING_GUIDE.md)** - Local Area Network and lab deployment guide
 
 ---
 
 ## 📊 Tech Stack
 
-- **Frontend**: Next.js 16.2.3 (App Router), React 19
-- **Backend**: Next.js API Routes, BullMQ (Job Queue), Node.js standalone worker
-- **Database**: Neon PostgreSQL (Serverless) + Redis (Task Queueing & Rate Limiting)
+- **Frontend**: Next.js 16.3.6 (App Router, Turbopack), React 19
+- **Backend**: Next.js Serverless API Routes, BullMQ (Job Queue), Node.js worker
+- **Database**: Neon PostgreSQL (Serverless) with PgBouncer Connection Pooling
 - **Execution Engine**: Docker (Language Daemons for secure execution isolation)
-- **Authentication**: JWT + bcryptjs
-- **Real-Time**: Socket.io
+- **Authentication**: JWT (24h expiry) + bcryptjs
+- **Real-Time**: Socket.io + 15-second automatic polling with Page Visibility detection
 - **PDF Generation**: jsPDF + jspdf-autotable
-- **File Parsing**: xlsx, csv-parse
-- **Styling**: CSS Modules
-
----
-
-## ⚡ High-Performance Execution Architecture
-We have completely revamped the code-execution pipeline for massive concurrent usage:
-- **BullMQ Background Queues**: Instead of hanging the Next.js API server for seconds while code executes, submissions are instantly placed in a Redis-backed queue.
-- **Dedicated Worker (`src/worker.js`)**: A separate process consumes jobs asynchronously and strictly manages concurrency, completely preventing 100% CPU exhaustion.
-- **Socket.io Real-Time Updates**: Completed jobs are immediately streamed back to the frontend without heavy polling.
-- **Shared Daemon Architecture**: Containerization now uses fixed, persistent shared instances (`DAEMONS`) rather than spawning a heavy Docker container per student per run.
-- **Batch DB Operations**: PostgreSQL test case submissions are batch-inserted via `UNNEST`, reducing DB latency from 600ms to ~30ms per submission.
-- **Distributed Rate Limiting**: Added cross-process robust API rate limiting via Redis.
+- **File Parsing**: ExcelJS, csv-parse
+- **Styling**: Vanilla CSS Modules
 
 ---
 
@@ -92,19 +67,27 @@ We have completely revamped the code-execution pipeline for massive concurrent u
 
 ```
 CodeRank/
-├── src/
-│   ├── app/                    # Next.js pages and API routes
-│   │   ├── page.js            # Login page
-│   │   ├── admin/             # Admin dashboard and management
-│   │   ├── student/           # Student dashboard
-│   │   ├── faculty/           # Faculty dashboard
-│   │   └── api/               # API endpoints
-│   ├── components/            # Reusable React components
-│   └── lib/                   # Utilities (db, auth, pdf)
-├── scripts/                   # Database initialization scripts
-├── sample_students.csv        # Sample data for testing
-├── sample_faculty.csv         # Sample data for testing
-└── Documentation files        # SUMMARY.md, TESTING_GUIDE.md, etc.
+├── frontend/
+│   ├── src/
+│   │   ├── app/                    # Next.js pages and API routes
+│   │   │   ├── page.js            # Landing / Homepage
+│   │   │   ├── login/             # Authentication portal
+│   │   │   ├── admin/             # Admin dashboard & user management
+│   │   │   ├── student/           # Student dashboard & practical solving
+│   │   │   ├── faculty/           # Faculty dashboard & submissions
+│   │   │   ├── code/              # Coding workspace
+│   │   │   ├── practice/          # Sandbox practice
+│   │   │   └── api/               # Serverless API routes
+│   │   ├── components/            # Reusable UI components
+│   │   ├── hooks/                 # Custom hooks (usePolling, useSocket, useAdminAuth)
+│   │   └── lib/                   # Database connection, auth, execution utilities
+│   ├── server.js                  # Custom Next.js + Socket.IO server
+│   ├── next.config.mjs            # Next.js configuration
+│   └── package.json               # Frontend dependencies
+├── backend/                       # Standalone worker and services
+├── vercel.json                    # Vercel deployment settings
+├── ARCHITECTURE.md                # System architecture documentation
+└── README.md                      # Main project documentation
 ```
 
 ---
