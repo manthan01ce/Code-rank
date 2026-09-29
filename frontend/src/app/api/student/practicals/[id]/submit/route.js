@@ -5,6 +5,7 @@ import { runStdinStdout } from '@/lib/execution/runStdinStdout';
 import fs from 'fs/promises';
 import path from 'path';
 import { encodeBinaryCode } from '@/lib/binaryCode';
+import { io as socketClient } from 'socket.io-client';
 
 export async function POST(request, { params }) {
   try {
@@ -211,6 +212,44 @@ export async function POST(request, { params }) {
           ${submissionId}, ${sc.test_case_id}, ${sc.passed}, ${sc.marks_awarded}, ${sc.actual_output}, ${sc.error_message}, ${sc.execution_time_ms}
         )
       `;
+    }
+
+    // Activity log
+    await sql`
+      INSERT INTO activity_logs (user_id, action, details)
+      VALUES (${user.id}, 'SUBMIT_PRACTICAL', ${`Submitted practical "${practical.title}" (${language}): ${overallStatus}, Marks: ${normalizedMarks}/10`})
+    `;
+
+    // Real-time socket broadcast to faculty dashboard and practical room
+    const submissionPayload = {
+      id: submissionId,
+      practical_id: practicalId,
+      student_id: user.id,
+      student_name: user.name,
+      student_email: user.email,
+      roll_number: studentExtra.roll_number || studentExtra.roll || '',
+      division: studentExtra.division || '',
+      language,
+      status: overallStatus,
+      raw_marks: rawMarks,
+      normalized_marks: normalizedMarks,
+      execution_time_ms: totalTime,
+      is_late: isLate,
+      submitted_at: new Date().toISOString()
+    };
+
+    if (global.io) {
+      global.io.to(`practical_${practicalId}`).emit('new_submission', submissionPayload);
+      global.io.to(`course_${practical.course_id}`).emit('new_submission_marks', { course_id: practical.course_id, practical_id: practicalId });
+      global.io.emit('new_submission', submissionPayload);
+    } else {
+      try {
+        const socket = socketClient(`http://127.0.0.1:${process.env.PORT || 3000}`);
+        socket.emit('student_new_submission', { practical_id: practicalId, course_id: practical.course_id, submission: submissionPayload });
+        setTimeout(() => socket.disconnect(), 1000);
+      } catch (sockErr) {
+        console.warn('Socket relay error:', sockErr);
+      }
     }
 
     return NextResponse.json({

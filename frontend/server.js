@@ -100,6 +100,16 @@ app.prepare().then(() => {
       io.emit('job_complete', data.result);
     });
 
+    socket.on('student_new_submission', (data) => {
+      if (data?.practical_id) {
+        io.to(`practical_${data.practical_id}`).emit('new_submission', data.submission);
+      }
+      if (data?.course_id) {
+        io.to(`course_${data.course_id}`).emit('new_submission_marks', { course_id: data.course_id, practical_id: data.practical_id });
+      }
+      io.emit('new_submission', data.submission);
+    });
+
     socket.on('disconnect', () => {
       console.log(`Socket disconnected: ${socket.id}`);
     });
