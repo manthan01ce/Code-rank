@@ -50,11 +50,10 @@ async function parseFile(file) {
       return obj;
     }).filter(r => r.Name || r.name);
   } else {
-    const XLSX = await import('xlsx');
-    const buffer = await file.arrayBuffer();
-    const wb = XLSX.read(buffer, { type: 'array' });
-    const ws = wb.Sheets[wb.SheetNames[0]];
-    return XLSX.utils.sheet_to_json(ws);
+    // Excel files: client-side parsing removed (xlsx had critical CVEs, no safe browser alternative).
+    // The file is uploaded directly to the server API which parses it with ExcelJS.
+    // Return null to signal the upload handler to skip preview and go straight to upload.
+    return null;
   }
 }
 

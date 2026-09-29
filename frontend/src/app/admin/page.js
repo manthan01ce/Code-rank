@@ -1,8 +1,9 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import LoadingOverlay from '@/components/LoadingOverlay';
 import { useAdminAuth } from '@/hooks/useAdminAuth';
+import { usePolling } from '@/hooks/usePolling';
 
 export default function AdminDashboard() {
   const [stats, setStats] = useState({ faculty: 0, students: 0, courses: 0 });
@@ -11,11 +12,7 @@ export default function AdminDashboard() {
 
   const { token, isReady } = useAdminAuth();
 
-  useEffect(() => {
-    if (isReady) fetchDashboardData();
-  }, [isReady]);
-
-  const fetchDashboardData = async () => {
+  const fetchDashboardData = useCallback(async () => {
     try {
       const [statsRes, logsRes] = await Promise.all([
         fetch('/api/stats', { headers: { 'Authorization': `Bearer ${token}` } }),
@@ -36,7 +33,14 @@ export default function AdminDashboard() {
     } finally {
       setLoading(false);
     }
-  };
+  }, [token]);
+
+  useEffect(() => {
+    if (isReady) fetchDashboardData();
+  }, [isReady, fetchDashboardData]);
+
+  // Auto-refresh every 30 seconds
+  usePolling(fetchDashboardData, 30_000, isReady);
 
   const formatDate = (dateString) => {
     return new Date(dateString).toLocaleString();

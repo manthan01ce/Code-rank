@@ -8,7 +8,7 @@ import { runJava } from './lib/execution/runJava.js';
 import { runJavaScript } from './lib/execution/runJavaScript.js';
 import { io } from 'socket.io-client';
 
-const MAX_CONCURRENT = parseInt(process.env.MAX_CONCURRENT_JOBS || '2', 10);
+const MAX_CONCURRENT = parseInt(process.env.MAX_CONCURRENT_JOBS || '8', 10);
 const JOB_TIMEOUT = parseInt(process.env.JOB_TIMEOUT_MS || '30000', 10);
 
 const connection = {

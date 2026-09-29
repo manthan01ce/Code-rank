@@ -1,8 +1,18 @@
+import { fileURLToPath } from 'url';
+import { dirname } from 'path';
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = dirname(__filename);
+
 /** @type {import('next').NextConfig} */
 const nextConfig = {
   poweredByHeader: false,
   compress: true,
   reactStrictMode: true,
+  // Turbopack: resolve modules from frontend/ where node_modules lives
+  turbopack: {
+    root: __dirname,
+  },
   allowedDevOrigins: [
     'localhost',
     '10.59.69.42',

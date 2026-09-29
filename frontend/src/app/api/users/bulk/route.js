@@ -1,7 +1,8 @@
 import { NextResponse } from 'next/server';
 import sql from '@/lib/db';
 import { getUserFromRequest, hashPassword, generateSecurePassword } from '@/lib/auth';
-import * as XLSX from 'xlsx';
+import ExcelJS from 'exceljs';
+import { Readable } from 'stream';
 
 function validateDivision(division) {
   if (!division || typeof division !== 'string' || !division.trim()) {
@@ -38,11 +39,35 @@ export async function POST(request) {
     const bytes = await file.arrayBuffer();
     const buffer = Buffer.from(bytes);
 
-    // Parse with XLSX — defVal: '' so empty cells come as '' not undefined
-    const workbook = XLSX.read(buffer, { type: 'buffer' });
-    const sheetName = workbook.SheetNames[0];
-    const sheet = workbook.Sheets[sheetName];
-    const records = XLSX.utils.sheet_to_json(sheet, { defval: '' });
+    // Parse with ExcelJS (supports .xlsx and .csv)
+    const workbook = new ExcelJS.Workbook();
+    const fileExt = (file.name || '').split('.').pop().toLowerCase();
+    if (fileExt === 'csv') {
+      await workbook.csv.read(Readable.from(buffer));
+    } else {
+      await workbook.xlsx.load(buffer);
+    }
+
+    const worksheet = workbook.worksheets[0];
+    if (!worksheet) {
+      return NextResponse.json({ error: 'No worksheet found in file' }, { status: 400 });
+    }
+
+    // Convert worksheet to array of plain objects keyed by header row
+    const headers = [];
+    const records = [];
+    worksheet.eachRow((row, rowNumber) => {
+      if (rowNumber === 1) {
+        row.eachCell((cell) => headers.push(String(cell.value || '').trim()));
+      } else {
+        const obj = {};
+        row.eachCell({ includeEmpty: true }, (cell, colNumber) => {
+          const header = headers[colNumber - 1] || `col${colNumber}`;
+          obj[header] = cell.value !== null && cell.value !== undefined ? String(cell.value).trim() : '';
+        });
+        records.push(obj);
+      }
+    });
 
     if (records.length === 0) {
       return NextResponse.json({ error: 'No data found in file' }, { status: 400 });

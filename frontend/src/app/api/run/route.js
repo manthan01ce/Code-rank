@@ -1,12 +1,18 @@
 import { NextResponse } from 'next/server';
 import { ALLOWED_LANGUAGES } from '@/lib/execution/index.js';
-import { runPython } from '@/lib/execution/runPython';
-import { runCpp } from '@/lib/execution/runCpp';
-const RUNNERS = { python: runPython, cpp: runCpp };
+import { enqueueJob } from '@/lib/queue/jobQueue';
+import { checkRateLimit } from '@/lib/queue/rateLimiter';
+import { getUserFromRequest } from '@/lib/auth';
 import { STATIC_PROBLEMS } from '@/lib/problems';
 
 export async function POST(request) {
   try {
+    const user = getUserFromRequest(request);
+    const userId = user ? user.id : 'anonymous';
+
+    const rate = await checkRateLimit(userId.toString(), 'run');
+    if (!rate.allowed) return NextResponse.json({ error: 'Too Many Requests', retryAfter: rate.retryAfter }, { status: 429 });
+
     let body;
     try {
       body = await request.json();
@@ -48,15 +54,20 @@ export async function POST(request) {
       expected: tc.expected,
     }));
 
-    // ── 4. Invoke selected language runner ──
-    const runner = RUNNERS[language] || RUNNERS.python;
-    const result = await runner({
-      code,
-      problem,
-      testCases: runnerTestCases,
-    });
-
-    return NextResponse.json(result, { status: 200 });
+    // ── 4. Enqueue for asynchronous execution ──
+    try {
+      const jobId = await enqueueJob('practice', { 
+        code, 
+        language, 
+        problem, 
+        testCases: runnerTestCases 
+      }, user ? user.id : null);
+      
+      return NextResponse.json({ jobId, status: 'queued' }, { status: 202 });
+    } catch (err) {
+      if (err.message === 'QUEUE_FULL') return NextResponse.json({ error: 'Server is busy. Please try again in a moment.' }, { status: 503 });
+      throw err;
+    }
 
   } catch (error) {
     console.error('API Error in /api/run:', error);

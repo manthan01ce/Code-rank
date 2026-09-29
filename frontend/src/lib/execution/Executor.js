@@ -3,7 +3,6 @@ import { promisify } from 'util';
 import crypto from 'crypto';
 
 const execAsync = promisify(exec);
-// Force turbopack cache invalidation
 
 const DAEMONS = {
   cpp: 'coderank-cpp-daemon',
@@ -44,10 +43,10 @@ const LANGUAGES = {
 function normalizeOutput(str) {
   if (str === null || str === undefined) return '';
   return String(str)
-    .replace(/\r\n/g, '\n')
-    .split('\n')
+    .replace(/\\r\\n/g, '\\n')
+    .split('\\n')
     .map(line => line.trimEnd())
-    .join('\n')
+    .join('\\n')
     .trim();
 }
 
@@ -58,30 +57,23 @@ export class Executor {
     this.timeLimit = customTimeLimit;
 
     if (this.language === 'java' && !this.code.includes('public class Solution') && !this.code.includes('class Solution')) {
-      this.code = `public class Solution {\n${this.code}\n}`;
+      this.code = `public class Solution {\\n${this.code}\\n}`;
     }
 
     this.config = LANGUAGES[language];
-    // Always use shared daemon pool for better scaling
     this.daemon = DAEMONS[language];
 
-    // Create a unique hash for caching the compiled binary
     this.hash = crypto.createHash('sha256').update(`${this.language}:${this.code}`).digest('hex');
-    // Inside the student's container, we create a unique folder for this execution
     this.workdir = `/app/exec_${this.hash}`;
   }
 
   async compile() {
-    // 1. Prepare directory and write code using base64 to completely bypass Windows volume mount bugs
     const codeB64 = Buffer.from(this.code).toString('base64');
     
-    // We check if it already exists, if so, we can skip writing and compiling! (Caching!)
     try {
       await execAsync(`docker exec ${this.daemon} bash -c "test -d ${this.workdir}"`);
-      // Directory exists, means it was already compiled and cached!
       return { success: true, cached: true };
     } catch {
-      // Directory does not exist, proceed to write and compile
     }
 
     const prepareCmd = `docker exec ${this.daemon} bash -c "mkdir -p ${this.workdir} && cd ${this.workdir} && echo '${codeB64}' | base64 -d > ${this.config.filename}"`;
@@ -92,13 +84,11 @@ export class Executor {
       return { success: false, error: 'Daemon unreachable or failed to write file.' };
     }
 
-    // 2. Compile if the language requires it
     if (this.config.compileCmd) {
       const compileCmd = `docker exec ${this.daemon} bash -c "cd ${this.workdir} && ${this.config.compileCmd}"`;
       try {
         await execAsync(compileCmd, { timeout: 10000 });
       } catch (err) {
-        // If compilation fails, we delete the workdir so it doesn't get cached as a success
         await execAsync(`docker exec ${this.daemon} rm -rf ${this.workdir}`).catch(() => {});
         return { success: false, error: err.stderr || err.message || 'Compilation failed' };
       }
@@ -124,7 +114,6 @@ export class Executor {
       const passed = actualNorm === expectedNorm;
       const marksAwarded = passed ? parseFloat(marksAwardedMax) : 0;
       
-      // Cleanup temporary input file
       execAsync(`docker exec ${this.daemon} rm -f ${this.workdir}/${inputFilename}`).catch(() => {});
 
       return {
@@ -143,7 +132,6 @@ export class Executor {
       let errMsg = err.stderr || err.message;
       if (err.killed) errMsg = "Time Limit Exceeded";
       
-      // Cleanup temporary input file on error
       execAsync(`docker exec ${this.daemon} rm -f ${this.workdir}/${inputFilename}`).catch(() => {});
 
       return {
@@ -161,17 +149,68 @@ export class Executor {
   }
 
   async runBatch(testCases) {
-    // Run test cases in chunks of 3 to avoid overwhelming the Docker daemon under load
-    const results = [];
-    const BATCH_SIZE = 3;
-    for (let i = 0; i < testCases.length; i += BATCH_SIZE) {
-      const chunk = testCases.slice(i, i + BATCH_SIZE);
-      const chunkPromises = chunk.map((tc, idx) =>
-        this.runOneTestCase(tc.input, tc.expected, tc.id, i + idx, tc.marks || 0)
-      );
-      const chunkResults = await Promise.all(chunkPromises);
-      results.push(...chunkResults);
+    // To reduce Docker overhead, we construct a single shell script to run all test cases in one 'docker exec' call
+    if (testCases.length === 0) return [];
+
+    const start = performance.now();
+    const scriptLines = [`cd ${this.workdir}`];
+    const testCaseMap = new Map();
+
+    testCases.forEach((tc, idx) => {
+      const inputFilename = `input_${idx}.txt`;
+      const inputB64 = Buffer.from(tc.input || '').toString('base64');
+      const runCmd = this.config.runCmd.replace('input.txt', inputFilename);
+      
+      // Create input file, run, and capture output to a temporary file
+      scriptLines.push(`echo '${inputB64}' | base64 -d > ${inputFilename}`);
+      scriptLines.push(`${runCmd} > output_${idx}.txt 2> error_${idx}.txt || echo "EXIT_CODE_NONZERO" > error_${idx}.txt`);
+      
+      testCaseMap.set(idx, tc);
+    });
+
+    const fullScript = scriptLines.join(' && ');
+    const batchCmd = `docker exec ${this.daemon} bash -c "${fullScript}"`;
+
+    try {
+      await execAsync(batchCmd, { timeout: this.timeLimit * testCases.length });
+    } catch (err) {
+      // We continue to read outputs even if the batch command failed (some tests might have failed)
     }
+
+    const results = [];
+    for (let i = 0; i < testCases.length; i++) {
+      const tc = testCaseMap.get(i);
+      const inputFilename = `input_${i}.txt`;
+      
+      let stdout = '';
+      let stderr = '';
+      try {
+        const outRes = await execAsync(`docker exec ${this.daemon} cat ${this.workdir}/output_${i}.txt`).catch(() => ({ stdout: '' }));
+        const errRes = await execAsync(`docker exec ${this.daemon} cat ${this.workdir}/error_${i}.txt`).catch(() => ({ stdout: '' }));
+        stdout = outRes.stdout;
+        stderr = errRes.stdout;
+      } catch (e) {}
+
+      const actualNorm = normalizeOutput(stdout);
+      const expectedNorm = normalizeOutput(tc.expected);
+      const passed = actualNorm === expectedNorm;
+      
+      // Cleanup
+      execAsync(`docker exec ${this.daemon} rm -f ${this.workdir}/${inputFilename} ${this.workdir}/output_${i}.txt ${this.workdir}/error_${i}.txt`).catch(() => {});
+
+      results.push({
+        testCaseId: tc.id,
+        idx: i,
+        passed,
+        marksAwarded: passed ? parseFloat(tc.marks || 0) : 0,
+        actualOutput: stdout.trim(),
+        errorMessage: stderr.trim(),
+        runtimeMs: 0, // Batch runtime is aggregated
+        expectedOutput: (tc.expected || '').trim(),
+        input: tc.input
+      });
+    }
+
     return results;
   }
 }
