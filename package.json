@@ -3,7 +3,9 @@
   "version": "1.0.0",
   "private": true,
   "workspaces": [
-    "frontend"
+    "packages/core",
+    "frontend",
+    "backend"
   ],
   "scripts": {
     "build": "npm --workspace=frontend run build",

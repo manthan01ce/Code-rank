@@ -1,5 +1,6 @@
 import './env-setup.js';
 import { Worker } from 'bullmq';
+import { closePool } from '@coderank/core';
 import { runDynamicPractical } from './lib/execution/runDynamicPractical.js';
 import { runPython } from './lib/execution/runPython.js';
 import { runCpp } from './lib/execution/runCpp.js';
@@ -55,12 +56,17 @@ const worker = new Worker('code-execution', async (job) => {
   lockDuration: JOB_TIMEOUT + 5000,
 });
 
-process.on('SIGTERM', async () => {
-  console.log('Worker: SIGTERM received, closing...');
+// Graceful shutdown — close worker, socket, AND database pool
+async function gracefulShutdown(signal) {
+  console.log(`Worker: ${signal} received, closing...`);
   await worker.close();
   socket.disconnect();
+  await closePool();
   process.exit(0);
-});
+}
+
+process.on('SIGTERM', () => gracefulShutdown('SIGTERM'));
+process.on('SIGINT', () => gracefulShutdown('SIGINT'));
 
 worker.on('completed', (job) => {
   console.log(`Job ${job.id} completed. Duration: ${job.finishedOn - job.processedOn}ms`);
@@ -83,3 +89,4 @@ worker.on('failed', (job, err) => {
 worker.on('stalled', (jobId) => {
   console.warn(`Job ${jobId} stalled`);
 });
+

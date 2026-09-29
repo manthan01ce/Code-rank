@@ -1,20 +1,15 @@
-import { neon } from '@neondatabase/serverless';
-
 /**
- * db.js – Neon Serverless Postgres connection with PgBouncer Pooling Support
- * ---------------------------------------------------------------------------
- * PgBouncer / Connection Pooler compatibility:
- *  - Neon's HTTP driver (@neondatabase/serverless) executes queries statelessly over HTTPS.
- *  - To route through Neon's native PgBouncer connection pooler, use the pooled endpoint:
- *      ep-xxxx-pooler.us-east-1.aws.neon.tech (notice "-pooler" in host)
- *  - If using external PgBouncer or transaction mode pooling, append:
- *      ?pgbouncer=true&connection_limit=1&sslmode=require
- *    `pgbouncer=true` disables named prepared statements incompatible with transaction-mode pooling.
+ * backend/src/lib/db.js
+ * ──────────────────────────────────────────────────────
+ * Thin re-export of the shared database client from
+ * @coderank/core.  The backend worker's execution files
+ * (e.g. runDynamicPractical.js) import from this path,
+ * so all existing `import sql from '../db.js'` statements
+ * continue to work without modification.
+ *
+ * The canonical implementation lives in:
+ *   packages/core/src/db/client.js
+ * ──────────────────────────────────────────────────────
  */
-const connectionString =
-  process.env.DATABASE_URL ||
-  'postgresql://placeholder:placeholder@localhost/placeholder';
 
-const sql = neon(connectionString);
-
-export default sql;
+export { default, sql, pool, closePool, checkConnection } from '@coderank/core';

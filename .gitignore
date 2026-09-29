@@ -61,6 +61,7 @@ frontend/out/
 frontend/code-storage/
 code-storage/
 backend/node_modules/
+packages/core/node_modules/
 
 coderank-backend/
 coderank-frontend/
