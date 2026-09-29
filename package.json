@@ -2,14 +2,20 @@
   "name": "coderank",
   "version": "1.0.0",
   "private": true,
+  "workspaces": [
+    "frontend"
+  ],
   "scripts": {
-    "install": "cd frontend && npm install",
-    "build": "cd frontend && npm run build",
-    "start": "cd frontend && npm start",
-    "dev": "cd frontend && npm run dev",
+    "install": "npm --workspace=frontend install",
+    "build": "npm --workspace=frontend run build",
+    "start": "npm --workspace=frontend run start",
+    "dev": "npm --workspace=frontend run dev",
     "k6:smoke": "powershell -ExecutionPolicy Bypass -File ./load-tests/run-k6.ps1 -Test smoke",
     "k6:api": "powershell -ExecutionPolicy Bypass -File ./load-tests/run-k6.ps1 -Test api",
     "k6:execution": "powershell -ExecutionPolicy Bypass -File ./load-tests/run-k6.ps1 -Test execution",
     "k6:all": "powershell -ExecutionPolicy Bypass -File ./load-tests/run-k6.ps1 -Test all"
+  },
+  "dependencies": {
+    "next": "^16.3.6"
   }
 }

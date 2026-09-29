@@ -1,14 +1,36 @@
 import { createClient } from 'redis';
 
-const redis = createClient({
-  socket: { 
-    host: process.env.REDIS_HOST || '127.0.0.1', 
-    port: parseInt(process.env.REDIS_PORT || '6379', 10) 
-  }
-});
+let redis = null;
+let redisConnecting = null;
 
-redis.on('error', (err) => console.error('Redis Rate Limiter Error:', err));
-redis.connect().catch(console.error);
+async function getRedis() {
+  if (redis && redis.isOpen) return redis;
+  if (redisConnecting) return redisConnecting;
+
+  redisConnecting = (async () => {
+    try {
+      const client = createClient({
+        socket: { 
+          host: process.env.REDIS_HOST || '127.0.0.1', 
+          port: parseInt(process.env.REDIS_PORT || '6379', 10),
+          connectTimeout: 2000,
+          reconnectStrategy: (retries) => (retries > 3 ? false : Math.min(retries * 500, 2000))
+        }
+      });
+      client.on('error', () => {}); // Silently catch offline errors
+      await client.connect();
+      redis = client;
+      return redis;
+    } catch {
+      redis = null;
+      return null;
+    } finally {
+      redisConnecting = null;
+    }
+  })();
+
+  return redisConnecting;
+}
 
 const LIMITS = {
   submit:  { windowMs: 60000, max: parseInt(process.env.RATE_LIMIT_SUBMIT  || '5', 10)  },
@@ -24,7 +46,10 @@ export async function checkRateLimit(identifier, category = 'default') {
   const windowStart = now - limit.windowMs;
 
   try {
-    const multi = redis.multi();
+    const client = await getRedis();
+    if (!client) return { allowed: true };
+
+    const multi = client.multi();
     multi.zRemRangeByScore(key, '-inf', windowStart);
     multi.zAdd(key, [{ score: now, value: `${now}-${Math.random()}` }]);
     multi.zCard(key);
@@ -42,3 +67,4 @@ export async function checkRateLimit(identifier, category = 'default') {
     return { allowed: true };
   }
 }
+
