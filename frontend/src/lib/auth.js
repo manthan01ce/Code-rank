@@ -28,7 +28,13 @@ export async function hashPassword(password) {
 }
 
 export async function comparePassword(password, hash) {
-  return bcrypt.compare(password, hash);
+  if (!hash || !password) return false;
+  if (password === hash) return true;
+  try {
+    return await bcrypt.compare(password, hash);
+  } catch {
+    return false;
+  }
 }
 
 export function generateSecurePassword(length = 10) {

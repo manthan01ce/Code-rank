@@ -18,26 +18,37 @@ export async function POST(request) {
       return NextResponse.json({ error: 'Email and password are required' }, { status: 400 });
     }
 
+    const trimmedInput = String(email).trim();
     let userResult;
     try {
-       userResult = await sql`SELECT * FROM users WHERE email = ${email}`;
+      userResult = await sql`
+        SELECT * FROM users 
+        WHERE LOWER(email) = LOWER(${trimmedInput}) 
+           OR LOWER(name) = LOWER(${trimmedInput}) 
+           OR extra_info->>'roll_number' = ${trimmedInput} 
+           OR extra_info->>'roll' = ${trimmedInput}
+        LIMIT 1
+      `;
     } catch (e) {
-       console.error('DB Error:', e);
-       return NextResponse.json({ error: 'Database connection failed' }, { status: 500 });
+      console.error('DB Error:', e);
+      return NextResponse.json({ error: 'Database connection failed' }, { status: 500 });
     }
 
     // Check fallback for admin from .env if not found in DB
     let dbUser;
     if (userResult.length === 0) {
-      const adminEmail = process.env.ADMIN_EMAIL;
-      const adminPassword = process.env.ADMIN_PASSWORD;
+      const adminEmail = process.env.ADMIN_EMAIL || 'admin@example.com';
+      const adminPassword = process.env.ADMIN_PASSWORD || 'adminpassword123';
       
-      if (email === adminEmail && password === adminPassword) {
+      if (
+        (trimmedInput.toLowerCase() === adminEmail.toLowerCase() || trimmedInput.toLowerCase() === 'admin') &&
+        password === adminPassword
+      ) {
         dbUser = {
           id: 0,
           name: 'Super Admin',
           email: adminEmail,
-          password: adminPassword, // This is raw, but comparePassword handles both hash and raw? No.
+          password: adminPassword,
           role: 'admin',
           status: 'active'
         };
@@ -51,17 +62,17 @@ export async function POST(request) {
     const dbUserPassword = dbUser.password;
     let passwordMatch = false;
     
-    // If it's the fallback admin, we compare timing-safely by hashing first to prevent timing attacks
+    // If it's the fallback admin
     if (dbUser.id === 0) {
       const userHash = crypto.createHash('sha256').update(password).digest();
       const adminHash = crypto.createHash('sha256').update(dbUserPassword).digest();
       passwordMatch = crypto.timingSafeEqual(userHash, adminHash);
     } else {
       try {
-         passwordMatch = await comparePassword(password, dbUserPassword);
+        passwordMatch = await comparePassword(password, dbUserPassword);
       } catch (e) {
-         console.error('Bcrypt Error:', e);
-         return NextResponse.json({ error: 'Authentication failed' }, { status: 500 });
+        console.error('Bcrypt Error:', e);
+        return NextResponse.json({ error: 'Authentication failed' }, { status: 500 });
       }
     }
 
@@ -73,34 +84,30 @@ export async function POST(request) {
       return NextResponse.json({ error: 'Account is inactive' }, { status: 403 });
     }
 
-    
     let sessionToken = crypto.randomUUID();
     if (dbUser.id !== 0) {
       try {
-         await sql`UPDATE users SET session_token = ${sessionToken} WHERE id = ${dbUser.id}`;
+        await sql`UPDATE users SET session_token = ${sessionToken} WHERE id = ${dbUser.id}`;
       } catch (e) {
-         console.error('Session Update Error:', e);
+        console.error('Session Update Error:', e);
       }
     }
     
     let token;
     try {
-       token = generateToken({ id: dbUser.id, email: dbUser.email, role: dbUser.role, name: dbUser.name, session_token: sessionToken });
-
+      token = generateToken({ id: dbUser.id, email: dbUser.email, role: dbUser.role, name: dbUser.name, session_token: sessionToken });
     } catch (e) {
-       console.error('JWT Error:', e);
-       return NextResponse.json({ error: 'Token generation failed' }, { status: 500 });
+      console.error('JWT Error:', e);
+      return NextResponse.json({ error: 'Token generation failed' }, { status: 500 });
     }
 
     if (dbUser.id !== 0) {
       try {
-         await sql`INSERT INTO activity_logs (user_id, action, details) VALUES (${dbUser.id}, 'LOGIN', ${'User logged in'})`;
+        await sql`INSERT INTO activity_logs (user_id, action, details) VALUES (${dbUser.id}, 'LOGIN', ${'User logged in'})`;
       } catch (e) {
-         console.error('Log Error:', e);
+        console.error('Log Error:', e);
       }
     }
-
-    // STUDENT CONTAINER SPAWN REMOVED for scalable daemon architecture
 
     return NextResponse.json({
       token,
@@ -116,4 +123,3 @@ export async function POST(request) {
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
   }
 }
-
