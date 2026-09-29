@@ -259,132 +259,140 @@ export default function ProfilePage() {
         <span>👤</span> PROFILE
       </div>
 
-      {/* ── 1. Identity Header ────────────────────── */}
-      <div className={styles.identityCard}>
-        {/* Avatar */}
-        <div className={styles.identityMain}>
-          <div className={styles.avatarWrap}>
-            {user.avatar_url ? (
-              <img src={user.avatar_url} alt={user.name} className={styles.avatarImage} />
-            ) : (
-              <span>{initials}</span>
-            )}
+      <div className={styles.profileLayout}>
+        {/* ── 1. Identity Header ────────────────────── */}
+        <div className={styles.identityCard}>
+          {/* Avatar */}
+          <div className={styles.identityMain}>
+            <div className={styles.avatarWrap}>
+              {user.avatar_url ? (
+                <img src={user.avatar_url} alt={user.name} className={styles.avatarImage} />
+              ) : (
+                <span>{initials}</span>
+              )}
+            </div>
+
+            <div className={styles.userInfo}>
+              <h1 className={styles.userName}>{user.name || '—'}</h1>
+              <div className={styles.userHandle}>@{userHandle}</div>
+
+              {/* Role + Status badges */}
+              <div className={styles.badgeRow}>
+                <span className={`${styles.badge} ${styles.badgeRole}`}>
+                  {user.role === 'admin' ? '🛡 Admin' : user.role === 'student' ? '🧑‍🎓 Student' : '🎓 Faculty'}
+                </span>
+                <span className={`${styles.badge} ${isActive ? styles.badgeActive : styles.badgeInactive}`}>
+                  {isActive ? '✔ Active' : '✖ Inactive'}
+                </span>
+              </div>
+            </div>
           </div>
 
-          <div className={styles.userInfo}>
-            <h1 className={styles.userName}>{user.name || '—'}</h1>
-            <div className={styles.userHandle}>@{userHandle}</div>
-
-            {/* Role + Status badges */}
-            <div className={styles.badgeRow}>
-              <span className={`${styles.badge} ${styles.badgeRole}`}>
-                {user.role === 'admin' ? '🛡 Admin' : user.role === 'student' ? '🧑‍🎓 Student' : '🎓 Faculty'}
-              </span>
-              <span className={`${styles.badge} ${isActive ? styles.badgeActive : styles.badgeInactive}`}>
-                {isActive ? '✔ Active' : '✖ Inactive'}
-              </span>
+          {/* Meta + Edit Button */}
+          <div className={styles.identityMeta}>
+            <div className={styles.metaGrid}>
+              {user.role === 'student' ? (
+                <>
+                  <div className={styles.metaItem}>
+                    <span className={styles.metaLabel}>ROLL NO</span>
+                    <span className={styles.metaValue}>{rollNumber}</span>
+                  </div>
+                  <div className={styles.metaItem}>
+                    <span className={styles.metaLabel}>SEM / DIV</span>
+                    <span className={styles.metaValue}>{semester} / {division}</span>
+                  </div>
+                </>
+              ) : (
+                <>
+                  <div className={styles.metaItem}>
+                    <span className={styles.metaLabel}>EMP ID</span>
+                    <span className={styles.metaValue}>{empId}</span>
+                  </div>
+                  <div className={styles.metaItem}>
+                    <span className={styles.metaLabel}>DEPARTMENT</span>
+                    <span className={styles.metaValue}>{department}</span>
+                  </div>
+                </>
+              )}
+              <div className={styles.metaItem}>
+                <span className={styles.metaLabel}>EMAIL</span>
+                <span className={styles.metaValue}>
+                  {user.email}
+                  <span className={styles.verifiedIcon} title="College Email">✔</span>
+                </span>
+              </div>
             </div>
+
+            {isOwnProfile && (
+              <button className={styles.btnEdit} onClick={() => setShowEdit(true)}>
+                ✏ Edit Profile
+              </button>
+            )}
           </div>
         </div>
 
-        {/* Meta + Edit Button */}
-        <div className={styles.identityMeta}>
-          {isOwnProfile && (
-            <button className={styles.btnEdit} onClick={() => setShowEdit(true)}>
-              ✏ Edit Profile
-            </button>
-          )}
-
-          <div className={styles.metaGrid}>
-            {user.role === 'student' ? (
-              <>
-                <div className={styles.metaItem}>
-                  <span className={styles.metaLabel}>ROLL NO</span>
-                  <span className={styles.metaValue}>{rollNumber}</span>
-                </div>
-                <div className={styles.metaItem}>
-                  <span className={styles.metaLabel}>SEM / DIV</span>
-                  <span className={styles.metaValue}>{semester} / {division}</span>
-                </div>
-              </>
-            ) : (
-              <>
-                <div className={styles.metaItem}>
-                  <span className={styles.metaLabel}>EMP ID</span>
-                  <span className={styles.metaValue}>{empId}</span>
-                </div>
-                <div className={styles.metaItem}>
-                  <span className={styles.metaLabel}>DEPARTMENT</span>
-                  <span className={styles.metaValue}>{department}</span>
-                </div>
-              </>
-            )}
-            <div className={styles.metaItem}>
-              <span className={styles.metaLabel}>EMAIL</span>
-              <span className={styles.metaValue}>
-                {user.email}
-                <span className={styles.verifiedIcon} title="College Email">✔</span>
-              </span>
+        {/* ── 2. Practicals Tracker (own profile only) ── */}
+        {isOwnProfile && (
+          <div className={styles.trackerSection}>
+            <div className={styles.trackerHeader}>
+              <h2>Problems / Practicals Tracker</h2>
+              <div className={styles.summaryChips}>
+                <span className={`${styles.summaryChip} ${styles.chipCompleted}`}>
+                  {completedCount} Completed
+                </span>
+                <span className={`${styles.summaryChip} ${styles.chipPastDue}`}>
+                  {pastDueCount} Past due
+                </span>
+                <span className={`${styles.summaryChip} ${styles.chipUpcoming}`}>
+                  {upcomingCount} Upcoming
+                </span>
+              </div>
             </div>
-          </div>
-        </div>
-      </div>
 
-      {/* ── 2. Practicals Tracker (own profile only, faculty only) ── */}
-      {isOwnProfile && user.role === 'faculty' && (
-        <div className={styles.trackerSection}>
-          <div className={styles.trackerHeader}>
-            <h2>Practicals Tracker</h2>
-            <div className={styles.summaryChips}>
-              <span className={`${styles.summaryChip} ${styles.chipCompleted}`}>
-                ✔ {completedCount} Completed
-              </span>
-              <span className={`${styles.summaryChip} ${styles.chipPastDue}`}>
-                ⚠ {pastDueCount} Past Due
-              </span>
-              <span className={`${styles.summaryChip} ${styles.chipUpcoming}`}>
-                🕐 {upcomingCount} Upcoming
-              </span>
-            </div>
-          </div>
-
-          <div className={styles.trackerList}>
-            {sortedTasks.length === 0 ? (
-              <div className={styles.emptyState}>No practicals assigned yet.</div>
-            ) : (
-              sortedTasks.map((task) => (
-                <Link
-                  key={task.id}
-                  href={`/faculty?tab=practicals&id=${task.id}`}
-                  className={styles.trackerRow}
-                >
-                  <div className={styles.taskName}>{task.name}</div>
-                  <div className={styles.taskCourse}>
-                    {task.course_code || task.course}
-                  </div>
-                  <div className={styles.taskDate}>
-                    {task.dueDate
-                      ? new Date(task.dueDate).toLocaleDateString('en-IN', {
-                          day: 'numeric', month: 'short', year: 'numeric',
-                        })
-                      : '—'}
-                  </div>
-                  <div
-                    className={`${styles.taskStatus} ${
-                      task.status === 'done'        ? styles.statusDone :
-                      task.status === 'past_due'    ? styles.statusPastDue :
-                      task.status === 'upcoming'    ? styles.statusUpcoming :
-                      styles.statusNotStarted
-                    }`}
+            <div className={styles.trackerList}>
+              <div className={styles.trackerListHeader}>
+                <div className={styles.headerName}>Problem/Practical Name</div>
+                <div className={styles.headerCourse}>Course</div>
+                <div className={styles.headerDate}>Due Date</div>
+                <div className={styles.headerStatus}>Status</div>
+              </div>
+              {sortedTasks.length === 0 ? (
+                <div className={styles.emptyState}>No practicals assigned yet.</div>
+              ) : (
+                sortedTasks.map((task) => (
+                  <Link
+                    key={task.id}
+                    href={user.role === 'student' ? `/student/code/practical_${task.id}?subject=${task.course_code || task.course}` : `/faculty?tab=practicals&id=${task.id}`}
+                    className={styles.trackerRow}
                   >
-                    {statusLabel(task.status)}
-                  </div>
-                </Link>
-              ))
-            )}
+                    <div className={styles.taskName}>{task.name}</div>
+                    <div className={styles.taskCourse}>
+                      {task.course_code || task.course}
+                    </div>
+                    <div className={styles.taskDate}>
+                      {task.dueDate
+                        ? new Date(task.dueDate).toLocaleDateString('en-IN', {
+                            day: 'numeric', month: 'short', year: 'numeric',
+                          })
+                        : '—'}
+                    </div>
+                    <div
+                      className={`${styles.taskStatus} ${
+                        task.status === 'done'        ? styles.statusDone :
+                        task.status === 'past_due'    ? styles.statusPastDue :
+                        task.status === 'upcoming'    ? styles.statusUpcoming :
+                        styles.statusNotStarted
+                      }`}
+                    >
+                      {statusLabel(task.status)}
+                    </div>
+                  </Link>
+                ))
+              )}
+            </div>
           </div>
-        </div>
-      )}
+        )}
+      </div>
 
       {/* Edit Modal */}
       {showEdit && (
