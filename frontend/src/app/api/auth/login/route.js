@@ -18,17 +18,19 @@ export async function POST(request) {
       return NextResponse.json({ error: 'Email and password are required' }, { status: 400 });
     }
 
-    let userResult;
+    let userResult = [];
+    let dbFailed = false;
     try {
        userResult = await sql`SELECT * FROM users WHERE email = ${email}`;
     } catch (e) {
        console.error('DB Error:', e);
-       return NextResponse.json({ error: 'Database connection failed' }, { status: 500 });
+       dbFailed = true;
+       // Don't return 500 yet, check if it's the fallback admin
     }
 
-    // Check fallback for admin from .env if not found in DB
+    // Check fallback for admin from .env if not found in DB or DB failed
     let dbUser;
-    if (userResult.length === 0) {
+    if (userResult.length === 0 || dbFailed) {
       const adminEmail = process.env.ADMIN_EMAIL;
       const adminPassword = process.env.ADMIN_PASSWORD;
       
@@ -37,11 +39,14 @@ export async function POST(request) {
           id: 0,
           name: 'Super Admin',
           email: adminEmail,
-          password: adminPassword, // This is raw, but comparePassword handles both hash and raw? No.
+          password: adminPassword,
           role: 'admin',
           status: 'active'
         };
       } else {
+        if (dbFailed) {
+          return NextResponse.json({ error: 'Database connection failed' }, { status: 500 });
+        }
         return NextResponse.json({ error: 'Invalid credentials' }, { status: 401 });
       }
     } else {
