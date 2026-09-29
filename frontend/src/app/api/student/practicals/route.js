@@ -21,7 +21,6 @@ export async function GET(request) {
     }
     if (user.id !== 0 && students[0].session_token && students[0].session_token !== user.session_token) {
         return NextResponse.json({ error: 'Logged in from another device' }, { status: 401 });
-    }, { status: 404 });
     }
 
     const { searchParams } = new URL(request.url);

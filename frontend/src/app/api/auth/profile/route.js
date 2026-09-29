@@ -29,7 +29,6 @@ export async function GET(request) {
 
     if (user.id !== 0 && rows[0].session_token && rows[0].session_token !== user.session_token) {
         return NextResponse.json({ error: 'Logged in from another device' }, { status: 401 });
-    }, { status: 404 });
     }
 
     return NextResponse.json({ user: rows[0] });
