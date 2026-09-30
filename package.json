@@ -1,21 +1,23 @@
 {
-  "name": "coderank",
-  "version": "1.0.0",
+  "name": "coderank-monorepo",
+  "version": "1.1.0",
   "private": true,
   "workspaces": [
-    "frontend"
+    "apps/*",
+    "packages/*"
   ],
   "scripts": {
-    "install": "npm --workspace=frontend install",
-    "build": "npm --workspace=frontend run build",
-    "start": "npm --workspace=frontend run start",
-    "dev": "npm --workspace=frontend run dev",
-    "k6:smoke": "powershell -ExecutionPolicy Bypass -File ./load-tests/run-k6.ps1 -Test smoke",
-    "k6:api": "powershell -ExecutionPolicy Bypass -File ./load-tests/run-k6.ps1 -Test api",
-    "k6:execution": "powershell -ExecutionPolicy Bypass -File ./load-tests/run-k6.ps1 -Test execution",
-    "k6:all": "powershell -ExecutionPolicy Bypass -File ./load-tests/run-k6.ps1 -Test all"
+    "dev": "turbo run dev",
+    "build": "turbo run build",
+    "lint": "turbo run lint",
+    "worker": "npm run dev --workspace=apps/worker",
+    "web": "npm run dev --workspace=apps/web"
   },
-  "dependencies": {
-    "next": "^16.3.6"
-  }
+  "devDependencies": {
+    "turbo": "^2.5.4"
+  },
+  "engines": {
+    "node": ">=18.0.0"
+  },
+  "packageManager": "npm@11.11.0"
 }
