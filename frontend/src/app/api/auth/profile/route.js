@@ -47,19 +47,24 @@ export async function PUT(request) {
 
     const { name, email, currentPassword, newPassword } = await request.json();
 
+    // Students are NOT allowed to change their email address
+    // Always fetch the existing email from DB and use that for students
+    const dbUserRows = await sql`SELECT email, password, role FROM users WHERE id = ${user.id}`;
+    if (dbUserRows.length === 0) {
+      return NextResponse.json({ error: 'User not found.' }, { status: 404 });
+    }
+
+    const dbUser = dbUserRows[0];
+    // For students: ignore submitted email, keep existing
+    const effectiveEmail = dbUser.role === 'student' ? dbUser.email : (email || dbUser.email);
+
     if (newPassword && newPassword.trim().length > 0) {
       if (!currentPassword) {
         return NextResponse.json({ error: 'Current password is required to change password.' }, { status: 400 });
       }
 
-      // Fetch user's existing hashed password from DB
-      const dbUserRows = await sql`SELECT password FROM users WHERE id = ${user.id}`;
-      if (dbUserRows.length === 0) {
-        return NextResponse.json({ error: 'User not found.' }, { status: 404 });
-      }
-
       const { comparePassword, hashPassword } = await import('@/lib/auth');
-      const passwordMatch = await comparePassword(currentPassword, dbUserRows[0].password);
+      const passwordMatch = await comparePassword(currentPassword, dbUser.password);
       if (!passwordMatch) {
         return NextResponse.json({ error: 'Incorrect current password.' }, { status: 400 });
       }
@@ -67,13 +72,13 @@ export async function PUT(request) {
       const hashed = await hashPassword(newPassword);
       await sql`
         UPDATE users 
-        SET name = ${name}, email = ${email}, password = ${hashed}
+        SET name = ${name}, email = ${effectiveEmail}, password = ${hashed}
         WHERE id = ${user.id}
       `;
     } else {
       await sql`
         UPDATE users 
-        SET name = ${name}, email = ${email}
+        SET name = ${name}, email = ${effectiveEmail}
         WHERE id = ${user.id}
       `;
     }

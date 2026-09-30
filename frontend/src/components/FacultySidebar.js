@@ -159,7 +159,8 @@ export default function FacultySidebar() {
               <div style={{ padding: '8px 0' }}>
                 <button
                   onClick={() => {
-                    alert(`Profile Information\n\nName: ${user?.name}\nEmail: ${user?.email}\nRole: ${user?.role}`);
+                    const handle = user?.email ? user.email.split('@')[0] : 'faculty';
+                    router.push(`/profile/${handle}`);
                     setShowProfileMenu(false);
                   }}
                   style={{
@@ -232,9 +233,9 @@ export default function FacultySidebar() {
       <div className="sidebar" style={{ paddingTop: '20px', position: 'fixed', left: 0, top: 0, bottom: 0, width: '280px', zIndex: 99 }}>
         <div className="logo-container" style={{ padding: '0 20px', textAlign: 'center', marginBottom: '30px' }}>
           <img 
-            src="/coderank-logo.svg" 
+            src="/coderank-logo.jpg" 
             alt="CodeRank Logo" 
-            onError={(e) => { e.target.src = '/coderank-logo.svg'; }}
+            onError={(e) => { e.target.src = '/coderank-logo.jpg'; }}
             style={{ width: '60px', height: '60px', objectFit: 'contain', marginBottom: '10px' }}
           />
           <h2 className="brand-text" style={{ fontSize: '22px', marginBottom: '5px' }}>CodeRank</h2>

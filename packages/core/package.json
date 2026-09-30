@@ -1,0 +1,24 @@
+{
+  "name": "@coderank/core",
+  "version": "1.1.0",
+  "private": true,
+  "type": "module",
+  "main": "./src/index.js",
+  "exports": {
+    ".": "./src/index.js",
+    "./db": "./src/db/client.js",
+    "./services/UserService": "./src/services/UserService.js",
+    "./services/CourseService": "./src/services/CourseService.js",
+    "./services/SubmissionService": "./src/services/SubmissionService.js",
+    "./utils/logger": "./src/utils/logger.js",
+    "./utils/pdf-gen": "./src/utils/pdf-gen.js",
+    "./utils/auth": "./src/utils/auth.js"
+  },
+  "dependencies": {
+    "@neondatabase/serverless": "^1.0.2",
+    "bcryptjs": "^3.0.3",
+    "bullmq": "^6.3.4",
+    "ioredis": "^6.0.0",
+    "jsonwebtoken": "^9.0.3"
+  }
+}

@@ -730,7 +730,7 @@ export default function WorkspaceLayout({ problem }) {
             style={{ display: 'flex', alignItems: 'center', gap: '12px', cursor: 'pointer' }}
             title="Go to Student Dashboard"
           >
-            <img src="/coderank-logo.svg" alt="CodeRank Logo" onError={(e) => { e.target.src = '/coderank-logo.svg'; }} style={{ width: '28px', height: '28px', objectFit: 'contain' }} />
+            <img src="/coderank-logo.jpg" alt="CodeRank Logo" onError={(e) => { e.target.src = '/coderank-logo.jpg'; }} style={{ width: '28px', height: '28px', objectFit: 'contain' }} />
             <span style={{ color: '#ffffff', fontWeight: 700, fontSize: '16px', letterSpacing: '1px', textTransform: 'uppercase' }}>CodeRank</span>
           </div>
           
@@ -1054,7 +1054,11 @@ export default function WorkspaceLayout({ problem }) {
                 <strong style={{ color: '#ffffff' }}>{profileForm.name || 'Student'}</strong>
               </div>
               <button suppressHydrationWarning
-                onClick={() => { setShowProfileModal(true); setIsUserDropdownOpen(false); }}
+                onClick={() => {
+                  const handle = profileForm.email ? profileForm.email.split('@')[0] : '';
+                  router.push(`/profile/${handle}`);
+                  setIsUserDropdownOpen(false);
+                }}
                 style={{ background: 'transparent', border: 'none', color: '#cccccc', textAlign: 'left', padding: '10px 16px', fontSize: '13px', cursor: 'pointer' }}
                 onMouseEnter={e => e.currentTarget.style.backgroundColor = '#2a2a2a'}
                 onMouseLeave={e => e.currentTarget.style.backgroundColor = 'transparent'}
@@ -1150,85 +1154,6 @@ export default function WorkspaceLayout({ problem }) {
 
         </PanelGroup>
       </div>
-
-      {/* ── PROFILE EDIT MODAL ── */}
-      {showProfileModal && (
-        <div style={{ position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, backgroundColor: 'rgba(0,0,0,0.85)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 10000, backdropFilter: 'blur(4px)' }}>
-          <div style={{ backgroundColor: '#161616', border: '1px solid #333', borderRadius: '12px', padding: '30px', width: '450px', display: 'flex', flexDirection: 'column', gap: '20px' }}>
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-              <h3 style={{ fontSize: '18px', fontWeight: 700, color: '#ffffff', margin: 0 }}>👤 Student Profile settings</h3>
-              <button suppressHydrationWarning onClick={() => { setShowProfileModal(false); setProfileMsg({ type: '', text: '' }); }} style={{ border: 'none', background: 'transparent', color: '#888', cursor: 'pointer', fontSize: '18px' }}>×</button>
-            </div>
-            
-            {profileMsg.text && (
-              <div style={{ padding: '10px 14px', borderRadius: '6px', fontSize: '13px', backgroundColor: profileMsg.type === 'success' ? 'rgba(16,185,129,0.1)' : 'rgba(239,68,68,0.1)', color: profileMsg.type === 'success' ? '#10b981' : '#ef4444', border: profileMsg.type === 'success' ? '1px solid rgba(16,185,129,0.2)' : '1px solid rgba(239,68,68,0.2)' }}>
-                {profileMsg.text}
-              </div>
-            )}
-
-            <form onSubmit={handleUpdateProfile} style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
-              <div>
-                <label style={{ display: 'block', fontSize: '11px', color: '#888', fontWeight: 600, textTransform: 'uppercase', marginBottom: '6px' }}>Full Name</label>
-                <input
-                  type="text"
-                  required
-                  value={profileForm.name}
-                  onChange={e => setProfileForm({ ...profileForm, name: e.target.value })}
-                  style={{ width: '100%', padding: '10px 14px', borderRadius: '6px', border: '1px solid #333', backgroundColor: '#0d0d0d', color: '#fff', fontSize: '14px', outline: 'none' }}
-                />
-              </div>
-              <div>
-                <label style={{ display: 'block', fontSize: '11px', color: '#888', fontWeight: 600, textTransform: 'uppercase', marginBottom: '6px' }}>Email Address</label>
-                <input
-                  type="email"
-                  required
-                  value={profileForm.email}
-                  onChange={e => setProfileForm({ ...profileForm, email: e.target.value })}
-                  style={{ width: '100%', padding: '10px 14px', borderRadius: '6px', border: '1px solid #333', backgroundColor: '#0d0d0d', color: '#fff', fontSize: '14px', outline: 'none' }}
-                />
-              </div>
-              <div>
-                <label style={{ display: 'block', fontSize: '11px', color: '#888', fontWeight: 600, textTransform: 'uppercase', marginBottom: '6px' }}>Current Password (Required for changes)</label>
-                <input
-                  type="password"
-                  placeholder="Enter current password..."
-                  value={profileForm.currentPassword}
-                  onChange={e => setProfileForm({ ...profileForm, currentPassword: e.target.value })}
-                  style={{ width: '100%', padding: '10px 14px', borderRadius: '6px', border: '1px solid #333', backgroundColor: '#0d0d0d', color: '#fff', fontSize: '14px', outline: 'none' }}
-                />
-              </div>
-              <div>
-                <label style={{ display: 'block', fontSize: '11px', color: '#888', fontWeight: 600, textTransform: 'uppercase', marginBottom: '6px' }}>New Password</label>
-                <input
-                  type="password"
-                  placeholder="Enter new password..."
-                  value={profileForm.newPassword}
-                  onChange={e => setProfileForm({ ...profileForm, newPassword: e.target.value })}
-                  style={{ width: '100%', padding: '10px 14px', borderRadius: '6px', border: '1px solid #333', backgroundColor: '#0d0d0d', color: '#fff', fontSize: '14px', outline: 'none' }}
-                />
-              </div>
-              <div>
-                <label style={{ display: 'block', fontSize: '11px', color: '#888', fontWeight: 600, textTransform: 'uppercase', marginBottom: '6px' }}>Confirm New Password</label>
-                <input
-                  type="password"
-                  placeholder="Confirm new password..."
-                  value={profileForm.confirmPassword}
-                  onChange={e => setProfileForm({ ...profileForm, confirmPassword: e.target.value })}
-                  style={{ width: '100%', padding: '10px 14px', borderRadius: '6px', border: '1px solid #333', backgroundColor: '#0d0d0d', color: '#fff', fontSize: '14px', outline: 'none' }}
-                />
-              </div>
-              <div style={{ display: 'flex', gap: '12px', marginTop: '10px' }}>
-                <button suppressHydrationWarning type="submit" style={{ flex: 1, padding: '12px', borderRadius: '6px', border: 'none', backgroundColor: '#4f46e5', color: '#fff', fontSize: '14px', fontWeight: 600, cursor: 'pointer' }}>
-                  Save Changes
-                </button>
-                <button suppressHydrationWarning type="button" onClick={() => { setShowProfileModal(false); setProfileMsg({ type: '', text: '' }); }} style={{ flex: 1, padding: '12px', borderRadius: '6px', border: '1px solid #333', backgroundColor: 'transparent', color: '#ccc', fontSize: '14px', cursor: 'pointer' }}>
-                  Cancel
-                </button>
-              </div>
-            </form>
-          </div>
-        </div>
-      )}
 
       {/* ── SETTINGS MODAL ── */}
       {showSettingsModal && (

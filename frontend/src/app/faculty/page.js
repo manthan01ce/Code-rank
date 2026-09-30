@@ -2,11 +2,13 @@
 import Editor from '@monaco-editor/react';
 
 import { useState, useEffect } from 'react';
+import { useRouter } from 'next/navigation';
 import LoadingOverlay from '@/components/LoadingOverlay';
 import { useSocket } from '@/hooks/useSocket';
 import { usePolling } from '@/hooks/usePolling';
 
 export default function FacultyDashboard() {
+  const router = useRouter();
   const socket = useSocket();
   const [courses, setCourses] = useState([]);
   const [batches, setBatches] = useState([]);
@@ -108,6 +110,24 @@ export default function FacultyDashboard() {
     setToast({ type, msg });
     setTimeout(() => setToast(null), 4000);
   };
+
+  // Auth guard: redirect unauthenticated / non-faculty users to landing page
+  useEffect(() => {
+    const storedToken = localStorage.getItem('token');
+    const storedUser  = localStorage.getItem('user');
+    if (!storedToken || !storedUser) {
+      router.replace('/');
+      return;
+    }
+    try {
+      const parsed = JSON.parse(storedUser);
+      if (parsed.role !== 'faculty') {
+        router.replace('/');
+      }
+    } catch {
+      router.replace('/');
+    }
+  }, [router]);
 
   useEffect(() => {
     fetchContextData();

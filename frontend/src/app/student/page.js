@@ -134,7 +134,7 @@ export default function StudentDashboard() {
         position: 'sticky', top: 0, zIndex: 100
       }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: '15px' }}>
-          <img src="/coderank-logo.svg" alt="Logo" style={{ height: '40px' }} onError={(e) => { e.target.src = '/coderank-logo.svg'; }} />
+          <img src="/coderank-logo.jpg" alt="Logo" style={{ height: '40px' }} onError={(e) => { e.target.src = '/coderank-logo.jpg'; }} />
           <h2 style={{ margin: 0, fontSize: '20px', fontWeight: 700, color: '#1e293b' }}>CodeRank</h2>
         </div>
         <div style={{ display: 'flex', alignItems: 'center', gap: '20px' }}>
@@ -142,6 +142,17 @@ export default function StudentDashboard() {
             <div style={{ fontSize: '14px', fontWeight: 600, color: '#1e293b' }}>{user.name}</div>
             <div style={{ fontSize: '12px', color: '#64748b' }}>Semester {semester} &bull; Batch {batch}</div>
           </div>
+          <button
+            onClick={() => {
+              const handle = user?.email ? user.email.split('@')[0] : '';
+              router.push(`/profile/${handle}`);
+            }}
+            style={{ padding: '8px 16px', background: '#4f46e5', border: 'none', borderRadius: '8px', cursor: 'pointer', fontWeight: 600, color: 'white', transition: 'all 0.2s', boxShadow: '0 2px 4px rgba(79, 70, 229, 0.2)' }}
+            onMouseEnter={e => e.currentTarget.style.background = '#4338ca'}
+            onMouseLeave={e => e.currentTarget.style.background = '#4f46e5'}
+          >
+            👤 Profile
+          </button>
           <button 
             onClick={handleLogout}
             style={{ padding: '8px 16px', background: '#f1f5f9', border: '1px solid #cbd5e1', borderRadius: '8px', cursor: 'pointer', fontWeight: 600, color: '#475569', transition: 'all 0.2s' }}

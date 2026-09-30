@@ -1,0 +1,5 @@
+{
+  "buildCommand": "turbo run build --filter=@coderank/web",
+  "outputDirectory": "apps/web/.next",
+  "framework": "nextjs"
+}
