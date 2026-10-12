@@ -66,6 +66,7 @@ export class CourseService {
     const cacheKey = `courses:${JSON.stringify({ search, semester })}`;
     
     // Try to get from cache
+    let staleCache = null;
     try {
       const client = await getRedis();
       if (client) {
@@ -73,46 +74,58 @@ export class CourseService {
         if (cached) {
           return JSON.parse(cached);
         }
+        // Store reference for potential stale cache serving
+        staleCache = cached ? JSON.parse(cached) : null;
       }
     } catch (err) {
       // Fail open - if cache fails, continue to DB
     }
 
     // Use coalescer to prevent thundering herd on cache miss
-    return coalesce(cacheKey, async () => {
-      let result;
-      if (search) {
-        const searchPattern = `%${search}%`;
-        result = await sql`
-          SELECT * FROM courses 
-          WHERE name ILIKE ${searchPattern} OR course_code ILIKE ${searchPattern}
-          ORDER BY created_at DESC
-        `;
-      } else if (semester) {
-        result = await sql`
-          SELECT * FROM courses 
-          WHERE semester = ${parseInt(semester)}
-          ORDER BY created_at DESC
-        `;
-      } else {
-        result = await sql`
-          SELECT * FROM courses 
-          ORDER BY created_at DESC
-        `;
-      }
-
-      // Store in cache with 60s TTL
-      try {
-        const client = await getRedis();
-        if (client) {
-          await client.setEx(cacheKey, 60, JSON.stringify(result));
+    try {
+      return await coalesce(cacheKey, async () => {
+        let result;
+        if (search) {
+          const searchPattern = `%${search}%`;
+          result = await sql`
+            SELECT * FROM courses 
+            WHERE name ILIKE ${searchPattern} OR course_code ILIKE ${searchPattern}
+            ORDER BY created_at DESC
+          `;
+        } else if (semester) {
+          result = await sql`
+            SELECT * FROM courses 
+            WHERE semester = ${parseInt(semester)}
+            ORDER BY created_at DESC
+          `;
+        } else {
+          result = await sql`
+            SELECT * FROM courses 
+            ORDER BY created_at DESC
+          `;
         }
-      } catch (err) {
-        // Fail open - cache write failure shouldn't break the request
-      }
 
-      return result;
-    });
+        // Store in cache with 60s TTL
+        try {
+          const client = await getRedis();
+          if (client) {
+            await client.setEx(cacheKey, 60, JSON.stringify(result));
+          }
+        } catch (err) {
+          // Fail open - cache write failure shouldn't break the request
+        }
+
+        return result;
+      });
+    } catch (dbError) {
+      // Graceful degradation: serve stale cache if available
+      if (staleCache) {
+        // Return stale cache with special flag to indicate degraded state
+        return { _stale: true, data: staleCache };
+      }
+      // No stale cache available, throw 503
+      throw { status: 503, message: 'Database temporarily unavailable', code: 'DB_ERROR' };
+    }
   }
 
   /**
@@ -204,6 +217,7 @@ export class CourseService {
     const cacheKey = `departments:${JSON.stringify({ search })}`;
     
     // Try to get from cache
+    let staleCache = null;
     try {
       const client = await getRedis();
       if (client) {
@@ -211,40 +225,52 @@ export class CourseService {
         if (cached) {
           return JSON.parse(cached);
         }
+        // Store reference for potential stale cache serving
+        staleCache = cached ? JSON.parse(cached) : null;
       }
     } catch (err) {
       // Fail open - if cache fails, continue to DB
     }
 
     // Use coalescer to prevent thundering herd on cache miss
-    return coalesce(cacheKey, async () => {
-      let result;
-      if (search) {
-        const searchPattern = `%${search}%`;
-        result = await sql`
-          SELECT * FROM departments 
-          WHERE name ILIKE ${searchPattern} OR institute_name ILIKE ${searchPattern}
-          ORDER BY created_at DESC
-        `;
-      } else {
-        result = await sql`
-          SELECT * FROM departments 
-          ORDER BY created_at DESC
-        `;
-      }
-
-      // Store in cache with 60s TTL
-      try {
-        const client = await getRedis();
-        if (client) {
-          await client.setEx(cacheKey, 60, JSON.stringify(result));
+    try {
+      return await coalesce(cacheKey, async () => {
+        let result;
+        if (search) {
+          const searchPattern = `%${search}%`;
+          result = await sql`
+            SELECT * FROM departments 
+            WHERE name ILIKE ${searchPattern} OR institute_name ILIKE ${searchPattern}
+            ORDER BY created_at DESC
+          `;
+        } else {
+          result = await sql`
+            SELECT * FROM departments 
+            ORDER BY created_at DESC
+          `;
         }
-      } catch (err) {
-        // Fail open - cache write failure shouldn't break the request
-      }
 
-      return result;
-    });
+        // Store in cache with 60s TTL
+        try {
+          const client = await getRedis();
+          if (client) {
+            await client.setEx(cacheKey, 60, JSON.stringify(result));
+          }
+        } catch (err) {
+          // Fail open - cache write failure shouldn't break the request
+        }
+
+        return result;
+      });
+    } catch (dbError) {
+      // Graceful degradation: serve stale cache if available
+      if (staleCache) {
+        // Return stale cache with special flag to indicate degraded state
+        return { _stale: true, data: staleCache };
+      }
+      // No stale cache available, throw 503
+      throw { status: 503, message: 'Database temporarily unavailable', code: 'DB_ERROR' };
+    }
   }
 
   /**

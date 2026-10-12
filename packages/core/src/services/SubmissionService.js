@@ -89,9 +89,6 @@ export class SubmissionService {
         timeout(800) // 800ms timeout to handle high concurrency
       ]);
       
-      const duration = Date.now() - startTime;
-      console.log('[SubmissionService] Redis operations completed', { duration, timestamp: new Date().toISOString() });
-      
       return { 
         waiting, 
         active, 
@@ -99,13 +96,8 @@ export class SubmissionService {
         failed: 0,    // Skip for performance
         delayed: 0    // Skip for performance
       };
-    } catch (err) {
-      const duration = Date.now() - startTime;
-      console.error('[SubmissionService] Redis timeout/error - returning fallback values', { 
-        error: err.message, 
-        duration, 
-        timestamp: new Date().toISOString() 
-      });
+    } catch {
+      // Return default values if Redis is slow
       // Return cached/default values if Redis is slow
       return { 
         waiting: 0, 

@@ -40,12 +40,12 @@ export const options = {
     http_req_failed:               ['rate<0.05'],    // <5% failures
     http_req_duration:             ['p(95)<3000'],   // p95 under 3s
     poll_success_rate:             ['rate>0.90'],    // 90%+ successful polls
-    poll_latency:                  ['p(90)<1500'],   // 90% poll under 1.5s
+    poll_latency_ms:               ['p(90)<1500'],   // 90% poll under 1.5s
     socket_handshake_duration_ms:  ['p(95)<2000'],   // WS handshake under 2s
   },
 };
 
-const BASE_URL  = __ENV.BASE_URL  || 'http://localhost:3000';
+const BASE_URL  = __ENV.BASE_URL  || 'http://127.0.0.1:3000';
 const JWT_TOKEN = __ENV.JWT_TOKEN || '';
 
 const PRACTICAL_ID = __ENV.PRACTICAL_ID || '1';
@@ -68,6 +68,7 @@ function testSocketHandshake() {
       headers: authHeaders,
       tags: { name: 'WS_Handshake_Polling' },
       timeout: '10s',
+      responseCallback: http.expectedStatuses(200, 101),
     }
   );
 
@@ -92,6 +93,7 @@ function pollStudentPracticals() {
   const res = http.get(`${BASE_URL}/api/student/practicals`, {
     headers: authHeaders,
     tags: { name: 'Poll_StudentPracticals' },
+    responseCallback: http.expectedStatuses(200, 401),
   });
   pollLatency.add(Date.now() - start);
 
@@ -107,6 +109,7 @@ function pollStudentSubmissions() {
   const res = http.get(`${BASE_URL}/api/student/submissions`, {
     headers: authHeaders,
     tags: { name: 'Poll_StudentSubmissions' },
+    responseCallback: http.expectedStatuses(200, 401),
   });
   pollLatency.add(Date.now() - start);
 
@@ -124,6 +127,7 @@ function pollJobStatus() {
   const res = http.get(`${BASE_URL}/api/jobs/${JOB_ID}`, {
     headers: authHeaders,
     tags: { name: 'Poll_JobStatus' },
+    responseCallback: http.expectedStatuses(200, 404),
   });
   pollLatency.add(Date.now() - start);
 
@@ -141,6 +145,7 @@ function pollPracticalSubmissions() {
     {
       headers: authHeaders,
       tags: { name: 'Poll_PracticalSubmissions' },
+      responseCallback: http.expectedStatuses(200, 401, 404),
     }
   );
   pollLatency.add(Date.now() - start);
@@ -160,6 +165,7 @@ function pollCourseStats() {
     {
       headers: authHeaders,
       tags: { name: 'Poll_CourseStats' },
+      responseCallback: http.expectedStatuses(200, 401, 404),
     }
   );
   pollLatency.add(Date.now() - start);

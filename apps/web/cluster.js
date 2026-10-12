@@ -3,13 +3,14 @@ import os from 'os';
 import { logger } from '@coderank/core/utils/logger';
 
 const numCPUs = os.cpus().length;
-const CLUSTER_ENABLED = process.env.CLUSTER_ENABLED !== 'false';
+const CLUSTER_ENABLED = process.env.CLUSTER_ENABLED === 'true';
 const isDev = process.env.NODE_ENV !== 'production';
 
-// In development or when clustering is disabled, run single process
-if (isDev || !CLUSTER_ENABLED) {
+// In development, only enable clustering if explicitly requested
+if (!CLUSTER_ENABLED) {
   logger.info('Running in single-process mode', { 
-    reason: isDev ? 'development mode' : 'CLUSTER_ENABLED=false' 
+    reason: 'CLUSTER_ENABLED not set to true',
+    mode: isDev ? 'development' : 'production'
   });
   
   // Import and run server directly

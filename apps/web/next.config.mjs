@@ -46,6 +46,15 @@ const nextConfig = {
         ],
       },
       {
+        source: '/student',
+        headers: [
+          {
+            key: 'Cache-Control',
+            value: 'public, s-maxage=60, stale-while-revalidate=120',
+          },
+        ],
+      },
+      {
         source: '/api/health',
         headers: [
           {

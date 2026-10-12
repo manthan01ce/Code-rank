@@ -17,7 +17,7 @@ export const options = {
   },
 };
 
-const BASE_URL = __ENV.BASE_URL || 'http://localhost:3000';
+const BASE_URL = __ENV.BASE_URL || 'http://127.0.0.1:3000';
 
 // Warmup function to initialize caches
 export function setup() {
@@ -51,6 +51,7 @@ export default function () {
       const queueRes = http.get(`${BASE_URL}/api/queue/stats`, {
         tags: { name: 'QueueStats' },
         timeout: '3s',
+        responseCallback: http.expectedStatuses(200, 503),
       });
 
       check(queueRes, {

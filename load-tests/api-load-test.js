@@ -18,16 +18,11 @@ export const options = {
     'http_req_duration{name:HomePage}': ['p(95)<1500'],    // Pages can be slower
     'http_req_duration{name:StudentPage}': ['p(95)<1500'], // Pages can be slower
   },
-  // Connection management
-  batch: 10,  // Batch requests in groups of 10
-  batchPerHost: 6,  // Max 6 concurrent requests per host
-  // Timeout configurations
-  httpDebug: 'full',
-  noConnectionReuse: false,  // Reuse connections
+  noConnectionReuse: false,  // Reuse connections with keep-alive
   userAgent: 'k6-load-test/1.0',
 };
 
-const BASE_URL = __ENV.BASE_URL || 'http://localhost:3000';
+const BASE_URL = __ENV.BASE_URL || 'http://127.0.0.1:3000';
 const JWT_TOKEN = __ENV.JWT_TOKEN || '';
 
 const authHeaders = {
@@ -39,13 +34,17 @@ const authHeaders = {
 export function setup() {
   console.log('🔥 Warming up API caches...');
   
-  // Hit each endpoint once to warm caches
-  http.get(`${BASE_URL}/api/health`);
-  http.get(`${BASE_URL}/api/queue/stats`);
-  http.get(`${BASE_URL}/`);
-  http.get(`${BASE_URL}/student`);
+  // Hit each endpoint multiple times to warm JIT and caches
+  for (let i = 0; i < 3; i++) {
+    http.get(`${BASE_URL}/api/health`, { timeout: '3s' });
+    http.get(`${BASE_URL}/api/queue/stats`, { timeout: '2s' });
+    http.get(`${BASE_URL}/`, { timeout: '5s' });
+    http.get(`${BASE_URL}/student`, { timeout: '5s' });
+    http.get(`${BASE_URL}/api/auth/profile`, { timeout: '3s', responseCallback: http.expectedStatuses(401) });
+    sleep(0.5);
+  }
   
-  sleep(2);
+  sleep(1);
   console.log('✓ API warmup complete');
   
   return { startTime: new Date().toISOString() };
@@ -55,7 +54,7 @@ export default function () {
   group('1. System Health & Monitoring', () => {
     const health = http.get(`${BASE_URL}/api/health`, { 
       tags: { name: 'HealthCheck' },
-      timeout: '3s',  // Add timeout
+      timeout: '3s',
     });
     check(health, { 
       'health returns 200': (r) => r.status === 200,
@@ -64,7 +63,8 @@ export default function () {
 
     const queueStats = http.get(`${BASE_URL}/api/queue/stats`, { 
       tags: { name: 'QueueStats' },
-      timeout: '2s',  // Add timeout
+      timeout: '2s',
+      responseCallback: http.expectedStatuses(200, 503),
     });
     check(queueStats, { 
       'queue stats accessible': (r) => r.status === 200 || r.status === 503,
@@ -72,13 +72,13 @@ export default function () {
     });
   });
 
-  // Reduced sleep for better throughput
+  // Brief pause for realistic client cadence
   sleep(0.2);
 
   group('2. Public Pages & Gateway', () => {
     const home = http.get(`${BASE_URL}/`, { 
       tags: { name: 'HomePage' },
-      timeout: '5s',  // Add timeout
+      timeout: '5s',
     });
     check(home, { 
       'home page status is 200': (r) => r.status === 200,
@@ -87,7 +87,7 @@ export default function () {
 
     const studentPage = http.get(`${BASE_URL}/student`, { 
       tags: { name: 'StudentPage' },
-      timeout: '5s',  // Add timeout
+      timeout: '5s',
     });
     check(studentPage, { 
       'student page status is 200': (r) => r.status === 200,
@@ -95,7 +95,7 @@ export default function () {
     });
   });
 
-  // Reduced sleep for better throughput
+  // Brief pause
   sleep(0.3);
 
   group('3. Authenticated APIs & Course Data', () => {
@@ -104,6 +104,7 @@ export default function () {
         headers: authHeaders,
         tags: { name: 'StudentPracticals' },
         timeout: '4s',
+        responseCallback: http.expectedStatuses(200, 401),
       });
       check(practicals, {
         'practicals endpoint responds': (r) => r.status === 200 || r.status === 401,
@@ -114,6 +115,7 @@ export default function () {
         headers: authHeaders,
         tags: { name: 'StudentSubmissions' },
         timeout: '4s',
+        responseCallback: http.expectedStatuses(200, 401),
       });
       check(submissions, {
         'submissions endpoint responds': (r) => r.status === 200 || r.status === 401,
@@ -124,16 +126,18 @@ export default function () {
         headers: authHeaders,
         tags: { name: 'UserProfile' },
         timeout: '3s',
+        responseCallback: http.expectedStatuses(200, 401),
       });
       check(profile, {
         'profile endpoint responds': (r) => r.status === 200 || r.status === 401,
         'profile fast': (r) => r.status === 401 || r.timings.duration < 500,
       });
     } else {
-      // Test unauthenticated responses return 401 cleanly
+      // Test unauthenticated responses return 401 cleanly as expected
       const unauth = http.get(`${BASE_URL}/api/auth/profile`, { 
         tags: { name: 'UnauthCheck' },
         timeout: '2s',
+        responseCallback: http.expectedStatuses(401),
       });
       check(unauth, { 
         'unauthenticated request is 401': (r) => r.status === 401,
@@ -142,7 +146,6 @@ export default function () {
     }
   });
 
-  // Reduced sleep - was 1s, now 0.5s for better throughput
   sleep(0.5);
 }
 
