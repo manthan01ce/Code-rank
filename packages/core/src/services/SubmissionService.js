@@ -73,20 +73,24 @@ export class SubmissionService {
   static async getQueueStats() {
     const queue = getExecutionQueue();
     
-    // Only get critical stats for health checks to improve performance
-    // Use a shorter timeout for smoke tests
+    // Increased timeout for better performance under high load
+    // Allows time for Redis operations with 100+ concurrent users
     const timeout = (ms) => new Promise((_, reject) => 
       setTimeout(() => reject(new Error('Timeout')), ms)
     );
 
+    const startTime = Date.now();
     try {
       const [waiting, active] = await Promise.race([
         Promise.all([
           queue.getWaitingCount(),
           queue.getActiveCount(),
         ]),
-        timeout(500) // 500ms timeout for health checks
+        timeout(800) // 800ms timeout to handle high concurrency
       ]);
+      
+      const duration = Date.now() - startTime;
+      console.log('[SubmissionService] Redis operations completed', { duration, timestamp: new Date().toISOString() });
       
       return { 
         waiting, 
@@ -96,6 +100,12 @@ export class SubmissionService {
         delayed: 0    // Skip for performance
       };
     } catch (err) {
+      const duration = Date.now() - startTime;
+      console.error('[SubmissionService] Redis timeout/error - returning fallback values', { 
+        error: err.message, 
+        duration, 
+        timestamp: new Date().toISOString() 
+      });
       // Return cached/default values if Redis is slow
       return { 
         waiting: 0, 
