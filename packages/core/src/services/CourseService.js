@@ -1,4 +1,57 @@
 import sql from '../db/client.js';
+import { createClient } from 'redis';
+import { coalesce } from '../utils/cache-coalescer.js';
+
+let redis = null;
+let redisConnecting = null;
+
+async function getRedis() {
+  if (redis && redis.isOpen) return redis;
+  if (redisConnecting) return redisConnecting;
+
+  redisConnecting = (async () => {
+    try {
+      const client = createClient({
+        socket: { 
+          host: process.env.REDIS_HOST || '127.0.0.1', 
+          port: parseInt(process.env.REDIS_PORT || '6379', 10),
+          connectTimeout: 2000,
+          reconnectStrategy: (retries) => (retries > 3 ? false : Math.min(retries * 500, 2000))
+        }
+      });
+      client.on('error', () => {}); // Silently catch offline errors
+      await client.connect();
+      redis = client;
+      return redis;
+    } catch {
+      redis = null;
+      return null;
+    } finally {
+      redisConnecting = null;
+    }
+  })();
+
+  return redisConnecting;
+}
+
+async function invalidateCachePattern(pattern) {
+  try {
+    const client = await getRedis();
+    if (!client) return;
+
+    // Use SCAN to find and delete all matching keys
+    const keys = [];
+    for await (const key of client.scanIterator({ MATCH: pattern, COUNT: 100 })) {
+      keys.push(key);
+    }
+    
+    if (keys.length > 0) {
+      await client.del(keys);
+    }
+  } catch (err) {
+    // Fail silently - cache invalidation failure shouldn't break the request
+  }
+}
 
 export class CourseService {
   /**
@@ -9,25 +62,57 @@ export class CourseService {
       throw { status: 401, message: 'Unauthorized' };
     }
 
-    if (search) {
-      const searchPattern = `%${search}%`;
-      return await sql`
-        SELECT * FROM courses 
-        WHERE name ILIKE ${searchPattern} OR course_code ILIKE ${searchPattern}
-        ORDER BY created_at DESC
-      `;
-    } else if (semester) {
-      return await sql`
-        SELECT * FROM courses 
-        WHERE semester = ${parseInt(semester)}
-        ORDER BY created_at DESC
-      `;
-    } else {
-      return await sql`
-        SELECT * FROM courses 
-        ORDER BY created_at DESC
-      `;
+    // Create cache key based on query parameters
+    const cacheKey = `courses:${JSON.stringify({ search, semester })}`;
+    
+    // Try to get from cache
+    try {
+      const client = await getRedis();
+      if (client) {
+        const cached = await client.get(cacheKey);
+        if (cached) {
+          return JSON.parse(cached);
+        }
+      }
+    } catch (err) {
+      // Fail open - if cache fails, continue to DB
     }
+
+    // Use coalescer to prevent thundering herd on cache miss
+    return coalesce(cacheKey, async () => {
+      let result;
+      if (search) {
+        const searchPattern = `%${search}%`;
+        result = await sql`
+          SELECT * FROM courses 
+          WHERE name ILIKE ${searchPattern} OR course_code ILIKE ${searchPattern}
+          ORDER BY created_at DESC
+        `;
+      } else if (semester) {
+        result = await sql`
+          SELECT * FROM courses 
+          WHERE semester = ${parseInt(semester)}
+          ORDER BY created_at DESC
+        `;
+      } else {
+        result = await sql`
+          SELECT * FROM courses 
+          ORDER BY created_at DESC
+        `;
+      }
+
+      // Store in cache with 60s TTL
+      try {
+        const client = await getRedis();
+        if (client) {
+          await client.setEx(cacheKey, 60, JSON.stringify(result));
+        }
+      } catch (err) {
+        // Fail open - cache write failure shouldn't break the request
+      }
+
+      return result;
+    });
   }
 
   /**
@@ -49,6 +134,9 @@ export class CourseService {
     `;
 
     await sql`INSERT INTO activity_logs (user_id, action, details) VALUES (${adminUser.id}, 'CREATE_COURSE', ${`Created course ${name}`})`;
+
+    // Invalidate courses cache
+    await invalidateCachePattern('courses:*');
 
     return result[0];
   }
@@ -73,6 +161,10 @@ export class CourseService {
     }
 
     await sql`INSERT INTO activity_logs (user_id, action, details) VALUES (${adminUser.id}, 'UPDATE_COURSE', ${`Updated course ${name}`})`;
+    
+    // Invalidate courses cache
+    await invalidateCachePattern('courses:*');
+    
     return result[0];
   }
 
@@ -93,6 +185,10 @@ export class CourseService {
     await sql`DELETE FROM courses WHERE id = ${parseInt(id)}`;
 
     await sql`INSERT INTO activity_logs (user_id, action, details) VALUES (${adminUser.id}, 'DELETE_COURSE', ${`Deleted course ${courseName}`})`;
+    
+    // Invalidate courses cache
+    await invalidateCachePattern('courses:*');
+    
     return { success: true };
   }
 
@@ -104,18 +200,51 @@ export class CourseService {
       throw { status: 401, message: 'Unauthorized' };
     }
 
-    if (search) {
-      const searchPattern = `%${search}%`;
-      return await sql`
-        SELECT * FROM departments 
-        WHERE name ILIKE ${searchPattern} OR institute_name ILIKE ${searchPattern}
-        ORDER BY created_at DESC
-      `;
+    // Create cache key based on query parameters
+    const cacheKey = `departments:${JSON.stringify({ search })}`;
+    
+    // Try to get from cache
+    try {
+      const client = await getRedis();
+      if (client) {
+        const cached = await client.get(cacheKey);
+        if (cached) {
+          return JSON.parse(cached);
+        }
+      }
+    } catch (err) {
+      // Fail open - if cache fails, continue to DB
     }
-    return await sql`
-      SELECT * FROM departments 
-      ORDER BY created_at DESC
-    `;
+
+    // Use coalescer to prevent thundering herd on cache miss
+    return coalesce(cacheKey, async () => {
+      let result;
+      if (search) {
+        const searchPattern = `%${search}%`;
+        result = await sql`
+          SELECT * FROM departments 
+          WHERE name ILIKE ${searchPattern} OR institute_name ILIKE ${searchPattern}
+          ORDER BY created_at DESC
+        `;
+      } else {
+        result = await sql`
+          SELECT * FROM departments 
+          ORDER BY created_at DESC
+        `;
+      }
+
+      // Store in cache with 60s TTL
+      try {
+        const client = await getRedis();
+        if (client) {
+          await client.setEx(cacheKey, 60, JSON.stringify(result));
+        }
+      } catch (err) {
+        // Fail open - cache write failure shouldn't break the request
+      }
+
+      return result;
+    });
   }
 
   /**
@@ -137,6 +266,10 @@ export class CourseService {
     `;
 
     await sql`INSERT INTO activity_logs (user_id, action, details) VALUES (${adminUser.id}, 'CREATE_DEPARTMENT', ${`Created department ${name}`})`;
+    
+    // Invalidate departments cache
+    await invalidateCachePattern('departments:*');
+    
     return result[0];
   }
 
@@ -160,6 +293,10 @@ export class CourseService {
     }
 
     await sql`INSERT INTO activity_logs (user_id, action, details) VALUES (${adminUser.id}, 'UPDATE_DEPARTMENT', ${`Updated department ${name}`})`;
+    
+    // Invalidate departments cache
+    await invalidateCachePattern('departments:*');
+    
     return result[0];
   }
 
@@ -182,6 +319,10 @@ export class CourseService {
     }
 
     await sql`INSERT INTO activity_logs (user_id, action, details) VALUES (${adminUser.id}, 'DELETE_DEPARTMENT', ${`Deleted department ${result[0].name}`})`;
+    
+    // Invalidate departments cache
+    await invalidateCachePattern('departments:*');
+    
     return { success: true };
   }
 
