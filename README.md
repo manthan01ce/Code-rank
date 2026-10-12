@@ -98,11 +98,27 @@ Create a `.env.local` file with:
 
 ```env
 # Neon Serverless Postgres (Direct or PgBouncer Connection Pooler)
-DATABASE_URL=postgresql://user:password@ep-xyz-pooler.us-east-1.aws.neon.tech/neondb?sslmode=require&pgbouncer=true&connection_limit=1
+DATABASE_URL=postgresql://user:password@ep-xyz-pooler.us-east-1.aws.neon.tech/neondb?sslmode=require&connection_limit=10
 JWT_SECRET=your_secret_key
 ADMIN_EMAIL=admin@example.com
 ADMIN_PASSWORD=your_password
+
+# Database connection pool size (default: 10)
+# Increase this value for higher concurrency workloads
+DB_POOL_SIZE=10
 ```
+
+### Database Configuration
+
+- **connection_limit**: Controls the maximum number of concurrent connections to Neon via PgBouncer pooler
+  - Default: 10 (optimized for 100+ concurrent users)
+  - Previous: 1 (too conservative, caused connection bottlenecks)
+  - Recommendation: Set to 10-20 for production workloads
+  
+- **DB_POOL_SIZE**: Application-level connection pool configuration
+  - Default: 10
+  - Should match or be slightly less than `connection_limit` in DATABASE_URL
+  - Prevents "connection pool exhausted" errors under load
 
 ---
 
