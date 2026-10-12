@@ -13,10 +13,10 @@ const nextConfig = {
   },
   
   // Optimize production builds
-  swcMinify: true,
+  // swcMinify: true, // Deprecated in Next.js 14+, SWC is default
   
-  // Output standalone for better performance
-  output: 'standalone',
+  // Note: output: 'standalone' removed - incompatible with custom server.js
+  // output: 'standalone',
   
   // Optimize images
   images: {

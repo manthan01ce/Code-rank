@@ -28,11 +28,11 @@ async function refreshHealthCache() {
       setTimeout(() => reject(new Error('Timeout')), ms)
     );
 
-    // Database check with timeout
+    // Database check with timeout (increased to 2000ms for Neon cold starts)
     try {
       const dbResult = await Promise.race([
         sql`SELECT 1 as active`,
-        timeout(200)
+        timeout(2000)
       ]);
       
       if (dbResult && dbResult[0]?.active === 1) {
@@ -47,11 +47,11 @@ async function refreshHealthCache() {
       report.status = 'unhealthy';
     }
 
-    // Queue check with timeout
+    // Queue check with timeout (increased to 1000ms)
     try {
       const queueStats = await Promise.race([
         SubmissionService.getQueueStats(),
-        timeout(200)
+        timeout(1000)
       ]);
       report.services.queue.status = 'healthy';
       report.services.queue.stats = queueStats;
