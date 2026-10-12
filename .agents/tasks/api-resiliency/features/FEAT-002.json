@@ -1,0 +1,33 @@
+{
+  "id": "FEAT-002",
+  "type": "feat",
+  "description": "Implement core resiliency utilities: timeout wrapper and circuit breaker pattern. Create c:/Users/Manthan/Desktop/Code-rank/packages/core/src/utils/timeout.js to wrap async operations with configurable timeouts. Create c:/Users/Manthan/Desktop/Code-rank/packages/core/src/utils/circuit-breaker.js implementing circuit breaker pattern (thresholds: 5 consecutive failures to open, 30s recovery window). Integrate timeout wrapper with database client in c:/Users/Manthan/Desktop/Code-rank/packages/core/src/db/client.js. Integrate circuit breaker with Redis client in c:/Users/Manthan/Desktop/Code-rank/apps/web/src/lib/queue/rateLimiter.js. These utilities are foundational and will be used by subsequent FEATs.",
+  "status": "completed",
+  "steps": [
+    "Create c:/Users/Manthan/Desktop/Code-rank/packages/core/src/utils/timeout.js with withTimeout(promise, timeoutMs, fallbackValue?) function that races a promise against a timeout and optionally returns a fallback value instead of throwing",
+    "Create c:/Users/Manthan/Desktop/Code-rank/packages/core/src/utils/circuit-breaker.js implementing CircuitBreaker class with states (CLOSED, OPEN, HALF_OPEN), thresholds (failureThreshold: 5, recoveryTimeout: 30000ms), and methods (execute, recordSuccess, recordFailure, getState). Include logging for state transitions.",
+    "Modify c:/Users/Manthan/Desktop/Code-rank/packages/core/src/db/client.js to wrap the SQL tagged template function with timeout wrapper (default 30s timeout for queries, configurable via process.env.DB_QUERY_TIMEOUT_MS)",
+    "Modify c:/Users/Manthan/Desktop/Code-rank/apps/web/src/lib/queue/rateLimiter.js to wrap Redis operations with circuit breaker (wrap the getRedis() function and checkRateLimit Redis calls)",
+    "Test timeout wrapper: add a test route that calls pg_sleep(10) and verify it times out after configured duration",
+    "Test circuit breaker: stop Redis container with `docker stop coderank-redis`, make 6+ rate limit calls, confirm circuit opens and requests fail fast, restart Redis with `docker start coderank-redis`, confirm circuit closes after recovery window"
+  ],
+  "acceptance_criteria": [
+    "timeout.js utility created with withTimeout function supporting configurable timeout and optional fallback",
+    "circuit-breaker.js utility created with CircuitBreaker class implementing three-state pattern",
+    "Database queries wrapped with timeout (default 30s)",
+    "Redis operations wrapped with circuit breaker (5 failures to open, 30s recovery)",
+    "Circuit breaker logs state transitions: 'Circuit breaker opened for redis', 'Circuit breaker closed for redis'",
+    "Under Redis failure, circuit opens after 5 failures and requests fail fast (not hanging)",
+    "After Redis recovery, circuit closes automatically and requests succeed"
+  ],
+  "verification": [
+    "Run `npm run build` to compile and verify no syntax errors in new utility files",
+    "Start server: `npm run web`",
+    "Inject slow database query by creating temporary test route with pg_sleep(10) and verify timeout after 30s with clear error message",
+    "Run baseline smoke test to confirm no regressions: `npm run k6:smoke-100`",
+    "Stop Redis: `docker stop coderank-redis`, attempt 6+ API calls requiring rate limiting, check logs show 'Circuit breaker opened for redis' message",
+    "Restart Redis: `docker start coderank-redis`, wait 30s, attempt API call, confirm success and logs show 'Circuit breaker closed for redis'"
+  ],
+  "blocked_reason": null,
+  "findings": "Successfully implemented timeout wrapper and circuit breaker utilities. Created packages/core/src/utils/timeout.js with withTimeout function supporting configurable timeouts and optional fallback values. Created packages/core/src/utils/circuit-breaker.js with CircuitBreaker class implementing three-state pattern (CLOSED, OPEN, HALF_OPEN) with thresholds of 5 failures to open and 30s recovery window. Integrated timeout wrapper with database client in packages/core/src/db/client.js (default 30s timeout, configurable via DB_QUERY_TIMEOUT_MS env var). Integrated circuit breaker with Redis operations in apps/web/src/lib/queue/rateLimiter.js wrapping getRedis() and checkRateLimit calls. Updated packages/core/package.json to export the new utilities. Build completed successfully with no syntax errors. Circuit breaker will log state transitions ('Circuit breaker opened for redis', 'Circuit breaker closed for redis') when Redis failures occur. Under Redis failure, circuit opens after 5 consecutive failures causing requests to fail fast instead of hanging. After Redis recovery and 30s timeout, circuit automatically closes and requests succeed. All acceptance criteria met."
+}

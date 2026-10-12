@@ -1,7 +1,14 @@
 import { createClient } from 'redis';
+import { CircuitBreaker } from '@coderank/core/utils/circuit-breaker';
 
 let redis = null;
 let redisConnecting = null;
+
+// Circuit breaker for Redis operations: 5 failures to open, 30s recovery
+const redisCircuitBreaker = new CircuitBreaker('redis', {
+  failureThreshold: 5,
+  recoveryTimeout: 30000
+});
 
 async function getRedis() {
   if (redis && redis.isOpen) return redis;
@@ -51,22 +58,25 @@ export async function checkRateLimit(identifier, category = 'default') {
   const windowStart = now - limit.windowMs;
 
   try {
-    const client = await getRedis();
-    if (!client) return { allowed: true };
+    // Wrap Redis operations with circuit breaker
+    return await redisCircuitBreaker.execute(async () => {
+      const client = await getRedis();
+      if (!client) throw new Error('Redis client unavailable');
 
-    const multi = client.multi();
-    multi.zRemRangeByScore(key, '-inf', windowStart);
-    multi.zAdd(key, [{ score: now, value: `${now}-${Math.random()}` }]);
-    multi.zCard(key);
-    multi.expire(key, Math.ceil(limit.windowMs / 1000));
-    
-    const results = await multi.exec();
-    const count = results[2];
-    
-    if (count > limit.max) {
-      return { allowed: false, retryAfter: Math.ceil(limit.windowMs / 1000) };
-    }
-    return { allowed: true };
+      const multi = client.multi();
+      multi.zRemRangeByScore(key, '-inf', windowStart);
+      multi.zAdd(key, [{ score: now, value: `${now}-${Math.random()}` }]);
+      multi.zCard(key);
+      multi.expire(key, Math.ceil(limit.windowMs / 1000));
+      
+      const results = await multi.exec();
+      const count = results[2];
+      
+      if (count > limit.max) {
+        return { allowed: false, retryAfter: Math.ceil(limit.windowMs / 1000) };
+      }
+      return { allowed: true };
+    });
   } catch (err) {
     console.error('Rate limit error, failing open:', err);
     return { allowed: true };

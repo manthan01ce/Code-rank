@@ -12,7 +12,9 @@
     "./services/SubmissionService": "./src/services/SubmissionService.js",
     "./utils/logger": "./src/utils/logger.js",
     "./utils/pdf-gen": "./src/utils/pdf-gen.js",
-    "./utils/auth": "./src/utils/auth.js"
+    "./utils/auth": "./src/utils/auth.js",
+    "./utils/timeout": "./src/utils/timeout.js",
+    "./utils/circuit-breaker": "./src/utils/circuit-breaker.js"
   },
   "dependencies": {
     "@neondatabase/serverless": "^1.0.2",
