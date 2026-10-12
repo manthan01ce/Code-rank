@@ -1,0 +1,326 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CodeRank WebSocket Test</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            max-width: 900px;
+            margin: 40px auto;
+            padding: 20px;
+            background: #f5f5f5;
+        }
+        .container {
+            background: white;
+            padding: 30px;
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        h1 {
+            color: #2563eb;
+            margin-bottom: 10px;
+        }
+        .status {
+            padding: 15px;
+            border-radius: 5px;
+            margin: 20px 0;
+            font-weight: bold;
+        }
+        .connected {
+            background: #10b981;
+            color: white;
+        }
+        .disconnected {
+            background: #ef4444;
+            color: white;
+        }
+        .connecting {
+            background: #f59e0b;
+            color: white;
+        }
+        .test-section {
+            margin: 20px 0;
+            padding: 20px;
+            border: 1px solid #e5e7eb;
+            border-radius: 5px;
+        }
+        button {
+            background: #2563eb;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 5px;
+            cursor: pointer;
+            margin: 5px;
+            font-size: 14px;
+        }
+        button:hover {
+            background: #1d4ed8;
+        }
+        button:disabled {
+            background: #9ca3af;
+            cursor: not-allowed;
+        }
+        #log {
+            background: #1e293b;
+            color: #e2e8f0;
+            padding: 15px;
+            border-radius: 5px;
+            height: 300px;
+            overflow-y: auto;
+            font-family: 'Courier New', monospace;
+            font-size: 12px;
+            margin-top: 15px;
+        }
+        .log-entry {
+            margin: 5px 0;
+            padding: 3px 0;
+            border-bottom: 1px solid #334155;
+        }
+        .log-success { color: #4ade80; }
+        .log-error { color: #f87171; }
+        .log-info { color: #60a5fa; }
+        .log-warning { color: #fbbf24; }
+        input {
+            padding: 8px;
+            border: 1px solid #d1d5db;
+            border-radius: 4px;
+            width: 200px;
+            margin: 5px;
+        }
+    </style>
+    <script src="https://cdn.socket.io/4.8.3/socket.io.min.js"></script>
+</head>
+<body>
+    <div class="container">
+        <h1>🔌 CodeRank WebSocket Test</h1>
+        <p>Test the WebSocket connection and real-time features</p>
+        
+        <div id="status" class="status connecting">
+            ⏳ Connecting to server...
+        </div>
+
+        <div class="test-section">
+            <h3>Server Connection</h3>
+            <p><strong>Server URL:</strong> <span id="serverUrl">http://localhost:3000</span></p>
+            <p><strong>Socket ID:</strong> <span id="socketId">Not connected</span></p>
+            <button onclick="reconnect()">Reconnect</button>
+            <button onclick="disconnect()">Disconnect</button>
+        </div>
+
+        <div class="test-section">
+            <h3>Room Tests</h3>
+            <div>
+                <input type="text" id="practicalId" placeholder="Practical ID" value="123">
+                <button onclick="joinPracticalRoom()">Join Practical Room</button>
+                <button onclick="leavePracticalRoom()">Leave Practical Room</button>
+            </div>
+            <div>
+                <input type="text" id="courseId" placeholder="Course ID" value="456">
+                <button onclick="joinCourseRoom()">Join Course Room</button>
+                <button onclick="leaveCourseRoom()">Leave Course Room</button>
+            </div>
+            <div>
+                <input type="text" id="jobId" placeholder="Job ID" value="job-123">
+                <button onclick="watchJob()">Watch Job</button>
+                <button onclick="unwatchJob()">Unwatch Job</button>
+            </div>
+        </div>
+
+        <div class="test-section">
+            <h3>Event Simulation</h3>
+            <button onclick="simulatePracticalAdded()">Simulate Practical Added</button>
+            <button onclick="simulateJobComplete()">Simulate Job Complete</button>
+            <button onclick="simulateNewSubmission()">Simulate New Submission</button>
+        </div>
+
+        <div class="test-section">
+            <h3>Event Log</h3>
+            <button onclick="clearLog()">Clear Log</button>
+            <div id="log"></div>
+        </div>
+    </div>
+
+    <script>
+        let socket = null;
+        const serverUrl = window.location.origin.includes('localhost') 
+            ? 'http://localhost:3000' 
+            : window.location.origin;
+
+        document.getElementById('serverUrl').textContent = serverUrl;
+
+        function log(message, type = 'info') {
+            const logDiv = document.getElementById('log');
+            const entry = document.createElement('div');
+            entry.className = `log-entry log-${type}`;
+            const timestamp = new Date().toLocaleTimeString();
+            entry.textContent = `[${timestamp}] ${message}`;
+            logDiv.appendChild(entry);
+            logDiv.scrollTop = logDiv.scrollHeight;
+        }
+
+        function updateStatus(message, className) {
+            const statusDiv = document.getElementById('status');
+            statusDiv.textContent = message;
+            statusDiv.className = `status ${className}`;
+        }
+
+        function connectSocket() {
+            log('Attempting to connect to ' + serverUrl, 'info');
+            
+            socket = io(serverUrl, {
+                reconnectionDelayMax: 10000,
+                transports: ['websocket', 'polling']
+            });
+
+            socket.on('connect', () => {
+                log('✓ Connected successfully!', 'success');
+                updateStatus('✓ Connected to server', 'connected');
+                document.getElementById('socketId').textContent = socket.id;
+            });
+
+            socket.on('disconnect', (reason) => {
+                log('✗ Disconnected: ' + reason, 'error');
+                updateStatus('✗ Disconnected from server', 'disconnected');
+                document.getElementById('socketId').textContent = 'Not connected';
+            });
+
+            socket.on('connect_error', (error) => {
+                log('✗ Connection error: ' + error.message, 'error');
+                updateStatus('✗ Connection failed', 'disconnected');
+            });
+
+            socket.on('reconnect', (attemptNumber) => {
+                log('↻ Reconnected after ' + attemptNumber + ' attempts', 'success');
+            });
+
+            // Listen for all CodeRank events
+            socket.on('practical_added', (data) => {
+                log('📝 Practical added: ' + JSON.stringify(data), 'success');
+            });
+
+            socket.on('practical_updated', (data) => {
+                log('✏️ Practical updated: ' + JSON.stringify(data), 'success');
+            });
+
+            socket.on('practical_deleted', (practicalId) => {
+                log('🗑️ Practical deleted: ' + practicalId, 'warning');
+            });
+
+            socket.on('job_complete', (data) => {
+                log('✅ Job complete: ' + JSON.stringify(data), 'success');
+            });
+
+            socket.on('new_submission', (data) => {
+                log('📤 New submission: ' + JSON.stringify(data), 'success');
+            });
+
+            socket.on('new_submission_marks', (data) => {
+                log('📊 New submission marks: ' + JSON.stringify(data), 'info');
+            });
+        }
+
+        function disconnect() {
+            if (socket) {
+                socket.disconnect();
+                log('Manually disconnected', 'warning');
+            }
+        }
+
+        function reconnect() {
+            if (socket) {
+                socket.disconnect();
+            }
+            connectSocket();
+        }
+
+        function joinPracticalRoom() {
+            const practicalId = document.getElementById('practicalId').value;
+            if (socket && practicalId) {
+                socket.emit('join_practical_room', practicalId);
+                log('📥 Joined practical room: ' + practicalId, 'info');
+            }
+        }
+
+        function leavePracticalRoom() {
+            const practicalId = document.getElementById('practicalId').value;
+            if (socket && practicalId) {
+                socket.emit('leave_practical_room', practicalId);
+                log('📤 Left practical room: ' + practicalId, 'warning');
+            }
+        }
+
+        function joinCourseRoom() {
+            const courseId = document.getElementById('courseId').value;
+            if (socket && courseId) {
+                socket.emit('join_course_room', courseId);
+                log('📥 Joined course room: ' + courseId, 'info');
+            }
+        }
+
+        function leaveCourseRoom() {
+            const courseId = document.getElementById('courseId').value;
+            if (socket && courseId) {
+                socket.emit('leave_course_room', courseId);
+                log('📤 Left course room: ' + courseId, 'warning');
+            }
+        }
+
+        function watchJob() {
+            const jobId = document.getElementById('jobId').value;
+            if (socket && jobId) {
+                socket.emit('watch_job', jobId);
+                log('👀 Watching job: ' + jobId, 'info');
+            }
+        }
+
+        function unwatchJob() {
+            const jobId = document.getElementById('jobId').value;
+            if (socket && jobId) {
+                socket.emit('unwatch_job', jobId);
+                log('👁️ Stopped watching job: ' + jobId, 'warning');
+            }
+        }
+
+        function simulatePracticalAdded() {
+            if (socket) {
+                socket.emit('faculty_practical_added', {
+                    course_id: '456',
+                    practical: { id: 999, title: 'Test Practical' }
+                });
+                log('🧪 Simulated practical_added event', 'info');
+            }
+        }
+
+        function simulateJobComplete() {
+            if (socket) {
+                socket.emit('worker_job_complete', {
+                    jobId: 'job-123',
+                    result: { status: 'success', message: 'Test completed' }
+                });
+                log('🧪 Simulated job_complete event', 'info');
+            }
+        }
+
+        function simulateNewSubmission() {
+            if (socket) {
+                socket.emit('student_new_submission', {
+                    practical_id: '123',
+                    course_id: '456',
+                    submission: { id: 789, student: 'Test Student' }
+                });
+                log('🧪 Simulated new_submission event', 'info');
+            }
+        }
+
+        function clearLog() {
+            document.getElementById('log').innerHTML = '';
+        }
+
+        // Connect on page load
+        connectSocket();
+    </script>
+</body>
+</html>

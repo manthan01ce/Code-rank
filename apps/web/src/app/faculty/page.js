@@ -130,7 +130,7 @@ export default function FacultyDashboard() {
   }, [router]);
 
   useEffect(() => {
-    fetchContextData();
+    fetchContextData(true);
   }, []);
 
   useEffect(() => {
@@ -143,13 +143,16 @@ export default function FacultyDashboard() {
         setActiveTab('marks');
       } else {
         setActiveTab('practicals');
-        setSelectedCourse('');
+      }
+      const courseParam = params.get('course');
+      if (courseParam) {
+        setSelectedCourse(courseParam);
       }
     }
-  }, [typeof window !== 'undefined' ? window.location.search : '']);
+  }, []);
 
-  const fetchContextData = async () => {
-    setLoading(true);
+  const fetchContextData = async (isInitialLoad = false) => {
+    if (isInitialLoad) setLoading(true);
     try {
       const [coursesRes, batchesRes] = await Promise.all([
         fetch('/api/faculty/courses', { headers: { Authorization: `Bearer ${token()}` } }),
@@ -159,7 +162,16 @@ export default function FacultyDashboard() {
       if (coursesRes.ok) {
         const courseList = await coursesRes.json();
         setCourses(courseList);
-        setSelectedCourse('');
+        setSelectedCourse(prev => {
+          if (prev && courseList.some(c => c.id.toString() === prev.toString())) {
+            return prev;
+          }
+          const stored = typeof window !== 'undefined' ? localStorage.getItem('facultySelectedCourse') : null;
+          if (stored && courseList.some(c => c.id.toString() === stored.toString())) {
+            return stored;
+          }
+          return prev || '';
+        });
       }
       if (batchesRes.ok) {
         const batchList = await batchesRes.json();
@@ -174,19 +186,19 @@ export default function FacultyDashboard() {
       console.error(e);
       showToast('error', 'Error loading course or batch metadata.');
     } finally {
-      setLoading(false);
+      if (isInitialLoad) setLoading(false);
     }
   };
 
   // Load practicals when selected course changes
   useEffect(() => {
     if (selectedCourse) {
-      fetchPracticals();
+      fetchPracticals(true);
     }
   }, [selectedCourse]);
 
-  const fetchPracticals = async () => {
-    setLoadingPracticals(true);
+  const fetchPracticals = async (showLoading = true) => {
+    if (showLoading) setLoadingPracticals(true);
     try {
       const res = await fetch(`/api/faculty/practicals?course_id=${selectedCourse}`, {
         headers: { Authorization: `Bearer ${token()}` }
@@ -195,8 +207,14 @@ export default function FacultyDashboard() {
         const data = await res.json();
         setPracticals(data);
         if (data.length > 0) {
-          setSelectedPracticalId(data[0].id.toString());
-          setSelectedMarksPracticalId(data[0].id.toString());
+          setSelectedPracticalId(prev => {
+            if (prev && data.some(p => p.id.toString() === prev.toString())) return prev;
+            return data[0].id.toString();
+          });
+          setSelectedMarksPracticalId(prev => {
+            if (prev && data.some(p => p.id.toString() === prev.toString())) return prev;
+            return data[0].id.toString();
+          });
         } else {
           setSelectedPracticalId('');
           setSelectedMarksPracticalId('');
@@ -207,19 +225,19 @@ export default function FacultyDashboard() {
     } catch (e) {
       console.error(e);
     } finally {
-      setLoadingPracticals(false);
+      if (showLoading) setLoadingPracticals(false);
     }
   };
 
   // Load submissions
   useEffect(() => {
     if (selectedPracticalId && activeTab === 'submissions') {
-      fetchSubmissions();
+      fetchSubmissions(true);
     }
   }, [selectedPracticalId, activeTab, studentSearch, submissionStatusFilter, submissionSortBy, submissionSortOrder, submissionDivisionFilter]);
 
-  const fetchSubmissions = async () => {
-    setLoadingSubmissions(true);
+  const fetchSubmissions = async (showLoading = true) => {
+    if (showLoading) setLoadingSubmissions(true);
     try {
       let url = `/api/faculty/practicals/${selectedPracticalId}/submissions?studentSearch=${encodeURIComponent(studentSearch)}&status=${submissionStatusFilter}&sortBy=${submissionSortBy}&sortOrder=${submissionSortOrder}`;
       if (submissionDivisionFilter && submissionDivisionFilter !== 'all') {
@@ -234,10 +252,41 @@ export default function FacultyDashboard() {
     } catch (e) {
       console.error(e);
     } finally {
-      setLoadingSubmissions(false);
+      if (showLoading) setLoadingSubmissions(false);
     }
   };
 
+  // Socket: 실시간 practical updates between faculty and co-coordinator
+  useEffect(() => {
+    if (!socket) return;
+
+    const handlePracticalChanged = () => {
+      if (selectedCourse) {
+        fetchPracticals(false);
+      }
+    };
+
+    socket.on('practical_added', handlePracticalChanged);
+    socket.on('practical_updated', handlePracticalChanged);
+    socket.on('practical_deleted', handlePracticalChanged);
+
+    return () => {
+      socket.off('practical_added', handlePracticalChanged);
+      socket.off('practical_updated', handlePracticalChanged);
+      socket.off('practical_deleted', handlePracticalChanged);
+    };
+  }, [socket, selectedCourse]);
+
+  // Join course room when a course is selected
+  useEffect(() => {
+    if (!socket || !selectedCourse) return;
+    socket.emit('join_course_room', selectedCourse);
+    return () => {
+      socket.emit('leave_course_room', selectedCourse);
+    };
+  }, [socket, selectedCourse]);
+
+  // Socket: Submissions room for active practical
   useEffect(() => {
     if (!socket || !selectedPracticalId) return;
     
@@ -261,28 +310,24 @@ export default function FacultyDashboard() {
   // Load stats
   useEffect(() => {
     if (selectedCourse && activeTab === 'marks') {
-      fetchStats();
+      fetchStats(true);
     }
     
     if (!socket || !selectedCourse || activeTab !== 'marks') return;
     
-    socket.emit('join_course_room', selectedCourse);
-    
     const handleNewSubmissionMarks = () => {
-      // Refresh stats on new submission
-      fetchStats();
+      fetchStats(false);
     };
     
     socket.on('new_submission_marks', handleNewSubmissionMarks);
     
     return () => {
       socket.off('new_submission_marks', handleNewSubmissionMarks);
-      socket.emit('leave_course_room', selectedCourse);
     };
   }, [selectedCourse, activeTab, socket]);
 
-  const fetchStats = async () => {
-    setLoadingStats(true);
+  const fetchStats = async (showLoading = true) => {
+    if (showLoading) setLoadingStats(true);
     try {
       const res = await fetch(`/api/faculty/courses/${selectedCourse}/stats`, {
         headers: { Authorization: `Bearer ${token()}` }
@@ -293,20 +338,20 @@ export default function FacultyDashboard() {
     } catch (e) {
       console.error(e);
     } finally {
-      setLoadingStats(false);
+      if (showLoading) setLoadingStats(false);
     }
   };
 
-  // Auto-refresh active tab data every 15s (practicals, submissions, marks)
+  // Background polling fallback (every 30s) - silent refresh so UI never flickers or resets
   usePolling(() => {
     if (selectedCourse && activeTab === 'practicals') {
-      fetchPracticals();
+      fetchPracticals(false);
     } else if (selectedPracticalId && activeTab === 'submissions') {
-      fetchSubmissions();
+      fetchSubmissions(false);
     } else if (selectedCourse && activeTab === 'marks') {
-      fetchStats();
+      fetchStats(false);
     }
-  }, 15_000, Boolean(selectedCourse || selectedPracticalId));
+  }, 30_000, Boolean(selectedCourse));
 
   const handleOpenAddPractical = () => {
     setEditingPractical(null);
@@ -471,6 +516,13 @@ export default function FacultyDashboard() {
         showToast('success', editingPractical ? 'Practical updated successfully.' : 'Practical created successfully.');
         setShowPracticalModal(false);
         fetchPracticals();
+        if (socket) {
+          const evt = editingPractical ? 'faculty_practical_updated' : 'faculty_practical_added';
+          socket.emit(evt, {
+            course_id: parseInt(selectedCourse),
+            practical: data.practical || { id: editingPractical?.id, title: pracTitle, course_id: parseInt(selectedCourse) }
+          });
+        }
       } else {
         showToast('error', data.error || 'Submission failed.');
       }
@@ -498,6 +550,12 @@ export default function FacultyDashboard() {
       if (res.ok) {
         showToast('success', data.message || 'Practical deleted successfully.');
         fetchPracticals();
+        if (socket) {
+          socket.emit('faculty_practical_deleted', {
+            course_id: parseInt(selectedCourse),
+            practicalId: p.id
+          });
+        }
       } else {
         showToast('error', data.error || 'Failed to delete practical.');
       }
@@ -528,9 +586,16 @@ export default function FacultyDashboard() {
       const data = await res.json();
       if (res.ok) {
         showToast('success', data.message || 'Extra time granted successfully!');
+        const practicalId = extraTimePractical.id;
         setExtraTimePractical(null);
         setCustomEndTimeInput('');
         fetchPracticals();
+        if (socket) {
+          socket.emit('faculty_practical_updated', {
+            course_id: parseInt(selectedCourse),
+            practical: data.practical || { id: practicalId, course_id: parseInt(selectedCourse) }
+          });
+        }
       } else {
         showToast('error', data.error || 'Failed to grant extra time.');
       }
@@ -756,7 +821,18 @@ export default function FacultyDashboard() {
               }}
             >
               <div>
-                <span style={{ fontSize: '12px', fontWeight: 700, color: 'var(--primary)', textTransform: 'uppercase', tracking: 'wide' }}>{c.course_code}</span>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                  <span style={{ fontSize: '12px', fontWeight: 700, color: 'var(--primary)', textTransform: 'uppercase', letterSpacing: '0.5px' }}>{c.course_code}</span>
+                  {c.is_co_coordinator ? (
+                    <span style={{ fontSize: '11px', fontWeight: 700, backgroundColor: '#fefce8', color: '#92400e', border: '1px solid #fde68a', padding: '2px 8px', borderRadius: '12px', display: 'inline-flex', alignItems: 'center', gap: '4px' }}>
+                      👑 Co-coordinator
+                    </span>
+                  ) : (
+                    <span style={{ fontSize: '11px', fontWeight: 600, backgroundColor: '#f1f5f9', color: '#64748b', border: '1px solid #cbd5e1', padding: '2px 8px', borderRadius: '12px', display: 'inline-flex', alignItems: 'center', gap: '4px' }}>
+                      👁 View-only
+                    </span>
+                  )}
+                </div>
                 <h3 style={{ fontSize: '18px', fontWeight: 600, marginTop: '8px', color: '#1e293b' }}>{c.name}</h3>
               </div>
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', fontSize: '13px', color: '#64748b' }}>
@@ -796,7 +872,7 @@ export default function FacultyDashboard() {
       )}
 
       {/* Header Selector Context */}
-      <div className="header" style={{ borderBottom: '1px solid var(--border-color)', pb: '20px', mb: '20px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+      <div className="header" style={{ borderBottom: '1px solid var(--border-color)', paddingBottom: '20px', marginBottom: '20px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
         <div>
           <span style={{ fontSize: '12px', fontWeight: 700, color: 'var(--primary)', textTransform: 'uppercase' }}>
             {activeCourse?.course_code}
@@ -874,7 +950,7 @@ export default function FacultyDashboard() {
       {/* TAB 1: PRACTICALS LIST */}
       {activeTab === 'practicals' && (
         <div>
-          <div style={{ display: 'flex', justifyContent: 'space-between', mb: '20px', alignItems: 'center' }}>
+          <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '20px', alignItems: 'center' }}>
             <h3 style={{ fontSize: '18px', fontWeight: 600 }}>Available Practicals</h3>
             {activeCourse?.is_co_coordinator && (
               <button className="btn-primary" style={{ width: 'auto', padding: '10px 20px', margin: 0 }} onClick={handleOpenAddPractical}>
@@ -965,7 +1041,7 @@ export default function FacultyDashboard() {
       {/* TAB 2: STUDENT SUBMISSIONS */}
       {activeTab === 'submissions' && (
         <div>
-          <div style={{ display: 'flex', justifyContent: 'space-between', gap: '15px', mb: '20px', alignItems: 'center', flexWrap: 'wrap' }}>
+          <div style={{ display: 'flex', justifyContent: 'space-between', gap: '15px', marginBottom: '20px', alignItems: 'center', flexWrap: 'wrap' }}>
             <div style={{ display: 'flex', gap: '12px', flex: 1, minWidth: '300px' }}>
               <select
                 value={selectedPracticalId}
@@ -1119,7 +1195,7 @@ export default function FacultyDashboard() {
       {/* TAB 3: MARKS OVERVIEW */}
       {activeTab === 'marks' && (
         <div>
-          <div style={{ display: 'flex', justifyContent: 'space-between', gap: '15px', mb: '20px', alignItems: 'center', flexWrap: 'wrap' }}>
+          <div style={{ display: 'flex', justifyContent: 'space-between', gap: '15px', marginBottom: '20px', alignItems: 'center', flexWrap: 'wrap' }}>
             <div>
               <h3 style={{ fontSize: '18px', fontWeight: 600 }}>Grades Matrix (Pivot View)</h3>
               <p style={{ color: 'var(--text-muted)', fontSize: '13px' }}>Grid layout showing each student's score across all active course practicals.</p>

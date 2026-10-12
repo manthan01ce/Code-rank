@@ -233,12 +233,17 @@ export default function FacultySidebar() {
       {/* Sidebar */}
       <div className="sidebar" style={{ paddingTop: '20px', position: 'fixed', left: 0, top: 0, bottom: 0, width: '280px', zIndex: 99 }}>
         <div className="logo-container" style={{ padding: '0 20px', textAlign: 'center', marginBottom: '30px' }}>
-          <img 
-            src="/coderank-logo.jpg" 
-            alt="CodeRank Logo" 
-            onError={(e) => { e.target.src = '/coderank-logo.jpg'; }}
-            style={{ width: '60px', height: '60px', objectFit: 'contain', marginBottom: '10px' }}
-          />
+          <div style={{ width: '60px', height: '60px', margin: '0 auto 10px', display: 'flex', alignItems: 'center', justifyContent: 'center', borderRadius: '50%', overflow: 'hidden', background: '#ffffff', boxShadow: '0 4px 12px rgba(79, 70, 229, 0.15)' }}>
+            <img 
+              src="/coderank-logo.jpg" 
+              alt="CodeRank Logo" 
+              onError={(e) => { e.target.style.display = 'none'; if (e.target.nextSibling) e.target.nextSibling.style.display = 'flex'; }}
+              style={{ width: '100%', height: '100%', objectFit: 'cover' }}
+            />
+            <div style={{ display: 'none', width: '100%', height: '100%', background: 'linear-gradient(135deg, #4F46E5, #7C3AED)', borderRadius: '50%', alignItems: 'center', justifyContent: 'center', fontSize: '24px', color: 'white', fontWeight: 800 }}>
+              CR
+            </div>
+          </div>
           <h2 className="brand-text" style={{ fontSize: '22px', marginBottom: '5px' }}>CodeRank</h2>
           <p style={{ fontSize: '12px', color: '#888' }}>Faculty Dashboard</p>
         </div>

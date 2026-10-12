@@ -13,6 +13,8 @@
     "worker": "npm run dev --workspace=apps/worker",
     "web": "npm run dev --workspace=apps/web",
     "k6:smoke": "powershell -ExecutionPolicy Bypass -File ./load-tests/run-k6.ps1 -Test smoke",
+    "k6:smoke-100": "k6 run -e BASE_URL=http://localhost:3000 ./load-tests/smoke-test-100vu.js",
+    "k6:stress": "k6 run -e BASE_URL=http://localhost:3000 ./load-tests/stress-test.js",
     "k6:api": "powershell -ExecutionPolicy Bypass -File ./load-tests/run-k6.ps1 -Test api",
     "k6:execution": "powershell -ExecutionPolicy Bypass -File ./load-tests/run-k6.ps1 -Test execution",
     "k6:all": "powershell -ExecutionPolicy Bypass -File ./load-tests/run-k6.ps1 -Test all"

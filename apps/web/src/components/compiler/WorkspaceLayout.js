@@ -260,12 +260,10 @@ export default function WorkspaceLayout({ problem }) {
     socket.on('practical_added', fetchPracticals);
     socket.on('practical_updated', fetchPracticals);
     socket.on('practical_deleted', fetchPracticals);
-    socket.on('practicalAdded', fetchPracticals); // fallback
     return () => {
       socket.off('practical_added', fetchPracticals);
       socket.off('practical_updated', fetchPracticals);
       socket.off('practical_deleted', fetchPracticals);
-      socket.off('practicalAdded', fetchPracticals);
     };
   }, [socket]);
 
@@ -369,9 +367,23 @@ export default function WorkspaceLayout({ problem }) {
             if (data.latest_code) {
               initialMap[currentLang] = data.latest_code;
             }
+          } else {
+            // Fallback to localStorage
+            throw new Error('DB load failed, trying cache');
           }
         } catch (err) {
-          console.error('Failed to load code from DB', err);
+          console.error('Failed to load code from DB:', err);
+          // Try localStorage as fallback
+          try {
+            const cacheKey = `workspace_${resolvedProblem.id}_${currentLang}`;
+            const cachedCode = localStorage.getItem(cacheKey);
+            if (cachedCode) {
+              initialMap[currentLang] = cachedCode;
+              console.log('Loaded code from browser cache');
+            }
+          } catch (localErr) {
+            console.error('Failed to load from cache:', localErr);
+          }
         }
       }
       
@@ -558,8 +570,10 @@ export default function WorkspaceLayout({ problem }) {
 
     setIsSavingCode(true);
     const token = localStorage.getItem('token');
+    let saved = false;
     
     try {
+      // Try saving to database
       const res = await fetch('/api/student/workspaces/save', {
         method: 'POST',
         headers: {
@@ -577,10 +591,23 @@ export default function WorkspaceLayout({ problem }) {
         const err = await res.json();
         throw new Error(err.error || 'Failed to save code');
       }
+      saved = true;
       setHasUnsavedChanges(false);
+      console.log('Code saved to database successfully');
     } catch (err) {
-      console.error('Failed to save workspace:', err);
-      alert('Failed to save code: ' + err.message);
+      console.error('Failed to save to database:', err);
+      // Fallback: save to localStorage
+      try {
+        const cacheKey = `workspace_${resolvedProblem.id}_${selectedLang}`;
+        localStorage.setItem(cacheKey, code);
+        localStorage.setItem(`${cacheKey}_timestamp`, new Date().toISOString());
+        saved = true;
+        setHasUnsavedChanges(false);
+        console.log('Code saved to browser cache (database unavailable)');
+      } catch (localErr) {
+        console.error('Failed to save to localStorage:', localErr);
+        alert('Failed to save code: ' + err.message);
+      }
     } finally {
       setIsSavingCode(false);
     }
@@ -730,7 +757,9 @@ export default function WorkspaceLayout({ problem }) {
             style={{ display: 'flex', alignItems: 'center', gap: '12px', cursor: 'pointer' }}
             title="Go to Student Dashboard"
           >
-            <img src="/coderank-logo.jpg" alt="CodeRank Logo" onError={(e) => { e.target.src = '/coderank-logo.jpg'; }} style={{ width: '28px', height: '28px', objectFit: 'contain' }} />
+            <div style={{ width: '28px', height: '28px', borderRadius: '50%', background: '#ffffff', overflow: 'hidden', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+              <img src="/coderank-logo.jpg" alt="CodeRank Logo" onError={(e) => { e.target.style.display = 'none'; }} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+            </div>
             <span style={{ color: '#ffffff', fontWeight: 700, fontSize: '16px', letterSpacing: '1px', textTransform: 'uppercase' }}>CodeRank</span>
           </div>
           

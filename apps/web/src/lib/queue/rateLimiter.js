@@ -40,6 +40,11 @@ const LIMITS = {
 };
 
 export async function checkRateLimit(identifier, category = 'default') {
+  // Check if rate limiting is disabled
+  if (process.env.DISABLE_RATE_LIMIT === 'true') {
+    return { allowed: true };
+  }
+
   const limit = LIMITS[category] || LIMITS.default;
   const key = `rl:${category}:${identifier}`;
   const now = Date.now();

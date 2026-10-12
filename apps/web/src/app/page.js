@@ -1,8 +1,9 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useMemo } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
+import dynamic from 'next/dynamic';
 
 export default function HomePage() {
   const router = useRouter();
@@ -56,17 +57,36 @@ export default function HomePage() {
             <div style={{
               width: '38px',
               height: '38px',
-              borderRadius: '10px',
-              background: 'linear-gradient(135deg, #4F46E5 0%, #7C3AED 100%)',
+              borderRadius: '50%',
               display: 'flex',
               alignItems: 'center',
               justifyContent: 'center',
-              color: '#ffffff',
-              fontWeight: 800,
-              fontSize: '18px',
-              boxShadow: '0 4px 10px rgba(79, 70, 229, 0.3)'
+              boxShadow: '0 4px 10px rgba(79, 70, 229, 0.3)',
+              overflow: 'hidden',
+              background: '#ffffff',
             }}>
-              CR
+              <img
+                src="/coderank-logo.jpg"
+                alt="CodeRank"
+                onError={(e) => {
+                  e.currentTarget.style.display = 'none';
+                  if (e.currentTarget.nextSibling) e.currentTarget.nextSibling.style.display = 'flex';
+                }}
+                style={{ width: '100%', height: '100%', objectFit: 'cover' }}
+              />
+              <div style={{
+                display: 'none',
+                width: '100%',
+                height: '100%',
+                background: 'linear-gradient(135deg, #4F46E5 0%, #7C3AED 100%)',
+                color: '#ffffff',
+                fontWeight: 800,
+                fontSize: '18px',
+                alignItems: 'center',
+                justifyContent: 'center',
+              }}>
+                CR
+              </div>
             </div>
             <div>
               <span style={{ fontSize: '19px', fontWeight: 800, color: '#0f172a', letterSpacing: '-0.5px' }}>Code</span>

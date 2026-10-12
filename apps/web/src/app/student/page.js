@@ -98,18 +98,27 @@ export default function StudentDashboard() {
     socket.on('practical_added', handleSocketUpdate);
     socket.on('practical_updated', handleSocketUpdate);
     socket.on('practical_deleted', handleSocketUpdate);
-    socket.on('practicalAdded', handleSocketUpdate);
 
     return () => {
       socket.off('practical_added', handleSocketUpdate);
       socket.off('practical_updated', handleSocketUpdate);
       socket.off('practical_deleted', handleSocketUpdate);
-      socket.off('practicalAdded', handleSocketUpdate);
     };
   }, [socket, fetchStudentPracticals]);
 
-  // Polling fallback – refresh practicals every 15s (supplements socket events)
-  usePolling(fetchStudentPracticals, 15_000, !!user);
+  // Join course rooms for student courses to receive course-specific socket events
+  useEffect(() => {
+    if (!socket || !courses || courses.length === 0) return;
+    courses.forEach(c => socket.emit('join_course_room', c.id));
+    return () => {
+      courses.forEach(c => socket.emit('leave_course_room', c.id));
+    };
+  }, [socket, courses]);
+
+  // Polling fallback – refresh practicals every 60s (only when socket unavailable, supplements socket events)
+  // Only enable polling when socket is not connected or user is active
+  const isSocketConnected = socket?.connected;
+  usePolling(fetchStudentPracticals, 60_000, !!user && !isSocketConnected);
 
   const [showLogoutModal, setShowLogoutModal] = useState(false);
 
@@ -137,7 +146,33 @@ export default function StudentDashboard() {
         position: 'sticky', top: 0, zIndex: 100
       }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: '15px' }}>
-          <img src="/coderank-logo.jpg" alt="Logo" style={{ height: '40px' }} onError={(e) => { e.target.src = '/coderank-logo.jpg'; }} />
+          <div style={{ 
+            width: '40px', height: '40px', 
+            display: 'flex', alignItems: 'center', justifyContent: 'center',
+            borderRadius: '50%', background: '#ffffff', overflow: 'hidden',
+            boxShadow: '0 2px 8px rgba(79, 70, 229, 0.15)'
+          }}>
+            <img 
+              src="/coderank-logo.jpg" 
+              alt="Logo" 
+              style={{ height: '40px', width: '40px', objectFit: 'cover', borderRadius: '50%' }}
+              onError={(e) => {
+                e.currentTarget.style.display = 'none';
+                if (e.currentTarget.nextSibling) e.currentTarget.nextSibling.style.display = 'flex';
+              }}
+            />
+            <div 
+              style={{
+                display: 'none', width: '40px', height: '40px',
+                background: 'linear-gradient(135deg, #4F46E5, #7C3AED)',
+                borderRadius: '50%',
+                alignItems: 'center', justifyContent: 'center',
+                fontSize: '16px', color: 'white', fontWeight: 700
+              }}
+            >
+              CR
+            </div>
+          </div>
           <h2 style={{ margin: 0, fontSize: '20px', fontWeight: 700, color: '#1e293b' }}>CodeRank</h2>
         </div>
         <div style={{ display: 'flex', alignItems: 'center', gap: '20px' }}>

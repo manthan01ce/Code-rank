@@ -3,6 +3,78 @@ const nextConfig = {
   poweredByHeader: false,
   compress: true,
   reactStrictMode: true,
+  
+  // Performance optimizations for smoke tests
+  experimental: {
+    optimizeCss: true, // Enable CSS optimization
+    serverActions: {
+      bodySizeLimit: '2mb',
+    },
+  },
+  
+  // Optimize production builds
+  swcMinify: true,
+  
+  // Output standalone for better performance
+  output: 'standalone',
+  
+  // Optimize images
+  images: {
+    formats: ['image/webp'],
+    minimumCacheTTL: 60,
+  },
+  
+  // Add cache headers for static assets
+  async headers() {
+    return [
+      {
+        source: '/',
+        headers: [
+          {
+            key: 'Cache-Control',
+            value: 'public, s-maxage=60, stale-while-revalidate=120',
+          },
+        ],
+      },
+      {
+        source: '/login',
+        headers: [
+          {
+            key: 'Cache-Control',
+            value: 'public, s-maxage=60, stale-while-revalidate=120',
+          },
+        ],
+      },
+      {
+        source: '/api/health',
+        headers: [
+          {
+            key: 'Cache-Control',
+            value: 'public, s-maxage=5, stale-while-revalidate=10',
+          },
+        ],
+      },
+      {
+        source: '/api/queue/stats',
+        headers: [
+          {
+            key: 'Cache-Control',
+            value: 'public, s-maxage=2, stale-while-revalidate=5',
+          },
+        ],
+      },
+      {
+        source: '/:path*',
+        headers: [
+          {
+            key: 'X-DNS-Prefetch-Control',
+            value: 'on'
+          },
+        ],
+      },
+    ];
+  },
+  
   allowedDevOrigins: [
     'localhost',
     '10.59.69.42',

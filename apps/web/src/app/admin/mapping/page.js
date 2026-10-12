@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import LoadingOverlay from '@/components/LoadingOverlay';
 import { useAdminAuth } from '@/hooks/useAdminAuth';
 import { usePolling } from '@/hooks/usePolling';
@@ -12,6 +12,7 @@ export default function CourseMapping() {
   const [loading, setLoading] = useState(true);
   const [processing, setProcessing] = useState(false);
   const [toast, setToast] = useState(null);
+  const isDirtyRef = useRef(false);
 
   const showToast = (type, msg) => {
     setToast({ type, msg });
@@ -21,11 +22,11 @@ export default function CourseMapping() {
   const { token: authToken, isReady } = useAdminAuth();
 
   useEffect(() => {
-    if (isReady) fetchData();
+    if (isReady) fetchData(true);
   }, [isReady]);
 
-  const fetchData = async () => {
-    setLoading(true);
+  const fetchData = async (isInitial = false) => {
+    if (isInitial) setLoading(true);
     try {
       const token = authToken;
       const headers = { 'Authorization': `Bearer ${token}` };
@@ -49,21 +50,24 @@ export default function CourseMapping() {
             co_coordinator_id: co ? co.id : (facs[0]?.id || null)
           };
         }
-        setMappings(initialMap);
+        if (!isDirtyRef.current) {
+          setMappings(initialMap);
+        }
       }
     } catch (e) {
       console.error(e);
-      showToast('error', 'Error loading data');
+      if (isInitial) showToast('error', 'Error loading data');
     } finally {
-      setLoading(false);
+      if (isInitial) setLoading(false);
     }
   };
 
-  // Auto-refresh courses and mappings every 15s (pauses while processing changes)
-  usePolling(() => { if (!processing) fetchData(); }, 15_000, isReady);
+  // Auto-refresh courses and mappings silently every 30s (skips when user has pending unsaved edits)
+  usePolling(() => { if (!processing && !isDirtyRef.current) fetchData(false); }, 30_000, isReady);
 
   const handleSelectFaculty = (courseId, facultyId) => {
     if (!facultyId) return; // Empty selection
+    isDirtyRef.current = true;
     
     setMappings(prev => {
       const current = prev[courseId] || { faculty_ids: [], co_coordinator_id: null };
@@ -88,6 +92,7 @@ export default function CourseMapping() {
   };
 
   const handleRemoveFaculty = (courseId, facultyId) => {
+    isDirtyRef.current = true;
     setMappings(prev => {
       const current = prev[courseId] || { faculty_ids: [], co_coordinator_id: null };
       const newFids = current.faculty_ids.filter(id => id !== facultyId);
@@ -106,6 +111,7 @@ export default function CourseMapping() {
   };
 
   const handleSetCoCoordinator = (courseId, facultyId) => {
+    isDirtyRef.current = true;
     setMappings(prev => {
       const current = prev[courseId] || { faculty_ids: [], co_coordinator_id: null };
       return {
@@ -139,6 +145,7 @@ export default function CourseMapping() {
       });
 
       if (res.ok) {
+        isDirtyRef.current = false;
         showToast('success', 'Mapping and Co-coordinator saved successfully');
       } else {
         const data = await res.json();
