@@ -3,6 +3,7 @@ import { createServer } from 'http';
 import { parse } from 'url';
 import next from 'next';
 import { Server } from 'socket.io';
+import compression from 'compression';
 import { verifyToken } from '@coderank/core/utils/auth';
 import { logger } from '@coderank/core/utils/logger';
 
@@ -26,15 +27,37 @@ const app = next({
 
 const handle = app.getRequestHandler();
 
+// Compression middleware configuration
+const compressionMiddleware = compression({
+  threshold: 1024, // Only compress responses > 1KB
+  level: 6, // Balanced compression level (0-9)
+  filter: (req, res) => {
+    // Don't compress images and other already-compressed content
+    const contentType = res.getHeader('Content-Type');
+    if (contentType && (
+      contentType.includes('image/') ||
+      contentType.includes('video/') ||
+      contentType.includes('audio/')
+    )) {
+      return false;
+    }
+    // Fall back to compression's default filter
+    return compression.filter(req, res);
+  }
+});
+
 app.prepare().then(() => {
   const server = createServer(async (req, res) => {
     try {
-      // Enable keep-alive for better performance
-      res.setHeader('Connection', 'keep-alive');
-      res.setHeader('Keep-Alive', 'timeout=5');
-      
-      const parsedUrl = parse(req.url, true);
-      await handle(req, res, parsedUrl);
+      // Apply compression middleware
+      compressionMiddleware(req, res, async () => {
+        // Enable keep-alive for better performance
+        res.setHeader('Connection', 'keep-alive');
+        res.setHeader('Keep-Alive', 'timeout=5');
+        
+        const parsedUrl = parse(req.url, true);
+        await handle(req, res, parsedUrl);
+      });
     } catch (err) {
       logger.error('Error occurred handling request', err, { url: req.url });
       res.statusCode = 500;
@@ -135,14 +158,13 @@ app.prepare().then(() => {
       }
     });
 
-    // Faculty practical events — broadcast to specific course room AND global so both faculty & students receive them
+    // Faculty practical events — broadcast to specific course room only
     socket.on('faculty_practical_added', (data) => {
       const practical = data?.practical || data;
       const courseId = data?.course_id || practical?.course_id;
       if (courseId) {
         io.to(`course_${courseId}`).emit('practical_added', practical);
       }
-      io.emit('practical_added', practical);
       if (process.env.NODE_ENV !== 'production') {
         logger.info(`Broadcasted practical_added`, { courseId, socketId: socket.id });
       }
@@ -154,7 +176,6 @@ app.prepare().then(() => {
       if (courseId) {
         io.to(`course_${courseId}`).emit('practical_updated', practical);
       }
-      io.emit('practical_updated', practical);
       if (process.env.NODE_ENV !== 'production') {
         logger.info(`Broadcasted practical_updated`, { courseId, socketId: socket.id });
       }
@@ -166,7 +187,6 @@ app.prepare().then(() => {
       if (courseId) {
         io.to(`course_${courseId}`).emit('practical_deleted', practicalId);
       }
-      io.emit('practical_deleted', practicalId);
       if (process.env.NODE_ENV !== 'production') {
         logger.info(`Broadcasted practical_deleted`, { practicalId, courseId, socketId: socket.id });
       }
