@@ -3,6 +3,8 @@ import { SubmissionService } from '@coderank/core/services/SubmissionService';
 import { checkRateLimit } from '@/lib/queue/rateLimiter';
 import { getUserFromRequest } from '@coderank/core/utils/auth';
 
+export const maxDuration = 30;
+
 const ALLOWED_LANGUAGES = new Set(['python', 'cpp', 'c', 'java', 'javascript']);
 
 export async function POST(request) {
@@ -28,7 +30,7 @@ export async function POST(request) {
       const jobId = await SubmissionService.enqueueJob('playground', { language, code, input: input ?? '' }, user ? user.id : null);
       return NextResponse.json({ jobId, status: 'queued' }, { status: 202 });
     } catch (err) {
-      if (err.message === 'QUEUE_FULL') return NextResponse.json({ error: 'Server is busy. Please try again in a moment.' }, { status: 503 });
+      if (err.message === 'QUEUE_FULL') return NextResponse.json({ error: 'Server is busy. Please try again in a moment.' }, { status: 503, headers: { 'Retry-After': '5' } });
       throw err;
     }
 

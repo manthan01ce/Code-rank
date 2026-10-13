@@ -2,6 +2,9 @@ import { NextResponse } from 'next/server';
 import { CourseService } from '@coderank/core/services/CourseService';
 import { getUserFromRequest } from '@coderank/core/utils/auth';
 
+export const maxDuration = 10;
+export const dynamic = 'force-dynamic';
+
 export async function GET(request) {
   try {
     const user = getUserFromRequest(request);

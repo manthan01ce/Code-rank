@@ -1,6 +1,8 @@
 import { NextResponse } from 'next/server';
 import { SubmissionService } from '@coderank/core/services/SubmissionService';
 
+export const maxDuration = 5;
+
 // In-memory cache for queue stats
 let queueStatsCache = null;
 let queueStatsCacheTime = 0;

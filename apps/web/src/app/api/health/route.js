@@ -7,6 +7,7 @@ import { SubmissionService } from '@coderank/core/services/SubmissionService';
 // and timestamp misleading during an incident.
 export const dynamic = 'force-dynamic';
 export const revalidate = 0;
+export const maxDuration = 5;
 
 // In-memory cache for health checks
 let healthCache = null;

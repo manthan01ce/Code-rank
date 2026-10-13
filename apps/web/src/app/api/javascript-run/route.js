@@ -4,6 +4,8 @@ import { checkRateLimit } from '@/lib/queue/rateLimiter';
 import { getUserFromRequest } from '@/lib/auth';
 import { STATIC_PROBLEMS } from '@/lib/problems';
 
+export const maxDuration = 30;
+
 export async function POST(request) {
   try {
     const user = getUserFromRequest(request);
@@ -31,7 +33,7 @@ export async function POST(request) {
         const jobId = await enqueueJob('dynamic', { language, code, dbId, userId: user ? user.id : null, isSubmit: false }, user ? user.id : null);
         return NextResponse.json({ jobId, status: 'queued' }, { status: 202 });
       } catch (err) {
-        if (err.message === 'QUEUE_FULL') return NextResponse.json({ error: 'Server is busy. Please try again in a moment.' }, { status: 503 });
+        if (err.message === 'QUEUE_FULL') return NextResponse.json({ error: 'Server is busy. Please try again in a moment.' }, { status: 503, headers: { 'Retry-After': '5' } });
         throw err;
       }
     }
