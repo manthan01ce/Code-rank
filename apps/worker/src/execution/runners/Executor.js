@@ -1,8 +1,9 @@
-import { exec } from 'child_process';
+import { exec, execFile } from 'child_process';
 import { promisify } from 'util';
 import crypto from 'crypto';
 
 const execAsync = promisify(exec);
+const execFileAsync = promisify(execFile);
 
 const DAEMONS = {
   cpp: 'coderank-cpp-daemon',
@@ -65,6 +66,55 @@ export class Executor {
 
     this.hash = crypto.createHash('sha256').update(`${this.language}:${this.code}`).digest('hex');
     this.workdir = `/app/exec_${this.hash}`;
+    // Input files must never be shared by two jobs with identical source code.
+    // The source cache above is intentionally shared; execution artifacts are not.
+    this.executionId = crypto.randomUUID();
+  }
+
+  /**
+   * Executes an interpreted playground program in one Docker invocation.
+   *
+   * The old path did a directory probe, a source write, and a program run as
+   * three separate `docker exec` processes.  That process startup overhead was
+   * the dominant cost for short Python/JavaScript programs.  Playground code
+   * does not need the persistent compilation cache, so keep all of its files
+   * in a private temporary directory and clean it up in the same invocation.
+   */
+  async runPlayground(input = '') {
+    if (this.config.compileCmd) return null;
+
+    const workdir = `/tmp/coderank-${this.executionId}`;
+    const codeB64 = Buffer.from(this.code).toString('base64');
+    const inputB64 = Buffer.from(input || '').toString('base64');
+    const timeoutSeconds = Math.max(1, Math.ceil(this.timeLimit / 1000));
+    const script = [
+      'set -u',
+      `workdir='${workdir}'`,
+      'cleanup() { rm -rf "$workdir"; }',
+      'trap cleanup EXIT',
+      'mkdir -p "$workdir"',
+      `printf '%s' '${codeB64}' | base64 -d > "$workdir/${this.config.filename}"`,
+      `printf '%s' '${inputB64}' | base64 -d > "$workdir/input.txt"`,
+      'cd "$workdir"',
+      `timeout ${timeoutSeconds}s ${this.config.runCmd}`
+    ].join('; ');
+
+    const start = performance.now();
+    try {
+      const { stdout, stderr } = await execFileAsync(
+        'docker',
+        ['exec', this.daemon, 'bash', '-lc', script],
+        { timeout: this.timeLimit + 2000, killSignal: 'SIGKILL', maxBuffer: 1024 * 1024 }
+      );
+      return { stdout: stdout || '', stderr: stderr || '', runtimeMs: performance.now() - start };
+    } catch (err) {
+      const timedOut = err.code === 124 || err.killed;
+      return {
+        stdout: err.stdout || '',
+        stderr: timedOut ? 'Time Limit Exceeded' : (err.stderr || err.message || 'Execution failed'),
+        runtimeMs: performance.now() - start
+      };
+    }
   }
 
   async compile() {
@@ -97,7 +147,7 @@ export class Executor {
   }
 
   async runOneTestCase(input, expectedOutput, tcId, idx, marksAwardedMax = 0) {
-    const inputFilename = `input_${idx}.txt`;
+    const inputFilename = `input_${this.executionId}_${idx}.txt`;
     const start = performance.now();
     try {
       const inputB64 = Buffer.from(input || '').toString('base64');
@@ -154,12 +204,17 @@ export class Executor {
     const testCaseMap = new Map();
 
     testCases.forEach((tc, idx) => {
-      const inputFilename = `input_${idx}.txt`;
+      // Keep per-execution artifacts private. The compiled source directory is
+      // shared by its content hash, so fixed names here caused concurrent
+      // submissions of the same source to overwrite each other's test data.
+      const inputFilename = `input_${this.executionId}_${idx}.txt`;
+      const outputFilename = `output_${this.executionId}_${idx}.txt`;
+      const errorFilename = `error_${this.executionId}_${idx}.txt`;
       const inputB64 = Buffer.from(tc.input || '').toString('base64');
       const runCmd = this.config.runCmd.replace('input.txt', inputFilename);
       
       scriptLines.push(`echo '${inputB64}' | base64 -d > ${inputFilename}`);
-      scriptLines.push(`${runCmd} > output_${idx}.txt 2> error_${idx}.txt || echo "EXIT_CODE_NONZERO" > error_${idx}.txt`);
+      scriptLines.push(`${runCmd} > ${outputFilename} 2> ${errorFilename} || echo "EXIT_CODE_NONZERO" > ${errorFilename}`);
       
       testCaseMap.set(idx, tc);
     });
@@ -174,13 +229,15 @@ export class Executor {
     const results = [];
     for (let i = 0; i < testCases.length; i++) {
       const tc = testCaseMap.get(i);
-      const inputFilename = `input_${i}.txt`;
+      const inputFilename = `input_${this.executionId}_${i}.txt`;
+      const outputFilename = `output_${this.executionId}_${i}.txt`;
+      const errorFilename = `error_${this.executionId}_${i}.txt`;
       
       let stdout = '';
       let stderr = '';
       try {
-        const outRes = await execAsync(`docker exec ${this.daemon} cat ${this.workdir}/output_${i}.txt`).catch(() => ({ stdout: '' }));
-        const errRes = await execAsync(`docker exec ${this.daemon} cat ${this.workdir}/error_${i}.txt`).catch(() => ({ stdout: '' }));
+        const outRes = await execAsync(`docker exec ${this.daemon} cat ${this.workdir}/${outputFilename}`).catch(() => ({ stdout: '' }));
+        const errRes = await execAsync(`docker exec ${this.daemon} cat ${this.workdir}/${errorFilename}`).catch(() => ({ stdout: '' }));
         stdout = outRes.stdout;
         stderr = errRes.stdout;
       } catch (e) {}
@@ -189,7 +246,7 @@ export class Executor {
       const expectedNorm = normalizeOutput(tc.expected);
       const passed = actualNorm === expectedNorm;
       
-      execAsync(`docker exec ${this.daemon} rm -f ${this.workdir}/${inputFilename} ${this.workdir}/output_${i}.txt ${this.workdir}/error_${i}.txt`).catch(() => {});
+      execAsync(`docker exec ${this.daemon} rm -f ${this.workdir}/${inputFilename} ${this.workdir}/${outputFilename} ${this.workdir}/${errorFilename}`).catch(() => {});
 
       results.push({
         testCaseId: tc.id,

@@ -229,34 +229,43 @@ export class UserService {
    * Admin: List users with filters
    */
   static async listUsers({ role, search, status, division }) {
-    let conditions = [];
+    const conditions = [];
+    const params = [];
+
+    const addParam = (value) => {
+      params.push(value);
+      return `$${params.length}`;
+    };
+
     if (role) {
-      conditions.push(sql`role = ${role}`);
+      conditions.push(`role = ${addParam(role)}`);
     } else {
-      conditions.push(sql`role != 'admin'`);
+      conditions.push("role != 'admin'");
     }
 
     if (status && status !== 'all') {
-      conditions.push(sql`status = ${status}`);
+      conditions.push(`status = ${addParam(status)}`);
     }
 
     if (search && search.trim()) {
       const searchPattern = `%${search.trim()}%`;
-      conditions.push(sql`(name ILIKE ${searchPattern} OR email ILIKE ${searchPattern} OR extra_info->>'roll_number' ILIKE ${searchPattern} OR extra_info->>'division' ILIKE ${searchPattern})`);
+      const nameParam = addParam(searchPattern);
+      const emailParam = addParam(searchPattern);
+      const rollNumberParam = addParam(searchPattern);
+      const divisionParam = addParam(searchPattern);
+      conditions.push(`(name ILIKE ${nameParam} OR email ILIKE ${emailParam} OR extra_info->>'roll_number' ILIKE ${rollNumberParam} OR extra_info->>'division' ILIKE ${divisionParam})`);
     }
 
     if (division && division !== 'all') {
-      conditions.push(sql`extra_info->>'division' = ${division}`);
+      conditions.push(`extra_info->>'division' = ${addParam(division)}`);
     }
 
-    const whereClause = conditions.reduce((acc, cond) => sql`${acc} AND ${cond}`);
-
-    return await sql`
+    return await sql.query(`
       SELECT id, first_name, last_name, name, email, role, status, created_at, extra_info 
       FROM users 
-      WHERE ${whereClause} 
+      WHERE ${conditions.join(' AND ')}
       ORDER BY created_at DESC
-    `;
+    `, params);
   }
 
   /**

@@ -55,6 +55,10 @@ next-env.d.ts
 scratch/
 test_vol/
 logs/
+!apps/web/src/app/api/logs/
+!apps/web/src/app/api/logs/**
+!apps/web/src/app/admin/logs/
+!apps/web/src/app/admin/logs/**
 
 # Frontend/Backend specific
 frontend/node_modules/

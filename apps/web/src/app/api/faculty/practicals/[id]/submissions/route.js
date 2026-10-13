@@ -34,8 +34,10 @@ export async function GET(request, { params }) {
       return NextResponse.json({ error: 'Practical not found or not owned by you' }, { status: 404 });
     }
 
-    // Build the query dynamically
-    let query = sql`
+    // Build the query dynamically. Keep SQL text and values separate: Neon
+    // query promises are executable requests, not composable SQL fragments.
+    const params = [parseInt(id)];
+    let query = `
       SELECT s.*, u.name as student_name, u.email as student_email,
              u.extra_info->>'roll_number' as roll_number,
              u.extra_info->>'batch' as batch,
@@ -43,59 +45,65 @@ export async function GET(request, { params }) {
              u.extra_info->>'department' as department
       FROM practical_submissions s
       JOIN users u ON s.student_id = u.id
-      WHERE s.practical_id = ${parseInt(id)}
+      WHERE s.practical_id = $1
     `;
 
     // Filter by student name / email / roll no / division
     if (studentSearch) {
       const searchPattern = `%${studentSearch}%`;
-      query = sql`${query} AND (u.name ILIKE ${searchPattern} OR u.email ILIKE ${searchPattern} OR u.extra_info->>'roll_number' ILIKE ${searchPattern} OR u.extra_info->>'division' ILIKE ${searchPattern})`;
+      params.push(searchPattern, searchPattern, searchPattern, searchPattern);
+      const firstSearchParam = params.length - 3;
+      query += ` AND (u.name ILIKE $${firstSearchParam} OR u.email ILIKE $${firstSearchParam + 1} OR u.extra_info->>'roll_number' ILIKE $${firstSearchParam + 2} OR u.extra_info->>'division' ILIKE $${firstSearchParam + 3})`;
     }
 
     // Filter by specific division
     if (divisionFilter && divisionFilter !== 'all') {
-      query = sql`${query} AND u.extra_info->>'division' = ${divisionFilter}`;
+      params.push(divisionFilter);
+      query += ` AND u.extra_info->>'division' = $${params.length}`;
     }
 
     // Filter by status
     if (status && status !== 'all') {
       if (status === 'in-time') {
-        query = sql`${query} AND s.is_late = false`;
+        query += ' AND s.is_late = false';
       } else if (status === 'late') {
-        query = sql`${query} AND s.is_late = true`;
+        query += ' AND s.is_late = true';
       } else {
-        query = sql`${query} AND s.status = ${status}`;
+        params.push(status);
+        query += ` AND s.status = $${params.length}`;
       }
     }
 
     // Filter by date range
     if (fromDate) {
-      query = sql`${query} AND s.submitted_at >= ${new Date(fromDate)}`;
+      params.push(new Date(fromDate));
+      query += ` AND s.submitted_at >= $${params.length}`;
     }
     if (toDate) {
       // Set to end of day
       const endOfDay = new Date(toDate);
       endOfDay.setHours(23, 59, 59, 999);
-      query = sql`${query} AND s.submitted_at <= ${endOfDay}`;
+      params.push(endOfDay);
+      query += ` AND s.submitted_at <= $${params.length}`;
     }
 
     // Handle dynamic sorting
     if (sortBy === 'marks') {
-      query = sortOrder.toUpperCase() === 'ASC' 
-        ? sql`${query} ORDER BY s.normalized_marks ASC, s.submitted_at DESC`
-        : sql`${query} ORDER BY s.normalized_marks DESC, s.submitted_at DESC`;
+      query += sortOrder.toUpperCase() === 'ASC'
+        ? ' ORDER BY s.normalized_marks ASC, s.submitted_at DESC'
+        : ' ORDER BY s.normalized_marks DESC, s.submitted_at DESC';
     } else if (sortBy === 'student_name') {
-      query = sortOrder.toUpperCase() === 'ASC' 
-        ? sql`${query} ORDER BY u.name ASC, s.submitted_at DESC`
-        : sql`${query} ORDER BY u.name DESC, s.submitted_at DESC`;
+      query += sortOrder.toUpperCase() === 'ASC'
+        ? ' ORDER BY u.name ASC, s.submitted_at DESC'
+        : ' ORDER BY u.name DESC, s.submitted_at DESC';
     } else {
       // Default: submission_time
-      query = sortOrder.toUpperCase() === 'ASC' 
-        ? sql`${query} ORDER BY s.submitted_at ASC`
-        : sql`${query} ORDER BY s.submitted_at DESC`;
+      query += sortOrder.toUpperCase() === 'ASC'
+        ? ' ORDER BY s.submitted_at ASC'
+        : ' ORDER BY s.submitted_at DESC';
     }
 
-    const submissionsList = await query;
+    const submissionsList = await sql.query(query, params);
 
     const decodedList = submissionsList.map(s => ({
       ...s,

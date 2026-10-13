@@ -1,11 +1,13 @@
 'use client';
 
 import { useState, useEffect, useCallback } from 'react';
+import { useRouter } from 'next/navigation';
 import LoadingOverlay from '@/components/LoadingOverlay';
 import { useAdminAuth } from '@/hooks/useAdminAuth';
 import { usePolling } from '@/hooks/usePolling';
 
 export default function AdminDashboard() {
+  const router = useRouter();
   const [stats, setStats] = useState({ faculty: 0, students: 0, courses: 0 });
   const [logs, setLogs] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -172,7 +174,7 @@ export default function AdminDashboard() {
       <div className="table-container" style={{ border: '1px solid var(--border-color)', boxShadow: 'none' }}>
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px' }}>
             <h3 style={{ fontSize: '18px', fontWeight: '600' }}>Recent Activity</h3>
-            <button className="btn-small" style={{ color: 'var(--primary)', border: 'none', fontWeight: '600' }}>View All Logs</button>
+            <button className="btn-small" style={{ color: 'var(--primary)', border: 'none', fontWeight: '600' }} onClick={() => router.push('/admin/logs')}>View All Logs</button>
         </div>
         <table>
           <thead>

@@ -4,27 +4,38 @@ import { coalesce } from '../utils/cache-coalescer.js';
 
 let redis = null;
 let redisConnecting = null;
+let redisUnavailableUntil = 0;
+
+// When Redis is offline, avoid making every request wait for a failed TCP
+// connection. A later request retries after this short cooldown so recovery is
+// still automatic once Redis is started.
+const REDIS_RETRY_COOLDOWN_MS = parseInt(process.env.REDIS_RETRY_COOLDOWN_MS || '30000', 10);
 
 async function getRedis() {
   if (redis && redis.isOpen) return redis;
   if (redisConnecting) return redisConnecting;
+  if (Date.now() < redisUnavailableUntil) return null;
 
   redisConnecting = (async () => {
+    let client = null;
     try {
-      const client = createClient({
+      client = createClient({
         socket: { 
           host: process.env.REDIS_HOST || '127.0.0.1', 
           port: parseInt(process.env.REDIS_PORT || '6379', 10),
-          connectTimeout: 2000,
-          reconnectStrategy: (retries) => (retries > 3 ? false : Math.min(retries * 500, 2000))
+          connectTimeout: 500,
+          reconnectStrategy: false
         }
       });
       client.on('error', () => {}); // Silently catch offline errors
       await client.connect();
       redis = client;
+      redisUnavailableUntil = 0;
       return redis;
     } catch {
+      client?.destroy();
       redis = null;
+      redisUnavailableUntil = Date.now() + REDIS_RETRY_COOLDOWN_MS;
       return null;
     } finally {
       redisConnecting = null;

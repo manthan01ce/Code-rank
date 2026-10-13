@@ -1,246 +1,136 @@
-# CodeRank - Educational Management System
+# CodeRank
 
-> A modern, full-stack educational management platform built with Next.js and PostgreSQL.
+CodeRank is a role-based educational platform for managing courses, practicals,
+students, faculty, submissions, activity logs, and isolated code execution.
 
-## 🎉 Status: All Issues Fixed & Ready to Use!
+## Architecture
 
-All bugs have been resolved. The application is fully functional with live updates, bulk upload, and PDF generation working perfectly.
+- **Web application:** Next.js 16, React 19, custom Socket.IO server
+- **Backend services:** shared Node.js service layer, BullMQ workers, Redis
+- **Database:** Neon/PostgreSQL through `@neondatabase/serverless`
+- **Execution:** isolated Docker daemons for Python, C, C++, Java, and JavaScript
 
----
+Execution requests are queued in Redis. The worker uses a CPU-bounded execution
+pool (calibrated to `MAX_CONCURRENT_JOBS=8` locally), while Redis buffers client
+requests. This is intentionally different from the number of active users: 50
+or 100 users may submit concurrently without starting 50 or 100 Docker jobs.
 
-## 🚀 Quick Start
+## Active project layout
 
-### 1. Install Dependencies
-```bash
-npm install
-```
-
-### 2. Start Development Server
-```bash
-npm run dev
-```
-
-### 3. Open Browser
-Navigate to: http://localhost:3000
-
----
-
-## ✨ Features
-
-- ✅ **Authentication** - JWT-based with role-based access control
-- ✅ **Student Management** - Add, edit, deactivate/reactivate students with bulk upload
-- ✅ **Faculty Management** - Add, edit, deactivate/reactivate faculty with bulk upload
-- ✅ **Course Management** - Create and manage courses with faculty assignment
-- ✅ **User Status Management** - Active/Inactive status with filtering (no permanent deletion)
-- ✅ **Bulk Upload** - CSV/Excel support with auto-generated passwords
-- ✅ **PDF Generation** - Automatic credential PDF downloads
-- ✅ **Live Updates** - Real-time UI updates without page refresh
-- ✅ **Activity Logging** - Track all system activities including status changes
-- ✅ **Dashboard** - Statistics and recent activity overview
-- ✅ **Search & Filter** - Real-time search and status filtering across all entities
-
----
-
-## 📚 Documentation
-
-- **[ARCHITECTURE.md](ARCHITECTURE.md)** - System architecture, PgBouncer pooling, and execution pipeline
-- **[TEST_GUIDE.md](TEST_GUIDE.md)** - Step-by-step testing instructions
-- **[LAN_TESTING_GUIDE.md](LAN_TESTING_GUIDE.md)** - Local Area Network and lab deployment guide
-
----
-
-## 📊 Tech Stack
-
-- **Frontend**: Next.js 16.3.6 (App Router, Turbopack), React 19
-- **Backend**: Next.js Serverless API Routes, BullMQ (Job Queue), Node.js worker
-- **Database**: Neon PostgreSQL (Serverless) with PgBouncer Connection Pooling
-- **Execution Engine**: Docker (Language Daemons for secure execution isolation)
-- **Authentication**: JWT (24h expiry) + bcryptjs
-- **Real-Time**: Socket.io + 15-second automatic polling with Page Visibility detection
-- **PDF Generation**: jsPDF + jspdf-autotable
-- **File Parsing**: ExcelJS, csv-parse
-- **Styling**: Vanilla CSS Modules
-
----
-
-## 🗂️ Project Structure
-
-```
+```text
 CodeRank/
-├── frontend/
-│   ├── src/
-│   │   ├── app/                    # Next.js pages and API routes
-│   │   │   ├── page.js            # Landing / Homepage
-│   │   │   ├── login/             # Authentication portal
-│   │   │   ├── admin/             # Admin dashboard & user management
-│   │   │   ├── student/           # Student dashboard & practical solving
-│   │   │   ├── faculty/           # Faculty dashboard & submissions
-│   │   │   ├── code/              # Coding workspace
-│   │   │   ├── practice/          # Sandbox practice
-│   │   │   └── api/               # Serverless API routes
-│   │   ├── components/            # Reusable UI components
-│   │   ├── hooks/                 # Custom hooks (usePolling, useSocket, useAdminAuth)
-│   │   └── lib/                   # Database connection, auth, execution utilities
-│   ├── server.js                  # Custom Next.js + Socket.IO server
-│   ├── next.config.mjs            # Next.js configuration
-│   └── package.json               # Frontend dependencies
-├── backend/                       # Standalone worker and services
-├── vercel.json                    # Vercel deployment settings
-├── ARCHITECTURE.md                # System architecture documentation
-└── README.md                      # Main project documentation
+├── apps/
+│   ├── web/                         # Next.js UI, API routes and Socket.IO server
+│   │   ├── src/app/                 # App Router pages and API handlers
+│   │   ├── src/components/          # UI and coding-workspace components
+│   │   └── src/lib/                 # Web-only helpers (auth, queue, PDF)
+│   └── worker/                      # BullMQ background-process application
+│       └── src/
+│           ├── execution/           # Docker health and language runners
+│           │   └── runners/         # Compile/run implementations
+│           └── workers/             # BullMQ queue consumers
+├── packages/
+│   └── core/                        # Shared DB, auth, logging and services
+├── infrastructure/                  # Docker Compose and deployment config
+├── load-tests/                      # k6 load and runner benchmarks
+├── database/                        # Database assets/migrations
+├── .env.example                     # Environment-variable template
+├── ARCHITECTURE.md                  # Detailed system and capacity design
+└── package.json                     # npm workspace scripts
 ```
 
----
+`frontend/`, `backend/`, and `runner/` are legacy copies retained for backward
+compatibility. They are **not** used by the root workspace scripts or active
+deployment configuration. New development belongs only in `apps/` and
+`packages/`.
 
-## 🔧 Environment Variables
+## Prerequisites
 
-Create a `.env.local` file with:
+- Node.js 18 or later (npm 11 recommended)
+- Docker Desktop (for Redis and language runner containers)
+- A PostgreSQL/Neon `DATABASE_URL`
+- [k6](https://grafana.com/docs/k6/latest/set-up/install-k6/) for load tests
+  (optional)
+
+## Setup
+
+```powershell
+git clone https://github.com/manthan01ce/Code-rank.git
+cd Code-rank
+Copy-Item .env.example .env
+npm install
+docker compose -f infrastructure/docker-compose.yml up -d redis
+```
+
+Set `DATABASE_URL`, `JWT_SECRET`, and other required values in `.env`. For
+local development, the web app and worker also load app-local `.env` files.
+
+## Run locally
+
+Use separate terminals:
+
+```powershell
+npm run web       # http://localhost:3000
+npm run worker    # BullMQ execution and system workers
+```
+
+Check dependencies and queue status:
+
+```powershell
+Invoke-RestMethod http://localhost:3000/api/health
+```
+
+## Environment configuration
+
+Start from `.env.example`. Important execution settings:
 
 ```env
-# Neon Serverless Postgres (Direct or PgBouncer Connection Pooler)
-DATABASE_URL=postgresql://user:password@ep-xyz-pooler.us-east-1.aws.neon.tech/neondb?sslmode=require&connection_limit=10
-JWT_SECRET=your_secret_key
-ADMIN_EMAIL=admin@example.com
-ADMIN_PASSWORD=your_password
-
-# Database connection pool size (default: 10)
-# Increase this value for higher concurrency workloads
-DB_POOL_SIZE=10
+REDIS_HOST=127.0.0.1
+REDIS_PORT=6379
+MAX_CONCURRENT_JOBS=8
+MAX_QUEUE_SIZE=500
+JOB_TIMEOUT_MS=30000
+WORKER_VERBOSE_LOGS=false
 ```
 
-### Database Configuration
+`MAX_CONCURRENT_JOBS` controls CPU-bound execution jobs, not signed-in users.
+Increase it only after measuring Docker CPU and latency on the target host. For
+more throughput, add worker/runner replicas with additional CPU capacity.
 
-- **connection_limit**: Controls the maximum number of concurrent connections to Neon via PgBouncer pooler
-  - Default: 10 (optimized for 100+ concurrent users)
-  - Previous: 1 (too conservative, caused connection bottlenecks)
-  - Recommendation: Set to 10-20 for production workloads
-  
-- **DB_POOL_SIZE**: Application-level connection pool configuration
-  - Default: 10
-  - Should match or be slightly less than `connection_limit` in DATABASE_URL
-  - Prevents "connection pool exhausted" errors under load
+## Load testing
 
----
+The runner benchmark submits code and waits for the actual BullMQ result. For
+local load testing only, temporarily disable the API rate limiter in
+`apps/web/.env`, restart the web server, and remove the setting afterward.
 
-## 📦 Sample Data
+```powershell
+# 50 simultaneous clients
+$env:VUS='50'; $env:DURATION='40s'
+k6 run load-tests/runner-concurrency-benchmark.js
 
-Two CSV files are provided for testing bulk upload:
-- `sample_students.csv` - 5 sample students
-- `sample_faculty.csv` - 5 sample faculty members
+# 100 simultaneous clients; permits time for the bounded execution backlog
+$env:VUS='100'; $env:DURATION='40s'
+$env:MAX_WAIT_SECONDS='30'; $env:POLL_INTERVAL_SECONDS='0.25'
+$env:P95_TARGET_MS='15000'
+k6 run load-tests/runner-concurrency-benchmark.js
+```
 
----
+Recent local result: 100 concurrent users completed at about 10.7
+executions/second. The p95 includes expected queue wait behind eight slots.
 
-## 🎯 What's Working
+## Documentation
 
-### Student Management
-- ✅ Add manually → PDF downloads
-- ✅ Bulk upload CSV/Excel → All added, PDF downloads
-- ✅ Edit → Changes appear immediately
-- ✅ Deactivate/Reactivate → Status changes immediately (no permanent deletion)
-- ✅ Filter by status → Active/Inactive/All
-- ✅ Search → Real-time filtering
+- [Architecture and capacity design](ARCHITECTURE.md)
+- [Load test notes](load-tests/README.md)
+- [Testing guide](TEST_GUIDE.md)
+- [LAN deployment guide](LAN_TESTING_GUIDE.md)
 
-### Faculty Management
-- ✅ Add manually → PDF downloads
-- ✅ Bulk upload CSV/Excel → All added, PDF downloads
-- ✅ Edit → Changes appear immediately
-- ✅ Deactivate/Reactivate → Status changes immediately (no permanent deletion)
-- ✅ Filter by status → Active/Inactive/All
-- ✅ Search → Real-time filtering
+## Deployment
 
-### Course Management
-- ✅ Create → Appears immediately
-- ✅ Edit → Changes appear immediately
-- ✅ Delete → Removed immediately
-- ✅ Assign faculty → Works correctly
+The root `vercel.json` targets `apps/web`. The BullMQ worker and Docker runners
+must run separately on infrastructure that can access Redis and Docker; they
+are not suitable for Vercel serverless execution.
 
-### Dashboard
-- ✅ Live statistics
-- ✅ Recent activity logs
-- ✅ Color-coded badges
+## License
 
----
-
-## 🚀 Deployment
-
-### Vercel (Recommended)
-1. Push to GitHub
-2. Connect to Vercel
-3. Add environment variables
-4. Deploy
-
-### Other Platforms
-- Netlify
-- Railway
-- Render
-- AWS/Azure/GCP
-
----
-
-## 📝 Database Schema
-
-### Users
-- id, name, email, password (hashed), role, status, extra_info (JSONB), created_at
-
-### Courses
-- id, name, description, assigned_faculty, status, created_at
-
-### Activity Logs
-- id, user_id, action, details, created_at
-
----
-
-## 🆘 Troubleshooting
-
-### Issue: Changes not appearing
-- Check browser console (F12) for errors
-- Verify database connection in .env.local
-- Clear browser cache and localStorage
-
-### Issue: PDF not downloading
-- Check browser popup blocker
-- Ensure jsPDF is installed: `npm install jspdf jspdf-autotable`
-
-### Issue: "Unauthorized" error
-- Token may have expired (24 hours)
-- Logout and login again
-
----
-
-## 📞 Support
-
-For detailed help, check:
-1. **TESTING_GUIDE.md** - Step-by-step testing
-2. **FIXES_APPLIED.md** - Technical details
-3. **ARCHITECTURE.md** - System design
-4. Browser console (F12) for errors
-
----
-
-## 🎨 Features Roadmap (Optional)
-
-- [ ] Student portal (view courses, submit assignments)
-- [ ] Faculty portal (grade students, manage courses)
-- [ ] Assignment submission system
-- [ ] Grading system
-- [ ] Email notifications
-- [ ] Dark mode
-- [ ] Mobile app
-
----
-
-## 📄 License
-
-This project is private and proprietary.
-
----
-
-## 🙏 Credits
-
-Built with Next.js, React, and Neon PostgreSQL.
-
----
-
-**Everything is working perfectly! Start testing and enjoy! 🎉**
-
-For detailed testing instructions, see [TESTING_GUIDE.md](TESTING_GUIDE.md)
+Private and proprietary.

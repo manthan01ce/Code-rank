@@ -2,6 +2,12 @@ import { NextResponse } from 'next/server';
 import sql from '@coderank/core/db';
 import { SubmissionService } from '@coderank/core/services/SubmissionService';
 
+// Health must be evaluated by this server instance. The short in-memory cache
+// below protects Redis/Neon; Next/CDN response caching would make its status
+// and timestamp misleading during an incident.
+export const dynamic = 'force-dynamic';
+export const revalidate = 0;
+
 // In-memory cache for health checks
 let healthCache = null;
 let healthCacheTime = 0;
@@ -44,15 +50,21 @@ async function refreshHealthCache() {
         report.services.database.error = dbResult.status === 'rejected' ? dbResult.reason?.message : 'Database check failed';
       }
 
-      if (queueResult.status === 'fulfilled') {
+      if (queueResult.status === 'fulfilled' && !queueResult.value?.cached) {
         report.services.queue.status = 'healthy';
         report.services.queue.stats = queueResult.value;
+      } else if (queueResult.status === 'fulfilled') {
+        report.services.queue.status = 'degraded';
+        report.services.queue.stats = queueResult.value;
+        report.services.queue.error = 'Redis queue is unavailable; cached queue statistics are being returned';
       } else {
         report.services.queue.status = 'degraded';
         report.services.queue.error = queueResult.status === 'rejected' ? queueResult.reason?.message : 'Queue check failed';
       }
 
-      report.status = 'healthy';
+      report.status = Object.values(report.services).every((service) => service.status === 'healthy')
+        ? 'healthy'
+        : 'degraded';
 
       healthCache = report;
       healthCacheTime = Date.now();
@@ -88,7 +100,7 @@ export async function GET() {
       status: 200,
       headers: { 
         'X-Cache': 'HIT',
-        'Cache-Control': 'public, s-maxage=10, stale-while-revalidate=20'
+        'Cache-Control': 'no-store'
       }
     });
   }
@@ -101,7 +113,7 @@ export async function GET() {
       status: 200,
       headers: { 
         'X-Cache': 'STALE',
-        'Cache-Control': 'public, s-maxage=10, stale-while-revalidate=20'
+        'Cache-Control': 'no-store'
       }
     });
   }
@@ -113,7 +125,7 @@ export async function GET() {
     status: 200,
     headers: { 
       'X-Cache': 'MISS',
-      'Cache-Control': 'public, s-maxage=10, stale-while-revalidate=20'
+        'Cache-Control': 'no-store'
     }
   });
 }

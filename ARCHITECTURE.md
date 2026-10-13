@@ -50,7 +50,7 @@ CodeRank is a secure, high-concurrency educational management and automated code
 - **UI & Frontend**: React 19, Monaco Editor, Lucide Icons, Vanilla CSS
 - **Database**: Neon Serverless PostgreSQL with PgBouncer Connection Pooling
 - **Database Driver**: `@neondatabase/serverless` (Stateless HTTP queries + WebSocket pooler)
-- **Real-Time Communication**: Socket.io + 15-second auto-polling with Page Visibility awareness
+- **Real-Time Communication**: Socket.io push with short job-status fallback polling; dashboard polling uses Page Visibility awareness
 - **Queueing & Rate Limiting**: Redis + BullMQ
 - **Execution Isolation**: Docker runtime daemons (Python, C, C++, Java, Node.js)
 - **Security & Auth**: JWT (24h expiry) + bcryptjs password hashing
@@ -139,6 +139,40 @@ To ensure 100% data reliability even if WebSocket disconnects or network drops o
    - Polling interval set to 15,000ms across Admin, Faculty, and Student modules.
    - Utilizes Page Visibility API (`document.visibilityState`) to pause polling when tabs are backgrounded, eliminating wasted network requests.
 
+### Execution completion delivery
+
+Code runs use a separate low-latency path: the worker emits `worker_job_complete`
+over Socket.IO as soon as BullMQ completes a job. If that socket delivery is
+unavailable, the coding workspace polls `/api/jobs/:jobId` after 250 ms, then
+backs off to 500 ms and a maximum of 1 second until it resolves. This keeps a
+socket failure from adding the previous fixed 1.5 second display delay without
+turning a large socket outage into permanent high-frequency polling.
+
+---
+
+## 🚀 Execution Capacity and Scaling
+
+The queue accepts requests independently of sandbox capacity. On the calibrated
+local host, `MAX_CONCURRENT_JOBS=8` is the execution limit and `MAX_QUEUE_SIZE=500`
+is the admission buffer. This supports at least 50 simultaneous users without
+starting 50 competing Docker processes.
+
+- **Do not set worker concurrency to active-user count.** Code execution is
+  CPU-bound; higher concurrency increased queueing/CPU contention without
+  increasing throughput in local tests.
+- **Runner isolation:** each invocation uses a unique execution artifact name.
+  Source builds may remain content-addressed and cached, but inputs, outputs,
+  and errors are never shared between same-source jobs.
+- **Interpreted playground fast path:** Python and JavaScript source, input,
+  execution, and cleanup happen in one `docker exec` call instead of three.
+- **Horizontal scale:** for more sustained throughput, run more worker
+  processes/hosts and add matching sandbox-daemon replicas. All workers share
+  Redis; capacity then scales with the number of daemon CPU allocations.
+- **Observability:** track BullMQ waiting/active counts, completion latency,
+  worker failures, Docker CPU/memory, and Redis memory/evictions. Redis uses
+  `noeviction` so a full queue fails explicitly instead of silently dropping
+  jobs.
+
 ---
 
 ## 🔒 Role-Based Access Control (RBAC) & Auth Flow
@@ -172,26 +206,15 @@ To ensure 100% data reliability even if WebSocket disconnects or network drops o
 
 ```
 CodeRank/
-├── frontend/
-│   ├── src/
-│   │   ├── app/
-│   │   │   ├── page.js                     # Homepage
-│   │   │   ├── login/page.js               # Login Portal
-│   │   │   ├── admin/                      # Admin Module (Faculty, Students, Courses, Logs)
-│   │   │   ├── faculty/                    # Faculty Module (Practicals, Submissions, Marks)
-│   │   │   ├── student/                    # Student Module (Practicals, Code Editor)
-│   │   │   ├── code/                       # Standalone Coding Workspace
-│   │   │   ├── practice/                   # Practice Sandbox
-│   │   │   └── api/                        # Next.js Serverless API Endpoints
-│   │   ├── components/                     # Shared UI Components (Loading, Logout, Modals)
-│   │   ├── hooks/                          # Custom Hooks (usePolling, useSocket, useAdminAuth)
-│   │   └── lib/                            # Database client, auth utils, execution engines
-│   ├── server.js                           # Custom Next.js + Socket.IO Server
-│   ├── next.config.mjs                     # Next.js Config
-│   └── package.json                        # Frontend Dependencies
-├── backend/                                # Standalone Worker & Queue Support
-│   └── src/lib/db.js                       # Backend Database Connection
-├── vercel.json                             # Vercel Deployment Configuration
-├── README.md                               # Project Guide & Documentation
-└── ARCHITECTURE.md                         # Architecture Specifications
+├── apps/
+│   ├── web/                                # Next.js + custom Socket.IO server
+│   │   └── src/app/api/                    # HTTP API routes
+│   └── worker/                             # BullMQ execution and system workers
+│       └── src/engine/runners/             # Docker sandbox execution paths
+├── packages/core/                          # Shared DB, queue, auth and service code
+├── infrastructure/                         # Docker Compose and service configuration
+├── load-tests/                             # k6 regression/load benchmarks
+├── .env.example                            # Deployment configuration template
+├── README.md
+└── ARCHITECTURE.md
 ```

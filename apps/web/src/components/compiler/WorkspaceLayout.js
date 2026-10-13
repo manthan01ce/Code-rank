@@ -517,6 +517,8 @@ export default function WorkspaceLayout({ problem }) {
             socket.emit('watch_job', data.jobId);
           }
 
+          let pollAttempt = 0;
+          const nextPollDelay = () => Math.min(1000, 250 * (2 ** pollAttempt++));
           const poll = async () => {
             if (isResolved) return;
             try {
@@ -538,9 +540,9 @@ export default function WorkspaceLayout({ problem }) {
             } catch (e) {
                // Ignore and retry
             }
-            if (!isResolved) pollTimeout = setTimeout(poll, 1500);
+            if (!isResolved) pollTimeout = setTimeout(poll, nextPollDelay());
           };
-          pollTimeout = setTimeout(poll, 1500);
+          pollTimeout = setTimeout(poll, nextPollDelay());
         });
       }
 
@@ -687,6 +689,8 @@ export default function WorkspaceLayout({ problem }) {
             socket.emit('watch_job', data.jobId);
           }
 
+          let pollAttempt = 0;
+          const nextPollDelay = () => Math.min(1000, 250 * (2 ** pollAttempt++));
           const poll = async () => {
             if (isResolved) return;
             try {
@@ -707,9 +711,9 @@ export default function WorkspaceLayout({ problem }) {
             } catch (e) {
                // Ignore and retry
             }
-            if (!isResolved) pollTimeout = setTimeout(poll, 1500);
+            if (!isResolved) pollTimeout = setTimeout(poll, nextPollDelay());
           };
-          pollTimeout = setTimeout(poll, 1500);
+          pollTimeout = setTimeout(poll, nextPollDelay());
         });
       }
 

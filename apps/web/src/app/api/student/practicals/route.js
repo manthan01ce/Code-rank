@@ -34,8 +34,11 @@ export async function GET(request) {
       return NextResponse.json([]);
     }
 
-    // Fetch practicals where practical batch matches and course semester matches student semester
-    let query = sql`
+    // Fetch practicals where practical batch matches and course semester matches student semester.
+    // Neon query promises cannot be nested as SQL fragments, so keep the query
+    // text and its parameters together while adding optional filters.
+    const params = [user.id, batch, batch, semester];
+    let query = `
       SELECT p.id, p.course_id, p.batch_id, p.title, p.description, p.instructions, p.total_marks, p.difficulty, 
              p.is_challenge, p.input_format, p.output_format, p.constraints, 
              p.sample_input, p.sample_output, p.starter_code, p.start_time, p.end_time,
@@ -48,30 +51,32 @@ export async function GET(request) {
         SELECT DISTINCT ON (practical_id) 
           practical_id, status, normalized_marks, submitted_at
         FROM practical_submissions 
-        WHERE student_id = ${user.id}
+        WHERE student_id = $1
         ORDER BY practical_id, normalized_marks DESC, submitted_at DESC
       ) s ON s.practical_id = p.id
       WHERE (
         p.batch_id IS NULL 
         OR p.batch_id = '' 
         OR p.batch_id ILIKE 'all' 
-        OR (${batch} != '' AND p.batch_id ILIKE ${batch})
+        OR ($2 != '' AND p.batch_id ILIKE $3)
       )
-        AND c.semester = ${semester}
+        AND c.semester = $4
         AND p.status = 'active'
     `;
 
     if (courseId) {
       if (!isNaN(parseInt(courseId))) {
-        query = sql`${query} AND (p.course_id = ${parseInt(courseId)} OR c.course_code = ${courseId})`;
+        params.push(parseInt(courseId), courseId);
+        query += ` AND (p.course_id = $${params.length - 1} OR c.course_code = $${params.length})`;
       } else {
-        query = sql`${query} AND c.course_code = ${courseId}`;
+        params.push(courseId);
+        query += ` AND c.course_code = $${params.length}`;
       }
     }
 
-    query = sql`${query} ORDER BY p.created_at DESC`;
+    query += ' ORDER BY p.created_at DESC';
 
-    const practicals = await query;
+    const practicals = await sql.query(query, params);
 
     return NextResponse.json(practicals);
   } catch (error) {

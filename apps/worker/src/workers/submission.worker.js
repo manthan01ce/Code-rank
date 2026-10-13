@@ -8,11 +8,12 @@ import {
   runJava,
   runJavaScript,
   executeCode
-} from '../engine/runners/index.js';
+} from '../execution/runners/index.js';
 
 export function createSubmissionWorker() {
   const MAX_CONCURRENT = parseInt(process.env.MAX_CONCURRENT_JOBS || '8', 10);
   const JOB_TIMEOUT = parseInt(process.env.JOB_TIMEOUT_MS || '30000', 10);
+  const verboseLogs = process.env.WORKER_VERBOSE_LOGS === 'true';
 
   const connection = {
     host: process.env.REDIS_HOST || '127.0.0.1',
@@ -26,7 +27,7 @@ export function createSubmissionWorker() {
 
   const worker = new Worker('code-execution', async (job) => {
     const { type, payload, userId } = job.data;
-    console.log(`[SubmissionWorker] Processing job ${job.id} (type: ${type})`);
+    if (verboseLogs) console.log(`[SubmissionWorker] Processing job ${job.id} (type: ${type})`);
 
     let result;
     if (type === 'dynamic') {
@@ -54,7 +55,7 @@ export function createSubmissionWorker() {
   });
 
   worker.on('completed', (job) => {
-    console.log(`[SubmissionWorker] Job ${job.id} completed. Duration: ${job.finishedOn - job.processedOn}ms`);
+    if (verboseLogs) console.log(`[SubmissionWorker] Job ${job.id} completed. Duration: ${job.finishedOn - job.processedOn}ms`);
   });
 
   worker.on('failed', (job, err) => {

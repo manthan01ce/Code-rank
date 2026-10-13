@@ -19,6 +19,17 @@ export async function executeCode(language, code, input = '') {
   }
 
   const executor = new Executor(language, code);
+  const playgroundResult = await executor.runPlayground(input);
+
+  if (playgroundResult) {
+    return {
+      success: !playgroundResult.stderr,
+      stdout: playgroundResult.stdout.trim(),
+      stderr: playgroundResult.stderr.trim(),
+      exitCode: playgroundResult.stderr ? 1 : 0
+    };
+  }
+
   const compileRes = await executor.compile();
 
   if (!compileRes.success) {

@@ -1,8 +1,8 @@
 import dotenv from 'dotenv';
 dotenv.config();
 
-import { createSubmissionWorker } from './queue/submission.worker.js';
-import { createSystemWorker } from './queue/system.worker.js';
+import { createSubmissionWorker } from './workers/submission.worker.js';
+import { createSystemWorker } from './workers/system.worker.js';
 import { logger } from '@coderank/core/utils/logger';
 
 console.log('⚡ CodeRank Execution Worker Starting...');

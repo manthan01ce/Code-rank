@@ -137,7 +137,7 @@ The code execution system uses Docker containers:
    - Memory limited to 512MB per container
    - CPU limited to 1.0 per container
 
-2. **Execution Engine** (apps/worker/src/engine/docker.js)
+2. **Execution Engine** (apps/worker/src/execution/docker.js)
    - Creates temporary session directories
    - Mounts code and input files
    - Executes in isolated containers
