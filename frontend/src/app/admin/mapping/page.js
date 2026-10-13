@@ -3,7 +3,6 @@
 import { useState, useEffect } from 'react';
 import LoadingOverlay from '@/components/LoadingOverlay';
 import { useAdminAuth } from '@/hooks/useAdminAuth';
-import { usePolling } from '@/hooks/usePolling';
 
 export default function CourseMapping() {
   const [courses, setCourses] = useState([]);
@@ -12,6 +11,7 @@ export default function CourseMapping() {
   const [loading, setLoading] = useState(true);
   const [processing, setProcessing] = useState(false);
   const [toast, setToast] = useState(null);
+  const [refreshing, setRefreshing] = useState(false);
 
   const showToast = (type, msg) => {
     setToast({ type, msg });
@@ -60,7 +60,7 @@ export default function CourseMapping() {
   };
 
   // Auto-refresh courses and mappings every 15s (pauses while processing changes)
-  usePolling(() => { if (!processing) fetchData(); }, 15_000, isReady);
+  // usePolling removed — use the Refresh button instead
 
   const handleSelectFaculty = (courseId, facultyId) => {
     if (!facultyId) return; // Empty selection
@@ -180,10 +180,19 @@ export default function CourseMapping() {
         </div>
         <button
           className="btn-small"
-          style={{ padding: '10px 16px', borderRadius: '8px', border: '1px solid var(--border-color)', background: 'transparent', cursor: 'pointer' }}
-          onClick={fetchData}
+          style={{
+            padding: '10px 16px', borderRadius: '8px', border: '1px solid var(--border-color)',
+            background: 'transparent', cursor: refreshing ? 'not-allowed' : 'pointer',
+            opacity: refreshing ? 0.6 : 1,
+          }}
+          onClick={async () => {
+            if (refreshing) return;
+            setRefreshing(true);
+            try { await fetchData(); } finally { setRefreshing(false); }
+          }}
+          disabled={refreshing}
         >
-          ↻ Refresh
+          {refreshing ? '↻ Refreshing...' : '↻ Refresh'}
         </button>
       </div>
 

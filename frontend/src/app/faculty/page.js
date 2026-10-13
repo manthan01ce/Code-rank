@@ -5,7 +5,6 @@ import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import LoadingOverlay from '@/components/LoadingOverlay';
 import { useSocket } from '@/hooks/useSocket';
-import { usePolling } from '@/hooks/usePolling';
 
 export default function FacultyDashboard() {
   const router = useRouter();
@@ -103,6 +102,7 @@ export default function FacultyDashboard() {
   const [loading, setLoading] = useState(true);
   const [processing, setProcessing] = useState(false);
   const [toast, setToast] = useState(null);
+  const [refreshing, setRefreshing] = useState(false);
 
   const token = () => localStorage.getItem('token');
 
@@ -297,16 +297,23 @@ export default function FacultyDashboard() {
     }
   };
 
-  // Auto-refresh active tab data every 15s (practicals, submissions, marks)
-  usePolling(() => {
-    if (selectedCourse && activeTab === 'practicals') {
-      fetchPracticals();
-    } else if (selectedPracticalId && activeTab === 'submissions') {
-      fetchSubmissions();
-    } else if (selectedCourse && activeTab === 'marks') {
-      fetchStats();
+  // Auto-refresh removed — use the Refresh button in the tab bar instead.
+
+  const handleRefreshActiveTab = async () => {
+    if (refreshing) return;
+    setRefreshing(true);
+    try {
+      if (selectedCourse && activeTab === 'practicals') {
+        await fetchPracticals();
+      } else if (selectedPracticalId && activeTab === 'submissions') {
+        await fetchSubmissions();
+      } else if (selectedCourse && activeTab === 'marks') {
+        await fetchStats();
+      }
+    } finally {
+      setRefreshing(false);
     }
-  }, 15_000, Boolean(selectedCourse || selectedPracticalId));
+  };
 
   const handleOpenAddPractical = () => {
     setEditingPractical(null);
@@ -841,7 +848,8 @@ export default function FacultyDashboard() {
       </div>
 
       {/* Tab Navigation */}
-      <div style={{ display: 'flex', borderBottom: '1px solid var(--border-color)', marginBottom: '25px' }}>
+      <div style={{ display: 'flex', borderBottom: '1px solid var(--border-color)', marginBottom: '25px', alignItems: 'center', justifyContent: 'space-between' }}>
+        <div style={{ display: 'flex' }}>
         <button
           onClick={() => setActiveTab('practicals')}
           style={{
@@ -868,6 +876,19 @@ export default function FacultyDashboard() {
           }}
         >
            Marks Overview
+        </button>
+        </div>
+        <button
+          onClick={handleRefreshActiveTab}
+          disabled={refreshing}
+          style={{
+            padding: '8px 16px', borderRadius: '8px', border: '1px solid var(--border-color)',
+            background: 'transparent', cursor: refreshing ? 'not-allowed' : 'pointer',
+            fontWeight: 600, fontSize: '13px', color: 'var(--text-muted)', opacity: refreshing ? 0.6 : 1,
+            marginBottom: '3px',
+          }}
+        >
+          {refreshing ? '↻ Refreshing...' : '↻ Refresh'}
         </button>
       </div>
 

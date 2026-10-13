@@ -2,28 +2,12 @@
 
 import { useRouter, usePathname } from 'next/navigation';
 import { useEffect, useState, useRef } from 'react';
-import ChangePasswordModal from './ChangePasswordModal';
-
+import HeaderProfileDropdown from './HeaderProfileDropdown';
 
 export default function FacultySidebar() {
   const router = useRouter();
   const pathname = usePathname();
   const [user, setUser] = useState(null);
-  const [showProfileMenu, setShowProfileMenu] = useState(false);
-  const [isChangePasswordOpen, setIsChangePasswordOpen] = useState(false);
-  const profileRef = useRef(null);
-
-  useEffect(() => {
-    function handleClickOutside(event) {
-      if (profileRef.current && !profileRef.current.contains(event.target)) {
-        setShowProfileMenu(false);
-      }
-    }
-    document.addEventListener("mousedown", handleClickOutside);
-    return () => {
-      document.removeEventListener("mousedown", handleClickOutside);
-    };
-  }, []);
 
   useEffect(() => {
     const userData = localStorage.getItem('user');
@@ -78,155 +62,7 @@ export default function FacultySidebar() {
         paddingRight: '30px',
         zIndex: 100
       }}>
-        {/* Profile Section */}
-        <div ref={profileRef} style={{ position: 'relative' }}>
-          <button
-            onClick={() => setShowProfileMenu(!showProfileMenu)}
-            style={{
-              display: 'flex',
-              alignItems: 'center',
-              gap: '12px',
-              background: 'none',
-              border: 'none',
-              cursor: 'pointer',
-              padding: '8px 12px',
-              borderRadius: '8px',
-              transition: 'background-color 0.2s',
-              backgroundColor: showProfileMenu ? '#f0f0f0' : 'transparent'
-            }}
-          >
-            {/* Profile Avatar */}
-            <div style={{
-              width: '40px',
-              height: '40px',
-              borderRadius: '50%',
-              backgroundColor: '#4F46E5',
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              color: 'white',
-              fontWeight: 'bold',
-              fontSize: '16px'
-            }}>
-              {user?.name?.charAt(0).toUpperCase() || 'F'}
-            </div>
-            
-            {/* User Info */}
-            <div style={{ textAlign: 'left' }}>
-              <div style={{ fontSize: '14px', fontWeight: '600', color: '#1e293b' }}>
-                {user?.name || 'Faculty'}
-              </div>
-              <div style={{ fontSize: '12px', color: '#64748b' }}>
-                {user?.role?.toUpperCase() || 'FACULTY'}
-              </div>
-            </div>
- 
-            {/* Dropdown Arrow */}
-            <div style={{ fontSize: '12px', color: '#64748b', marginLeft: '8px' }}>
-              ▼
-            </div>
-          </button>
- 
-          {/* Profile Dropdown Menu */}
-          {showProfileMenu && (
-            <div style={{
-              position: 'absolute',
-              top: '100%',
-              right: 0,
-              marginTop: '8px',
-              backgroundColor: 'white',
-              borderRadius: '8px',
-              boxShadow: '0 4px 12px rgba(0,0,0,0.15)',
-              minWidth: '200px',
-              zIndex: 1000,
-              overflow: 'hidden'
-            }}>
-              {/* Profile Info */}
-              <div style={{
-                padding: '16px',
-                borderBottom: '1px solid var(--border-color)',
-                backgroundColor: '#f8fafc'
-              }}>
-                <div style={{ fontSize: '14px', fontWeight: '600', color: '#1e293b' }}>
-                  {user?.name || 'Faculty'}
-                </div>
-                <div style={{ fontSize: '12px', color: '#64748b', marginTop: '4px' }}>
-                  {user?.email || 'faculty@charusat.edu.in'}
-                </div>
-              </div>
- 
-              {/* Menu Items */}
-              <div style={{ padding: '8px 0' }}>
-                <button
-                  onClick={() => {
-                    const handle = user?.email ? user.email.split('@')[0] : 'faculty';
-                    router.push(`/profile/${handle}`);
-                    setShowProfileMenu(false);
-                  }}
-                  style={{
-                    width: '100%',
-                    padding: '12px 16px',
-                    border: 'none',
-                    background: 'none',
-                    textAlign: 'left',
-                    cursor: 'pointer',
-                    fontSize: '14px',
-                    color: '#1e293b',
-                    transition: 'background-color 0.2s'
-                  }}
-                  onMouseEnter={(e) => e.target.style.backgroundColor = '#f0f0f0'}
-                  onMouseLeave={(e) => e.target.style.backgroundColor = 'transparent'}
-                >
-                  👤 Profile
-                </button>
-
-                <button
-                  onClick={() => {
-                    setIsChangePasswordOpen(true);
-                    setShowProfileMenu(false);
-                  }}
-                  style={{
-                    width: '100%',
-                    padding: '12px 16px',
-                    border: 'none',
-                    background: 'none',
-                    textAlign: 'left',
-                    cursor: 'pointer',
-                    fontSize: '14px',
-                    color: '#1e293b',
-                    transition: 'background-color 0.2s'
-                  }}
-                  onMouseEnter={(e) => e.target.style.backgroundColor = '#f0f0f0'}
-                  onMouseLeave={(e) => e.target.style.backgroundColor = 'transparent'}
-                >
-                  🔑 Change Password
-                </button>
- 
-                <div style={{ height: '1px', backgroundColor: 'var(--border-color)', margin: '8px 0' }} />
- 
-                <button
-                  onClick={handleLogout}
-                  style={{
-                    width: '100%',
-                    padding: '12px 16px',
-                    border: 'none',
-                    background: 'none',
-                    textAlign: 'left',
-                    cursor: 'pointer',
-                    fontSize: '14px',
-                    color: '#ef4444',
-                    fontWeight: '600',
-                    transition: 'background-color 0.2s'
-                  }}
-                  onMouseEnter={(e) => e.target.style.backgroundColor = '#fef2f2'}
-                  onMouseLeave={(e) => e.target.style.backgroundColor = 'transparent'}
-                >
-                   Sign Out
-                </button>
-              </div>
-            </div>
-          )}
-        </div>
+        <HeaderProfileDropdown user={user} />
       </div>
  
       {/* Sidebar */}
@@ -257,8 +93,6 @@ export default function FacultySidebar() {
           </li>
         </ul>
       </div>
-      <ChangePasswordModal isOpen={isChangePasswordOpen} onClose={() => setIsChangePasswordOpen(false)} />
-
     </>
   );
 }

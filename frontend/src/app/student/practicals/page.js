@@ -3,9 +3,8 @@
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import Editor from '@monaco-editor/react';
-import ChangePasswordModal from '@/components/ChangePasswordModal';
+import HeaderProfileDropdown from '@/components/HeaderProfileDropdown';
 import { useSocket } from '@/hooks/useSocket';
-import { usePolling } from '@/hooks/usePolling';
 
 export default function StudentPracticals() {
   const router = useRouter();
@@ -16,6 +15,7 @@ export default function StudentPracticals() {
   const [practicals, setPracticals] = useState([]);
   const [loading, setLoading] = useState(true);
   const [isChangePasswordOpen, setIsChangePasswordOpen] = useState(false);
+  const [refreshing, setRefreshing] = useState(false);
 
   // Solving mode states
   const [activePractical, setActivePractical] = useState(null);
@@ -127,8 +127,8 @@ export default function StudentPracticals() {
     }
   };
 
-  // Auto-refresh practicals list every 15 seconds
-  usePolling(fetchPracticals, 15_000, Boolean(selectedCourse && !activePractical));
+  // Auto-refresh removed — use the Refresh button in the list header instead.
+  // Submission after solve still calls fetchPracticals() to update status in list.
 
   const getBoilerplate = (lang, p = activePractical) => {
     if (p && p.starter_code && p.starter_code[lang]) {
@@ -525,28 +525,13 @@ int main() {
     return (
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', backgroundColor: 'white', padding: '12px 24px', borderBottom: '1px solid var(--border-color)', marginBottom: '20px', borderRadius: '10px', boxShadow: '0 4px 6px -1px rgba(0,0,0,0.05)', color: '#1e293b' }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: '15px' }}>
-          <div style={{ width: '40px', height: '40px', borderRadius: '50%', backgroundColor: '#4F46E5', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'white', fontWeight: 'bold' }}>
-            {user?.name?.charAt(0).toUpperCase() || 'S'}
-          </div>
+          <img src="/coderank-logo.jpg" alt="Logo" style={{ height: '36px' }} onError={(e) => { e.target.src = '/coderank-logo.jpg'; }} />
           <div>
-            <h3 style={{ margin: 0, fontSize: '15px', fontWeight: 600 }}>{user?.name}</h3>
-            <span style={{ fontSize: '12px', color: '#64748b' }}>Semester {user?.extra_info?.semester || 'N/A'} • Student Workspace</span>
+            <h3 style={{ margin: 0, fontSize: '16px', fontWeight: 700, color: '#1e293b' }}>CodeRank Workspace</h3>
+            <span style={{ fontSize: '12px', color: '#64748b' }}>Semester {user?.extra_info?.semester || '—'} &bull; Practicals Hub</span>
           </div>
         </div>
-        <div style={{ display: 'flex', gap: '12px' }}>
-          <button 
-            onClick={() => setIsChangePasswordOpen(true)} 
-            style={{ padding: '8px 16px', borderRadius: '8px', border: '1px solid var(--border-color)', backgroundColor: 'white', cursor: 'pointer', fontWeight: 600, fontSize: '13px', color: '#475569' }}
-          >
-            🔑 Change Password
-          </button>
-          <button 
-            onClick={handleLogout} 
-            style={{ padding: '8px 16px', borderRadius: '8px', border: 'none', backgroundColor: '#ef4444', color: 'white', cursor: 'pointer', fontWeight: 600, fontSize: '13px' }}
-          >
-             Sign Out
-          </button>
-        </div>
+        <HeaderProfileDropdown user={user} />
       </div>
     );
   };
@@ -617,7 +602,22 @@ int main() {
           <h2 style={{ fontSize: '22px', fontWeight: 700, marginTop: '4px' }}>{activeCourse?.name}</h2>
           <p style={{ color: 'var(--text-muted)', fontSize: '13px', marginTop: '2px' }}>Solve your coding assignments and view marks feedback.</p>
         </div>
-        <div>
+        <div style={{ display: 'flex', gap: '10px', alignItems: 'center' }}>
+          <button
+            onClick={async () => {
+              if (refreshing) return;
+              setRefreshing(true);
+              try { await fetchPracticals(); } finally { setRefreshing(false); }
+            }}
+            disabled={refreshing}
+            style={{
+              padding: '8px 16px', borderRadius: '8px', border: '1px solid var(--border-color)',
+              backgroundColor: 'white', cursor: refreshing ? 'not-allowed' : 'pointer',
+              fontWeight: 600, fontSize: '13px', opacity: refreshing ? 0.6 : 1,
+            }}
+          >
+            {refreshing ? '↻ Refreshing...' : '↻ Refresh'}
+          </button>
           <button 
             onClick={() => setSelectedCourse('')}
             style={{
@@ -722,7 +722,6 @@ int main() {
           </table>
         )}
       </div>
-      <ChangePasswordModal isOpen={isChangePasswordOpen} onClose={() => setIsChangePasswordOpen(false)} />
     </div>
   );
 }

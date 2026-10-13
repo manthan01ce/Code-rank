@@ -3,7 +3,6 @@
 import { useState, useEffect } from 'react';
 import LoadingOverlay from '@/components/LoadingOverlay';
 import { useAdminAuth } from '@/hooks/useAdminAuth';
-import { usePolling } from '@/hooks/usePolling';
 
 export default function CoursesManagement() {
   const [courses, setCourses] = useState([]);
@@ -11,6 +10,7 @@ export default function CoursesManagement() {
   const [loading, setLoading] = useState(true);
   const [processing, setProcessing] = useState(false);
   const [search, setSearch] = useState('');
+  const [refreshing, setRefreshing] = useState(false);
 
   // Form State
   const [showAddModal, setShowAddModal] = useState(false);
@@ -42,7 +42,7 @@ export default function CoursesManagement() {
   };
 
   // Auto-refresh courses list every 15s (pauses while modal is open)
-  usePolling(() => { if (!showAddModal) fetchCourses(); }, 15_000, isReady);
+  // usePolling removed — use the Refresh button below instead
 
 
 
@@ -151,10 +151,19 @@ export default function CoursesManagement() {
         </button>
         <button
           className="btn-small"
-          style={{ padding: '10px 16px', borderRadius: '8px', border: '1px solid var(--border-color)', background: 'transparent', cursor: 'pointer', fontSize: '13px', color: 'var(--text-muted)' }}
-          onClick={fetchCourses}
+          style={{
+            padding: '10px 16px', borderRadius: '8px', border: '1px solid var(--border-color)',
+            background: 'transparent', cursor: refreshing ? 'not-allowed' : 'pointer',
+            fontSize: '13px', color: 'var(--text-muted)', opacity: refreshing ? 0.6 : 1,
+          }}
+          onClick={async () => {
+            if (refreshing) return;
+            setRefreshing(true);
+            try { await fetchCourses(); } finally { setRefreshing(false); }
+          }}
+          disabled={refreshing}
         >
-          ↻ Refresh
+          {refreshing ? '↻ Refreshing...' : '↻ Refresh'}
         </button>
       </div>
 

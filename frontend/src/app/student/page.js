@@ -4,7 +4,7 @@ import { useRouter } from 'next/navigation';
 import { useEffect, useState, useCallback } from 'react';
 import LoadingOverlay from '@/components/LoadingOverlay';
 import { useSocket } from '@/hooks/useSocket';
-import { usePolling } from '@/hooks/usePolling';
+import HeaderProfileDropdown from '@/components/HeaderProfileDropdown';
 
 export default function StudentDashboard() {
   const router = useRouter();
@@ -14,6 +14,7 @@ export default function StudentDashboard() {
   const [loading, setLoading] = useState(true);
   const [courses, setCourses] = useState([]);
   const [practicals, setPracticals] = useState([]);
+  const [refreshing, setRefreshing] = useState(false);
 
   const fetchStudentPracticals = useCallback(async () => {
     const token = localStorage.getItem('token');
@@ -107,8 +108,8 @@ export default function StudentDashboard() {
     };
   }, [socket, fetchStudentPracticals]);
 
-  // Polling fallback – refresh practicals every 15s (supplements socket events)
-  usePolling(fetchStudentPracticals, 15_000, !!user);
+  // Polling fallback removed — use the Refresh button instead.
+  // Socket events above handle real-time updates automatically.
 
   const handleLogout = () => {
     if (window.confirm("Are you sure you want to log out?")) {
@@ -138,35 +139,38 @@ export default function StudentDashboard() {
           <h2 style={{ margin: 0, fontSize: '20px', fontWeight: 700, color: '#1e293b' }}>CodeRank</h2>
         </div>
         <div style={{ display: 'flex', alignItems: 'center', gap: '20px' }}>
-          <div style={{ textAlign: 'right' }}>
-            <div style={{ fontSize: '14px', fontWeight: 600, color: '#1e293b' }}>{user.name}</div>
-            <div style={{ fontSize: '12px', color: '#64748b' }}>Semester {semester} &bull; Batch {batch}</div>
-          </div>
-          <button
-            onClick={() => {
-              const handle = user?.email ? user.email.split('@')[0] : '';
-              router.push(`/profile/${handle}`);
-            }}
-            style={{ padding: '8px 16px', background: '#4f46e5', border: 'none', borderRadius: '8px', cursor: 'pointer', fontWeight: 600, color: 'white', transition: 'all 0.2s', boxShadow: '0 2px 4px rgba(79, 70, 229, 0.2)' }}
-            onMouseEnter={e => e.currentTarget.style.background = '#4338ca'}
-            onMouseLeave={e => e.currentTarget.style.background = '#4f46e5'}
-          >
-            👤 Profile
-          </button>
-          <button 
-            onClick={handleLogout}
-            style={{ padding: '8px 16px', background: '#f1f5f9', border: '1px solid #cbd5e1', borderRadius: '8px', cursor: 'pointer', fontWeight: 600, color: '#475569', transition: 'all 0.2s' }}
-            onMouseEnter={e => e.currentTarget.style.background = '#e2e8f0'}
-            onMouseLeave={e => e.currentTarget.style.background = '#f1f5f9'}
-          >
-            Logout
-          </button>
+          {(semester || batch) && (
+            <div style={{ textAlign: 'right', display: 'none', md: 'block' }}>
+              <div style={{ fontSize: '12px', fontWeight: 600, color: '#475569', background: '#f1f5f9', padding: '4px 10px', borderRadius: '6px' }}>
+                Semester {semester || '—'} &bull; Batch {batch || '—'}
+              </div>
+            </div>
+          )}
+          <HeaderProfileDropdown user={user} />
         </div>
       </div>
 
       <div style={{ maxWidth: '1200px', margin: '0 auto', padding: '40px 20px' }}>
         <div style={{ marginBottom: '35px' }}>
-          <h1 style={{ fontSize: '28px', fontWeight: 700, color: '#1e293b', marginBottom: '8px' }}>My Assigned Subjects & Practicals</h1>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '8px' }}>
+            <h1 style={{ fontSize: '28px', fontWeight: 700, color: '#1e293b', margin: 0 }}>My Assigned Subjects &amp; Practicals</h1>
+            <button
+              onClick={async () => {
+                if (refreshing) return;
+                setRefreshing(true);
+                try { await fetchStudentPracticals(); } finally { setRefreshing(false); }
+              }}
+              disabled={refreshing}
+              style={{
+                padding: '8px 18px', borderRadius: '8px', border: '1px solid #cbd5e1',
+                background: 'white', cursor: refreshing ? 'not-allowed' : 'pointer',
+                fontWeight: 600, fontSize: '13px', color: '#475569',
+                opacity: refreshing ? 0.6 : 1, display: 'flex', alignItems: 'center', gap: '6px',
+              }}
+            >
+              {refreshing ? '↻ Refreshing...' : '↻ Refresh'}
+            </button>
+          </div>
           <p style={{ color: '#64748b', fontSize: '15px' }}>
             View questions assigned by your faculty for Semester {semester}. Click any practical question to open your coding workspace.
           </p>

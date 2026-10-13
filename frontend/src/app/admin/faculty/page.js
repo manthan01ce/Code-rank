@@ -3,7 +3,6 @@
 import { useState, useEffect, useRef } from 'react';
 import LoadingOverlay from '@/components/LoadingOverlay';
 import { useAdminAuth } from '@/hooks/useAdminAuth';
-import { usePolling } from '@/hooks/usePolling';
 
 // ─── PDF Generator ────────────────────────────────────────────────────────────
 async function downloadCredentialsPDF(users) {
@@ -71,6 +70,7 @@ export default function FacultyManagement() {
   const [showModal, setShowModal]     = useState(false);
   const [editTarget, setEditTarget]   = useState(null);
   const [toast, setToast]             = useState(null);
+  const [refreshing, setRefreshing]   = useState(false);
   const fileRef                       = useRef();
 
   const [form, setForm] = useState({ facultyId: '', firstName: '', lastName: '', emailPrefix: '', department: '', designation: '', password: '' });
@@ -103,6 +103,16 @@ export default function FacultyManagement() {
     finally { setLoading(false); }
   };
 
+  const handleRefresh = async () => {
+    if (refreshing) return;
+    setRefreshing(true);
+    try {
+      await fetchFaculty();
+    } finally {
+      setRefreshing(false);
+    }
+  };
+
   const fetchDepartments = async () => {
     try {
       const res = await fetch('/api/departments', { headers: { Authorization: `Bearer ${token()}` } });
@@ -114,9 +124,6 @@ export default function FacultyManagement() {
 
   useEffect(() => { if (isReady) { fetchFaculty(); } }, [search, statusFilter, isReady]);
   useEffect(() => { if (isReady) fetchDepartments(); }, [isReady]);
-
-  // Auto-refresh faculty list every 15s (pauses while modal is open)
-  usePolling(() => { if (!showModal) fetchFaculty(); }, 15_000, isReady);
 
   // ── Open modal ──
   const openAdd = () => {
@@ -398,13 +405,15 @@ export default function FacultyManagement() {
         </label>
 
         <button
-          onClick={fetchFaculty}
+          onClick={handleRefresh}
           style={{
             padding: '10px 16px', borderRadius: '8px', border: '1px solid var(--border-color)',
-            background: 'transparent', cursor: 'pointer', fontSize: '13px', color: 'var(--text-muted)',
+            background: 'transparent', cursor: refreshing ? 'not-allowed' : 'pointer',
+            fontSize: '13px', color: 'var(--text-muted)', opacity: refreshing ? 0.6 : 1,
           }}
+          disabled={refreshing}
         >
-          ↻ Refresh
+          {refreshing ? '↻ Refreshing...' : '↻ Refresh'}
         </button>
       </div>
 

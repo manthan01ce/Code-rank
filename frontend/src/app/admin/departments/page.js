@@ -3,7 +3,6 @@
 import { useState, useEffect } from 'react';
 import LoadingOverlay from '@/components/LoadingOverlay';
 import { useAdminAuth } from '@/hooks/useAdminAuth';
-import { usePolling } from '@/hooks/usePolling';
 
 export default function DepartmentMaster() {
   const [departments, setDepartments] = useState([]);
@@ -14,6 +13,7 @@ export default function DepartmentMaster() {
   const [showModal, setShowModal] = useState(false);
   const [editTarget, setEditTarget] = useState(null);
   const [toast, setToast] = useState(null);
+  const [refreshing, setRefreshing] = useState(false);
 
   const [form, setForm] = useState({ name: '', institute_name: '' });
 
@@ -47,8 +47,7 @@ export default function DepartmentMaster() {
 
   useEffect(() => { if (isReady) fetchDepartments(); }, [search, isReady]);
 
-  // Auto-refresh departments list every 15s
-  usePolling(() => { if (!showModal) fetchDepartments(); }, 15_000, isReady);
+  // Auto-refresh removed — use the Refresh button instead
 
   const openAdd = () => {
     setEditTarget(null);
@@ -162,13 +161,19 @@ export default function DepartmentMaster() {
           + Add Department
         </button>
         <button
-          onClick={fetchDepartments}
+          onClick={async () => {
+            if (refreshing) return;
+            setRefreshing(true);
+            try { await fetchDepartments(); } finally { setRefreshing(false); }
+          }}
+          disabled={refreshing}
           style={{
             padding: '10px 16px', borderRadius: '8px', border: '1px solid var(--border-color)',
-            background: 'transparent', cursor: 'pointer', fontSize: '13px', color: 'var(--text-muted)',
+            background: 'transparent', cursor: refreshing ? 'not-allowed' : 'pointer',
+            fontSize: '13px', color: 'var(--text-muted)', opacity: refreshing ? 0.6 : 1,
           }}
         >
-          ↻ Refresh
+          {refreshing ? '↻ Refreshing...' : '↻ Refresh'}
         </button>
       </div>
 

@@ -3,7 +3,6 @@
 import { useState, useEffect, useCallback } from 'react';
 import LoadingOverlay from '@/components/LoadingOverlay';
 import { useAdminAuth } from '@/hooks/useAdminAuth';
-import { usePolling } from '@/hooks/usePolling';
 
 export default function AdminDashboard() {
   const [stats, setStats] = useState({ faculty: 0, students: 0, courses: 0 });
@@ -38,9 +37,6 @@ export default function AdminDashboard() {
   useEffect(() => {
     if (isReady) fetchDashboardData();
   }, [isReady, fetchDashboardData]);
-
-  // Auto-refresh every 15 seconds
-  usePolling(fetchDashboardData, 15_000, isReady);
 
   const formatDate = (dateString) => {
     return new Date(dateString).toLocaleString();
@@ -116,8 +112,13 @@ export default function AdminDashboard() {
           <p style={{ color: 'var(--text-muted)', fontSize: '14px' }}>Welcome back to your administration command center.</p>
         </div>
         <div style={{ display: 'flex', gap: '15px' }}>
-             <button className="btn-primary" style={{ width: 'auto', padding: '10px 20px', margin: 0 }} onClick={fetchDashboardData}>
-               Refresh Data
+             <button
+               className="btn-primary"
+               style={{ width: 'auto', padding: '10px 20px', margin: 0, opacity: loading ? 0.7 : 1 }}
+               onClick={fetchDashboardData}
+               disabled={loading}
+             >
+               {loading ? '↻ Refreshing...' : '↻ Refresh Data'}
              </button>
         </div>
       </div>

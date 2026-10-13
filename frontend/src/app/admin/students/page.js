@@ -3,7 +3,6 @@
 import { useState, useEffect, useRef } from 'react';
 import LoadingOverlay from '@/components/LoadingOverlay';
 import { useAdminAuth } from '@/hooks/useAdminAuth';
-import { usePolling } from '@/hooks/usePolling';
 
 // ─── PDF Generator (inline, no jspdf-autotable import issues) ───────────────
 async function downloadCredentialsPDF(users) {
@@ -76,6 +75,7 @@ export default function StudentManagement() {
   const [showModal, setShowModal]     = useState(false);
   const [editTarget, setEditTarget]   = useState(null); // null = create mode
   const [toast, setToast]             = useState(null); // { type: 'success'|'error', msg }
+  const [refreshing, setRefreshing]   = useState(false);
   const fileRef                       = useRef();
 
   // Form fields
@@ -125,6 +125,16 @@ export default function StudentManagement() {
     finally { setLoading(false); }
   };
 
+  const handleRefresh = async () => {
+    if (refreshing) return;
+    setRefreshing(true);
+    try {
+      await fetchStudents();
+    } finally {
+      setRefreshing(false);
+    }
+  };
+
   const fetchDepartments = async () => {
     try {
       const res = await fetch('/api/departments', { headers: { Authorization: `Bearer ${token()}` } });
@@ -140,9 +150,6 @@ export default function StudentManagement() {
 
   useEffect(() => { if (isReady) { fetchStudents(); } }, [search, statusFilter, divisionFilter, isReady]);
   useEffect(() => { if (isReady) fetchDepartments(); }, [isReady]);
-
-  // Auto-refresh students list every 15s (pauses while modal is open)
-  usePolling(() => { if (!showModal) fetchStudents(); }, 15_000, isReady);
 
   // ── Open modal ──
   const openAdd = () => {
@@ -458,11 +465,13 @@ export default function StudentManagement() {
         <button
           style={{
             padding: '10px 16px', borderRadius: '8px', border: '1px solid var(--border-color)',
-            background: 'transparent', cursor: 'pointer', fontSize: '13px', color: 'var(--text-muted)',
+            background: 'transparent', cursor: refreshing ? 'not-allowed' : 'pointer',
+            fontSize: '13px', color: 'var(--text-muted)', opacity: refreshing ? 0.6 : 1,
           }}
-          onClick={fetchStudents}
+          onClick={handleRefresh}
+          disabled={refreshing}
         >
-          ↻ Refresh
+          {refreshing ? '↻ Refreshing...' : '↻ Refresh'}
         </button>
       </div>
 
