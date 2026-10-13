@@ -25,8 +25,12 @@ export function useAdminAuth() {
   const router = useRouter();
   const [token, setToken] = useState(null);
   const [isReady, setIsReady] = useState(false);
+  const [isHydrating, setIsHydrating] = useState(true);
 
   useEffect(() => {
+    // Wait for client-side hydration before checking localStorage
+    setIsHydrating(false);
+    
     const storedToken = localStorage.getItem('token');
     const storedUser  = localStorage.getItem('user');
 
@@ -47,6 +51,11 @@ export function useAdminAuth() {
       router.replace('/');
     }
   }, [router]);
+
+  // Don't redirect while hydrating
+  if (isHydrating) {
+    return { token: null, isReady: false };
+  }
 
   return { token, isReady };
 }

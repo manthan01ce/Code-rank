@@ -115,7 +115,16 @@ export default function FacultyDashboard() {
   };
 
   // Auth guard: redirect unauthenticated / non-faculty users to landing page
+  const [isHydrated, setIsHydrated] = useState(false);
+  
   useEffect(() => {
+    // Wait for client-side hydration before accessing localStorage
+    setIsHydrated(true);
+  }, []);
+
+  useEffect(() => {
+    if (!isHydrated) return; // Don't check auth until hydrated
+    
     const storedToken = localStorage.getItem('token');
     const storedUser  = localStorage.getItem('user');
     if (!storedToken || !storedUser) {
@@ -130,7 +139,7 @@ export default function FacultyDashboard() {
     } catch {
       router.replace('/');
     }
-  }, [router]);
+  }, [router, isHydrated]);
 
   useEffect(() => {
     fetchContextData(true);
