@@ -159,6 +159,9 @@ in-process Redis snapshot to prevent monitoring traffic from amplifying load.
 memory, and top endpoint counts; it requires an administrator Bearer token and
 must not be exposed through a public monitoring dashboard without auth.
 
+The web lint configuration uses ESLint 9 flat config. Existing UI lint findings
+are tracked separately; the production build remains the current required gate.
+
 ## Documentation
 
 - [Architecture and capacity design](ARCHITECTURE.md)

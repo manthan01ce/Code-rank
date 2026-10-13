@@ -1,4 +1,5 @@
 import { createClient } from 'redis';
+import { randomUUID } from 'crypto';
 import { CircuitBreaker } from '@coderank/core/utils/circuit-breaker';
 
 let redis = null;
@@ -46,6 +47,16 @@ const LIMITS = {
   default: { windowMs: 60000, max: parseInt(process.env.RATE_LIMIT_DEFAULT || '60', 10) },
 };
 
+// One Redis round-trip and atomic mutation prevents concurrent requests from
+// observing the same count and both being accepted at a rate-limit boundary.
+const RATE_LIMIT_SCRIPT = `
+  redis.call('ZREMRANGEBYSCORE', KEYS[1], '-inf', ARGV[1])
+  redis.call('ZADD', KEYS[1], ARGV[2], ARGV[3])
+  local count = redis.call('ZCARD', KEYS[1])
+  redis.call('PEXPIRE', KEYS[1], ARGV[4])
+  return count
+`;
+
 export async function checkRateLimit(identifier, category = 'default') {
   // Check if rate limiting is disabled
   if (process.env.DISABLE_RATE_LIMIT === 'true') {
@@ -63,14 +74,15 @@ export async function checkRateLimit(identifier, category = 'default') {
       const client = await getRedis();
       if (!client) throw new Error('Redis client unavailable');
 
-      const multi = client.multi();
-      multi.zRemRangeByScore(key, '-inf', windowStart);
-      multi.zAdd(key, [{ score: now, value: `${now}-${Math.random()}` }]);
-      multi.zCard(key);
-      multi.expire(key, Math.ceil(limit.windowMs / 1000));
-      
-      const results = await multi.exec();
-      const count = results[2];
+      const count = await client.eval(RATE_LIMIT_SCRIPT, {
+        keys: [key],
+        arguments: [
+          String(windowStart),
+          String(now),
+          `${now}-${randomUUID()}`,
+          String(limit.windowMs),
+        ],
+      });
       
       if (count > limit.max) {
         return { allowed: false, retryAfter: Math.ceil(limit.windowMs / 1000) };
