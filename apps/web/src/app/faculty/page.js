@@ -82,11 +82,14 @@ export default function FacultyDashboard() {
   const [copyCodeSuccess, setCopyCodeSuccess] = useState(false);
 
   // Live timer tick for real-time countdown
-  const [currentTime, setCurrentTime] = useState(Date.now());
+  // Keep rendering deterministic; initialise the clock after mount.
+  const [currentTime, setCurrentTime] = useState(0);
   useEffect(() => {
-    const timer = setInterval(() => {
+    const tick = () => {
       setCurrentTime(Date.now());
-    }, 1000);
+    };
+    tick();
+    const timer = setInterval(tick, 1000);
     return () => clearInterval(timer);
   }, []);
 
