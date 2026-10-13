@@ -9,6 +9,7 @@ import compression from 'compression';
 import { performance } from 'perf_hooks';
 import { verifyToken } from '@coderank/core/utils/auth';
 import { logger } from '@coderank/core/utils/logger';
+import { recordHttpRequest } from './src/lib/observability.js';
 
 const dev = process.env.NODE_ENV !== 'production';
 const hostname = process.env.HOSTNAME || '0.0.0.0';
@@ -55,6 +56,8 @@ app.prepare().then(() => {
   const server = createServer((req, res) => {
     const startedAt = performance.now();
     res.once('finish', () => {
+      const durationMs = performance.now() - startedAt;
+      recordHttpRequest({ url: req.url, statusCode: res.statusCode, durationMs });
       // Keep production request logging off the hot path. Errors retain a
       // concise signal without generating a line for every successful request.
       if (res.statusCode >= 500) {
@@ -62,7 +65,7 @@ app.prepare().then(() => {
           method: req.method,
           path: req.url?.split('?')[0],
           statusCode: res.statusCode,
-          durationMs: Math.round(performance.now() - startedAt),
+          durationMs: Math.round(durationMs),
         });
       }
     });

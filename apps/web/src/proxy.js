@@ -1,8 +1,6 @@
 import { NextResponse } from 'next/server';
 
 export function proxy(request) {
-  const pathname = request.nextUrl.pathname;
-
   // Next.js handles CORS for API routes if set in next.config.js, 
   // but if doing it in middleware:
   const response = NextResponse.next();
@@ -15,12 +13,22 @@ export function proxy(request) {
   response.headers.set('Strict-Transport-Security', 'max-age=31536000; includeSubDomains');
 
   // Handle CORS
-  const origin = request.headers.get('origin') || '*';
-  response.headers.set('Access-Control-Allow-Origin', origin);
-  response.headers.set('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS');
-  response.headers.set('Access-Control-Allow-Headers', 'Content-Type, Authorization, x-compiler-secret');
-  response.headers.set('Access-Control-Allow-Credentials', 'true');
-  response.headers.set('Access-Control-Max-Age', '86400'); // Cache preflight 24h
+  const origin = request.headers.get('origin');
+  const allowedOrigins = (process.env.ALLOWED_ORIGIN || 'http://localhost:3000')
+    .split(',')
+    .map((value) => value.trim())
+    .filter(Boolean);
+
+  // Never reflect arbitrary origins while allowing credentials. Same-origin
+  // requests need no CORS header; approved browser clients receive one.
+  if (origin && allowedOrigins.includes(origin)) {
+    response.headers.set('Access-Control-Allow-Origin', origin);
+    response.headers.set('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS');
+    response.headers.set('Access-Control-Allow-Headers', 'Content-Type, Authorization, x-compiler-secret');
+    response.headers.set('Access-Control-Allow-Credentials', 'true');
+    response.headers.set('Access-Control-Max-Age', '86400');
+    response.headers.set('Vary', 'Origin');
+  }
 
   // Note: Rate limiting is now handled via Redis in individual route handlers
 

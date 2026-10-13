@@ -155,6 +155,9 @@ k6 run --stage 30s:500 --stage 20s:500 --stage 15s:0 -e BASE_URL=http://127.0.0.
 `/api/live` is for lightweight liveness monitoring. `/api/health` is a cached
 readiness report for Neon and Redis, while `/api/queue/stats` shares a bounded
 in-process Redis snapshot to prevent monitoring traffic from amplifying load.
+`/api/metrics` reports process request latency, event-loop delay, CPU deltas,
+memory, and top endpoint counts; it requires an administrator Bearer token and
+must not be exposed through a public monitoring dashboard without auth.
 
 ## Documentation
 
