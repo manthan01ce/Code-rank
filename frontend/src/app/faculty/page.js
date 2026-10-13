@@ -3,14 +3,17 @@ import Editor from '@monaco-editor/react';
 
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
+import { Radio } from 'lucide-react';
 import LoadingOverlay from '@/components/LoadingOverlay';
 import { useSocket } from '@/hooks/useSocket';
+import RefreshButton from '@/components/RefreshButton';
 
 export default function FacultyDashboard() {
   const router = useRouter();
   const socket = useSocket();
   const [courses, setCourses] = useState([]);
   const [batches, setBatches] = useState([]);
+  const [lastUpdated, setLastUpdated] = useState(null);
   
   // Context selection
   const [selectedCourse, setSelectedCourse] = useState(() => {
@@ -194,6 +197,7 @@ export default function FacultyDashboard() {
       if (res.ok) {
         const data = await res.json();
         setPracticals(data);
+        setLastUpdated(new Date());
         if (data.length > 0) {
           setSelectedPracticalId(data[0].id.toString());
           setSelectedMarksPracticalId(data[0].id.toString());
@@ -230,6 +234,7 @@ export default function FacultyDashboard() {
       });
       if (res.ok) {
         setSubmissions(await res.json());
+        setLastUpdated(new Date());
       }
     } catch (e) {
       console.error(e);
@@ -258,28 +263,44 @@ export default function FacultyDashboard() {
     };
   }, [socket, selectedPracticalId]);
 
-  // Load stats
+  // Course-level real-time socket events (practicals, marks)
   useEffect(() => {
-    if (selectedCourse && activeTab === 'marks') {
-      fetchStats();
-    }
-    
-    if (!socket || !selectedCourse || activeTab !== 'marks') return;
-    
+    if (!socket || !selectedCourse) return;
+
     socket.emit('join_course_room', selectedCourse);
-    
-    const handleNewSubmissionMarks = () => {
-      // Refresh stats on new submission
-      fetchStats();
+
+    const handlePracticalEvent = () => {
+      fetchPracticals();
     };
-    
+
+    const handleNewSubmissionMarks = () => {
+      if (activeTab === 'marks') {
+        fetchStats();
+      }
+      // Also update practicals count
+      fetchPracticals();
+    };
+
+    socket.on('practical_added', handlePracticalEvent);
+    socket.on('practical_updated', handlePracticalEvent);
+    socket.on('practical_deleted', handlePracticalEvent);
     socket.on('new_submission_marks', handleNewSubmissionMarks);
-    
+
     return () => {
+      socket.off('practical_added', handlePracticalEvent);
+      socket.off('practical_updated', handlePracticalEvent);
+      socket.off('practical_deleted', handlePracticalEvent);
       socket.off('new_submission_marks', handleNewSubmissionMarks);
       socket.emit('leave_course_room', selectedCourse);
     };
   }, [selectedCourse, activeTab, socket]);
+
+  // Load stats when marks tab active
+  useEffect(() => {
+    if (selectedCourse && activeTab === 'marks') {
+      fetchStats();
+    }
+  }, [selectedCourse, activeTab]);
 
   const fetchStats = async () => {
     setLoadingStats(true);
@@ -289,6 +310,7 @@ export default function FacultyDashboard() {
       });
       if (res.ok) {
         setStatsData(await res.json());
+        setLastUpdated(new Date());
       }
     } catch (e) {
       console.error(e);
@@ -297,21 +319,21 @@ export default function FacultyDashboard() {
     }
   };
 
-  // Auto-refresh removed — use the Refresh button in the tab bar instead.
-
   const handleRefreshActiveTab = async () => {
-    if (refreshing) return;
-    setRefreshing(true);
     try {
-      if (selectedCourse && activeTab === 'practicals') {
+      if (!selectedCourse) {
+        await fetchContextData();
+      } else if (activeTab === 'practicals') {
         await fetchPracticals();
       } else if (selectedPracticalId && activeTab === 'submissions') {
         await fetchSubmissions();
-      } else if (selectedCourse && activeTab === 'marks') {
+      } else if (activeTab === 'marks') {
         await fetchStats();
       }
-    } finally {
-      setRefreshing(false);
+      setLastUpdated(new Date());
+    } catch (err) {
+      console.error('Refresh error:', err);
+      throw err;
     }
   };
 
@@ -735,9 +757,17 @@ export default function FacultyDashboard() {
           </div>
         )}
 
-        <div>
-          <h2 style={{ fontSize: '24px', fontWeight: '700', color: 'var(--text-main)', marginBottom: '8px' }}>Select Allocated Subject</h2>
-          <p style={{ color: 'var(--text-muted)', fontSize: '14.5px', marginBottom: '30px' }}>Choose a course below to manage its assignments, view student grades, and download spreadsheets.</p>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '30px', flexWrap: 'wrap', gap: '16px' }}>
+          <div>
+            <h2 style={{ fontSize: '24px', fontWeight: '700', color: 'var(--text-main)', marginBottom: '8px' }}>Select Allocated Subject</h2>
+            <p style={{ color: 'var(--text-muted)', fontSize: '14.5px', margin: 0 }}>Choose a course below to manage its assignments, view student grades, and download spreadsheets.</p>
+          </div>
+          <RefreshButton
+            onRefresh={fetchContextData}
+            lastUpdated={lastUpdated}
+            label="Refresh"
+            variant="default"
+          />
         </div>
 
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(280px, 1fr))', gap: '20px' }}>
@@ -834,8 +864,36 @@ export default function FacultyDashboard() {
           </div>
         </div>
         
-        <div>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '12px', flexWrap: 'wrap' }}>
+          {/* Live WebSocket Status Indicator */}
+          <span
+            style={{
+              display: 'inline-flex',
+              alignItems: 'center',
+              gap: '5px',
+              fontSize: '11px',
+              fontWeight: 600,
+              padding: '4px 10px',
+              borderRadius: '999px',
+              backgroundColor: socket?.isConnected ? '#ecfdf5' : '#fffbeb',
+              color: socket?.isConnected ? '#059669' : '#d97706',
+              border: `1px solid ${socket?.isConnected ? '#a7f3d0' : '#fde68a'}`,
+            }}
+            title={socket?.isConnected ? 'Connected to WebSocket server' : 'Reconnecting to WebSocket server'}
+          >
+            <Radio size={12} style={{ animation: socket?.isConnected ? 'pulse 2s infinite' : 'none' }} />
+            {socket?.isConnected ? 'WebSocket Live' : 'Reconnecting...'}
+          </span>
+
+          <RefreshButton
+            onRefresh={handleRefreshActiveTab}
+            lastUpdated={lastUpdated}
+            label="Refresh"
+            variant="default"
+          />
+
           <button 
+            type="button"
             onClick={() => setSelectedCourse('')}
             style={{
               padding: '8px 16px', borderRadius: '8px', border: '1px solid var(--border-color)',

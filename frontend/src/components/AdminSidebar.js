@@ -1,8 +1,20 @@
 'use client';
 
 import { useRouter, usePathname } from 'next/navigation';
-import { useEffect, useState, useRef } from 'react';
+import { useEffect, useState } from 'react';
+import { 
+  LayoutDashboard, 
+  Building2, 
+  GraduationCap, 
+  Users, 
+  BookOpen, 
+  Network, 
+  ScrollText, 
+  Settings, 
+  LogOut 
+} from 'lucide-react';
 import HeaderProfileDropdown from './HeaderProfileDropdown';
+import NotificationDropdown from './NotificationDropdown';
 
 export default function AdminSidebar() {
   const router = useRouter();
@@ -12,15 +24,19 @@ export default function AdminSidebar() {
   useEffect(() => {
     const userData = localStorage.getItem('user');
     if (userData) {
-      const parsed = JSON.parse(userData);
-      if (parsed.role !== 'admin') {
+      try {
+        const parsed = JSON.parse(userData);
+        if (parsed.role !== 'admin') {
+          router.push('/');
+        }
+        setUser(parsed);
+      } catch {
         router.push('/');
       }
-      setUser(parsed);
     } else {
       router.push('/');
     }
-  }, []);
+  }, [router]);
 
   const handleLogout = () => {
     if (window.confirm("Are you sure you want to log out?")) {
@@ -29,6 +45,17 @@ export default function AdminSidebar() {
       router.push('/');
     }
   };
+
+  const navItems = [
+    { label: 'Dashboard', path: '/admin', icon: <LayoutDashboard size={18} /> },
+    { label: 'Department Master', path: '/admin/departments', icon: <Building2 size={18} /> },
+    { label: 'Faculty Master', path: '/admin/faculty', icon: <Users size={18} /> },
+    { label: 'Student Master', path: '/admin/students', icon: <GraduationCap size={18} /> },
+    { label: 'Courses', path: '/admin/courses', icon: <BookOpen size={18} /> },
+    { label: 'Course Mapping', path: '/admin/mapping', icon: <Network size={18} /> },
+    { label: 'Activity Logs', path: '/admin/logs', icon: <ScrollText size={18} /> },
+    { label: 'Settings', path: '/admin/settings', icon: <Settings size={18} /> },
+  ];
 
   return (
     <>
@@ -39,57 +66,86 @@ export default function AdminSidebar() {
         right: 0,
         left: 280,
         height: '70px',
-        backgroundColor: 'white',
-        borderBottom: '1px solid var(--border-color)',
+        backgroundColor: '#ffffff',
+        borderBottom: '1px solid #e2e8f0',
         display: 'flex',
         alignItems: 'center',
         justifyContent: 'flex-end',
         paddingRight: '30px',
+        gap: '16px',
         zIndex: 100
       }}>
+        <NotificationDropdown user={user} />
         <HeaderProfileDropdown user={user} />
       </div>
 
       {/* Sidebar */}
-      <div className="sidebar" style={{ paddingTop: '20px' }}>
-        <div className="logo-container" style={{ padding: '0 20px', textAlign: 'center', marginBottom: '30px' }}>
+      <div className="sidebar" style={{ paddingTop: '20px', zIndex: 99 }}>
+        <div className="logo-container" style={{ padding: '0 20px', textAlign: 'center', marginBottom: '24px' }}>
           <img 
             src="/coderank-logo.jpg" 
             alt="CodeRank Logo" 
             onError={(e) => { e.target.src = '/coderank-logo.jpg'; }}
-            style={{ width: '60px', height: '60px', objectFit: 'contain', marginBottom: '10px' }}
+            style={{ width: '56px', height: '56px', objectFit: 'contain', marginBottom: '8px', borderRadius: '10px' }}
           />
-          <h2 className="brand-text" style={{ fontSize: '22px', marginBottom: '5px' }}>CodeRank</h2>
-          <p style={{ fontSize: '12px', color: '#888' }}>Admin Panel</p>
+          <h2 className="brand-text" style={{ fontSize: '20px', fontWeight: 700, margin: '0 0 2px 0', color: '#1e293b' }}>
+            CodeRank
+          </h2>
+          <p style={{ fontSize: '11px', fontWeight: 600, color: '#6366f1', margin: 0, textTransform: 'uppercase', letterSpacing: '0.05em' }}>
+            Administration
+          </p>
         </div>
 
-        <ul className="sidebar-nav">
-          <li className={pathname === '/admin' ? 'active' : ''} onClick={() => router.push('/admin')}>
-            Dashboard
-          </li>
-          <li className={pathname === '/admin/departments' ? 'active' : ''} onClick={() => router.push('/admin/departments')}>
-            Department Master
-          </li>
-          <li className={pathname === '/admin/faculty' ? 'active' : ''} onClick={() => router.push('/admin/faculty')}>
-            Faculty Master
-          </li>
-          <li className={pathname === '/admin/students' ? 'active' : ''} onClick={() => router.push('/admin/students')}>
-            Student Master
-          </li>
-          <li className={pathname === '/admin/courses' ? 'active' : ''} onClick={() => router.push('/admin/courses')}>
-            Courses
-          </li>
-          <li className={pathname === '/admin/mapping' ? 'active' : ''} onClick={() => router.push('/admin/mapping')}>
-            Course Mapping
-          </li>
-          <li className={pathname === '/admin/logs' ? 'active' : ''} onClick={() => router.push('/admin/logs')}>
-            Activity Logs
-          </li>
-          <li className={pathname === '/admin/settings' ? 'active' : ''} onClick={() => router.push('/admin/settings')}>
-            Settings
-          </li>
-          <li style={{ marginTop: 'auto', color: '#ef4444', cursor: 'pointer', fontWeight: '600' }} onClick={handleLogout}>
-             Logout
+        <ul className="sidebar-nav" style={{ listStyle: 'none', padding: '0 12px', margin: 0 }}>
+          {navItems.map((item) => {
+            const isActive = pathname === item.path;
+            return (
+              <li
+                key={item.path}
+                className={isActive ? 'active' : ''}
+                onClick={() => router.push(item.path)}
+                style={{
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '12px',
+                  padding: '11px 16px',
+                  borderRadius: '10px',
+                  cursor: 'pointer',
+                  fontWeight: isActive ? 600 : 500,
+                  fontSize: '14px',
+                  marginBottom: '4px',
+                  transition: 'all 0.15s ease',
+                  backgroundColor: isActive ? '#eef2ff' : 'transparent',
+                  color: isActive ? '#4f46e5' : '#475569',
+                }}
+              >
+                <span style={{ color: isActive ? '#4f46e5' : '#64748b', display: 'flex' }}>
+                  {item.icon}
+                </span>
+                <span>{item.label}</span>
+              </li>
+            );
+          })}
+
+          <li
+            onClick={handleLogout}
+            style={{
+              marginTop: '28px',
+              display: 'flex',
+              alignItems: 'center',
+              gap: '12px',
+              padding: '11px 16px',
+              borderRadius: '10px',
+              cursor: 'pointer',
+              fontWeight: 600,
+              fontSize: '14px',
+              color: '#ef4444',
+              backgroundColor: '#fff5f5',
+              transition: 'all 0.15s ease',
+            }}
+          >
+            <LogOut size={18} />
+            <span>Sign Out</span>
           </li>
         </ul>
       </div>

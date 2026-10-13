@@ -3,8 +3,11 @@
 import { useState, useEffect } from 'react';
 import LoadingOverlay from '@/components/LoadingOverlay';
 import { useAdminAuth } from '@/hooks/useAdminAuth';
+import { useSocket } from '@/hooks/useSocket';
+import RefreshButton from '@/components/RefreshButton';
 
 export default function DepartmentMaster() {
+  const socket = useSocket();
   const [departments, setDepartments] = useState([]);
   const [loading, setLoading] = useState(true);
   const [processing, setProcessing] = useState(false);
@@ -13,7 +16,7 @@ export default function DepartmentMaster() {
   const [showModal, setShowModal] = useState(false);
   const [editTarget, setEditTarget] = useState(null);
   const [toast, setToast] = useState(null);
-  const [refreshing, setRefreshing] = useState(false);
+  const [lastUpdated, setLastUpdated] = useState(null);
 
   const [form, setForm] = useState({ name: '', institute_name: '' });
 
@@ -34,6 +37,7 @@ export default function DepartmentMaster() {
       if (res.ok) {
         const data = await res.json();
         setDepartments(Array.isArray(data) ? data : []);
+        setLastUpdated(new Date());
       } else {
         setDepartments([]);
       }
@@ -47,7 +51,27 @@ export default function DepartmentMaster() {
 
   useEffect(() => { if (isReady) fetchDepartments(); }, [search, isReady]);
 
-  // Auto-refresh removed — use the Refresh button instead
+  // Real-time WebSocket synchronization for department changes
+  useEffect(() => {
+    if (!socket) return;
+    socket.emit('join_admin_room');
+
+    const handleDeptEvent = () => {
+      fetchDepartments();
+    };
+
+    socket.on('department_added', handleDeptEvent);
+    socket.on('department_updated', handleDeptEvent);
+    socket.on('department_deleted', handleDeptEvent);
+    socket.on('admin_stats_changed', handleDeptEvent);
+
+    return () => {
+      socket.off('department_added', handleDeptEvent);
+      socket.off('department_updated', handleDeptEvent);
+      socket.off('department_deleted', handleDeptEvent);
+      socket.off('admin_stats_changed', handleDeptEvent);
+    };
+  }, [socket]);
 
   const openAdd = () => {
     setEditTarget(null);
@@ -156,25 +180,16 @@ export default function DepartmentMaster() {
         </div>
       </div>
 
-      <div style={{ marginBottom: '20px', display: 'flex', gap: '12px', flexWrap: 'wrap' }}>
+      <div style={{ marginBottom: '20px', display: 'flex', gap: '12px', flexWrap: 'wrap', alignItems: 'center' }}>
         <button className="btn-primary" style={{ width: 'auto', padding: '10px 22px', margin: 0 }} onClick={openAdd}>
           + Add Department
         </button>
-        <button
-          onClick={async () => {
-            if (refreshing) return;
-            setRefreshing(true);
-            try { await fetchDepartments(); } finally { setRefreshing(false); }
-          }}
-          disabled={refreshing}
-          style={{
-            padding: '10px 16px', borderRadius: '8px', border: '1px solid var(--border-color)',
-            background: 'transparent', cursor: refreshing ? 'not-allowed' : 'pointer',
-            fontSize: '13px', color: 'var(--text-muted)', opacity: refreshing ? 0.6 : 1,
-          }}
-        >
-          {refreshing ? '↻ Refreshing...' : '↻ Refresh'}
-        </button>
+        <RefreshButton
+          onRefresh={fetchDepartments}
+          lastUpdated={lastUpdated}
+          label="Refresh"
+          variant="default"
+        />
       </div>
 
       {showModal && (

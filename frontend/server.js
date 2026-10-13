@@ -47,6 +47,22 @@ app.prepare().then(() => {
       console.log(`Socket ${socket.id} left room ${room}`);
     });
 
+    // Join admin room for real-time system & audit updates
+    socket.on('join_admin_room', () => {
+      socket.join('admin_room');
+      console.log(`Socket ${socket.id} joined admin_room`);
+    });
+
+    socket.on('leave_admin_room', () => {
+      socket.leave('admin_room');
+      console.log(`Socket ${socket.id} left admin_room`);
+    });
+
+    // Auto-join admin room if authenticated as admin
+    if (socket.handshake?.auth?.role === 'admin') {
+      socket.join('admin_room');
+    }
+
     socket.on('join_course_room', (courseId) => {
       const room = `course_${courseId}`;
       socket.join(room);

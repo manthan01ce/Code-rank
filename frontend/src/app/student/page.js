@@ -4,7 +4,10 @@ import { useRouter } from 'next/navigation';
 import { useEffect, useState, useCallback } from 'react';
 import LoadingOverlay from '@/components/LoadingOverlay';
 import { useSocket } from '@/hooks/useSocket';
+import { usePolling } from '@/hooks/usePolling';
 import HeaderProfileDropdown from '@/components/HeaderProfileDropdown';
+import NotificationDropdown from '@/components/NotificationDropdown';
+import RefreshButton from '@/components/RefreshButton';
 
 export default function StudentDashboard() {
   const router = useRouter();
@@ -14,7 +17,7 @@ export default function StudentDashboard() {
   const [loading, setLoading] = useState(true);
   const [courses, setCourses] = useState([]);
   const [practicals, setPracticals] = useState([]);
-  const [refreshing, setRefreshing] = useState(false);
+  const [lastUpdated, setLastUpdated] = useState(null);
 
   const fetchStudentPracticals = useCallback(async () => {
     const token = localStorage.getItem('token');
@@ -27,12 +30,16 @@ export default function StudentDashboard() {
         const data = await res.json();
         if (Array.isArray(data)) {
           setPracticals(data);
+          setLastUpdated(new Date());
         }
       }
     } catch (err) {
       console.error('Error fetching practicals for dashboard:', err);
     }
   }, []);
+
+  // Adaptive 15-second polling for Student dashboard (pauses when backgrounded, prevents overlaps)
+  usePolling(fetchStudentPracticals, 15_000, !!user);
 
   useEffect(() => {
     const userData = localStorage.getItem('user');
@@ -146,6 +153,7 @@ export default function StudentDashboard() {
               </div>
             </div>
           )}
+          <NotificationDropdown user={user} />
           <HeaderProfileDropdown user={user} />
         </div>
       </div>
@@ -154,22 +162,12 @@ export default function StudentDashboard() {
         <div style={{ marginBottom: '35px' }}>
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '8px' }}>
             <h1 style={{ fontSize: '28px', fontWeight: 700, color: '#1e293b', margin: 0 }}>My Assigned Subjects &amp; Practicals</h1>
-            <button
-              onClick={async () => {
-                if (refreshing) return;
-                setRefreshing(true);
-                try { await fetchStudentPracticals(); } finally { setRefreshing(false); }
-              }}
-              disabled={refreshing}
-              style={{
-                padding: '8px 18px', borderRadius: '8px', border: '1px solid #cbd5e1',
-                background: 'white', cursor: refreshing ? 'not-allowed' : 'pointer',
-                fontWeight: 600, fontSize: '13px', color: '#475569',
-                opacity: refreshing ? 0.6 : 1, display: 'flex', alignItems: 'center', gap: '6px',
-              }}
-            >
-              {refreshing ? '↻ Refreshing...' : '↻ Refresh'}
-            </button>
+            <RefreshButton
+              onRefresh={fetchStudentPracticals}
+              lastUpdated={lastUpdated}
+              label="Refresh"
+              variant="default"
+            />
           </div>
           <p style={{ color: '#64748b', fontSize: '15px' }}>
             View questions assigned by your faculty for Semester {semester}. Click any practical question to open your coding workspace.

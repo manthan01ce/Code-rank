@@ -3,9 +3,11 @@
 import { useRouter } from 'next/navigation';
 import { useEffect, useState, useCallback } from 'react';
 import LoadingOverlay from '@/components/LoadingOverlay';
-import LogoutConfirmModal from '@/components/LogoutConfirmModal';
 import { useSocket } from '@/hooks/useSocket';
 import { usePolling } from '@/hooks/usePolling';
+import HeaderProfileDropdown from '@/components/HeaderProfileDropdown';
+import NotificationDropdown from '@/components/NotificationDropdown';
+import RefreshButton from '@/components/RefreshButton';
 
 export default function StudentDashboard() {
   const router = useRouter();
@@ -15,6 +17,7 @@ export default function StudentDashboard() {
   const [loading, setLoading] = useState(true);
   const [courses, setCourses] = useState([]);
   const [practicals, setPracticals] = useState([]);
+  const [lastUpdated, setLastUpdated] = useState(null);
 
   const fetchStudentPracticals = useCallback(async () => {
     const token = localStorage.getItem('token');
@@ -27,12 +30,16 @@ export default function StudentDashboard() {
         const data = await res.json();
         if (Array.isArray(data)) {
           setPracticals(data);
+          setLastUpdated(new Date());
         }
       }
     } catch (err) {
       console.error('Error fetching practicals for dashboard:', err);
     }
   }, []);
+
+  // Adaptive 15-second polling for Student dashboard (pauses when backgrounded, prevents overlaps)
+  usePolling(fetchStudentPracticals, 15_000, !!user);
 
   useEffect(() => {
     const userData = localStorage.getItem('user');
@@ -98,36 +105,25 @@ export default function StudentDashboard() {
     socket.on('practical_added', handleSocketUpdate);
     socket.on('practical_updated', handleSocketUpdate);
     socket.on('practical_deleted', handleSocketUpdate);
+    socket.on('practicalAdded', handleSocketUpdate);
 
     return () => {
       socket.off('practical_added', handleSocketUpdate);
       socket.off('practical_updated', handleSocketUpdate);
       socket.off('practical_deleted', handleSocketUpdate);
+      socket.off('practicalAdded', handleSocketUpdate);
     };
   }, [socket, fetchStudentPracticals]);
 
-  // Join course rooms for student courses to receive course-specific socket events
-  useEffect(() => {
-    if (!socket || !courses || courses.length === 0) return;
-    courses.forEach(c => socket.emit('join_course_room', c.id));
-    return () => {
-      courses.forEach(c => socket.emit('leave_course_room', c.id));
-    };
-  }, [socket, courses]);
+  // Polling fallback removed — use the Refresh button instead.
+  // Socket events above handle real-time updates automatically.
 
-  // Polling fallback – refresh practicals every 60s (only when socket unavailable, supplements socket events)
-  // Only enable polling when socket is not connected or user is active
-  const isSocketConnected = socket?.connected;
-  usePolling(fetchStudentPracticals, 60_000, !!user && !isSocketConnected);
-
-  const [showLogoutModal, setShowLogoutModal] = useState(false);
-
-  const handleLogout = () => setShowLogoutModal(true);
-
-  const confirmLogout = () => {
-    localStorage.removeItem('token');
-    localStorage.removeItem('user');
-    router.push('/');
+  const handleLogout = () => {
+    if (window.confirm("Are you sure you want to log out?")) {
+      localStorage.removeItem('token');
+      localStorage.removeItem('user');
+      router.push('/');
+    }
   };
 
   if (!user) return null;
@@ -146,65 +142,33 @@ export default function StudentDashboard() {
         position: 'sticky', top: 0, zIndex: 100
       }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: '15px' }}>
-          <div style={{ 
-            width: '40px', height: '40px', 
-            display: 'flex', alignItems: 'center', justifyContent: 'center',
-            borderRadius: '50%', background: '#ffffff', overflow: 'hidden',
-            boxShadow: '0 2px 8px rgba(79, 70, 229, 0.15)'
-          }}>
-            <img 
-              src="/coderank-logo.jpg" 
-              alt="Logo" 
-              style={{ height: '40px', width: '40px', objectFit: 'cover', borderRadius: '50%' }}
-              onError={(e) => {
-                e.currentTarget.style.display = 'none';
-                if (e.currentTarget.nextSibling) e.currentTarget.nextSibling.style.display = 'flex';
-              }}
-            />
-            <div 
-              style={{
-                display: 'none', width: '40px', height: '40px',
-                background: 'linear-gradient(135deg, #4F46E5, #7C3AED)',
-                borderRadius: '50%',
-                alignItems: 'center', justifyContent: 'center',
-                fontSize: '16px', color: 'white', fontWeight: 700
-              }}
-            >
-              CR
-            </div>
-          </div>
+          <img src="/coderank-logo.jpg" alt="Logo" style={{ height: '40px' }} onError={(e) => { e.target.src = '/coderank-logo.jpg'; }} />
           <h2 style={{ margin: 0, fontSize: '20px', fontWeight: 700, color: '#1e293b' }}>CodeRank</h2>
         </div>
         <div style={{ display: 'flex', alignItems: 'center', gap: '20px' }}>
-          <div style={{ textAlign: 'right' }}>
-            <div style={{ fontSize: '14px', fontWeight: 600, color: '#1e293b' }}>{user.name}</div>
-            <div style={{ fontSize: '12px', color: '#64748b' }}>Semester {semester} &bull; Batch {batch}</div>
-          </div>
-          <button
-            onClick={() => {
-              const handle = user?.email ? user.email.split('@')[0] : '';
-              router.push(`/profile/${handle}`);
-            }}
-            style={{ padding: '8px 16px', background: '#4f46e5', border: 'none', borderRadius: '8px', cursor: 'pointer', fontWeight: 600, color: 'white', transition: 'all 0.2s', boxShadow: '0 2px 4px rgba(79, 70, 229, 0.2)' }}
-            onMouseEnter={e => e.currentTarget.style.background = '#4338ca'}
-            onMouseLeave={e => e.currentTarget.style.background = '#4f46e5'}
-          >
-            👤 Profile
-          </button>
-          <button 
-            onClick={handleLogout}
-            style={{ padding: '8px 16px', background: '#f1f5f9', border: '1px solid #cbd5e1', borderRadius: '8px', cursor: 'pointer', fontWeight: 600, color: '#475569', transition: 'all 0.2s' }}
-            onMouseEnter={e => e.currentTarget.style.background = '#e2e8f0'}
-            onMouseLeave={e => e.currentTarget.style.background = '#f1f5f9'}
-          >
-            Logout
-          </button>
+          {(semester || batch) && (
+            <div style={{ textAlign: 'right', display: 'none', md: 'block' }}>
+              <div style={{ fontSize: '12px', fontWeight: 600, color: '#475569', background: '#f1f5f9', padding: '4px 10px', borderRadius: '6px' }}>
+                Semester {semester || '—'} &bull; Batch {batch || '—'}
+              </div>
+            </div>
+          )}
+          <NotificationDropdown user={user} />
+          <HeaderProfileDropdown user={user} />
         </div>
       </div>
 
       <div style={{ maxWidth: '1200px', margin: '0 auto', padding: '40px 20px' }}>
         <div style={{ marginBottom: '35px' }}>
-          <h1 style={{ fontSize: '28px', fontWeight: 700, color: '#1e293b', marginBottom: '8px' }}>My Assigned Subjects & Practicals</h1>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '8px' }}>
+            <h1 style={{ fontSize: '28px', fontWeight: 700, color: '#1e293b', margin: 0 }}>My Assigned Subjects &amp; Practicals</h1>
+            <RefreshButton
+              onRefresh={fetchStudentPracticals}
+              lastUpdated={lastUpdated}
+              label="Refresh"
+              variant="default"
+            />
+          </div>
           <p style={{ color: '#64748b', fontSize: '15px' }}>
             View questions assigned by your faculty for Semester {semester}. Click any practical question to open your coding workspace.
           </p>
@@ -403,11 +367,7 @@ export default function StudentDashboard() {
           </div>
         )}
       </div>
-      <LogoutConfirmModal
-        isOpen={showLogoutModal}
-        onConfirm={confirmLogout}
-        onCancel={() => setShowLogoutModal(false)}
-      />
+
     </div>
   );
 }

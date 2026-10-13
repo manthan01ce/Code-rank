@@ -3,7 +3,8 @@
 import { useState, useEffect, useRef } from 'react';
 import LoadingOverlay from '@/components/LoadingOverlay';
 import { useAdminAuth } from '@/hooks/useAdminAuth';
-import { usePolling } from '@/hooks/usePolling';
+import { useSocket } from '@/hooks/useSocket';
+import RefreshButton from '@/components/RefreshButton';
 
 // ─── PDF Generator ────────────────────────────────────────────────────────────
 async function downloadCredentialsPDF(users) {
@@ -61,6 +62,7 @@ async function parseFile(file) {
 // ─── Component ────────────────────────────────────────────────────────────────
 export default function FacultyManagement() {
   const { token: authToken, isReady } = useAdminAuth();
+  const socket = useSocket();
 
   const [faculty, setFaculty]         = useState([]);
   const [departmentsList, setDepartmentsList] = useState([]);
@@ -71,6 +73,7 @@ export default function FacultyManagement() {
   const [showModal, setShowModal]     = useState(false);
   const [editTarget, setEditTarget]   = useState(null);
   const [toast, setToast]             = useState(null);
+  const [lastUpdated, setLastUpdated] = useState(null);
   const fileRef                       = useRef();
 
   const [form, setForm] = useState({ facultyId: '', firstName: '', lastName: '', emailPrefix: '', department: '', designation: '', password: '' });
@@ -92,6 +95,7 @@ export default function FacultyManagement() {
       if (res.ok) {
         const data = await res.json();
         setFaculty(Array.isArray(data) ? data : []);
+        setLastUpdated(new Date());
       } else {
         console.error('Failed to fetch faculty:', res.status);
         setFaculty([]);
@@ -102,6 +106,28 @@ export default function FacultyManagement() {
     }
     finally { setLoading(false); }
   };
+
+  // Real-time WebSocket synchronization for faculty master
+  useEffect(() => {
+    if (!socket) return;
+    socket.emit('join_admin_room');
+
+    const handleFacultyUpdate = () => {
+      fetchFaculty();
+    };
+
+    socket.on('user_created', handleFacultyUpdate);
+    socket.on('user_updated', handleFacultyUpdate);
+    socket.on('user_deleted', handleFacultyUpdate);
+    socket.on('admin_stats_changed', handleFacultyUpdate);
+
+    return () => {
+      socket.off('user_created', handleFacultyUpdate);
+      socket.off('user_updated', handleFacultyUpdate);
+      socket.off('user_deleted', handleFacultyUpdate);
+      socket.off('admin_stats_changed', handleFacultyUpdate);
+    };
+  }, [socket]);
 
   const fetchDepartments = async () => {
     try {
@@ -114,9 +140,6 @@ export default function FacultyManagement() {
 
   useEffect(() => { if (isReady) { fetchFaculty(); } }, [search, statusFilter, isReady]);
   useEffect(() => { if (isReady) fetchDepartments(); }, [isReady]);
-
-  // Auto-refresh faculty list every 15s (pauses while modal is open)
-  usePolling(() => { if (!showModal) fetchFaculty(); }, 15_000, isReady);
 
   // ── Open modal ──
   const openAdd = () => {
@@ -397,15 +420,12 @@ export default function FacultyManagement() {
           <input ref={fileRef} type="file" accept=".xlsx,.xls,.csv" style={{ display: 'none' }} onChange={handleBulkUpload} />
         </label>
 
-        <button
-          onClick={fetchFaculty}
-          style={{
-            padding: '10px 16px', borderRadius: '8px', border: '1px solid var(--border-color)',
-            background: 'transparent', cursor: 'pointer', fontSize: '13px', color: 'var(--text-muted)',
-          }}
-        >
-          ↻ Refresh
-        </button>
+        <RefreshButton
+          onRefresh={fetchFaculty}
+          lastUpdated={lastUpdated}
+          label="Refresh"
+          variant="default"
+        />
       </div>
 
       <p style={{ fontSize: '12px', color: '#94a3b8', marginBottom: '16px' }}>

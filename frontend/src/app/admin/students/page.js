@@ -3,6 +3,8 @@
 import { useState, useEffect, useRef } from 'react';
 import LoadingOverlay from '@/components/LoadingOverlay';
 import { useAdminAuth } from '@/hooks/useAdminAuth';
+import { useSocket } from '@/hooks/useSocket';
+import RefreshButton from '@/components/RefreshButton';
 
 // ─── PDF Generator (inline, no jspdf-autotable import issues) ───────────────
 async function downloadCredentialsPDF(users) {
@@ -64,6 +66,7 @@ async function parseFile(file) {
 // ─── Component ───────────────────────────────────────────────────────────────
 export default function StudentManagement() {
   const { token: authToken, isReady } = useAdminAuth();
+  const socket = useSocket();
 
   const [students, setStudents]       = useState([]);
   const [departmentsList, setDepartmentsList] = useState([]);
@@ -75,7 +78,7 @@ export default function StudentManagement() {
   const [showModal, setShowModal]     = useState(false);
   const [editTarget, setEditTarget]   = useState(null); // null = create mode
   const [toast, setToast]             = useState(null); // { type: 'success'|'error', msg }
-  const [refreshing, setRefreshing]   = useState(false);
+  const [lastUpdated, setLastUpdated] = useState(null);
   const fileRef                       = useRef();
 
   // Form fields
@@ -108,6 +111,7 @@ export default function StudentManagement() {
       if (res.ok) {
         const data = await res.json();
         setStudents(Array.isArray(data) ? data : []);
+        setLastUpdated(new Date());
       } else {
         if (res.status === 401) {
           localStorage.removeItem('token');
@@ -125,15 +129,27 @@ export default function StudentManagement() {
     finally { setLoading(false); }
   };
 
-  const handleRefresh = async () => {
-    if (refreshing) return;
-    setRefreshing(true);
-    try {
-      await fetchStudents();
-    } finally {
-      setRefreshing(false);
-    }
-  };
+  // Real-time WebSocket synchronization for student master
+  useEffect(() => {
+    if (!socket) return;
+    socket.emit('join_admin_room');
+
+    const handleStudentUpdate = () => {
+      fetchStudents();
+    };
+
+    socket.on('user_created', handleStudentUpdate);
+    socket.on('user_updated', handleStudentUpdate);
+    socket.on('user_deleted', handleStudentUpdate);
+    socket.on('admin_stats_changed', handleStudentUpdate);
+
+    return () => {
+      socket.off('user_created', handleStudentUpdate);
+      socket.off('user_updated', handleStudentUpdate);
+      socket.off('user_deleted', handleStudentUpdate);
+      socket.off('admin_stats_changed', handleStudentUpdate);
+    };
+  }, [socket]);
 
   const fetchDepartments = async () => {
     try {
@@ -462,17 +478,12 @@ export default function StudentManagement() {
           <input ref={fileRef} type="file" accept=".xlsx,.xls,.csv" style={{ display: 'none' }} onChange={handleBulkUpload} />
         </label>
 
-        <button
-          style={{
-            padding: '10px 16px', borderRadius: '8px', border: '1px solid var(--border-color)',
-            background: 'transparent', cursor: refreshing ? 'not-allowed' : 'pointer',
-            fontSize: '13px', color: 'var(--text-muted)', opacity: refreshing ? 0.6 : 1,
-          }}
-          onClick={handleRefresh}
-          disabled={refreshing}
-        >
-          {refreshing ? '↻ Refreshing...' : '↻ Refresh'}
-        </button>
+        <RefreshButton
+          onRefresh={fetchStudents}
+          lastUpdated={lastUpdated}
+          label="Refresh"
+          variant="default"
+        />
       </div>
 
       {/* Hint */}

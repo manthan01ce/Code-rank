@@ -4,7 +4,10 @@ import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import Editor from '@monaco-editor/react';
 import HeaderProfileDropdown from '@/components/HeaderProfileDropdown';
+import NotificationDropdown from '@/components/NotificationDropdown';
+import RefreshButton from '@/components/RefreshButton';
 import { useSocket } from '@/hooks/useSocket';
+import { usePolling } from '@/hooks/usePolling';
 
 export default function StudentPracticals() {
   const router = useRouter();
@@ -15,7 +18,7 @@ export default function StudentPracticals() {
   const [practicals, setPracticals] = useState([]);
   const [loading, setLoading] = useState(true);
   const [isChangePasswordOpen, setIsChangePasswordOpen] = useState(false);
-  const [refreshing, setRefreshing] = useState(false);
+  const [lastUpdated, setLastUpdated] = useState(null);
 
   // Solving mode states
   const [activePractical, setActivePractical] = useState(null);
@@ -119,6 +122,7 @@ export default function StudentPracticals() {
       });
       if (res.ok) {
         setPracticals(await res.json());
+        setLastUpdated(new Date());
       }
     } catch (e) {
       console.error('Error fetching practicals:', e);
@@ -127,8 +131,8 @@ export default function StudentPracticals() {
     }
   };
 
-  // Auto-refresh removed — use the Refresh button in the list header instead.
-  // Submission after solve still calls fetchPracticals() to update status in list.
+  // Adaptive 15-second polling for Student practicals list
+  usePolling(fetchPracticals, 15_000, Boolean(selectedCourse && !activePractical));
 
   const getBoilerplate = (lang, p = activePractical) => {
     if (p && p.starter_code && p.starter_code[lang]) {
@@ -531,7 +535,10 @@ int main() {
             <span style={{ fontSize: '12px', color: '#64748b' }}>Semester {user?.extra_info?.semester || '—'} &bull; Practicals Hub</span>
           </div>
         </div>
-        <HeaderProfileDropdown user={user} />
+        <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
+          <NotificationDropdown user={user} />
+          <HeaderProfileDropdown user={user} />
+        </div>
       </div>
     );
   };
@@ -602,23 +609,15 @@ int main() {
           <h2 style={{ fontSize: '22px', fontWeight: 700, marginTop: '4px' }}>{activeCourse?.name}</h2>
           <p style={{ color: 'var(--text-muted)', fontSize: '13px', marginTop: '2px' }}>Solve your coding assignments and view marks feedback.</p>
         </div>
-        <div style={{ display: 'flex', gap: '10px', alignItems: 'center' }}>
-          <button
-            onClick={async () => {
-              if (refreshing) return;
-              setRefreshing(true);
-              try { await fetchPracticals(); } finally { setRefreshing(false); }
-            }}
-            disabled={refreshing}
-            style={{
-              padding: '8px 16px', borderRadius: '8px', border: '1px solid var(--border-color)',
-              backgroundColor: 'white', cursor: refreshing ? 'not-allowed' : 'pointer',
-              fontWeight: 600, fontSize: '13px', opacity: refreshing ? 0.6 : 1,
-            }}
-          >
-            {refreshing ? '↻ Refreshing...' : '↻ Refresh'}
-          </button>
+        <div style={{ display: 'flex', gap: '12px', alignItems: 'center' }}>
+          <RefreshButton
+            onRefresh={fetchPracticals}
+            lastUpdated={lastUpdated}
+            label="Refresh"
+            variant="default"
+          />
           <button 
+            type="button"
             onClick={() => setSelectedCourse('')}
             style={{
               padding: '8px 16px', borderRadius: '8px', border: '1px solid var(--border-color)',

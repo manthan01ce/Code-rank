@@ -1,18 +1,20 @@
 'use client';
 
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect } from 'react';
 import LoadingOverlay from '@/components/LoadingOverlay';
 import { useAdminAuth } from '@/hooks/useAdminAuth';
-import { usePolling } from '@/hooks/usePolling';
+import { useSocket } from '@/hooks/useSocket';
+import RefreshButton from '@/components/RefreshButton';
 
 export default function CourseMapping() {
+  const socket = useSocket();
   const [courses, setCourses] = useState([]);
   const [faculties, setFaculties] = useState([]);
   const [mappings, setMappings] = useState({}); // { course_id: { faculty_ids: [...], co_coordinator_id: null } }
   const [loading, setLoading] = useState(true);
   const [processing, setProcessing] = useState(false);
   const [toast, setToast] = useState(null);
-  const isDirtyRef = useRef(false);
+  const [lastUpdated, setLastUpdated] = useState(null);
 
   const showToast = (type, msg) => {
     setToast({ type, msg });
@@ -22,11 +24,11 @@ export default function CourseMapping() {
   const { token: authToken, isReady } = useAdminAuth();
 
   useEffect(() => {
-    if (isReady) fetchData(true);
+    if (isReady) fetchData();
   }, [isReady]);
 
-  const fetchData = async (isInitial = false) => {
-    if (isInitial) setLoading(true);
+  const fetchData = async () => {
+    setLoading(true);
     try {
       const token = authToken;
       const headers = { 'Authorization': `Bearer ${token}` };
@@ -50,24 +52,37 @@ export default function CourseMapping() {
             co_coordinator_id: co ? co.id : (facs[0]?.id || null)
           };
         }
-        if (!isDirtyRef.current) {
-          setMappings(initialMap);
-        }
+        setMappings(initialMap);
       }
+      setLastUpdated(new Date());
     } catch (e) {
       console.error(e);
-      if (isInitial) showToast('error', 'Error loading data');
+      showToast('error', 'Error loading data');
     } finally {
-      if (isInitial) setLoading(false);
+      setLoading(false);
     }
   };
 
-  // Auto-refresh courses and mappings silently every 30s (skips when user has pending unsaved edits)
-  usePolling(() => { if (!processing && !isDirtyRef.current) fetchData(false); }, 30_000, isReady);
+  // Real-time WebSocket synchronization for course mapping
+  useEffect(() => {
+    if (!socket) return;
+    socket.emit('join_admin_room');
+
+    const handleUpdate = () => {
+      fetchData();
+    };
+
+    socket.on('course_updated', handleUpdate);
+    socket.on('admin_stats_changed', handleUpdate);
+
+    return () => {
+      socket.off('course_updated', handleUpdate);
+      socket.off('admin_stats_changed', handleUpdate);
+    };
+  }, [socket]);
 
   const handleSelectFaculty = (courseId, facultyId) => {
     if (!facultyId) return; // Empty selection
-    isDirtyRef.current = true;
     
     setMappings(prev => {
       const current = prev[courseId] || { faculty_ids: [], co_coordinator_id: null };
@@ -92,7 +107,6 @@ export default function CourseMapping() {
   };
 
   const handleRemoveFaculty = (courseId, facultyId) => {
-    isDirtyRef.current = true;
     setMappings(prev => {
       const current = prev[courseId] || { faculty_ids: [], co_coordinator_id: null };
       const newFids = current.faculty_ids.filter(id => id !== facultyId);
@@ -111,7 +125,6 @@ export default function CourseMapping() {
   };
 
   const handleSetCoCoordinator = (courseId, facultyId) => {
-    isDirtyRef.current = true;
     setMappings(prev => {
       const current = prev[courseId] || { faculty_ids: [], co_coordinator_id: null };
       return {
@@ -145,7 +158,6 @@ export default function CourseMapping() {
       });
 
       if (res.ok) {
-        isDirtyRef.current = false;
         showToast('success', 'Mapping and Co-coordinator saved successfully');
       } else {
         const data = await res.json();
@@ -185,13 +197,12 @@ export default function CourseMapping() {
           <h2 style={{ fontSize: '22px', fontWeight: 700 }}>Course-Faculty Mapping</h2>
           <p style={{ color: 'var(--text-muted)', fontSize: '13px' }}>Assign up to 4 faculties per course.</p>
         </div>
-        <button
-          className="btn-small"
-          style={{ padding: '10px 16px', borderRadius: '8px', border: '1px solid var(--border-color)', background: 'transparent', cursor: 'pointer' }}
-          onClick={fetchData}
-        >
-          ↻ Refresh
-        </button>
+        <RefreshButton
+          onRefresh={fetchData}
+          lastUpdated={lastUpdated}
+          label="Refresh"
+          variant="default"
+        />
       </div>
 
       <div className="table-container">

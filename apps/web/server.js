@@ -158,13 +158,25 @@ app.prepare().then(() => {
       }
     });
 
-    socket.on('leave_practical_room', (practicalId) => {
-      const room = `practical_${practicalId}`;
-      socket.leave(room);
+    // Join admin room for real-time system & audit updates
+    socket.on('join_admin_room', () => {
+      socket.join('admin_room');
       if (process.env.NODE_ENV !== 'production') {
-        logger.info(`Socket left practical room`, { socketId: socket.id, room });
+        logger.info(`Socket joined admin room`, { socketId: socket.id });
       }
     });
+
+    socket.on('leave_admin_room', () => {
+      socket.leave('admin_room');
+      if (process.env.NODE_ENV !== 'production') {
+        logger.info(`Socket left admin room`, { socketId: socket.id });
+      }
+    });
+
+    // Auto-join admin room if authenticated as admin
+    if (userRole === 'admin') {
+      socket.join('admin_room');
+    }
 
     socket.on('join_course_room', (courseId) => {
       const room = `course_${courseId}`;

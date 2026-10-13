@@ -3,15 +3,18 @@
 import { useState, useEffect } from 'react';
 import LoadingOverlay from '@/components/LoadingOverlay';
 import { useAdminAuth } from '@/hooks/useAdminAuth';
+import { useSocket } from '@/hooks/useSocket';
+import RefreshButton from '@/components/RefreshButton';
 
 export default function CourseMapping() {
+  const socket = useSocket();
   const [courses, setCourses] = useState([]);
   const [faculties, setFaculties] = useState([]);
   const [mappings, setMappings] = useState({}); // { course_id: { faculty_ids: [...], co_coordinator_id: null } }
   const [loading, setLoading] = useState(true);
   const [processing, setProcessing] = useState(false);
   const [toast, setToast] = useState(null);
-  const [refreshing, setRefreshing] = useState(false);
+  const [lastUpdated, setLastUpdated] = useState(null);
 
   const showToast = (type, msg) => {
     setToast({ type, msg });
@@ -51,6 +54,7 @@ export default function CourseMapping() {
         }
         setMappings(initialMap);
       }
+      setLastUpdated(new Date());
     } catch (e) {
       console.error(e);
       showToast('error', 'Error loading data');
@@ -59,8 +63,23 @@ export default function CourseMapping() {
     }
   };
 
-  // Auto-refresh courses and mappings every 15s (pauses while processing changes)
-  // usePolling removed — use the Refresh button instead
+  // Real-time WebSocket synchronization for course mapping
+  useEffect(() => {
+    if (!socket) return;
+    socket.emit('join_admin_room');
+
+    const handleUpdate = () => {
+      fetchData();
+    };
+
+    socket.on('course_updated', handleUpdate);
+    socket.on('admin_stats_changed', handleUpdate);
+
+    return () => {
+      socket.off('course_updated', handleUpdate);
+      socket.off('admin_stats_changed', handleUpdate);
+    };
+  }, [socket]);
 
   const handleSelectFaculty = (courseId, facultyId) => {
     if (!facultyId) return; // Empty selection
@@ -178,22 +197,12 @@ export default function CourseMapping() {
           <h2 style={{ fontSize: '22px', fontWeight: 700 }}>Course-Faculty Mapping</h2>
           <p style={{ color: 'var(--text-muted)', fontSize: '13px' }}>Assign up to 4 faculties per course.</p>
         </div>
-        <button
-          className="btn-small"
-          style={{
-            padding: '10px 16px', borderRadius: '8px', border: '1px solid var(--border-color)',
-            background: 'transparent', cursor: refreshing ? 'not-allowed' : 'pointer',
-            opacity: refreshing ? 0.6 : 1,
-          }}
-          onClick={async () => {
-            if (refreshing) return;
-            setRefreshing(true);
-            try { await fetchData(); } finally { setRefreshing(false); }
-          }}
-          disabled={refreshing}
-        >
-          {refreshing ? '↻ Refreshing...' : '↻ Refresh'}
-        </button>
+        <RefreshButton
+          onRefresh={fetchData}
+          lastUpdated={lastUpdated}
+          label="Refresh"
+          variant="default"
+        />
       </div>
 
       <div className="table-container">

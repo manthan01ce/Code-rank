@@ -1,45 +1,33 @@
 'use client';
 
 import { useRouter, usePathname } from 'next/navigation';
-import { useEffect, useState, useRef } from 'react';
-import ChangePasswordModal from './ChangePasswordModal';
-import LogoutConfirmModal from './LogoutConfirmModal';
+import { useEffect, useState } from 'react';
+import { LayoutDashboard, Inbox, Award, LogOut } from 'lucide-react';
+import HeaderProfileDropdown from './HeaderProfileDropdown';
+import NotificationDropdown from './NotificationDropdown';
 
 export default function FacultySidebar() {
   const router = useRouter();
   const pathname = usePathname();
   const [user, setUser] = useState(null);
-  const [showProfileMenu, setShowProfileMenu] = useState(false);
-  const [isChangePasswordOpen, setIsChangePasswordOpen] = useState(false);
-  const [showLogoutModal, setShowLogoutModal] = useState(false);
-  const profileRef = useRef(null);
-
-  useEffect(() => {
-    function handleClickOutside(event) {
-      if (profileRef.current && !profileRef.current.contains(event.target)) {
-        setShowProfileMenu(false);
-      }
-    }
-    document.addEventListener("mousedown", handleClickOutside);
-    return () => {
-      document.removeEventListener("mousedown", handleClickOutside);
-    };
-  }, []);
+  const [activeMenu, setActiveMenu] = useState('dashboard');
 
   useEffect(() => {
     const userData = localStorage.getItem('user');
     if (userData) {
-      const parsed = JSON.parse(userData);
-      if (parsed.role !== 'faculty') {
+      try {
+        const parsed = JSON.parse(userData);
+        if (parsed.role !== 'faculty') {
+          router.push('/');
+        }
+        setUser(parsed);
+      } catch {
         router.push('/');
       }
-      setUser(parsed);
     } else {
       router.push('/');
     }
-  }, []);
-
-  const [activeMenu, setActiveMenu] = useState('dashboard');
+  }, [router]);
 
   useEffect(() => {
     if (typeof window !== 'undefined') {
@@ -54,13 +42,19 @@ export default function FacultySidebar() {
     }
   }, [pathname]);
 
-  const handleLogout = () => setShowLogoutModal(true);
-
-  const confirmLogout = () => {
-    localStorage.removeItem('token');
-    localStorage.removeItem('user');
-    router.push('/');
+  const handleLogout = () => {
+    if (window.confirm("Are you sure you want to log out?")) {
+      localStorage.removeItem('token');
+      localStorage.removeItem('user');
+      router.push('/');
+    }
   };
+
+  const navItems = [
+    { id: 'dashboard', label: 'Practicals Dashboard', path: '/faculty', icon: <LayoutDashboard size={18} /> },
+    { id: 'submissions', label: 'Student Submissions', path: '/faculty?tab=submissions', icon: <Inbox size={18} /> },
+    { id: 'marks', label: 'Marks Overview', path: '/faculty?tab=marks', icon: <Award size={18} /> },
+  ];
 
   return (
     <>
@@ -71,204 +65,92 @@ export default function FacultySidebar() {
         right: 0,
         left: 280,
         height: '70px',
-        backgroundColor: 'white',
-        borderBottom: '1px solid var(--border-color)',
+        backgroundColor: '#ffffff',
+        borderBottom: '1px solid #e2e8f0',
         display: 'flex',
         alignItems: 'center',
         justifyContent: 'flex-end',
         paddingRight: '30px',
+        gap: '16px',
         zIndex: 100
       }}>
-        {/* Profile Section */}
-        <div ref={profileRef} style={{ position: 'relative' }}>
-          <button
-            onClick={() => setShowProfileMenu(!showProfileMenu)}
+        <NotificationDropdown user={user} />
+        <HeaderProfileDropdown user={user} />
+      </div>
+
+      {/* Sidebar */}
+      <div className="sidebar" style={{ paddingTop: '20px', position: 'fixed', left: 0, top: 0, bottom: 0, width: '280px', zIndex: 99 }}>
+        <div className="logo-container" style={{ padding: '0 20px', textAlign: 'center', marginBottom: '24px' }}>
+          <img 
+            src="/coderank-logo.jpg" 
+            alt="CodeRank Logo" 
+            onError={(e) => { e.target.src = '/coderank-logo.jpg'; }}
+            style={{ width: '56px', height: '56px', objectFit: 'contain', marginBottom: '8px', borderRadius: '10px' }}
+          />
+          <h2 className="brand-text" style={{ fontSize: '20px', fontWeight: 700, margin: '0 0 2px 0', color: '#1e293b' }}>
+            CodeRank
+          </h2>
+          <p style={{ fontSize: '11px', fontWeight: 600, color: '#7c3aed', margin: 0, textTransform: 'uppercase', letterSpacing: '0.05em' }}>
+            Faculty Portal
+          </p>
+        </div>
+
+        <ul className="sidebar-nav" style={{ listStyle: 'none', padding: '0 12px', margin: 0 }}>
+          {navItems.map((item) => {
+            const isActive = activeMenu === item.id;
+            return (
+              <li
+                key={item.id}
+                className={isActive ? 'active' : ''}
+                onClick={() => {
+                  setActiveMenu(item.id);
+                  router.push(item.path);
+                }}
+                style={{
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '12px',
+                  padding: '11px 16px',
+                  borderRadius: '10px',
+                  cursor: 'pointer',
+                  fontWeight: isActive ? 600 : 500,
+                  fontSize: '14px',
+                  marginBottom: '4px',
+                  transition: 'all 0.15s ease',
+                  backgroundColor: isActive ? '#f5f3ff' : 'transparent',
+                  color: isActive ? '#7c3aed' : '#475569',
+                }}
+              >
+                <span style={{ color: isActive ? '#7c3aed' : '#64748b', display: 'flex' }}>
+                  {item.icon}
+                </span>
+                <span>{item.label}</span>
+              </li>
+            );
+          })}
+
+          <li
+            onClick={handleLogout}
             style={{
+              marginTop: '28px',
               display: 'flex',
               alignItems: 'center',
               gap: '12px',
-              background: 'none',
-              border: 'none',
+              padding: '11px 16px',
+              borderRadius: '10px',
               cursor: 'pointer',
-              padding: '8px 12px',
-              borderRadius: '8px',
-              transition: 'background-color 0.2s',
-              backgroundColor: showProfileMenu ? '#f0f0f0' : 'transparent'
+              fontWeight: 600,
+              fontSize: '14px',
+              color: '#ef4444',
+              backgroundColor: '#fff5f5',
+              transition: 'all 0.15s ease',
             }}
           >
-            {/* Profile Avatar */}
-            <div style={{
-              width: '40px',
-              height: '40px',
-              borderRadius: '50%',
-              backgroundColor: '#4F46E5',
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              color: 'white',
-              fontWeight: 'bold',
-              fontSize: '16px'
-            }}>
-              {user?.name?.charAt(0).toUpperCase() || 'F'}
-            </div>
-            
-            {/* User Info */}
-            <div style={{ textAlign: 'left' }}>
-              <div style={{ fontSize: '14px', fontWeight: '600', color: '#1e293b' }}>
-                {user?.name || 'Faculty'}
-              </div>
-              <div style={{ fontSize: '12px', color: '#64748b' }}>
-                {user?.role?.toUpperCase() || 'FACULTY'}
-              </div>
-            </div>
- 
-            {/* Dropdown Arrow */}
-            <div style={{ fontSize: '12px', color: '#64748b', marginLeft: '8px' }}>
-              ▼
-            </div>
-          </button>
- 
-          {/* Profile Dropdown Menu */}
-          {showProfileMenu && (
-            <div style={{
-              position: 'absolute',
-              top: '100%',
-              right: 0,
-              marginTop: '8px',
-              backgroundColor: 'white',
-              borderRadius: '8px',
-              boxShadow: '0 4px 12px rgba(0,0,0,0.15)',
-              minWidth: '200px',
-              zIndex: 1000,
-              overflow: 'hidden'
-            }}>
-              {/* Profile Info */}
-              <div style={{
-                padding: '16px',
-                borderBottom: '1px solid var(--border-color)',
-                backgroundColor: '#f8fafc'
-              }}>
-                <div style={{ fontSize: '14px', fontWeight: '600', color: '#1e293b' }}>
-                  {user?.name || 'Faculty'}
-                </div>
-                <div style={{ fontSize: '12px', color: '#64748b', marginTop: '4px' }}>
-                  {user?.email || 'faculty@charusat.edu.in'}
-                </div>
-              </div>
- 
-              {/* Menu Items */}
-              <div style={{ padding: '8px 0' }}>
-                <button
-                  onClick={() => {
-                    const handle = user?.email ? user.email.split('@')[0] : 'faculty';
-                    router.push(`/profile/${handle}`);
-                    setShowProfileMenu(false);
-                  }}
-                  style={{
-                    width: '100%',
-                    padding: '12px 16px',
-                    border: 'none',
-                    background: 'none',
-                    textAlign: 'left',
-                    cursor: 'pointer',
-                    fontSize: '14px',
-                    color: '#1e293b',
-                    transition: 'background-color 0.2s'
-                  }}
-                  onMouseEnter={(e) => e.target.style.backgroundColor = '#f0f0f0'}
-                  onMouseLeave={(e) => e.target.style.backgroundColor = 'transparent'}
-                >
-                  👤 Profile
-                </button>
-
-                <button
-                  onClick={() => {
-                    setIsChangePasswordOpen(true);
-                    setShowProfileMenu(false);
-                  }}
-                  style={{
-                    width: '100%',
-                    padding: '12px 16px',
-                    border: 'none',
-                    background: 'none',
-                    textAlign: 'left',
-                    cursor: 'pointer',
-                    fontSize: '14px',
-                    color: '#1e293b',
-                    transition: 'background-color 0.2s'
-                  }}
-                  onMouseEnter={(e) => e.target.style.backgroundColor = '#f0f0f0'}
-                  onMouseLeave={(e) => e.target.style.backgroundColor = 'transparent'}
-                >
-                  🔑 Change Password
-                </button>
- 
-                <div style={{ height: '1px', backgroundColor: 'var(--border-color)', margin: '8px 0' }} />
- 
-                <button
-                  onClick={handleLogout}
-                  style={{
-                    width: '100%',
-                    padding: '12px 16px',
-                    border: 'none',
-                    background: 'none',
-                    textAlign: 'left',
-                    cursor: 'pointer',
-                    fontSize: '14px',
-                    color: '#ef4444',
-                    fontWeight: '600',
-                    transition: 'background-color 0.2s'
-                  }}
-                  onMouseEnter={(e) => e.target.style.backgroundColor = '#fef2f2'}
-                  onMouseLeave={(e) => e.target.style.backgroundColor = 'transparent'}
-                >
-                   Sign Out
-                </button>
-              </div>
-            </div>
-          )}
-        </div>
-      </div>
- 
-      {/* Sidebar */}
-      <div className="sidebar" style={{ paddingTop: '20px', position: 'fixed', left: 0, top: 0, bottom: 0, width: '280px', zIndex: 99 }}>
-        <div className="logo-container" style={{ padding: '0 20px', textAlign: 'center', marginBottom: '30px' }}>
-          <div style={{ width: '60px', height: '60px', margin: '0 auto 10px', display: 'flex', alignItems: 'center', justifyContent: 'center', borderRadius: '50%', overflow: 'hidden', background: '#ffffff', boxShadow: '0 4px 12px rgba(79, 70, 229, 0.15)' }}>
-            <img 
-              src="/coderank-logo.jpg" 
-              alt="CodeRank Logo" 
-              onError={(e) => { e.target.style.display = 'none'; if (e.target.nextSibling) e.target.nextSibling.style.display = 'flex'; }}
-              style={{ width: '100%', height: '100%', objectFit: 'cover' }}
-            />
-            <div style={{ display: 'none', width: '100%', height: '100%', background: 'linear-gradient(135deg, #4F46E5, #7C3AED)', borderRadius: '50%', alignItems: 'center', justifyContent: 'center', fontSize: '24px', color: 'white', fontWeight: 800 }}>
-              CR
-            </div>
-          </div>
-          <h2 className="brand-text" style={{ fontSize: '22px', marginBottom: '5px' }}>CodeRank</h2>
-          <p style={{ fontSize: '12px', color: '#888' }}>Faculty Dashboard</p>
-        </div>
- 
-        <ul className="sidebar-nav">
-          <li className={activeMenu === 'dashboard' ? 'active' : ''} onClick={() => router.push('/faculty')}>
-             Dashboard
-          </li>
-          <li className={activeMenu === 'submissions' ? 'active' : ''} onClick={() => router.push('/faculty?tab=submissions')}>
-            📥 Student submissions
-          </li>
-          <li className={activeMenu === 'marks' ? 'active' : ''} onClick={() => router.push('/faculty?tab=marks')}>
-             Marks overview
-          </li>
-          <li style={{ marginTop: 'auto', color: '#ef4444', cursor: 'pointer', fontWeight: '600' }} onClick={handleLogout}>
-             Logout
+            <LogOut size={18} />
+            <span>Sign Out</span>
           </li>
         </ul>
       </div>
-      <ChangePasswordModal isOpen={isChangePasswordOpen} onClose={() => setIsChangePasswordOpen(false)} />
-      <LogoutConfirmModal
-        isOpen={showLogoutModal}
-        onConfirm={confirmLogout}
-        onCancel={() => setShowLogoutModal(false)}
-      />
     </>
   );
 }

@@ -1,90 +1,102 @@
 'use client';
 
-import { useEffect, useRef, useCallback } from 'react';
+import { useEffect, useRef, useCallback, useState } from 'react';
 
 /**
  * usePolling
  * ----------
- * A reliable polling hook that calls `callback` every `intervalMs` milliseconds.
+ * High-reliability, role-specific polling hook designed for Student dashboards.
  *
- * Features:
- *  - Runs immediately on mount (first call at t=0)
- *  - Pauses when the tab/window is hidden (Page Visibility API) to save resources
- *  - Resumes immediately when the tab becomes visible again, but does NOT double-fire
- *    if the interval already fired recently (to prevent UI refresh jitter)
- *  - Clears timer cleanly on unmount
- *  - Stable callback via useRef (no need to memoize callback at call site)
- *  - Deduplication via `isRunning` flag to prevent concurrent calls
+ * Requirements met:
+ *  - Configurable polling interval (default 15,000ms).
+ *  - Prevents overlapping async requests via `isExecutingRef`.
+ *  - Pauses execution when tab is hidden (Page Visibility API) to eliminate wasted traffic.
+ *  - Resumes and fires immediately when student returns to tab.
+ *  - Thorough cleanup of timers on component unmount.
+ *  - Returns a stable manual `triggerPoll()` that executes immediately without
+ *    creating duplicate intervals or breaking the polling cadence.
  *
- * @param {function} callback   – Async or sync function to call on each tick
- * @param {number}   intervalMs – Polling interval in milliseconds (default: 15000)
- * @param {boolean}  enabled    – Set to false to pause polling (default: true)
+ * @param {Function} callback   - Async or sync data fetch function
+ * @param {number}   intervalMs - Polling interval in ms (default 15000)
+ * @param {boolean}  enabled    - Toggle polling active state (default true)
  */
 export function usePolling(callback, intervalMs = 15_000, enabled = true) {
   const callbackRef = useRef(callback);
   const timerRef = useRef(null);
-  const isRunningRef = useRef(false);
-  const lastFiredRef = useRef(0);
+  const isExecutingRef = useRef(false);
+  const [isPollingActive, setIsPollingActive] = useState(enabled);
 
-  // Keep callbackRef current without re-triggering the effect
+  // Keep callbackRef current without re-triggering effects
   useEffect(() => {
     callbackRef.current = callback;
   }, [callback]);
 
-  const runCallback = useCallback(async () => {
-    // Deduplicate: don't run if already running
-    if (isRunningRef.current) return;
-    isRunningRef.current = true;
-    lastFiredRef.current = Date.now();
+  // Safe executor preventing overlapping requests
+  const executePoll = useCallback(async () => {
+    if (isExecutingRef.current) return;
+    isExecutingRef.current = true;
     try {
-      await callbackRef.current();
-    } catch (e) {
-      // Silently ignore errors in polling callbacks
+      if (typeof callbackRef.current === 'function') {
+        await callbackRef.current();
+      }
+    } catch (err) {
+      console.warn('[usePolling] Error during poll execution:', err);
     } finally {
-      isRunningRef.current = false;
+      isExecutingRef.current = false;
     }
   }, []);
 
-  const startPolling = useCallback((immediate = true) => {
+  const startTimer = useCallback(() => {
     if (timerRef.current) clearInterval(timerRef.current);
-    // Fire immediately only if requested
-    if (immediate) runCallback();
-    timerRef.current = setInterval(() => runCallback(), intervalMs);
-  }, [intervalMs, runCallback]);
+    timerRef.current = setInterval(() => {
+      executePoll();
+    }, intervalMs);
+  }, [intervalMs, executePoll]);
 
-  const stopPolling = useCallback(() => {
+  const stopTimer = useCallback(() => {
     if (timerRef.current) {
       clearInterval(timerRef.current);
       timerRef.current = null;
     }
   }, []);
 
+  // Manual trigger function: fires immediately and keeps existing interval untouched
+  const triggerPoll = useCallback(async () => {
+    await executePoll();
+  }, [executePoll]);
+
   useEffect(() => {
     if (!enabled) {
-      stopPolling();
+      stopTimer();
+      setIsPollingActive(false);
       return;
     }
 
-    startPolling(true);
+    setIsPollingActive(true);
+    // Initial fetch on mount / enable
+    executePoll();
+    startTimer();
 
-    // Pause when tab is hidden, resume when visible — but don't double-fire
+    // Page Visibility handling
     const handleVisibilityChange = () => {
       if (document.visibilityState === 'hidden') {
-        stopPolling();
+        stopTimer();
       } else {
-        // Only fire immediately if enough time has passed since last poll
-        const elapsed = Date.now() - lastFiredRef.current;
-        const shouldFireNow = elapsed >= intervalMs * 0.8;
-        startPolling(shouldFireNow);
+        // Tab visible again: fire fresh fetch and resume schedule
+        executePoll();
+        startTimer();
       }
     };
 
     document.addEventListener('visibilitychange', handleVisibilityChange);
 
     return () => {
-      stopPolling();
+      stopTimer();
       document.removeEventListener('visibilitychange', handleVisibilityChange);
     };
-  }, [enabled, startPolling, stopPolling, intervalMs]);
+  }, [enabled, startTimer, stopTimer, executePoll]);
+
+  return { triggerPoll, isPollingActive };
 }
 
+export default usePolling;

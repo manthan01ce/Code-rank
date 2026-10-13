@@ -3,14 +3,17 @@
 import { useState, useEffect } from 'react';
 import LoadingOverlay from '@/components/LoadingOverlay';
 import { useAdminAuth } from '@/hooks/useAdminAuth';
+import { useSocket } from '@/hooks/useSocket';
+import RefreshButton from '@/components/RefreshButton';
 
 export default function CoursesManagement() {
+  const socket = useSocket();
   const [courses, setCourses] = useState([]);
   const [faculties, setFaculties] = useState([]);
   const [loading, setLoading] = useState(true);
   const [processing, setProcessing] = useState(false);
   const [search, setSearch] = useState('');
-  const [refreshing, setRefreshing] = useState(false);
+  const [lastUpdated, setLastUpdated] = useState(null);
 
   // Form State
   const [showAddModal, setShowAddModal] = useState(false);
@@ -33,7 +36,10 @@ export default function CoursesManagement() {
       const res = await fetch(url, {
         headers: { 'Authorization': `Bearer ${token}` }
       });
-      if (res.ok) setCourses(await res.json());
+      if (res.ok) {
+        setCourses(await res.json());
+        setLastUpdated(new Date());
+      }
     } catch (e) {
       console.error(e);
     } finally {
@@ -41,8 +47,27 @@ export default function CoursesManagement() {
     }
   };
 
-  // Auto-refresh courses list every 15s (pauses while modal is open)
-  // usePolling removed — use the Refresh button below instead
+  // Real-time WebSocket synchronization for course management
+  useEffect(() => {
+    if (!socket) return;
+    socket.emit('join_admin_room');
+
+    const handleCourseEvent = () => {
+      fetchCourses();
+    };
+
+    socket.on('course_added', handleCourseEvent);
+    socket.on('course_updated', handleCourseEvent);
+    socket.on('course_deleted', handleCourseEvent);
+    socket.on('admin_stats_changed', handleCourseEvent);
+
+    return () => {
+      socket.off('course_added', handleCourseEvent);
+      socket.off('course_updated', handleCourseEvent);
+      socket.off('course_deleted', handleCourseEvent);
+      socket.off('admin_stats_changed', handleCourseEvent);
+    };
+  }, [socket]);
 
 
 
@@ -149,22 +174,12 @@ export default function CoursesManagement() {
         }}>
           {showAddModal ? 'Cancel' : '+ Add New Course'}
         </button>
-        <button
-          className="btn-small"
-          style={{
-            padding: '10px 16px', borderRadius: '8px', border: '1px solid var(--border-color)',
-            background: 'transparent', cursor: refreshing ? 'not-allowed' : 'pointer',
-            fontSize: '13px', color: 'var(--text-muted)', opacity: refreshing ? 0.6 : 1,
-          }}
-          onClick={async () => {
-            if (refreshing) return;
-            setRefreshing(true);
-            try { await fetchCourses(); } finally { setRefreshing(false); }
-          }}
-          disabled={refreshing}
-        >
-          {refreshing ? '↻ Refreshing...' : '↻ Refresh'}
-        </button>
+        <RefreshButton
+          onRefresh={fetchCourses}
+          lastUpdated={lastUpdated}
+          label="Refresh"
+          variant="default"
+        />
       </div>
 
       {showAddModal && (
