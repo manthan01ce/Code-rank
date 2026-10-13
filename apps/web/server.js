@@ -1,21 +1,26 @@
 import 'dotenv/config';
 import { createServer } from 'http';
 import { parse } from 'url';
+import { fileURLToPath } from 'url';
+import path from 'path';
 import next from 'next';
 import { Server } from 'socket.io';
 import compression from 'compression';
+import { performance } from 'perf_hooks';
 import { verifyToken } from '@coderank/core/utils/auth';
 import { logger } from '@coderank/core/utils/logger';
 
 const dev = process.env.NODE_ENV !== 'production';
 const hostname = process.env.HOSTNAME || '0.0.0.0';
 const port = parseInt(process.env.PORT || '3000', 10);
+const appDirectory = path.dirname(fileURLToPath(import.meta.url));
 
 // Performance optimizations
 const app = next({ 
   dev, 
   hostname, 
   port,
+  dir: appDirectory,
   // Production optimizations
   ...(dev ? {} : {
     conf: {
@@ -47,21 +52,37 @@ const compressionMiddleware = compression({
 });
 
 app.prepare().then(() => {
-  const server = createServer(async (req, res) => {
+  const server = createServer((req, res) => {
+    const startedAt = performance.now();
+    res.once('finish', () => {
+      // Keep production request logging off the hot path. Errors retain a
+      // concise signal without generating a line for every successful request.
+      if (res.statusCode >= 500) {
+        logger.warn('HTTP request failed', {
+          method: req.method,
+          path: req.url?.split('?')[0],
+          statusCode: res.statusCode,
+          durationMs: Math.round(performance.now() - startedAt),
+        });
+      }
+    });
+
+    const onError = (err) => {
+      logger.error('Error occurred handling request', err, { url: req.url });
+      if (!res.headersSent) res.statusCode = 500;
+      res.end('internal server error');
+    };
+
     try {
-      // Apply compression middleware
-      compressionMiddleware(req, res, async () => {
+      compressionMiddleware(req, res, () => {
         // Enable keep-alive for better performance
         res.setHeader('Connection', 'keep-alive');
         res.setHeader('Keep-Alive', 'timeout=5');
-        
         const parsedUrl = parse(req.url, true);
-        await handle(req, res, parsedUrl);
+        Promise.resolve(handle(req, res, parsedUrl)).catch(onError);
       });
     } catch (err) {
-      logger.error('Error occurred handling request', err, { url: req.url });
-      res.statusCode = 500;
-      res.end('internal server error');
+      onError(err);
     }
   });
 

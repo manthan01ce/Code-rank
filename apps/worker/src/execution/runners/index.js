@@ -26,7 +26,10 @@ export async function executeCode(language, code, input = '') {
       success: !playgroundResult.stderr,
       stdout: playgroundResult.stdout.trim(),
       stderr: playgroundResult.stderr.trim(),
-      exitCode: playgroundResult.stderr ? 1 : 0
+      exitCode: playgroundResult.stderr ? 1 : 0,
+      runtimeMs: playgroundResult.runtimeMs,
+      cpuTimeMs: playgroundResult.cpuTimeMs,
+      memoryBytes: playgroundResult.memoryBytes
     };
   }
 

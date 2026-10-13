@@ -2,14 +2,25 @@ import cluster from 'cluster';
 import os from 'os';
 import { logger } from '@coderank/core/utils/logger';
 
+// `npm run start` is the production entrypoint on every platform. Set this
+// before importing server.js so Next resolves the production build correctly.
+process.env.NODE_ENV ||= 'production';
+
 const numCPUs = os.cpus().length;
-const CLUSTER_ENABLED = process.env.CLUSTER_ENABLED === 'true';
+// Socket.IO rooms are process-local. Do not create a cluster until a shared
+// adapter and sticky-session routing are configured, otherwise completion
+// events can be delivered to a different process than the connected client.
+const requestedCluster = process.env.CLUSTER_ENABLED === 'true';
+const socketAdapterConfigured = process.env.SOCKET_IO_ADAPTER === 'redis';
+const CLUSTER_ENABLED = requestedCluster && socketAdapterConfigured;
 const isDev = process.env.NODE_ENV !== 'production';
 
 // In development, only enable clustering if explicitly requested
 if (!CLUSTER_ENABLED) {
   logger.info('Running in single-process mode', { 
-    reason: 'CLUSTER_ENABLED not set to true',
+    reason: requestedCluster
+      ? 'Socket.IO Redis adapter/sticky-session routing is not configured'
+      : 'CLUSTER_ENABLED not set to true',
     mode: isDev ? 'development' : 'production'
   });
   

@@ -1,7 +1,5 @@
 import { exec } from 'child_process';
 import { promisify } from 'util';
-import fs from 'fs/promises';
-import path from 'path';
 import crypto from 'crypto';
 
 const execAsync = promisify(exec);
@@ -243,28 +241,16 @@ export async function runPython({
   }
 
   const uuid = crypto.randomUUID();
-  const tmpBase = path.join(process.cwd(), '.tmp');
-  const sessionDir = path.join(tmpBase, uuid);
 
   try {
-    await fs.mkdir(sessionDir, { recursive: true });
-
-    await fs.writeFile(path.join(sessionDir, 'solution.py'), code, 'utf-8');
-    await fs.writeFile(path.join(sessionDir, 'runner.py'), runnerPyTemplate, 'utf-8');
-    
     const casesPayload = {
       entry: problem?.entry ?? { type: 'function', methodName: 'solution' },
       testCases,
     };
-    await fs.writeFile(
-      path.join(sessionDir, 'test_cases.json'),
-      JSON.stringify(casesPayload, null, 2),
-      'utf-8'
-    );
 
     const codeB64 = Buffer.from(code).toString('base64');
     const runnerB64 = Buffer.from(runnerPyTemplate).toString('base64');
-    const testCasesB64 = Buffer.from(JSON.stringify({ entry: problem?.entry, testCases })).toString('base64');
+    const testCasesB64 = Buffer.from(JSON.stringify(casesPayload)).toString('base64');
     
     const workdir = `/app/exec_${uuid.slice(0, 8)}`;
     
@@ -346,9 +332,5 @@ export async function runPython({
       runtimeError: sysErr.message,
       cases: [],
     };
-  } finally {
-    try {
-      await fs.rm(sessionDir, { recursive: true, force: true });
-    } catch {}
-  }
+  } finally {}
 }

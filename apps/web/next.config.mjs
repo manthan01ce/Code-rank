@@ -50,7 +50,7 @@ const nextConfig = {
         headers: [
           {
             key: 'Cache-Control',
-            value: 'public, s-maxage=60, stale-while-revalidate=120',
+            value: 'private, no-store',
           },
         ],
       },
@@ -61,6 +61,15 @@ const nextConfig = {
             key: 'Cache-Control',
             // The route keeps its own bounded in-memory cache. Do not let a
             // proxy/CDN serve an old health report during an outage.
+            value: 'no-store',
+          },
+        ],
+      },
+      {
+        source: '/api/live',
+        headers: [
+          {
+            key: 'Cache-Control',
             value: 'no-store',
           },
         ],

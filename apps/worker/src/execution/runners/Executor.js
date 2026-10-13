@@ -4,6 +4,7 @@ import crypto from 'crypto';
 
 const execAsync = promisify(exec);
 const execFileAsync = promisify(execFile);
+const RESOURCE_MARKER = '__CODERANK_RESOURCE__';
 
 const DAEMONS = {
   cpp: 'coderank-cpp-daemon',
@@ -51,6 +52,19 @@ function normalizeOutput(str) {
     .trim();
 }
 
+function extractResourceMetrics(stderr = '') {
+  const match = String(stderr).match(new RegExp(`${RESOURCE_MARKER}:(\\d+(?:\\.\\d+)?):(\\d+(?:\\.\\d+)?):(\\d+)`));
+  if (!match) return { stderr: String(stderr), cpuTimeMs: null, memoryBytes: null };
+
+  const cpuTimeMs = Math.round((Number(match[1]) + Number(match[2])) * 1000);
+  const memoryBytes = Number(match[3]) * 1024; // GNU time reports max RSS in KiB on Linux.
+  return {
+    stderr: String(stderr).replace(match[0], '').trim(),
+    cpuTimeMs,
+    memoryBytes
+  };
+}
+
 export class Executor {
   constructor(language, code, customTimeLimit = 3000, userId = null) {
     this.language = language;
@@ -96,7 +110,7 @@ export class Executor {
       `printf '%s' '${codeB64}' | base64 -d > "$workdir/${this.config.filename}"`,
       `printf '%s' '${inputB64}' | base64 -d > "$workdir/input.txt"`,
       'cd "$workdir"',
-      `timeout ${timeoutSeconds}s ${this.config.runCmd}`
+      `timeout ${timeoutSeconds}s /usr/bin/time -f '${RESOURCE_MARKER}:%U:%S:%M' ${this.config.runCmd}`
     ].join('; ');
 
     const start = performance.now();
@@ -106,12 +120,15 @@ export class Executor {
         ['exec', this.daemon, 'bash', '-lc', script],
         { timeout: this.timeLimit + 2000, killSignal: 'SIGKILL', maxBuffer: 1024 * 1024 }
       );
-      return { stdout: stdout || '', stderr: stderr || '', runtimeMs: performance.now() - start };
+      const resources = extractResourceMetrics(stderr);
+      return { stdout: stdout || '', ...resources, runtimeMs: performance.now() - start };
     } catch (err) {
       const timedOut = err.code === 124 || err.killed;
+      const resources = extractResourceMetrics(err.stderr);
       return {
         stdout: err.stdout || '',
-        stderr: timedOut ? 'Time Limit Exceeded' : (err.stderr || err.message || 'Execution failed'),
+        ...resources,
+        stderr: timedOut ? 'Time Limit Exceeded' : (resources.stderr || err.message || 'Execution failed'),
         runtimeMs: performance.now() - start
       };
     }
@@ -153,11 +170,12 @@ export class Executor {
       const inputB64 = Buffer.from(input || '').toString('base64');
       const specificRunCmd = this.config.runCmd.replace('input.txt', inputFilename);
       
-      const runCmd = `docker exec ${this.daemon} bash -c "cd ${this.workdir} && echo '${inputB64}' | base64 -d > ${inputFilename} && ${specificRunCmd}"`;
+      const runCmd = `docker exec ${this.daemon} bash -c "cd ${this.workdir} && echo '${inputB64}' | base64 -d > ${inputFilename} && /usr/bin/time -f '${RESOURCE_MARKER}:%U:%S:%M' ${specificRunCmd}"`;
       
       const { stdout, stderr } = await execAsync(runCmd, { timeout: this.timeLimit, killSignal: 'SIGKILL' });
       
       const runtimeMs = performance.now() - start;
+      const resources = extractResourceMetrics(stderr);
       const actualNorm = normalizeOutput(stdout);
       const expectedNorm = normalizeOutput(expectedOutput);
       const passed = actualNorm === expectedNorm;
@@ -171,14 +189,17 @@ export class Executor {
         passed,
         marksAwarded,
         actualOutput: (stdout || '').trim(),
-        errorMessage: (stderr || '').trim(),
+        errorMessage: resources.stderr,
         runtimeMs,
+        cpuTimeMs: resources.cpuTimeMs,
+        memoryBytes: resources.memoryBytes,
         expectedOutput: (expectedOutput || '').trim(),
         input: input
       };
     } catch (err) {
       const runtimeMs = performance.now() - start;
-      let errMsg = err.stderr || err.message;
+      const resources = extractResourceMetrics(err.stderr);
+      let errMsg = resources.stderr || err.message;
       if (err.killed) errMsg = 'Time Limit Exceeded';
       
       execAsync(`docker exec ${this.daemon} rm -f ${this.workdir}/${inputFilename}`).catch(() => {});
@@ -191,6 +212,8 @@ export class Executor {
         actualOutput: (err.stdout || '').trim(),
         errorMessage: (errMsg || '').trim(),
         runtimeMs,
+        cpuTimeMs: resources.cpuTimeMs,
+        memoryBytes: resources.memoryBytes,
         expectedOutput: (expectedOutput || '').trim(),
         input: input
       };

@@ -173,6 +173,17 @@ starting 50 competing Docker processes.
   `noeviction` so a full queue fails explicitly instead of silently dropping
   jobs.
 
+### Runner isolation and graceful shutdown
+
+Workers consume the BullMQ queue concurrently up to `MAX_CONCURRENT_JOBS`.
+On `SIGTERM` or `SIGINT`, they pause queue intake, wait for active processors to
+finish, then close their Redis connections; `SHUTDOWN_GRACE_MS` supplies a
+bounded fail-safe deadline. Runner daemons use Docker network isolation,
+non-root execution, a read-only root filesystem, dropped capabilities,
+`no-new-privileges`, PID limits, CPU/memory limits, and tmpfs workspaces.
+The playground executor collects wall time plus `/usr/bin/time` CPU and peak
+RSS metrics from the process it started.
+
 ---
 
 ## 🔒 Role-Based Access Control (RBAC) & Auth Flow
@@ -210,7 +221,7 @@ CodeRank/
 │   ├── web/                                # Next.js + custom Socket.IO server
 │   │   └── src/app/api/                    # HTTP API routes
 │   └── worker/                             # BullMQ execution and system workers
-│       └── src/engine/runners/             # Docker sandbox execution paths
+│       └── src/execution/runners/          # Docker sandbox execution paths
 ├── packages/core/                          # Shared DB, queue, auth and service code
 ├── infrastructure/                         # Docker Compose and service configuration
 ├── load-tests/                             # k6 regression/load benchmarks

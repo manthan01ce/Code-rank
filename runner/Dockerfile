@@ -19,5 +19,10 @@ RUN apk add --no-cache \
 
 WORKDIR /app
 
+# Code is executed with a non-privileged UID. Docker Compose supplies writable
+# tmpfs mounts for /app and /tmp; the image root filesystem remains read-only.
+RUN addgroup -S -g 1000 sandbox && adduser -S -D -u 1000 -G sandbox sandbox
+USER sandbox
+
 # Idle indefinitely, waiting for commands via `docker exec`
 CMD ["tail", "-f", "/dev/null"]

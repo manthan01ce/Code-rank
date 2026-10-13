@@ -9,6 +9,10 @@ const redisConnection = {
 
 // BullMQ Queue instance
 let codeExecutionQueue = null;
+let queueStatsCache = null;
+let queueStatsCacheAt = 0;
+let queueStatsPromise = null;
+const QUEUE_STATS_TTL_MS = 1000;
 
 function getExecutionQueue() {
   if (!codeExecutionQueue) {
@@ -71,43 +75,38 @@ export class SubmissionService {
    * Get queue statistics with caching for better performance
    */
   static async getQueueStats() {
+    const now = Date.now();
+    if (queueStatsCache && now - queueStatsCacheAt < QUEUE_STATS_TTL_MS) {
+      return queueStatsCache;
+    }
+    if (queueStatsPromise) return queueStatsPromise;
+
     const queue = getExecutionQueue();
-    
-    // Increased timeout for better performance under high load
-    // Allows time for Redis operations with 100+ concurrent users
     const timeout = (ms) => new Promise((_, reject) => 
       setTimeout(() => reject(new Error('Timeout')), ms)
     );
 
-    const startTime = Date.now();
-    try {
-      const [waiting, active] = await Promise.race([
-        Promise.all([
-          queue.getWaitingCount(),
-          queue.getActiveCount(),
-        ]),
-        timeout(800) // 800ms timeout to handle high concurrency
-      ]);
-      
-      return { 
-        waiting, 
-        active, 
-        completed: 0, // Skip for performance 
-        failed: 0,    // Skip for performance
-        delayed: 0    // Skip for performance
-      };
-    } catch {
-      // Return default values if Redis is slow
-      // Return cached/default values if Redis is slow
-      return { 
-        waiting: 0, 
-        active: 0, 
-        completed: 0, 
-        failed: 0, 
-        delayed: 0,
-        cached: true 
-      };
-    }
+    queueStatsPromise = (async () => {
+      try {
+        const [waiting, active] = await Promise.race([
+          Promise.all([queue.getWaitingCount(), queue.getActiveCount()]),
+          timeout(800),
+        ]);
+        queueStatsCache = { waiting, active, completed: 0, failed: 0, delayed: 0 };
+        queueStatsCacheAt = Date.now();
+        return queueStatsCache;
+      } catch {
+        // Preserve the last known value when Redis is slow rather than
+        // presenting an empty queue as an authoritative value.
+        return queueStatsCache
+          ? { ...queueStatsCache, cached: true }
+          : { waiting: 0, active: 0, completed: 0, failed: 0, delayed: 0, cached: true };
+      } finally {
+        queueStatsPromise = null;
+      }
+    })();
+
+    return queueStatsPromise;
   }
 
   /**

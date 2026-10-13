@@ -1,7 +1,5 @@
 import { exec } from 'child_process';
 import { promisify } from 'util';
-import fs from 'fs/promises';
-import path from 'path';
 import crypto from 'crypto';
 
 const execAsync = promisify(exec);
@@ -126,12 +124,8 @@ public class Main {
 
 export async function runJava({ code, problem, testCases = [], timeoutMs = 10000, memoryMb = 128 }) {
   const uuid = crypto.randomUUID();
-  const tmpBase = path.join(process.cwd(), '.tmp');
-  const sessionDir = path.join(tmpBase, uuid);
 
   try {
-    await fs.mkdir(sessionDir, { recursive: true });
-    
     let userCode = code;
     if (!userCode.includes('class Solution')) {
       userCode = `public class Solution {\n${userCode}\n}`;
@@ -139,10 +133,7 @@ export async function runJava({ code, problem, testCases = [], timeoutMs = 10000
       userCode = userCode.replace(/public\s+class\s+Solution/, 'class Solution');
     }
 
-    await fs.writeFile(path.join(sessionDir, 'Solution.java'), userCode, 'utf-8');
-    
     const mainJava = generateMainJava(problem?.id, problem?.entry, testCases);
-    await fs.writeFile(path.join(sessionDir, 'Main.java'), mainJava, 'utf-8');
 
     const codeB64 = Buffer.from(userCode).toString('base64');
     const mainB64 = Buffer.from(mainJava).toString('base64');
@@ -162,7 +153,7 @@ export async function runJava({ code, problem, testCases = [], timeoutMs = 10000
       const { stdout, stderr } = await execAsync(cmd, { timeout: timeoutMs, killSignal: 'SIGKILL', maxBuffer: 2 * 1024 * 1024 });
 
       if (stdout.includes('RUNTIME_ERROR:')) {
-        const errData = await fs.readFile(path.join(sessionDir, 'compile_err.txt'), 'utf-8').catch(() => stderr);
+        const errData = stderr;
         return {
           status: 'compile_error',
           summary: 'Compile Error',
@@ -237,9 +228,8 @@ export async function runJava({ code, problem, testCases = [], timeoutMs = 10000
         return { status: 'time_limit_exceeded', summary: 'Time Limit Exceeded', exitCode: 124, compileError: null, runtimeError: 'Execution exceeded time limit (10s).', cases: [] };
       }
 
-      const errData = await fs.readFile(path.join(sessionDir, 'compile_err.txt'), 'utf-8').catch(() => null);
-      if (errData && errData.trim()) {
-        return { status: 'compile_error', summary: 'Compile Error', exitCode: 1, compileError: errData, runtimeError: null, cases: [] };
+      if (execErr.stderr && execErr.stderr.trim()) {
+        return { status: 'compile_error', summary: 'Compile Error', exitCode: 1, compileError: execErr.stderr, runtimeError: null, cases: [] };
       }
 
       return { status: 'runtime_error', summary: 'Runtime Exception', exitCode: execErr.code ?? 1, compileError: null, runtimeError: execErr.stderr || execErr.message, cases: [] };
@@ -247,7 +237,5 @@ export async function runJava({ code, problem, testCases = [], timeoutMs = 10000
 
   } catch (sysErr) {
     return { status: 'internal_error', summary: 'Internal Execution Failure', exitCode: 500, compileError: null, runtimeError: sysErr.message, cases: [] };
-  } finally {
-    try { await fs.rm(sessionDir, { recursive: true, force: true }); } catch {}
-  }
+  } finally {}
 }

@@ -15,6 +15,15 @@ pool (calibrated to `MAX_CONCURRENT_JOBS=8` locally), while Redis buffers client
 requests. This is intentionally different from the number of active users: 50
 or 100 users may submit concurrently without starting 50 or 100 Docker jobs.
 
+### Execution security and resources
+
+Language daemons are Docker-isolated and run untrusted code as a non-root
+`sandbox` user. Their hardening profile has no network, a read-only root
+filesystem, dropped Linux capabilities, `no-new-privileges`, a PID limit,
+CPU/memory limits, and disposable tmpfs workspaces. Playground runs report
+measured wall-clock runtime, CPU time, and peak resident memory; resource
+values are not hardcoded.
+
 ## Active project layout
 
 ```text
@@ -77,8 +86,25 @@ npm run worker    # BullMQ execution and system workers
 Check dependencies and queue status:
 
 ```powershell
+# Fast process-only liveness probe (no Redis or database call)
+Invoke-RestMethod http://localhost:3000/api/live
+# Cached readiness/dependency report
 Invoke-RestMethod http://localhost:3000/api/health
 ```
+
+## Production web server
+
+Always load test a production build, not `next dev`:
+
+```powershell
+npm run build --workspace=@coderank/web
+npm run start --workspace=@coderank/web
+```
+
+The web process is intentionally single-process by default. Socket.IO job rooms
+are process-local; enabling `CLUSTER_ENABLED=true` without both sticky sessions
+and a Socket.IO Redis adapter can lose completion notifications. Scale the web
+tier behind a load balancer only after those two pieces are configured.
 
 ## Environment configuration
 
@@ -117,6 +143,18 @@ k6 run load-tests/runner-concurrency-benchmark.js
 
 Recent local result: 100 concurrent users completed at about 10.7
 executions/second. The p95 includes expected queue wait behind eight slots.
+
+For HTTP capacity, use the mixed workload only against the production server:
+
+```powershell
+# staged 25, 50, 100, 150, 200, then a short 500-VU validation
+k6 run --stage 30s:25  --stage 15s:0 -e BASE_URL=http://127.0.0.1:3000 load-tests/stress-test.js
+k6 run --stage 30s:500 --stage 20s:500 --stage 15s:0 -e BASE_URL=http://127.0.0.1:3000 load-tests/stress-test.js
+```
+
+`/api/live` is for lightweight liveness monitoring. `/api/health` is a cached
+readiness report for Neon and Redis, while `/api/queue/stats` shares a bounded
+in-process Redis snapshot to prevent monitoring traffic from amplifying load.
 
 ## Documentation
 

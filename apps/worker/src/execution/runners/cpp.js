@@ -1,7 +1,5 @@
 import { exec } from 'child_process';
 import { promisify } from 'util';
-import fs from 'fs/promises';
-import path from 'path';
 import crypto from 'crypto';
 
 const execAsync = promisify(exec);
@@ -121,15 +119,9 @@ int main() {
 export async function runCpp({ code, problem, testCases }) {
   const timeoutMs = 5000;
   const uuid = crypto.randomUUID();
-  const tmpBase = path.join(process.cwd(), '.tmp');
-  const sessionDir = path.join(tmpBase, uuid);
 
   try {
-    await fs.mkdir(sessionDir, { recursive: true });
-
-    await fs.writeFile(path.join(sessionDir, 'solution.cpp'), code, 'utf-8');
     const mainCpp = generateMainCpp(problem?.id, problem?.entry || { methodName: 'solution', className: 'Solution' }, testCases || []);
-    await fs.writeFile(path.join(sessionDir, 'main.cpp'), mainCpp, 'utf-8');
 
     const codeB64 = Buffer.from(code).toString('base64');
     const mainB64 = Buffer.from(mainCpp).toString('base64');
@@ -157,7 +149,7 @@ export async function runCpp({ code, problem, testCases }) {
       stderr = execResult.stderr;
 
       if (stdout.includes('RUNTIME_ERROR:')) {
-        const errData = await fs.readFile(path.join(sessionDir, 'compile_err.txt'), 'utf-8').catch(() => stderr);
+        const errData = stderr;
         return {
           status: 'compile_error',
           summary: 'Compile Error',
@@ -231,9 +223,5 @@ export async function runCpp({ code, problem, testCases }) {
       runtimeError: sysErr.message,
       cases: [],
     };
-  } finally {
-    try {
-      await fs.rm(sessionDir, { recursive: true, force: true });
-    } catch {}
-  }
+  } finally {}
 }

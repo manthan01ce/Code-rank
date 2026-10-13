@@ -7,6 +7,16 @@ x-daemon-config: &daemon-config
   network_mode: "none"
   mem_limit: 512m
   cpus: 1.0
+  pids_limit: 128
+  init: true
+  read_only: true
+  cap_drop:
+    - ALL
+  security_opt:
+    - no-new-privileges:true
+  tmpfs:
+    - /app:rw,exec,nosuid,nodev,size=256m,uid=1000,gid=1000,mode=1770
+    - /tmp:rw,noexec,nosuid,nodev,size=64m,uid=1000,gid=1000,mode=1770
 
 services:
   redis:
