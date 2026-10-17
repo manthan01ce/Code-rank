@@ -274,6 +274,7 @@ export async function runDynamicPractical({ language, code, dbId, userId, isSubm
           `;
         }
       }
+    }
 
     const allPassed = rawMarks === totalPracticalMarks;
 
