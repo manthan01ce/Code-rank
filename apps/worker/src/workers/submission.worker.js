@@ -21,7 +21,14 @@ export function createSubmissionWorker() {
     maxRetriesPerRequest: null,
   };
 
-  const socket = io(`http://127.0.0.1:${process.env.PORT || 3000}`);
+  const socket = io(`http://127.0.0.1:${process.env.PORT || 3000}`, {
+    auth: {
+      serviceToken: process.env.WORKER_SERVICE_TOKEN || 'coderank-local-dev-service-token-32-chars-long-secure',
+    },
+    reconnection: true,
+    reconnectionAttempts: Infinity,
+    reconnectionDelay: 1000,
+  });
 
   console.log(`[SubmissionWorker] Starting... Concurrency: ${MAX_CONCURRENT}`);
 

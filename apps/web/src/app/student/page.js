@@ -13,6 +13,7 @@ export default function StudentDashboard() {
   const [user, setUser] = useState(null);
   const [profile, setProfile] = useState(null);
   const [loading, setLoading] = useState(true);
+  const [isHydrated, setIsHydrated] = useState(false);
   const [courses, setCourses] = useState([]);
   const [practicals, setPracticals] = useState([]);
 
@@ -35,6 +36,13 @@ export default function StudentDashboard() {
   }, []);
 
   useEffect(() => {
+    // Wait for client-side hydration before accessing localStorage
+    setIsHydrated(true);
+  }, []);
+
+  useEffect(() => {
+    if (!isHydrated) return; // Don't check auth until hydrated
+    
     const userData = localStorage.getItem('user');
     const token = localStorage.getItem('token');
     if (!userData || !token) {
@@ -85,7 +93,7 @@ export default function StudentDashboard() {
     };
     
     fetchData();
-  }, [router, fetchStudentPracticals]);
+  }, [router, fetchStudentPracticals, isHydrated]);
 
   // Real-time socket updates for new, updated, or deleted practicals
   useEffect(() => {

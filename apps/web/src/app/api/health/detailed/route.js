@@ -1,4 +1,5 @@
 import { NextResponse } from 'next/server';
+import { getUserFromRequest } from '@coderank/core/utils/auth';
 import { SubmissionService } from '@coderank/core/services/SubmissionService';
 import os from 'os';
 
@@ -99,8 +100,13 @@ async function refreshDetailedHealth() {
   return refreshPromise;
 }
 
-export async function GET() {
+export async function GET(request) {
   try {
+    const user = getUserFromRequest(request);
+    if (!user || user.role !== 'admin') {
+      return NextResponse.json({ error: 'Unauthorized. Admin access required.' }, { status: 401 });
+    }
+
     const now = Date.now();
     const cacheAge = now - detailedHealthCacheTime;
 

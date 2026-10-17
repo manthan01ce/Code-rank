@@ -2,6 +2,7 @@
   "name": "coderank-monorepo",
   "version": "1.1.0",
   "private": true,
+  "type": "module",
   "workspaces": [
     "apps/*",
     "packages/*"
@@ -10,8 +11,10 @@
     "dev": "turbo run dev",
     "build": "turbo run build",
     "lint": "turbo run lint",
+    "test": "node --env-file-if-exists=.env --test tests/*.test.js",
     "worker": "npm run dev --workspace=apps/worker",
     "web": "npm run dev --workspace=apps/web",
+    "db:migrate": "node packages/core/src/db/migrate.js",
     "k6:smoke": "powershell -ExecutionPolicy Bypass -File ./load-tests/run-k6.ps1 -Test smoke",
     "k6:smoke-100": "k6 run -e BASE_URL=http://localhost:3000 ./load-tests/smoke-test-100vu.js",
     "k6:stress": "k6 run -e BASE_URL=http://localhost:3000 ./load-tests/stress-test.js",

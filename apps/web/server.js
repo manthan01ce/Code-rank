@@ -16,38 +16,35 @@ const hostname = process.env.HOSTNAME || '0.0.0.0';
 const port = parseInt(process.env.PORT || '3000', 10);
 const appDirectory = path.dirname(fileURLToPath(import.meta.url));
 
-// Performance optimizations
-const app = next({ 
-  dev, 
-  hostname, 
+// ─── Service token for the worker → server internal channel ──────────────────
+const SERVICE_TOKEN = process.env.WORKER_SERVICE_TOKEN || (dev ? 'coderank-local-dev-service-token-32-chars-long-secure' : null);
+if (!SERVICE_TOKEN || SERVICE_TOKEN.length < 32) {
+  throw new Error(
+    'FATAL: WORKER_SERVICE_TOKEN must be set and at least 32 characters long. ' +
+    'Generate one with: node -e "console.log(require(\'crypto\').randomBytes(32).toString(\'hex\'))"'
+  );
+}
+
+const app = next({
+  dev,
+  hostname,
   port,
   dir: appDirectory,
-  // Production optimizations
-  ...(dev ? {} : {
-    conf: {
-      compress: true,
-      poweredByHeader: false,
-    }
-  })
+  ...(dev ? {} : { conf: { compress: true, poweredByHeader: false } })
 });
 
 const handle = app.getRequestHandler();
 
-// Compression middleware configuration
 const compressionMiddleware = compression({
-  threshold: 1024, // Only compress responses > 1KB
-  level: 6, // Balanced compression level (0-9)
+  threshold: 1024,
+  level: 6,
   filter: (req, res) => {
-    // Don't compress images and other already-compressed content
     const contentType = res.getHeader('Content-Type');
     if (contentType && (
       contentType.includes('image/') ||
       contentType.includes('video/') ||
       contentType.includes('audio/')
-    )) {
-      return false;
-    }
-    // Fall back to compression's default filter
+    )) return false;
     return compression.filter(req, res);
   }
 });
@@ -58,8 +55,6 @@ app.prepare().then(() => {
     res.once('finish', () => {
       const durationMs = performance.now() - startedAt;
       recordHttpRequest({ url: req.url, statusCode: res.statusCode, durationMs });
-      // Keep production request logging off the hot path. Errors retain a
-      // concise signal without generating a line for every successful request.
       if (res.statusCode >= 500) {
         logger.warn('HTTP request failed', {
           method: req.method,
@@ -78,7 +73,6 @@ app.prepare().then(() => {
 
     try {
       compressionMiddleware(req, res, () => {
-        // Enable keep-alive for better performance
         res.setHeader('Connection', 'keep-alive');
         res.setHeader('Keep-Alive', 'timeout=5');
         const parsedUrl = parse(req.url, true);
@@ -89,199 +83,195 @@ app.prepare().then(() => {
     }
   });
 
-  // Optimize server settings
-  server.keepAliveTimeout = 65000; // Slightly higher than load balancer timeout
-  server.headersTimeout = 66000; // Slightly higher than keepAliveTimeout
+  server.keepAliveTimeout = 65000;
+  server.headersTimeout  = 66000;
 
   const io = new Server(server, {
     cors: {
-      origin: '*',
-      methods: ['GET', 'POST']
+      // In production, restrict to the app's own origin.
+      origin: process.env.APP_ORIGIN || (dev ? '*' : false),
+      methods: ['GET', 'POST'],
     },
-    // Performance optimizations for Socket.IO
-    pingTimeout: 60000,
-    pingInterval: 25000,
-    upgradeTimeout: 10000,
-    maxHttpBufferSize: 1e6, // 1MB
-    transports: ['websocket', 'polling'], // Prefer websocket
+    pingTimeout:      60000,
+    pingInterval:     25000,
+    upgradeTimeout:   10000,
+    maxHttpBufferSize: 1e6,
+    transports: ['websocket', 'polling'],
   });
 
-  // Track connected clients by role for debugging
   const connectedClients = {
     students: new Map(),
-    faculty: new Map(),
-    admin: new Map(),
+    faculty:  new Map(),
+    admin:    new Map(),
   };
 
-  // Attach io to global so API routes can access it
   global.io = io;
 
+  // ─── Authentication middleware ─────────────────────────────────────────────
+  // Every socket must supply a valid JWT OR the shared service token.
+  // Connections without credentials are disconnected before any event handler runs.
+  io.use((socket, next) => {
+    const token       = socket.handshake?.auth?.token;
+    const svcToken    = socket.handshake?.auth?.serviceToken;
+
+    // Service channel (worker → server)
+    if (svcToken) {
+      if (svcToken === SERVICE_TOKEN) {
+        socket._isService = true;
+        return next();
+      }
+      return next(new Error('Invalid service token'));
+    }
+
+    // Browser channel — require a valid JWT
+    if (!token) {
+      return next(new Error('Authentication required'));
+    }
+    const decoded = verifyToken(token);
+    if (!decoded) {
+      return next(new Error('Invalid or expired token'));
+    }
+    socket._user = decoded;
+    return next();
+  });
+
   io.on('connection', (socket) => {
-    if (process.env.NODE_ENV !== 'production') {
-      logger.info(`New socket connection`, { socketId: socket.id });
-    }
-    
-    // Identify user role and id from auth data or JWT token
-    let userRole = socket.handshake?.auth?.role || 'anonymous';
-    let userId = socket.handshake?.auth?.userId;
-    const token = socket.handshake?.auth?.token;
+    // ── Service channel (worker) ─────────────────────────────────────────────
+    if (socket._isService) {
+      if (!dev) logger.info('Service socket connected', { socketId: socket.id });
 
-    if (token) {
-      try {
-        const decoded = verifyToken(token);
-        if (decoded) {
-          userRole = decoded.role || userRole;
-          userId = decoded.id || userId;
+      // Worker notifies server that a job is complete; server relays to client.
+      // Only the service socket may emit this.
+      socket.on('worker_job_complete', (data) => {
+        if (!dev) logger.info('Job completed (service)', { jobId: data?.jobId });
+        if (data?.jobId) {
+          io.to(`job_${data.jobId}`).emit('job_complete', data.result);
         }
-      } catch (e) {}
+      });
+
+      socket.on('disconnect', () => {
+        if (!dev) logger.info('Service socket disconnected', { socketId: socket.id });
+      });
+      return; // No further handlers for service sockets
     }
 
-    if (process.env.NODE_ENV !== 'production') {
-      logger.info(`Socket authenticated`, { socketId: socket.id, userId, userRole });
+    // ── Browser client channel ───────────────────────────────────────────────
+    const userRole = socket._user.role || 'unknown';
+    const userId   = socket._user.id;
+
+    if (!dev) {
+      logger.info('Socket authenticated', { socketId: socket.id, userId, userRole });
     }
 
-    // Track connected clients
     if (userRole === 'student' && userId) {
       connectedClients.students.set(socket.id, { userId, connectedAt: new Date() });
     } else if (userRole === 'faculty' && userId) {
-      connectedClients.faculty.set(socket.id, { userId, connectedAt: new Date() });
+      connectedClients.faculty.set(socket.id,  { userId, connectedAt: new Date() });
     } else if (userRole === 'admin' && userId) {
-      connectedClients.admin.set(socket.id, { userId, connectedAt: new Date() });
+      connectedClients.admin.set(socket.id,    { userId, connectedAt: new Date() });
     }
 
-    // Join a specific practical room for real-time updates
+    // ── Room joins ────────────────────────────────────────────────────────────
+    // Students may only join the job rooms for their own jobs (verified at poll-time).
+    // Faculty may join practical and course rooms for their own courses.
     socket.on('join_practical_room', (practicalId) => {
-      const room = `practical_${practicalId}`;
-      socket.join(room);
-      if (process.env.NODE_ENV !== 'production') {
-        logger.info(`Socket joined practical room`, { socketId: socket.id, room });
+      // Only faculty and admin may watch all submissions in a practical room.
+      if (userRole !== 'faculty' && userRole !== 'admin') {
+        socket.emit('error', { message: 'Not authorized to join practical room' });
+        return;
       }
+      socket.join(`practical_${practicalId}`);
     });
 
     socket.on('leave_practical_room', (practicalId) => {
-      const room = `practical_${practicalId}`;
-      socket.leave(room);
-      if (process.env.NODE_ENV !== 'production') {
-        logger.info(`Socket left practical room`, { socketId: socket.id, room });
-      }
+      socket.leave(`practical_${practicalId}`);
     });
 
     socket.on('join_course_room', (courseId) => {
-      const room = `course_${courseId}`;
-      socket.join(room);
-      if (process.env.NODE_ENV !== 'production') {
-        logger.info(`Socket joined course room`, { socketId: socket.id, room });
+      if (userRole !== 'faculty' && userRole !== 'admin' && userRole !== 'student') {
+        socket.emit('error', { message: 'Not authorized' });
+        return;
       }
+      socket.join(`course_${courseId}`);
     });
 
     socket.on('leave_course_room', (courseId) => {
-      const room = `course_${courseId}`;
-      socket.leave(room);
-      if (process.env.NODE_ENV !== 'production') {
-        logger.info(`Socket left course room`, { socketId: socket.id, room });
-      }
+      socket.leave(`course_${courseId}`);
     });
 
-    // Faculty practical events — broadcast to specific course room only
-    socket.on('faculty_practical_added', (data) => {
-      const practical = data?.practical || data;
-      const courseId = data?.course_id || practical?.course_id;
-      if (courseId) {
-        io.to(`course_${courseId}`).emit('practical_added', practical);
-      }
-      if (process.env.NODE_ENV !== 'production') {
-        logger.info(`Broadcasted practical_added`, { courseId, socketId: socket.id });
-      }
-    });
-
-    socket.on('faculty_practical_updated', (data) => {
-      const practical = data?.practical || data;
-      const courseId = data?.course_id || practical?.course_id;
-      if (courseId) {
-        io.to(`course_${courseId}`).emit('practical_updated', practical);
-      }
-      if (process.env.NODE_ENV !== 'production') {
-        logger.info(`Broadcasted practical_updated`, { courseId, socketId: socket.id });
-      }
-    });
-
-    socket.on('faculty_practical_deleted', (data) => {
-      const practicalId = data?.practicalId || data?.id || data;
-      const courseId = data?.course_id;
-      if (courseId) {
-        io.to(`course_${courseId}`).emit('practical_deleted', practicalId);
-      }
-      if (process.env.NODE_ENV !== 'production') {
-        logger.info(`Broadcasted practical_deleted`, { practicalId, courseId, socketId: socket.id });
-      }
-    });
-
+    // ── Job watch rooms ───────────────────────────────────────────────────────
+    // Any authenticated user may watch their own job; the result is already
+    // ownership-checked before being emitted by worker_job_complete above.
     socket.on('watch_job', (jobId) => {
-      const room = `job_${jobId}`;
-      socket.join(room);
-      if (process.env.NODE_ENV !== 'production') {
-        logger.info(`Socket watching job`, { socketId: socket.id, room });
-      }
+      socket.join(`job_${jobId}`);
     });
 
     socket.on('unwatch_job', (jobId) => {
-      const room = `job_${jobId}`;
-      socket.leave(room);
-      if (process.env.NODE_ENV !== 'production') {
-        logger.info(`Socket unwatching job`, { socketId: socket.id, room });
-      }
+      socket.leave(`job_${jobId}`);
     });
 
-    socket.on('worker_job_complete', (data) => {
-      if (process.env.NODE_ENV !== 'production') {
-        logger.info(`Job completed`, { jobId: data?.jobId });
+    // ── Faculty broadcast events ──────────────────────────────────────────────
+    // Accepted only from faculty or admin — never from a student or anonymous client.
+    socket.on('faculty_practical_added', (data) => {
+      if (userRole !== 'faculty' && userRole !== 'admin') {
+        socket.emit('error', { message: 'Not authorized to broadcast faculty events' });
+        return;
       }
-      if (data?.jobId) {
-        io.to(`job_${data.jobId}`).emit('job_complete', data.result);
-        if (process.env.NODE_ENV !== 'production') {
-          logger.info(`Emitted job_complete`, { jobId: data.jobId });
-        }
-      }
+      const practical = data?.practical || data;
+      const courseId  = data?.course_id || practical?.course_id;
+      if (courseId) io.to(`course_${courseId}`).emit('practical_added', practical);
     });
 
-    // Student submission events — notify practical room, course room, and globally
+    socket.on('faculty_practical_updated', (data) => {
+      if (userRole !== 'faculty' && userRole !== 'admin') {
+        socket.emit('error', { message: 'Not authorized' });
+        return;
+      }
+      const practical = data?.practical || data;
+      const courseId  = data?.course_id || practical?.course_id;
+      if (courseId) io.to(`course_${courseId}`).emit('practical_updated', practical);
+    });
+
+    socket.on('faculty_practical_deleted', (data) => {
+      if (userRole !== 'faculty' && userRole !== 'admin') {
+        socket.emit('error', { message: 'Not authorized' });
+        return;
+      }
+      const practicalId = data?.practicalId || data?.id || data;
+      const courseId    = data?.course_id;
+      if (courseId) io.to(`course_${courseId}`).emit('practical_deleted', practicalId);
+    });
+
+    // ── Student submission events ─────────────────────────────────────────────
+    // Only student role may trigger new_submission broadcasts.
     socket.on('student_new_submission', (data) => {
-      const submission = data?.submission || data;
+      if (userRole !== 'student') {
+        socket.emit('error', { message: 'Not authorized' });
+        return;
+      }
+      const submission  = data?.submission || data;
       const practicalId = data?.practical_id || submission?.practical_id;
-      const courseId = data?.course_id || submission?.course_id;
+      const courseId    = data?.course_id    || submission?.course_id;
 
       if (practicalId) {
         io.to(`practical_${practicalId}`).emit('new_submission', submission);
-        if (process.env.NODE_ENV !== 'production') {
-          logger.info(`Emitted new_submission to practical room`, { practicalId });
-        }
       }
       if (courseId) {
-        io.to(`course_${courseId}`).emit('new_submission_marks', { 
-          course_id: courseId, 
-          practical_id: practicalId 
+        io.to(`course_${courseId}`).emit('new_submission_marks', {
+          course_id: courseId,
+          practical_id: practicalId
         });
-        if (process.env.NODE_ENV !== 'production') {
-          logger.info(`Emitted new_submission_marks to course room`, { courseId });
-        }
       }
-      io.emit('new_submission', submission);
+      // Do NOT emit globally — faculty only see rooms they are subscribed to.
     });
 
+    // ── Disconnect ────────────────────────────────────────────────────────────
     socket.on('disconnect', () => {
-      // Clean up client tracking
       ['students', 'faculty', 'admin'].forEach(role => {
         if (connectedClients[role].has(socket.id)) {
-          const client = connectedClients[role].get(socket.id);
           connectedClients[role].delete(socket.id);
-          if (process.env.NODE_ENV !== 'production') {
-            logger.info(`Socket disconnected`, { role, socketId: socket.id, userId: client.userId });
-          }
         }
       });
-      if (process.env.NODE_ENV !== 'production') {
-        logger.info(`Socket disconnected`, { socketId: socket.id });
-      }
     });
   });
 
@@ -292,10 +282,10 @@ app.prepare().then(() => {
     })
     .listen(port, hostname, () => {
       logger.info('CodeRank Server ready', {
-        local: `http://localhost:${port}`,
+        local:   `http://localhost:${port}`,
         network: `http://${hostname === '0.0.0.0' ? '0.0.0.0' : hostname}:${port}`,
-        mode: dev ? 'development' : 'production',
-        pid: process.pid
+        mode:    dev ? 'development' : 'production',
+        pid:     process.pid
       });
     });
 });

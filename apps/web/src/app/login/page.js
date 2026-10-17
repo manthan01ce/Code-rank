@@ -13,18 +13,9 @@ export default function Login() {
   const [loading, setLoading] = useState(false);
   const router = useRouter();
 
-  useEffect(() => {
-    const userData = localStorage.getItem('user');
-    const token = localStorage.getItem('token');
-    if (userData && token) {
-      try {
-        const user = JSON.parse(userData);
-        if (user.role === 'admin') router.replace('/admin');
-        else if (user.role === 'student') router.replace('/student');
-        else if (user.role === 'faculty') router.replace('/faculty');
-      } catch (e) {}
-    }
-  }, [router]);
+  // REMOVED AUTO-LOGIN REDIRECT
+  // Users should be able to view the login page even when already logged in
+  // Only manual form submission redirects to dashboard
 
   const handleLogin = async (e) => {
     e.preventDefault();

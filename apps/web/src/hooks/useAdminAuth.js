@@ -25,8 +25,17 @@ export function useAdminAuth() {
   const router = useRouter();
   const [token, setToken] = useState(null);
   const [isReady, setIsReady] = useState(false);
+  const [isHydrated, setIsHydrated] = useState(false);
 
+  // First effect: Mark hydration complete
   useEffect(() => {
+    setIsHydrated(true);
+  }, []);
+
+  // Second effect: Check auth only after hydration
+  useEffect(() => {
+    if (!isHydrated) return;
+    
     const storedToken = localStorage.getItem('token');
     const storedUser  = localStorage.getItem('user');
 
@@ -46,7 +55,12 @@ export function useAdminAuth() {
     } catch {
       router.replace('/');
     }
-  }, [router]);
+  }, [router, isHydrated]);
+
+  // Don't redirect while hydrating
+  if (!isHydrated) {
+    return { token: null, isReady: false };
+  }
 
   return { token, isReady };
 }

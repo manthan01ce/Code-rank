@@ -79,10 +79,10 @@ export class Executor {
     this.daemon = DAEMONS[language] || DAEMONS.python;
 
     this.hash = crypto.createHash('sha256').update(`${this.language}:${this.code}`).digest('hex');
-    this.workdir = `/app/exec_${this.hash}`;
-    // Input files must never be shared by two jobs with identical source code.
-    // The source cache above is intentionally shared; execution artifacts are not.
     this.executionId = crypto.randomUUID();
+    // Each execution gets a private workdir — never shared between concurrent
+    // same-source submissions.
+    this.workdir = `/app/exec_${this.executionId}`;
   }
 
   /**
@@ -136,16 +136,11 @@ export class Executor {
 
   async compile() {
     const codeB64 = Buffer.from(this.code).toString('base64');
-    
-    try {
-      await execAsync(`docker exec ${this.daemon} bash -c "test -d ${this.workdir}"`);
-      return { success: true, cached: true };
-    } catch {}
 
-    const prepareCmd = `docker exec ${this.daemon} bash -c "mkdir -p ${this.workdir} && cd ${this.workdir} && echo '${codeB64}' | base64 -d > ${this.config.filename}"`;
-    
+    const prepareCmd = `docker exec ${this.daemon} bash -c "mkdir -p ${this.workdir} && cd ${this.workdir} && printf '%s' '${codeB64}' | base64 -d > ${this.config.filename}"`;
+
     try {
-      await execAsync(prepareCmd);
+      await execAsync(prepareCmd, { timeout: 10000 });
     } catch (err) {
       return { success: false, error: 'Daemon unreachable or failed to write file.' };
     }
@@ -153,8 +148,9 @@ export class Executor {
     if (this.config.compileCmd) {
       const compileCmd = `docker exec ${this.daemon} bash -c "cd ${this.workdir} && ${this.config.compileCmd}"`;
       try {
-        await execAsync(compileCmd, { timeout: 10000 });
+        await execAsync(compileCmd, { timeout: 15000 });
       } catch (err) {
+        // Always clean up on compile failure so the workdir doesn't linger.
         await execAsync(`docker exec ${this.daemon} rm -rf ${this.workdir}`).catch(() => {});
         return { success: false, error: err.stderr || err.message || 'Compilation failed' };
       }
@@ -285,5 +281,16 @@ export class Executor {
     }
 
     return results;
+  }
+
+  /**
+   * Remove the private workdir from the daemon container.
+   * Called after every execution (pass or fail) to prevent artifact accumulation.
+   */
+  async cleanup() {
+    if (!this.workdir) return;
+    await execAsync(
+      `docker exec ${this.daemon} rm -rf ${this.workdir}`
+    ).catch(() => {});
   }
 }

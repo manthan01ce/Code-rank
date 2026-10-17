@@ -75,28 +75,24 @@ if ! docker info >/dev/null 2>&1; then
 fi
 
 # 4. Ensure environment variables exist
-if [ ! -f "frontend/.env.local" ] && [ -f ".env.local" ]; then
-    cp .env.local frontend/.env.local
+if [ ! -f "apps/web/.env.local" ] && [ -f ".env.local" ]; then
+    cp .env.local apps/web/.env.local
 fi
-if [ ! -f "frontend/.env" ] && [ -f ".env" ]; then
-    cp .env frontend/.env
+if [ ! -f "apps/web/.env" ] && [ -f ".env" ]; then
+    cp .env apps/web/.env
 fi
-if [ ! -f "backend/.env.local" ] && [ -f ".env.local" ]; then
-    cp .env.local backend/.env.local
-fi
-if [ ! -f "backend/.env" ] && [ -f ".env" ]; then
-    cp .env backend/.env
+if [ ! -f "apps/worker/.env" ]; then
+    if [ -f ".env.local" ]; then
+        cp .env.local apps/worker/.env
+    elif [ -f ".env" ]; then
+        cp .env apps/worker/.env
+    fi
 fi
 
 # 5. Check dependencies
-if [ ! -d "frontend/node_modules" ]; then
-    echo "📦 Installing frontend dependencies..."
-    (cd frontend && npm install)
-fi
-
-if [ ! -d "backend/node_modules" ]; then
-    echo "📦 Installing backend dependencies..."
-    (cd backend && npm install)
+if [ ! -d "node_modules" ]; then
+    echo "📦 Installing monorepo dependencies..."
+    npm install
 fi
 
 # 6. Start Redis & Execution Daemons
@@ -125,7 +121,7 @@ trap cleanup SIGINT SIGTERM EXIT
 
 # 8. Start Backend Worker
 echo "⚙️  [2/3] Starting BullMQ backend worker..."
-(cd backend && node src/worker.js) &
+(cd apps/worker && node src/index.js) &
 WORKER_PID=$!
 
 # Wait briefly for worker to initialize
@@ -136,7 +132,7 @@ echo "🖥️  [3/3] Starting Frontend web server (0.0.0.0:3000)..."
 export HOSTNAME="0.0.0.0"
 export PORT="3000"
 
-(cd frontend && node server.js) &
+(cd apps/web && node server.js) &
 FRONTEND_PID=$!
 
 echo ""

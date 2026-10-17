@@ -1,5 +1,6 @@
 import sql from '../db/client.js';
 import { Queue } from 'bullmq';
+import { randomUUID } from 'crypto';
 
 const redisConnection = {
   host: process.env.REDIS_HOST || '127.0.0.1',
@@ -19,8 +20,8 @@ function getExecutionQueue() {
     codeExecutionQueue = new Queue('code-execution', {
       connection: redisConnection,
       defaultJobOptions: {
-        removeOnComplete: { age: 3600 },
-        removeOnFail: { age: 86400 },
+        removeOnComplete: { age: 3600, count: 500 },
+        removeOnFail: { age: 86400, count: 1000 },
         attempts: 1,
         timeout: parseInt(process.env.JOB_TIMEOUT_MS || '30000', 10),
       },
@@ -29,27 +30,56 @@ function getExecutionQueue() {
   return codeExecutionQueue;
 }
 
+const QUEUE_ADMISSION_LUA = `
+  local wait_len = redis.call('LLEN', KEYS[1])
+  local paused_len = redis.call('LLEN', KEYS[2])
+  local total = wait_len + paused_len
+  if total >= tonumber(ARGV[1]) then
+    return 0
+  end
+  return 1
+`;
+
 export class SubmissionService {
   /**
    * Enqueue a job into BullMQ
    */
-  static async enqueueJob(type, payload, userId = null) {
+  static async enqueueJob(type, payload, userId = null, anonSessionId = null) {
     const queue = getExecutionQueue();
-    const waiting = await queue.getWaitingCount();
     const maxQueueSize = parseInt(process.env.MAX_QUEUE_SIZE || '500', 10);
 
-    if (waiting >= maxQueueSize) {
-      throw { status: 503, message: 'QUEUE_FULL' };
+    try {
+      const client = await queue.client;
+      const allowed = await client.eval(
+        QUEUE_ADMISSION_LUA,
+        2,
+        'bull:code-execution:wait',
+        'bull:code-execution:paused',
+        maxQueueSize
+      );
+      if (allowed === 0) {
+        throw { status: 503, message: 'QUEUE_FULL' };
+      }
+    } catch (err) {
+      if (err.status === 503 || err.message === 'QUEUE_FULL') {
+        throw { status: 503, message: 'QUEUE_FULL' };
+      }
+      const waiting = await queue.getWaitingCount();
+      if (waiting >= maxQueueSize) {
+        throw { status: 503, message: 'QUEUE_FULL' };
+      }
     }
 
-    const job = await queue.add(type, {
+    const jobUuid = randomUUID();
+    await queue.add(type, {
       type,
       payload,
       userId,
+      anonSessionId,
       enqueuedAt: Date.now(),
-    });
+    }, { jobId: jobUuid });
 
-    return job.id;
+    return jobUuid;
   }
 
   /**
