@@ -88,20 +88,10 @@ export async function runDynamicPractical({ language, code, dbId, userId, isSubm
           WHERE practical_id = ${dbId} AND is_hidden = false 
           ORDER BY order_index ASC
         `;
-        if (dbCases.length > 0) {
-          testCases = dbCases;
-        } else {
-          const fallbackCases = await sql`
-            SELECT * FROM practical_test_cases 
-            WHERE practical_id = ${dbId} 
-            ORDER BY order_index ASC 
-            LIMIT 1
-          `;
-          if (fallbackCases.length > 0) {
-            testCases = fallbackCases.map(c => ({ ...c, is_hidden: false }));
-          }
-        }
+        testCases = dbCases;
+        // Do NOT fall back to hidden test cases — they must never be shown as public samples.
       }
+
     }
 
     if (testCases.length === 0) {
@@ -126,20 +116,33 @@ export async function runDynamicPractical({ language, code, dbId, userId, isSubm
     if (!compileResult.success) {
       if (isSubmit && userId) {
         const binaryCode = encodeBinaryCode(code);
-        const existing = await sql`
-          SELECT id, normalized_marks FROM practical_submissions 
-          WHERE student_id = ${userId} AND practical_id = ${dbId}
-        `;
-        if (existing.length === 0) {
+        try {
+          const attemptCount = await sql`
+            SELECT COUNT(*)::int as count FROM submission_attempts
+            WHERE student_id = ${userId} AND practical_id = ${dbId}
+          `;
+          const attemptNumber = (attemptCount[0]?.count || 0) + 1;
           await sql`
-            INSERT INTO practical_submissions (
-              student_id, practical_id, code, language, status, raw_marks, normalized_marks, is_late
+            INSERT INTO submission_attempts (
+              student_id, practical_id, code, language, status, raw_marks, normalized_marks, execution_time_ms, is_late, attempt_number
             )
             VALUES (
-              ${userId}, ${dbId}, ${binaryCode}, ${language}, 'Compile Error', 0, 0, ${isLate}
+              ${userId}, ${dbId}, ${binaryCode}, ${language}, 'Compile Error', 0, 0, 0, ${isLate}, ${attemptNumber}
             )
           `;
+        } catch (e) {
+          console.warn('Failed to record compile error attempt:', e.message);
         }
+
+        await sql`
+          INSERT INTO practical_submissions (
+            student_id, practical_id, code, language, status, raw_marks, normalized_marks, is_late
+          )
+          VALUES (
+            ${userId}, ${dbId}, ${binaryCode}, ${language}, 'Compile Error', 0, 0, ${isLate}
+          )
+          ON CONFLICT (student_id, practical_id) DO NOTHING
+        `;
       }
       return {
         status: 'compile_error',
@@ -205,27 +208,56 @@ export async function runDynamicPractical({ language, code, dbId, userId, isSubm
     let finalRawMarks = rawMarks;
 
     if (isSubmit && userId) {
-      const existing = await sql`
-        SELECT id, normalized_marks, raw_marks, status 
-        FROM practical_submissions 
-        WHERE student_id = ${userId} AND practical_id = ${dbId}
-      `;
-
       const binaryCode = encodeBinaryCode(code);
 
-      if (existing.length === 0) {
-        const savedSub = await sql`
-          INSERT INTO practical_submissions (
-            student_id, practical_id, code, language, status, raw_marks, normalized_marks, execution_time_ms, is_late
+      // 1. Record attempt in submission_attempts
+      try {
+        const attemptCount = await sql`
+          SELECT COUNT(*)::int as count FROM submission_attempts
+          WHERE student_id = ${userId} AND practical_id = ${dbId}
+        `;
+        const attemptNumber = (attemptCount[0]?.count || 0) + 1;
+        await sql`
+          INSERT INTO submission_attempts (
+            student_id, practical_id, code, language, status, raw_marks, normalized_marks, execution_time_ms, is_late, attempt_number
           )
           VALUES (
-            ${userId}, ${dbId}, ${binaryCode}, ${language}, ${overallStatus}, ${rawMarks}, ${normalizedMarks}, ${totalTime}, ${isLate}
+            ${userId}, ${dbId}, ${binaryCode}, ${language}, ${overallStatus}, ${rawMarks}, ${normalizedMarks}, ${totalTime}, ${isLate}, ${attemptNumber}
           )
-          RETURNING id
         `;
-        submissionId = savedSub[0].id;
+      } catch (e) {
+        console.warn('Failed to record submission attempt:', e.message);
+      }
 
-        if (submissionCasesToInsert.length > 0) {
+      // 2. Atomic Upsert for practical_submissions keeping best score
+      const upserted = await sql`
+        INSERT INTO practical_submissions (
+          student_id, practical_id, code, language, status, raw_marks, normalized_marks, execution_time_ms, is_late, submitted_at
+        )
+        VALUES (
+          ${userId}, ${dbId}, ${binaryCode}, ${language}, ${overallStatus}, ${rawMarks}, ${normalizedMarks}, ${totalTime}, ${isLate}, NOW()
+        )
+        ON CONFLICT (student_id, practical_id) DO UPDATE SET
+          code = CASE WHEN EXCLUDED.normalized_marks > practical_submissions.normalized_marks THEN EXCLUDED.code ELSE practical_submissions.code END,
+          language = CASE WHEN EXCLUDED.normalized_marks > practical_submissions.normalized_marks THEN EXCLUDED.language ELSE practical_submissions.language END,
+          status = CASE WHEN EXCLUDED.normalized_marks > practical_submissions.normalized_marks THEN EXCLUDED.status ELSE practical_submissions.status END,
+          raw_marks = CASE WHEN EXCLUDED.normalized_marks > practical_submissions.normalized_marks THEN EXCLUDED.raw_marks ELSE practical_submissions.raw_marks END,
+          normalized_marks = GREATEST(EXCLUDED.normalized_marks, practical_submissions.normalized_marks),
+          execution_time_ms = CASE WHEN EXCLUDED.normalized_marks > practical_submissions.normalized_marks THEN EXCLUDED.execution_time_ms ELSE practical_submissions.execution_time_ms END,
+          is_late = CASE WHEN EXCLUDED.normalized_marks > practical_submissions.normalized_marks THEN EXCLUDED.is_late ELSE practical_submissions.is_late END,
+          submitted_at = CASE WHEN EXCLUDED.normalized_marks > practical_submissions.normalized_marks THEN NOW() ELSE practical_submissions.submitted_at END
+        RETURNING id, normalized_marks, raw_marks, status
+      `;
+
+      if (upserted.length > 0) {
+        submissionId = upserted[0].id;
+        finalNormalizedMarks = parseFloat(upserted[0].normalized_marks);
+        finalRawMarks = parseFloat(upserted[0].raw_marks);
+        finalOverallStatus = upserted[0].status;
+
+        // If this current run is the winning best score, refresh its test case breakdown
+        if (finalNormalizedMarks === normalizedMarks && submissionCasesToInsert.length > 0) {
+          await sql`DELETE FROM practical_submission_cases WHERE submission_id = ${submissionId}`;
           await sql`
             INSERT INTO practical_submission_cases (
               submission_id, test_case_id, passed, marks_awarded, actual_output, error_message, execution_time_ms
@@ -241,50 +273,13 @@ export async function runDynamicPractical({ language, code, dbId, userId, isSubm
             )
           `;
         }
-      } else {
-        submissionId = existing[0].id;
-        const prevNormalized = parseFloat(existing[0].normalized_marks) || 0;
-
-        if (normalizedMarks > prevNormalized) {
-          await sql`
-            UPDATE practical_submissions
-            SET code = ${binaryCode},
-                language = ${language},
-                status = ${overallStatus},
-                raw_marks = ${rawMarks},
-                normalized_marks = ${normalizedMarks},
-                execution_time_ms = ${totalTime},
-                is_late = ${isLate},
-                submitted_at = NOW()
-            WHERE id = ${submissionId}
-          `;
-
-          await sql`DELETE FROM practical_submission_cases WHERE submission_id = ${submissionId}`;
-          if (submissionCasesToInsert.length > 0) {
-            await sql`
-              INSERT INTO practical_submission_cases (
-                submission_id, test_case_id, passed, marks_awarded, actual_output, error_message, execution_time_ms
-              )
-              SELECT * FROM UNNEST(
-                ${submissionCasesToInsert.map(s => submissionId)}::int[],
-                ${submissionCasesToInsert.map(s => s.test_case_id)}::int[],
-                ${submissionCasesToInsert.map(s => s.passed)}::boolean[],
-                ${submissionCasesToInsert.map(s => s.marks_awarded)}::numeric[],
-                ${submissionCasesToInsert.map(s => s.actual_output)}::text[],
-                ${submissionCasesToInsert.map(s => s.error_message)}::text[],
-                ${submissionCasesToInsert.map(s => s.execution_time_ms)}::numeric[]
-              )
-            `;
-          }
-        } else {
-          finalNormalizedMarks = prevNormalized;
-          finalRawMarks = parseFloat(existing[0].raw_marks) || 0;
-          finalOverallStatus = existing[0].status;
-        }
       }
-    }
 
     const allPassed = rawMarks === totalPracticalMarks;
+
+    // Always clean up the workdir — do not leave artifacts in the daemon container.
+    executor.cleanup().catch(() => {});
+
     return {
       status: allPassed ? 'accepted' : 'wrong_answer',
       summary: allPassed ? 'All test cases passed' : `${casesReport.filter(c => c.status === 'passed').length} / ${testCases.length} cases passed`,

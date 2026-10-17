@@ -97,36 +97,29 @@ export async function GET() {
 
   // If cache is fresh, return immediately with HIT
   if (healthCache && cacheAge < HEALTH_CACHE_TTL) {
-    return NextResponse.json(healthCache, { 
-      status: 200,
-      headers: { 
-        'X-Cache': 'HIT',
-        'Cache-Control': 'no-store'
-      }
+    const httpStatus = healthCache.status === 'healthy' ? 200 : 503;
+    return NextResponse.json(healthCache, {
+      status: httpStatus,
+      headers: { 'X-Cache': 'HIT', 'Cache-Control': 'no-store' }
     });
   }
 
   // If cache exists but is stale, return stale cache immediately and trigger background refresh
   if (healthCache) {
     refreshHealthCache().catch(() => {/* ignore */});
-    
-    return NextResponse.json(healthCache, { 
-      status: 200,
-      headers: { 
-        'X-Cache': 'STALE',
-        'Cache-Control': 'no-store'
-      }
+    const httpStatus = healthCache.status === 'healthy' ? 200 : 503;
+    return NextResponse.json(healthCache, {
+      status: httpStatus,
+      headers: { 'X-Cache': 'STALE', 'Cache-Control': 'no-store' }
     });
   }
 
   // Cold start (cache is null) - perform initial refresh
   await refreshHealthCache();
 
-  return NextResponse.json(healthCache, { 
-    status: 200,
-    headers: { 
-      'X-Cache': 'MISS',
-        'Cache-Control': 'no-store'
-    }
+  const httpStatus = healthCache.status === 'healthy' ? 200 : 503;
+  return NextResponse.json(healthCache, {
+    status: httpStatus,
+    headers: { 'X-Cache': 'MISS', 'Cache-Control': 'no-store' }
   });
 }
