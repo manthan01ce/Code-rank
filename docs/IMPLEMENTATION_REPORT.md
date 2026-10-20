@@ -324,3 +324,29 @@ Operational commands and production prerequisites are in DEPLOYMENT_OPERATIONS.m
 Actual new full-stack/Docker/backup verification is pending the next CI run; local
 regression coverage passes. Production requires an identified deployment origin,
 direct database connection, maintenance access and persistent private backup storage.
+
+### Verified deployment-operations result
+
+Commit 7612184 passed [GitHub Actions run 39366613664](https://github.com/manthan01ce/Code-rank/actions/runs/39366613664):
+172 unit tests, seven real Redis/PostgreSQL integration tests, eleven real Docker
+tests, four real Chromium workflows, zero-warning critical lint, image/build and
+guest full-stack gates. The new guarded migration path applied every pending
+migration to a fresh database after actual pg_dump/pg_restore and clone rehearsal.
+After real grading/browser flows, a second verified backup/restore preserved the
+resulting table counts and rehearsed the now-current migrations again.
+
+Actual process drills replaced a killed web worker without losing the freshly
+rotated session and completed the same grading job queued during an execution-
+worker outage, with one attempt identity and one best grade. The Docker drill
+removed an expired ownerless sandbox while retaining live/different-scope work.
+The authenticated capacity gate completed 12/12 jobs at 3.43 jobs/s, p95 851 ms,
+with normal rate limits enabled. These are CI smoke measurements, not production
+capacity claims. Reports and private-fixture archives are CI artifacts; production
+archives must stay on approved private persistent storage.
+
+The pending new CI verification recorded above is closed by this run. No live
+production migration or load was executed: the intended deployment origin,
+direct database connection and maintenance/backup host still need to be supplied.
+The earlier supplied Neon pooler connection is explicitly rejected by the snapshot
+workflow, which requires a direct connection. Do not infer live readiness from
+this isolated end-to-end result.

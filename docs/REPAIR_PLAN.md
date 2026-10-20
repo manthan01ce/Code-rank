@@ -77,3 +77,10 @@ backend lint and authenticated PostgreSQL/Chromium cluster workflows are now
 mandatory gates on the working branch. See the latest implementation-report entry
 for their actual verification status. Production migration, host readiness, measured
 capacity and backup/orphan-recovery drills remain deployment work.
+
+Ninth increment: guarded production migration tooling with verified backups,
+portable measured execution capacity and scoped orphan recovery are implemented.
+Run 39366613664 verified actual PostgreSQL dump/restore and fresh migration rollout,
+web/execution process recovery, eleven Docker cases and all role browser flows.
+Live production execution requires an explicit origin, direct database connection,
+maintenance host and persistent backup location; no live target was selected.
