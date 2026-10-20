@@ -1,10 +1,10 @@
 import { NextResponse } from 'next/server';
 import { CourseService } from '@coderank/core/services/CourseService';
-import { getUserFromRequest } from '@coderank/core/utils/auth';
+import { authenticateRequest } from '@coderank/core/security/active-actor';
 
 export async function PUT(request, { params }) {
   try {
-    const user = getUserFromRequest(request);
+    const user = await authenticateRequest(request);
     const { id } = await params;
     const body = await request.json();
     const course = await CourseService.updateCourse(user, id, body);
@@ -20,7 +20,7 @@ export async function PUT(request, { params }) {
 
 export async function DELETE(request, { params }) {
   try {
-    const user = getUserFromRequest(request);
+    const user = await authenticateRequest(request);
     const { id } = await params;
     const result = await CourseService.deleteCourse(user, id);
     return NextResponse.json(result);

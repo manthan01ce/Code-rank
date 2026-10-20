@@ -1,34 +1,36 @@
-version: '3.8'
-
+# Authoritative local infrastructure. Redis binds only to loopback.
 services:
   redis:
     image: redis:7-alpine
     container_name: coderank-redis
     ports:
-      - "6379:6379"
+    - 127.0.0.1:6379:6379
     volumes:
-      - redis_data:/data
+    - redis_data:/data
     command: redis-server --appendonly yes --maxmemory-policy noeviction
     restart: unless-stopped
     healthcheck:
-      test: ["CMD", "redis-cli", "ping"]
+      test:
+      - CMD
+      - redis-cli
+      - ping
       interval: 5s
       timeout: 3s
       retries: 5
-
   postgres:
     image: postgres:16-alpine
     container_name: coderank-postgres
     ports:
-      - "5432:5432"
+    - 5432:5432
     environment:
       POSTGRES_USER: ${POSTGRES_USER:-coderank}
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-coderank123}
       POSTGRES_DB: ${POSTGRES_DB:-coderank}
     volumes:
-      - postgres_data:/var/lib/postgresql/data
+    - postgres_data:/var/lib/postgresql/data
     restart: unless-stopped
-
+    profiles:
+    - local-database
   worker:
     build:
       context: ..
@@ -38,14 +40,28 @@ services:
       redis:
         condition: service_healthy
     environment:
-      - REDIS_HOST=redis
-      - REDIS_PORT=6379
-      - DATABASE_URL=${DATABASE_URL}
-      - JWT_SECRET=${JWT_SECRET}
+    - REDIS_HOST=redis
+    - REDIS_PORT=6379
+    - DATABASE_URL=${DATABASE_URL}
+    - JWT_SECRET=${JWT_SECRET}
+    - REALTIME_URL=${REALTIME_URL:-http://host.docker.internal:3000}
     volumes:
-      - /var/run/docker.sock:/var/run/docker.sock
+    - /var/run/docker.sock:/var/run/docker.sock
     restart: unless-stopped
+    # Docker's default 10s stop timeout is shorter than one execution job.
+    stop_grace_period: 150s
+    profiles:
+    - container-worker
+    extra_hosts:
+    - host.docker.internal:host-gateway
+  runner-image:
+    build:
+      context: ..
+      dockerfile: infrastructure/docker/runner/Dockerfile
+    image: coderank-base:latest
+    profiles:
+    - build-image
 
 volumes:
-  redis_data:
-  postgres_data:
+  redis_data: null
+  postgres_data: null

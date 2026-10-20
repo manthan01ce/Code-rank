@@ -2,6 +2,7 @@
 
 import { useEffect, useRef, useState } from 'react';
 import { io } from 'socket.io-client';
+import { browserSocketAuth } from '../lib/browser-socket-auth.js';
 
 // Singleton socket to prevent multiple connections across component remounts
 let globalSocket = null;
@@ -18,25 +19,15 @@ export function useSocket() {
     refCount++;
 
     if (!globalSocket || !globalSocket.connected) {
-      const token = typeof window !== 'undefined' ? localStorage.getItem('token') : null;
-      let user = null;
-      try {
-        const userStr = typeof window !== 'undefined' ? localStorage.getItem('user') : null;
-        if (userStr) user = JSON.parse(userStr);
-      } catch (e) {}
-      
-      globalSocket = io(window.location.origin, {
+      globalSocket = io(process.env.NEXT_PUBLIC_REALTIME_URL || window.location.origin, {
         path: '/socket.io',
+        transports: ['websocket'],
         reconnection: true,
         reconnectionAttempts: Infinity,
         reconnectionDelay: 1000,
         reconnectionDelayMax: 10000,
         timeout: 20000,
-        auth: {
-          token,
-          role: user?.role,
-          userId: user?.id,
-        },
+        auth: (callback) => callback(browserSocketAuth(localStorage)),
       });
 
       // Connection event handlers for debugging and state tracking

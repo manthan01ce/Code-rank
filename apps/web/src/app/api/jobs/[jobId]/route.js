@@ -1,14 +1,6 @@
-/**
- * apps/web/src/app/api/jobs/[jobId]/route.js
- *
- * Returns job status for authenticated users or anonymous callers with a valid
- * session cookie. Hidden test-case data is redacted for students.
- */
 import { NextResponse } from 'next/server';
-import { getJobStatus } from '@/lib/queue/jobQueue';
-import { getUserFromRequest } from '@coderank/core/utils/auth';
-
-export const maxDuration = 10;
+import { executionActor, executionError } from '@/lib/execution-api';
+import { SubmissionService } from '@coderank/core/services/SubmissionService';
 
 export async function GET(request, { params }) {
   try {
@@ -17,26 +9,13 @@ export async function GET(request, { params }) {
       return NextResponse.json({ error: 'jobId is required' }, { status: 400 });
     }
 
-    const caller = getUserFromRequest(request);
-
-    // Read anonymous session cookie (HttpOnly, set at job-creation time)
-    const cookieHeader = request.headers.get('cookie') || '';
-    const anonMatch = cookieHeader.match(/(?:^|;\s*)anon_session=([^;]+)/);
-    const anonSessionId = anonMatch ? anonMatch[1] : null;
-
-    const job = await getJobStatus(jobId, caller, anonSessionId);
-
+    const job = await SubmissionService.getJobStatus(jobId, await executionActor(request));
     if (!job) {
       return NextResponse.json({ error: 'Job not found' }, { status: 404 });
     }
 
-    if (job.forbidden) {
-      return NextResponse.json({ error: 'Access denied' }, { status: 403 });
-    }
-
-    return NextResponse.json(job);
+    return NextResponse.json(job, { headers: { 'Cache-Control': 'no-store' } });
   } catch (error) {
-    console.error('GET /api/jobs/[jobId] error:', error);
-    return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
+    return executionError(error);
   }
 }

@@ -1,0 +1,1 @@
+{"name":"@coderank/queue","version":"1.1.0","private":true,"type":"module","exports":"./src/index.js","dependencies":{"bullmq":"6.3.10"}}

@@ -19,39 +19,41 @@ export async function executeCode(language, code, input = '') {
   }
 
   const executor = new Executor(language, code);
-  const playgroundResult = await executor.runPlayground(input);
+  try {
+    const playgroundResult = await executor.runPlayground(input);
 
-  if (playgroundResult) {
+    if (playgroundResult) {
+      return {
+        success: playgroundResult.exitCode === 0,
+        stdout: playgroundResult.stdout.trim(),
+        stderr: playgroundResult.stderr.trim(),
+        exitCode: playgroundResult.exitCode,
+        runtimeMs: playgroundResult.runtimeMs,
+        cpuTimeMs: playgroundResult.cpuTimeMs,
+        memoryBytes: playgroundResult.memoryBytes
+      };
+    }
+
+    const compileRes = await executor.compile();
+
+    if (!compileRes.success) {
+      return {
+        success: false,
+        stdout: '',
+        stderr: compileRes.error,
+        exitCode: 1
+      };
+    }
+
+    const res = await executor.runOneTestCase(input, '', 'playground', 0);
+
     return {
-      success: !playgroundResult.stderr,
-      stdout: playgroundResult.stdout.trim(),
-      stderr: playgroundResult.stderr.trim(),
-      exitCode: playgroundResult.stderr ? 1 : 0,
-      runtimeMs: playgroundResult.runtimeMs,
-      cpuTimeMs: playgroundResult.cpuTimeMs,
-      memoryBytes: playgroundResult.memoryBytes
+      success: res.exitCode === 0,
+      stdout: res.actualOutput,
+      stderr: res.errorMessage,
+      exitCode: res.exitCode
     };
-  }
-
-  const compileRes = await executor.compile();
-
-  if (!compileRes.success) {
-    return {
-      success: false,
-      stdout: '',
-      stderr: compileRes.error,
-      exitCode: 1
-    };
-  }
-
-  const res = await executor.runOneTestCase(input, '', 'playground', 0);
-
-  return {
-    success: !res.errorMessage,
-    stdout: res.actualOutput,
-    stderr: res.errorMessage,
-    exitCode: res.errorMessage ? 1 : 0
-  };
+  } finally { await executor.cleanup(); }
 }
 
 export {

@@ -1,4 +1,5 @@
 'use client';
+import { fetchCollection } from '@/lib/fetch-collection';
 
 import { useState, useEffect } from 'react';
 import LoadingOverlay from '@/components/LoadingOverlay';
@@ -30,10 +31,10 @@ export default function CoursesManagement() {
     try {
       const token = authToken;
       const url = search ? `/api/courses?search=${search}` : '/api/courses';
-      const res = await fetch(url, {
+      const rows = await fetchCollection(url, {
         headers: { 'Authorization': `Bearer ${token}` }
       });
-      if (res.ok) setCourses(await res.json());
+      setCourses(rows);
     } catch (e) {
       console.error(e);
     } finally {

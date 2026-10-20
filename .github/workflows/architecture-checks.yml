@@ -1,0 +1,56 @@
+name: Architecture checks
+on:
+  pull_request:
+  push:
+    branches: [master, main, fix/architecture-hardening]
+permissions:
+  contents: read
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    services:
+      redis:
+        image: redis:7-alpine
+        ports: ['6379:6379']
+        options: --health-cmd "redis-cli ping" --health-interval 5s --health-timeout 3s --health-retries 10
+      postgres:
+        image: postgres:16-alpine
+        env:
+          POSTGRES_PASSWORD: test-only-password
+          POSTGRES_DB: coderank_test
+        ports: ['5432:5432']
+        options: --health-cmd "pg_isready -U postgres" --health-interval 5s --health-timeout 3s --health-retries 10
+    env:
+      JWT_SECRET: ci-only-secret-not-for-production
+      TEST_DATABASE_URL: postgresql://postgres:test-only-password@127.0.0.1:5432/coderank_test
+      DATABASE_URL: postgresql://placeholder:placeholder@localhost/placeholder
+      NEXT_TELEMETRY_DISABLED: '1'
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: npm
+      - run: npm ci
+      - run: npm test
+      - run: node --test tests/integration/queue.test.mjs tests/integration/realtime.test.mjs tests/integration/worker-readiness.test.mjs tests/integration/worker-recovery.test.mjs tests/integration/postgres.test.mjs
+      - run: docker build -t coderank-base:latest -f infrastructure/docker/runner/Dockerfile .
+      - run: node --test tests/integration/sandbox.test.mjs
+      - name: Validate authoritative Compose configuration
+        run: docker compose -f infrastructure/docker-compose.yml config --quiet
+      - name: Build worker deployment image
+        run: docker build -t coderank-worker:ci -f apps/worker/Dockerfile .
+      - run: npm run build --workspace=apps/web
+      - name: Full web-to-worker execution round trip
+        run: npm run test:stack
+      - name: Preserve stack diagnostics
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: stack-logs
+          path: test-results/stack/
+          if-no-files-found: ignore

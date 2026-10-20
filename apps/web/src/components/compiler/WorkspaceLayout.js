@@ -10,6 +10,7 @@
  * - Settings & Account menu: A User profile dropdown managing profile updates, password changes, preferences, and logout.
  */
 
+import { fetchCollection } from '@/lib/fetch-collection';
 import { useState, useEffect, useRef } from 'react';
 import { useRouter } from 'next/navigation';
 import { Panel, Group as PanelGroup, Separator as PanelResizeHandle } from 'react-resizable-panels';
@@ -19,6 +20,7 @@ import ConsolePanel from './ConsolePanel';
 import { Play, ChevronRight, Settings, User, List, Save } from 'lucide-react';
 import { DEFAULT_LANGUAGE, LANGUAGES } from './LanguageConfig';
 import { STATIC_PROBLEMS } from '@/lib/problems';
+import { waitForJob } from '@/lib/wait-for-job';
 import { useSocket } from '@/hooks/useSocket';
 
 // ── Stdin/Stdout boilerplates for practicals (main() style) ──────────────────
@@ -175,12 +177,10 @@ export default function WorkspaceLayout({ problem }) {
     setLoadingSubmissions(true);
     try {
       const token = localStorage.getItem('token');
-      const res = await fetch('/api/student/submissions', {
+      const data = await fetchCollection('/api/student/submissions', {
         headers: { Authorization: `Bearer ${token}` }
       });
-      if (res.ok) {
-        setUserSubmissions(await res.json());
-      }
+      setUserSubmissions(data);
     } catch (e) {
       console.error(e);
     } finally {
@@ -219,6 +219,13 @@ export default function WorkspaceLayout({ problem }) {
         })
       });
       if (res.ok) {
+        const data = await res.json();
+        if (data.token) {
+          localStorage.setItem('token', data.token);
+          if (socket) {
+            socket.disconnect().connect();
+          }
+        }
         setProfileMsg({ type: 'success', text: 'Profile updated successfully!' });
         // Update user in localStorage
         const userData = JSON.parse(localStorage.getItem('user'));
@@ -497,53 +504,7 @@ export default function WorkspaceLayout({ problem }) {
 
       // If it's a background job, wait for completion
       if (data.jobId) {
-        data = await new Promise((resolve) => {
-          let isResolved = false;
-          let pollTimeout;
-
-          const onComplete = (result) => {
-            if (isResolved) return;
-            isResolved = true;
-            if (socket) {
-              socket.off('job_complete', onComplete);
-              socket.emit('unwatch_job', data.jobId);
-            }
-            clearTimeout(pollTimeout);
-            resolve(result);
-          };
-
-          if (socket) {
-            socket.on('job_complete', onComplete);
-            socket.emit('watch_job', data.jobId);
-          }
-
-          let pollAttempt = 0;
-          const nextPollDelay = () => Math.min(1000, 250 * (2 ** pollAttempt++));
-          const poll = async () => {
-            if (isResolved) return;
-            try {
-              const token = localStorage.getItem('token');
-              const headers = token ? { Authorization: `Bearer ${token}` } : {};
-              const pRes = await fetch(`/api/jobs/${data.jobId}`, { headers });
-              if (pRes.ok) {
-                const pData = await pRes.json();
-                if (pData.status === 'completed') return onComplete(pData.result);
-                if (pData.status === 'failed') {
-                   return onComplete({
-                     status: 'internal_error',
-                     summary: 'Job Failed',
-                     runtimeError: pData.failedReason,
-                     cases: []
-                   });
-                }
-              }
-            } catch (e) {
-               // Ignore and retry
-            }
-            if (!isResolved) pollTimeout = setTimeout(poll, nextPollDelay());
-          };
-          pollTimeout = setTimeout(poll, nextPollDelay());
-        });
+        data = await waitForJob({ jobId: data.jobId, socket, token: localStorage.getItem('token') });
       }
 
       setOutput(data);
@@ -669,52 +630,7 @@ export default function WorkspaceLayout({ problem }) {
 
       // Wait for job completion
       if (data.jobId) {
-        data = await new Promise((resolve) => {
-          let isResolved = false;
-          let pollTimeout;
-
-          const onComplete = (result) => {
-            if (isResolved) return;
-            isResolved = true;
-            if (socket) {
-              socket.off('job_complete', onComplete);
-              socket.emit('unwatch_job', data.jobId);
-            }
-            clearTimeout(pollTimeout);
-            resolve(result);
-          };
-
-          if (socket) {
-            socket.on('job_complete', onComplete);
-            socket.emit('watch_job', data.jobId);
-          }
-
-          let pollAttempt = 0;
-          const nextPollDelay = () => Math.min(1000, 250 * (2 ** pollAttempt++));
-          const poll = async () => {
-            if (isResolved) return;
-            try {
-              const headers = token ? { Authorization: `Bearer ${token}` } : {};
-              const pRes = await fetch(`/api/jobs/${data.jobId}`, { headers });
-              if (pRes.ok) {
-                const pData = await pRes.json();
-                if (pData.status === 'completed') return onComplete(pData.result);
-                if (pData.status === 'failed') {
-                   return onComplete({
-                     status: 'internal_error',
-                     summary: 'Job Failed',
-                     runtimeError: pData.failedReason,
-                     cases: []
-                   });
-                }
-              }
-            } catch (e) {
-               // Ignore and retry
-            }
-            if (!isResolved) pollTimeout = setTimeout(poll, nextPollDelay());
-          };
-          pollTimeout = setTimeout(poll, nextPollDelay());
-        });
+        data = await waitForJob({ jobId: data.jobId, socket, token: localStorage.getItem('token') });
       }
 
       setOutput(data);

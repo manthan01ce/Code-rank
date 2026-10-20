@@ -11,22 +11,32 @@
     "dev": "turbo run dev",
     "build": "turbo run build",
     "lint": "turbo run lint",
-    "test": "node --env-file-if-exists=.env --test tests/*.test.js",
     "worker": "npm run dev --workspace=apps/worker",
     "web": "npm run dev --workspace=apps/web",
-    "db:migrate": "node packages/core/src/db/migrate.js",
     "k6:smoke": "powershell -ExecutionPolicy Bypass -File ./load-tests/run-k6.ps1 -Test smoke",
     "k6:smoke-100": "k6 run -e BASE_URL=http://localhost:3000 ./load-tests/smoke-test-100vu.js",
     "k6:stress": "k6 run -e BASE_URL=http://localhost:3000 ./load-tests/stress-test.js",
     "k6:api": "powershell -ExecutionPolicy Bypass -File ./load-tests/run-k6.ps1 -Test api",
     "k6:execution": "powershell -ExecutionPolicy Bypass -File ./load-tests/run-k6.ps1 -Test execution",
-    "k6:all": "powershell -ExecutionPolicy Bypass -File ./load-tests/run-k6.ps1 -Test all"
+    "k6:all": "powershell -ExecutionPolicy Bypass -File ./load-tests/run-k6.ps1 -Test all",
+    "test": "node --experimental-test-module-mocks --test-concurrency=2 --test-timeout=30000 --test tests/*.test.mjs",
+    "db:migrate": "node database/run-migration.js",
+    "test:redis": "node --test tests/integration/queue.test.mjs tests/integration/realtime.test.mjs tests/integration/worker-readiness.test.mjs tests/integration/worker-recovery.test.mjs",
+    "test:postgres": "node --test tests/integration/postgres.test.mjs",
+    "test:docker": "node --test tests/integration/sandbox.test.mjs",
+    "db:preflight": "node database/preflight.js",
+    "test:neon": "node --test tests/integration/neon.test.mjs tests/integration/neon-upgrade.test.mjs",
+    "test:stack": "node scripts/stack-smoke.mjs",
+    "deployment:check": "node scripts/check-deployment.mjs",
+    "db:manifest": "node database/update-readiness-manifest.js"
   },
   "devDependencies": {
+    "@electric-sql/pglite": "0.5.10",
+    "pg": "8.23.1",
     "turbo": "^2.5.4"
   },
   "engines": {
-    "node": ">=18.0.0"
+    "node": ">=24.0.0"
   },
   "packageManager": "npm@11.11.0"
 }

@@ -1,4 +1,5 @@
 'use client';
+import { fetchCollection } from '@/lib/fetch-collection';
 
 import { useState, useEffect, useRef } from 'react';
 import LoadingOverlay from '@/components/LoadingOverlay';
@@ -63,6 +64,9 @@ export default function FacultyManagement() {
   const { token: authToken, isReady } = useAdminAuth();
 
   const [faculty, setFaculty]         = useState([]);
+  const [pageCursor, setPageCursor] = useState(null);
+  const [nextCursor, setNextCursor] = useState(null);
+  const requestVersion = useRef(0);
   const [departmentsList, setDepartmentsList] = useState([]);
   const [loading, setLoading]         = useState(true);
   const [processing, setProcessing]   = useState(false);
@@ -83,14 +87,19 @@ export default function FacultyManagement() {
   };
 
   // ── Fetch ──
-  const fetchFaculty = async () => {
+  const fetchFaculty = async (cursor = pageCursor) => {
+    const version = ++requestVersion.current;
     setLoading(true);
     try {
       let url = `/api/users?role=faculty&status=${statusFilter}`;
       if (search) url += `&search=${encodeURIComponent(search)}`;
+      if (cursor) url += `&cursor=${cursor}`;
       const res = await fetch(url, { headers: { Authorization: `Bearer ${token()}` } });
       if (res.ok) {
         const data = await res.json();
+        if (version !== requestVersion.current) return;
+        setPageCursor(cursor);
+        setNextCursor(res.headers.get('X-Next-Cursor') || null);
         setFaculty(Array.isArray(data) ? data : []);
       } else {
         console.error('Failed to fetch faculty:', res.status);
@@ -105,14 +114,11 @@ export default function FacultyManagement() {
 
   const fetchDepartments = async () => {
     try {
-      const res = await fetch('/api/departments', { headers: { Authorization: `Bearer ${token()}` } });
-      if (res.ok) {
-        setDepartmentsList(await res.json());
-      }
+      setDepartmentsList(await fetchCollection('/api/departments', { headers: { Authorization: `Bearer ${token()}` } }));
     } catch (e) { console.error(e); }
   };
 
-  useEffect(() => { if (isReady) { fetchFaculty(); } }, [search, statusFilter, isReady]);
+  useEffect(() => { if (isReady) { fetchFaculty(null); } }, [search, statusFilter, isReady]);
   useEffect(() => { if (isReady) fetchDepartments(); }, [isReady]);
 
   // Auto-refresh faculty list every 15s (pauses while modal is open)
@@ -356,7 +362,7 @@ export default function FacultyManagement() {
         <div>
           <h2 style={{ fontSize: '22px', fontWeight: 700 }}>Faculty Master</h2>
           <p style={{ color: 'var(--text-muted)', fontSize: '13px' }}>
-            {loading ? 'Loading...' : `${faculty.length} faculty member${faculty.length !== 1 ? 's' : ''} total`}
+            {loading ? 'Loading...' : `${faculty.length} faculty member${faculty.length !== 1 ? 's' : ''} on this page`}
           </p>
         </div>
         <div style={{ display: 'flex', gap: '12px', alignItems: 'center' }}>
@@ -398,7 +404,7 @@ export default function FacultyManagement() {
         </label>
 
         <button
-          onClick={fetchFaculty}
+          onClick={() => fetchFaculty()}
           style={{
             padding: '10px 16px', borderRadius: '8px', border: '1px solid var(--border-color)',
             background: 'transparent', cursor: 'pointer', fontSize: '13px', color: 'var(--text-muted)',
@@ -526,6 +532,7 @@ export default function FacultyManagement() {
         {loading ? (
           <p style={{ textAlign: 'center', padding: '40px', color: 'var(--text-muted)' }}>Loading faculty...</p>
         ) : (
+          <>
           <table>
             <thead>
               <tr>
@@ -601,6 +608,12 @@ export default function FacultyManagement() {
               )}
             </tbody>
           </table>
+          <div style={{display: 'flex', gap: 12, padding: 16}}>
+            <button disabled={loading || !pageCursor} onClick={() => fetchFaculty(null)}>First page</button>
+            <span>{faculty.length} shown on this page</span>
+            <button disabled={loading || !nextCursor} onClick={() => fetchFaculty(nextCursor)}>Next page</button>
+          </div>
+          </>
         )}
       </div>
     </div>

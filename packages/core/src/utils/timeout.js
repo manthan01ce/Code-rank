@@ -16,18 +16,18 @@
 export async function withTimeout(promise, timeoutMs, fallbackValue) {
   const hasFallback = arguments.length === 3;
   
-  return Promise.race([
-    promise,
-    new Promise((resolve, reject) => {
-      setTimeout(() => {
-        if (hasFallback) {
-          resolve(fallbackValue);
-        } else {
-          reject(new Error(`Operation timed out after ${timeoutMs}ms`));
-        }
-      }, timeoutMs);
-    })
-  ]);
+  let timer;
+  try {
+    return await Promise.race([
+      promise,
+      new Promise((resolve, reject) => {
+        timer = setTimeout(() => {
+          if (hasFallback) resolve(fallbackValue);
+          else reject(new Error(`Operation timed out after ${timeoutMs}ms`));
+        }, timeoutMs);
+      }),
+    ]);
+  } finally { clearTimeout(timer); }
 }
 
 export default withTimeout;

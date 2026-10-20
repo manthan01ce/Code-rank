@@ -9,12 +9,7 @@ import crypto from 'crypto';
 
 function getJwtSecret() {
   const secret = process.env.JWT_SECRET;
-  if (!secret) {
-    if (process.env.NODE_ENV === 'test' || process.env.NEXT_PHASE === 'phase-production-build') {
-      return 'temporary-ci-build-secret-at-least-32-chars-long';
-    }
-    throw new Error('FATAL: JWT_SECRET environment variable is missing.');
-  }
+  if (!secret) throw new Error('FATAL: JWT_SECRET environment variable is missing.');
   return secret;
 }
 
@@ -34,7 +29,8 @@ export function generateToken(user) {
 
 export function verifyToken(token) {
   try {
-    return jwt.verify(token, getJwtSecret());
+    const user = jwt.verify(token, getJwtSecret(), { algorithms: ['HS256'] });
+    return user.id !== undefined && ['student', 'faculty', 'admin'].includes(user.role) && !user.aud ? user : null;
   } catch {
     return null;
   }

@@ -1,180 +1,116 @@
 # CodeRank
 
-CodeRank is a role-based educational platform for managing courses, practicals,
-students, faculty, submissions, activity logs, and isolated code execution.
+Educational practical-management and code-execution platform using Next.js,
+PostgreSQL/Neon, Redis/BullMQ and Docker.
 
-## Architecture
+## Active workspace
 
-- **Web application:** Next.js 16, React 19, custom Socket.IO server
-- **Backend services:** shared Node.js service layer, BullMQ workers, Redis
-- **Database:** Neon/PostgreSQL through `@neondatabase/serverless`
-- **Execution:** isolated Docker daemons for Python, C, C++, Java, and JavaScript
+- `apps/web`: UI, HTTP adapters and authenticated realtime server.
+- `apps/worker`: execution and system queue consumers.
+- `packages/core`: domain services and access policy.
+- `packages/database`: database client and migration engine.
+- `packages/queue`: atomic execution admission.
+- `packages/runner`: language execution and disposable sandboxes.
+- `database/migrations`: versioned schema and transactional grading.
+- `infrastructure`: authoritative Docker image and Compose configuration.
 
-Execution requests are queued in Redis. The worker uses a CPU-bounded execution
-pool (calibrated to `MAX_CONCURRENT_JOBS=8` locally), while Redis buffers client
-requests. This is intentionally different from the number of active users: 50
-or 100 users may submit concurrently without starting 50 or 100 Docker jobs.
+See [architecture](ARCHITECTURE.md), [repair plan](docs/REPAIR_PLAN.md) and
+[implementation report](docs/IMPLEMENTATION_REPORT.md). The old `frontend/` and `backend/` copies have been retired. The top-level
+`runner/` is a legacy copy; `infrastructure` defines the active sandbox image.
 
-### Execution security and resources
+## Local setup
 
-Language daemons are Docker-isolated and run untrusted code as a non-root
-`sandbox` user. Their hardening profile has no network, a read-only root
-filesystem, dropped Linux capabilities, `no-new-privileges`, a PID limit,
-CPU/memory limits, and disposable tmpfs workspaces. Playground runs report
-measured wall-clock runtime, CPU time, and peak resident memory; resource
-values are not hardcoded.
+Use Node 24, npm, Docker and a configured Neon database. Copy `.env.example` to
+`.env`, provide your database URL and a strong JWT secret. Never commit credentials.
 
-## Active project layout
-
-```text
-CodeRank/
-├── apps/
-│   ├── web/                         # Next.js UI, API routes and Socket.IO server
-│   │   ├── src/app/                 # App Router pages and API handlers
-│   │   ├── src/components/          # UI and coding-workspace components
-│   │   └── src/lib/                 # Web-only helpers (auth, queue, PDF)
-│   └── worker/                      # BullMQ background-process application
-│       └── src/
-│           ├── execution/           # Docker health and language runners
-│           │   └── runners/         # Compile/run implementations
-│           └── workers/             # BullMQ queue consumers
-├── packages/
-│   └── core/                        # Shared DB, auth, logging and services
-├── infrastructure/                  # Docker Compose and deployment config
-├── load-tests/                      # k6 load and runner benchmarks
-├── database/                        # Database assets/migrations
-├── .env.example                     # Environment-variable template
-├── ARCHITECTURE.md                  # Detailed system and capacity design
-└── package.json                     # npm workspace scripts
-```
-
-`frontend/`, `backend/`, and `runner/` are legacy copies retained for backward
-compatibility. They are **not** used by the root workspace scripts or active
-deployment configuration. New development belongs only in `apps/` and
-`packages/`.
-
-## Prerequisites
-
-- Node.js 18 or later (npm 11 recommended)
-- Docker Desktop (for Redis and language runner containers)
-- A PostgreSQL/Neon `DATABASE_URL`
-- [k6](https://grafana.com/docs/k6/latest/set-up/install-k6/) for load tests
-  (optional)
-
-## Setup
-
-```powershell
-git clone https://github.com/manthan01ce/Code-rank.git
-cd Code-rank
-Copy-Item .env.example .env
-npm install
+```sh
+npm ci
+# Review schema/duplicates and back up an existing database before migration.
+npm run db:preflight
+# Preflight reports missing columns that the pending migrations will add.
+npm run db:migrate
+docker compose -f infrastructure/docker-compose.yml --profile build-image build runner-image
 docker compose -f infrastructure/docker-compose.yml up -d redis
+npm run worker
+# In another terminal:
+npm run web
 ```
 
-Set `DATABASE_URL`, `JWT_SECRET`, and other required values in `.env`. For
-local development, the web app and worker also load app-local `.env` files.
+Alternatively use `start-lab.sh` or `start-lab.bat` after configuration and database
+migration. The optional local PostgreSQL Compose profile does not replace Neon's
+HTTP driver automatically; use a compatible local adapter/proxy if choosing it.
 
-## Run locally
+For a containerized worker, build the runner image first, then enable the
+`container-worker` profile. Only the trusted worker receives the Docker socket.
+Set `REALTIME_URL` to the persistent web/realtime server and configure
+`ALLOWED_ORIGIN`. Never expose Redis publicly.
 
-Use separate terminals:
+## Verification
 
-```powershell
-npm run web       # http://localhost:3000
-npm run worker    # BullMQ execution and system workers
+The local harness suite requires GCC and Node.js; use Linux/WSL or the included
+Ubuntu CI job. Test concurrency is limited to two to bound embedded-database
+memory use. It compiles and runs trusted test solutions. Docker tests separately
+verify the production execution path.
+
+```sh
+npm test
+npm run test:redis       # Redis running on REDIS_PORT, default 6379
+npm run test:postgres    # isolated TEST_DATABASE_URL required
+npm run test:neon        # optional Neon config; uses and removes private test schemas
+npm run test:docker      # Docker plus coderank-base:latest required
+npm run build --workspace=apps/web
+npm run test:stack       # built web app, Docker image and disposable Redis required
+npm run deployment:check -- https://your-deployment.example
 ```
 
-Check dependencies and queue status:
+The PostgreSQL integration test creates and drops its own schema; it must still
+use a disposable test database. CI runs all these gates. Local mock/PGlite tests
+do not replace host-level Docker checks or concurrency/load testing.
 
-```powershell
-# Fast process-only liveness probe (no Redis or database call)
-Invoke-RestMethod http://localhost:3000/api/live
-# Cached readiness/dependency report
-Invoke-RestMethod http://localhost:3000/api/health
-```
+## Operational contracts
 
-## Production web server
+Execution APIs return `202` with a job ID; clients use authorized polling or
+trusted realtime completion. Existing endpoint paths are retained. Hidden tests
+are redacted from student-facing results. User and selector lists use cursor pagination;
+inspect `X-Next-Cursor` and pass `cursor` to retrieve another page.
 
-Always load test a production build, not `next dev`:
+Default admission is 500 pending/active jobs globally and five per owner;
+configure `MAX_QUEUE_SIZE` and `MAX_JOBS_PER_USER`. Set worker concurrency based on
+measured CPU/memory, not student count. Each sandbox has its own bounded lifetime.
+`/api/health` requires a healthy worker lease; `/api/live` checks process liveness.
+Workers must have access to Docker and the configured sandbox image.
+Redis uses AOF and no-eviction mode; provision memory and alert before exhaustion.
 
-```powershell
-npm run build --workspace=@coderank/web
-npm run start --workspace=@coderank/web
-```
+For multiple web processes, enable `REALTIME_REDIS_ENABLED=true`, then
+`CLUSTER_ENABLED=true` and a bounded `WEB_CONCURRENCY`. Supported socket clients
+use WebSocket-only transport; shared delivery is covered by Redis integration tests.
+Validate the full production cluster on the deployment host before scaling it.
+Database migrations through 006 must precede the new web/worker deployment. Remaining limitations and exact
+validation results are recorded in the implementation report; this refactor does
+not establish a production capacity guarantee.
 
-The web process is intentionally single-process by default. Socket.IO job rooms
-are process-local; enabling `CLUSTER_ENABLED=true` without both sticky sessions
-and a Socket.IO Redis adapter can lose completion notifications. Scale the web
-tier behind a load balancer only after those two pieces are configured.
+`test:stack` starts its own production web and worker processes on loopback port
+3100, forces a placeholder database URL, and exercises all five playground
+languages through HTTP, Redis and Docker. It checks guest ownership, worker-only
+realtime publishing, completion delivery, invalid bearer denial and runtime
+failure. It uses the configured Redis instance: use disposable test infrastructure.
+Diagnostics are written under `test-results/stack/`. This gate does not validate
+student grading or database-backed browser workflows.
 
-## Environment configuration
+`deployment:check` only reads liveness/readiness endpoints. It requires a fresh,
+uncached healthy report with database, queue and at least one execution worker.
+It does not apply migrations or deploy code.
 
-Start from `.env.example`. Important execution settings:
+Readiness also verifies every required migration name and checksum against a
+bundled manifest. Missing, pending or modified migration ledgers make
+`/api/health` return 503; `/api/live` remains independent of the database. Health
+checks never create the ledger or apply migrations. After adding a new migration,
+run `npm run db:manifest` and commit its updated metadata; the regression suite
+checks that the manifest matches the migration files. This command does not
+connect to a database.
 
-```env
-REDIS_HOST=127.0.0.1
-REDIS_PORT=6379
-MAX_CONCURRENT_JOBS=8
-MAX_QUEUE_SIZE=500
-JOB_TIMEOUT_MS=30000
-WORKER_VERBOSE_LOGS=false
-```
-
-`MAX_CONCURRENT_JOBS` controls CPU-bound execution jobs, not signed-in users.
-Increase it only after measuring Docker CPU and latency on the target host. For
-more throughput, add worker/runner replicas with additional CPU capacity.
-
-## Load testing
-
-The runner benchmark submits code and waits for the actual BullMQ result. For
-local load testing only, temporarily disable the API rate limiter in
-`apps/web/.env`, restart the web server, and remove the setting afterward.
-
-```powershell
-# 50 simultaneous clients
-$env:VUS='50'; $env:DURATION='40s'
-k6 run load-tests/runner-concurrency-benchmark.js
-
-# 100 simultaneous clients; permits time for the bounded execution backlog
-$env:VUS='100'; $env:DURATION='40s'
-$env:MAX_WAIT_SECONDS='30'; $env:POLL_INTERVAL_SECONDS='0.25'
-$env:P95_TARGET_MS='15000'
-k6 run load-tests/runner-concurrency-benchmark.js
-```
-
-Recent local result: 100 concurrent users completed at about 10.7
-executions/second. The p95 includes expected queue wait behind eight slots.
-
-For HTTP capacity, use the mixed workload only against the production server:
-
-```powershell
-# staged 25, 50, 100, 150, 200, then a short 500-VU validation
-k6 run --stage 30s:25  --stage 15s:0 -e BASE_URL=http://127.0.0.1:3000 load-tests/stress-test.js
-k6 run --stage 30s:500 --stage 20s:500 --stage 15s:0 -e BASE_URL=http://127.0.0.1:3000 load-tests/stress-test.js
-```
-
-`/api/live` is for lightweight liveness monitoring. `/api/health` is a cached
-readiness report for Neon and Redis, while `/api/queue/stats` shares a bounded
-in-process Redis snapshot to prevent monitoring traffic from amplifying load.
-`/api/metrics` reports process request latency, event-loop delay, CPU deltas,
-memory, and top endpoint counts; it requires an administrator Bearer token and
-must not be exposed through a public monitoring dashboard without auth.
-
-The web lint configuration uses ESLint 9 flat config. Existing UI lint findings
-are tracked separately; the production build remains the current required gate.
-
-## Documentation
-
-- [Architecture and capacity design](ARCHITECTURE.md)
-- [Load test notes](load-tests/README.md)
-- [Testing guide](TEST_GUIDE.md)
-- [LAN deployment guide](LAN_TESTING_GUIDE.md)
-
-## Deployment
-
-The root `vercel.json` targets `apps/web`. The BullMQ worker and Docker runners
-must run separately on infrastructure that can access Redis and Docker; they
-are not suitable for Vercel serverless execution.
-
-## License
-
-Private and proprietary.
+`test:redis` includes real child-process worker crash recovery, exhausted stalled
+recovery and production graceful-drain tests. Their deliberately shortened leases
+are test-only; the production worker lock remains tied to the job lifetime.
+Recovery can execute a job again. Transactional submission idempotency prevents
+duplicate persisted grades; it is not an exactly-once execution guarantee.

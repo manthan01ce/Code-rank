@@ -70,3 +70,8 @@ backend/node_modules/
 
 coderank-backend/
 coderank-frontend/
+
+# Temporary native harness test directories
+/.harness-*/
+
+/test-results/

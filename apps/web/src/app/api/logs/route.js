@@ -1,10 +1,10 @@
 import { NextResponse } from 'next/server';
 import sql from '@coderank/core/db';
-import { getUserFromRequest } from '@coderank/core/utils/auth';
+import { authenticateRequest } from '@coderank/core/security/active-actor';
 
 export async function GET(request) {
   try {
-    const user = getUserFromRequest(request);
+    const user = await authenticateRequest(request);
     if (!user || user.role !== 'admin') {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
@@ -26,6 +26,7 @@ export async function GET(request) {
 
     return NextResponse.json(logs);
   } catch (error) {
+    if (error.status) return NextResponse.json({ error: error.message }, { status: error.status });
     console.error('GET /api/logs error:', error);
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
   }

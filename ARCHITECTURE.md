@@ -1,231 +1,130 @@
-# 🏛️ CodeRank System Architecture
+# CodeRank architecture
 
-Comprehensive architecture, data flow, execution engine, real-time polling, and database design for CodeRank.
+## Runtime and package boundaries
 
----
-
-## 📑 Table of Contents
-1. [Overview & High-Level Architecture](#-overview--high-level-architecture)
-2. [Tech Stack & Infrastructure](#-tech-stack--infrastructure)
-3. [Database Design & PgBouncer Connection Pooling](#-database-design--pgbouncer-connection-pooling)
-4. [Real-Time Sync & 15-Second Polling Architecture](#-real-time-sync--15-second-polling-architecture)
-5. [Code Execution & Sandboxing Pipeline](#-code-execution--sandboxing-pipeline)
-6. [Role-Based Access Control (RBAC) & Auth Flow](#-role-based-access-control-rbac--auth-flow)
-7. [Directory & Component Layout](#-directory--component-layout)
-
----
-
-## 🌐 Overview & High-Level Architecture
-
-CodeRank is a secure, high-concurrency educational management and automated code-evaluation platform designed for universities and coding labs.
-
-```
-┌────────────────────────────────────────────────────────────────────────┐
-│                              CLIENT TIER                                │
-│  React 19 / Next.js 16 (App Router) + Monaco Code Editor + Socket.IO   │
-│  Dashboards: /admin  |  /faculty  |  /student  |  /practice  |  /code  │
-└────────────────────────────────────┬───────────────────────────────────┘
-                                     │ HTTPS / WSS
-                                     ▼
-┌────────────────────────────────────────────────────────────────────────┐
-│                             GATEWAY / API                               │
-│  Next.js Serverless Routes (/api/*) + Custom Node.js Server (server.js)│
-│  JWT Authentication + RBAC Middleware + Activity Logging                │
-└───────────────────┬────────────────────────────────┬───────────────────┘
-                    │                                │
-                    ▼                                ▼
-┌──────────────────────────────────────┐ ┌───────────────────────────────┐
-│           DATA ACCESS TIER           │ │     EXECUTION ENGINE TIER     │
-│  @neondatabase/serverless (HTTP)     │ │  Docker Sandbox Daemons       │
-│  Neon Serverless PostgreSQL          │ │  BullMQ Job Queues + Redis    │
-│  PgBouncer Connection Pooler         │ │  stdin/stdout Test Runner     │
-└──────────────────────────────────────┘ └───────────────────────────────┘
+```mermaid
+flowchart TD
+    UI[Browser] --> API[Next.js API adapters]
+    UI --> RT[Authenticated realtime server]
+    API --> Core[Core domain services]
+    Core --> DB[Database package / Neon PostgreSQL]
+    Core --> Q[Queue package / Redis]
+    Q --> Worker[BullMQ worker]
+    Worker --> Grade[Core grading service]
+    Grade --> DB
+    Grade --> Runner[Runner package]
+    Worker --> Runner
+    Runner --> Docker[Disposable Docker sandbox]
+    Worker --> RT
 ```
 
----
+| Location | Responsibility |
+|---|---|
+| `apps/web/src/app/api` | HTTP adapters, request authentication and response contracts |
+| `apps/web/src/lib/execution-api.js` | Shared execution authorization, validation, admission and cookies |
+| `apps/web/server.js`, `src/lib/realtime.js` | Socket authentication, room authorization, trusted worker relay |
+| `apps/worker/src/workers` | Queue consumption and completion notifications |
+| `packages/core/src/modules/users` | User domain service |
+| `packages/core/src/modules/courses` | Course and department domain service |
+| `packages/core/src/modules/practicals` | Practical-access policy and transactional management |
+| `packages/core/src/modules/mapping` | Course/faculty mapping management |
+| `packages/core/src/modules/submissions` | Submission/workspace service, grading and persistence repository |
+| `packages/core/src/services` | Compatibility exports preserving existing imports |
+| `packages/database` | Neon client, migration loader and version ledger |
+| `packages/queue` | BullMQ producer and atomic Redis admission |
+| `packages/runner` | Language runtimes, Docker transport and sandbox lifecycle |
+| `database/migrations` | Baseline schema, indexes and transactional grading functions |
+| `infrastructure` | Authoritative image and Compose definitions |
 
-## 🛠️ Tech Stack & Infrastructure
+Core has no dependency on the runner package. Grading receives an executor factory
+from the worker. The runner has no database, queue, JWT or web dependency.
+Practical CRUD, deadline changes, mapping and submission-history routes are thin
+adapters. User-management mutations and course marks reporting also use domain services;
+some older course/department and selector routes still retain their original implementation.
 
-- **Framework**: Next.js 16.3.6 (Turbopack, App Router)
-- **UI & Frontend**: React 19, Monaco Editor, Lucide Icons, Vanilla CSS
-- **Database**: Neon Serverless PostgreSQL with PgBouncer Connection Pooling
-- **Database Driver**: `@neondatabase/serverless` (Stateless HTTP queries + WebSocket pooler)
-- **Real-Time Communication**: Socket.io push with short job-status fallback polling; dashboard polling uses Page Visibility awareness
-- **Queueing & Rate Limiting**: Redis + BullMQ
-- **Execution Isolation**: Docker runtime daemons (Python, C, C++, Java, Node.js)
-- **Security & Auth**: JWT (24h expiry) + bcryptjs password hashing
-- **Reporting & Export**: jsPDF + jspdf-autotable, ExcelJS, csv-parse
+## Execution and grading
 
----
+Execution requests validate language/source size and practical membership before
+admission. Jobs carry a server-generated UUID, owner and enqueue timestamp. Job
+reads require ownership; anonymous playground runs use an opaque HttpOnly cookie.
 
-## 🗄️ Database Design & PgBouncer Connection Pooling
+Capacity checks and insertion share one Redis Lua invocation. The adapter extends
+BullMQ's standard insertion script and pins BullMQ to 6.3.10. Updating that package
+requires the concurrent-producer integration test. Global capacity counts waiting,
+paused, active, delayed and prioritized jobs. Per-owner membership is cleaned
+against terminal job state on the next admission. Admission fairness is a pending
+job cap, not round-robin scheduling. The producer only creates ordinary jobs.
 
-### PgBouncer Connection Architecture
-Under high concurrent usage in serverless environments (e.g., hundreds of students submitting practicals simultaneously), persistent database connections can exhaust connection limits.
+Each execution gets a new Docker container with no network, a read-only root,
+non-root UID, dropped capabilities, CPU/memory/PID limits and private tmpfs mounts.
+The capability-free supervisor runs as root; submitted programs execute explicitly
+as UID 1000 so they cannot stop its watchdog. Containers expire independently of the worker and are removed after execution.
+Timeout/output overflow destroys the container, including detached processes.
+Docker is a host-kernel isolation boundary; use dedicated runner hosts and validate
+isolation before exposing untrusted workloads. The Docker socket belongs only to
+the trusted worker, never to the web process or job container.
 
-CodeRank implements connection pooling through Neon's native PgBouncer pooler:
+Practical grading compares outputs outside the sandbox. The grading service
+redacts hidden cases, uses enqueue time for lateness, and calls a single PostgreSQL
+function to save attempt, best grade and case results. An advisory transaction lock
+serializes changes per student/practical. A unique constraint prevents duplicate
+best grades. Job IDs provide replay protection. Reset timestamps reject older
+queued submissions after deletion. Infrastructure/database failures fail the job.
 
-```
-Serverless Function / API
-         │
-         │ (Stateless HTTP via @neondatabase/serverless)
-         ▼
-  PgBouncer Proxy (Transaction Mode Pooling)
-  ep-xxxx-pooler.us-east-1.aws.neon.tech:5432
-         │
-         │ (Active Connection Pool)
-         ▼
-  PostgreSQL Master DB (neondb)
-```
+## Compatibility and scaling limits
 
-- **Connection URL**:
-  ```env
-  DATABASE_URL=postgresql://user:password@ep-xxxx-pooler.us-east-1.aws.neon.tech/neondb?sslmode=require&pgbouncer=true&connection_limit=1
-  ```
-- **`pgbouncer=true`**: Disables prepared statement caching incompatible with transaction-mode pooling.
-- **`connection_limit=1`**: Limits connection consumption per serverless invocation.
+All 46 existing API paths and 17 page locations remain. Execution uses asynchronous
+202 responses plus protected job polling. User lists return arrays with a bounded
+`limit` (default 100, maximum 200), optional `cursor`, and `X-Next-Cursor` response
+header. Student/faculty management pages consume those cursors. The faculty mapping
+selector collects pages; it still retains all faculty options in browser memory.
 
-### Core Database Entities
+Realtime supports an opt-in shared Redis adapter. Set `REALTIME_REDIS_ENABLED=true`
+before `CLUSTER_ENABLED=true`, and set a bounded `WEB_CONCURRENCY`. All supported
+socket clients use WebSocket-only transport, so connections do not require polling
+affinity. Cross-server authorized delivery has a real Redis integration test; the
+full production Next.js cluster still requires deployment validation. Worker replicas can use separate Docker hosts, but their
+aggregate concurrency must be measured against actual host resources. No throughput
+or production-readiness claim follows from unit tests.
 
-```
- ┌──────────────┐       1:N       ┌──────────────────┐
- │    users     ├─────────────────►  activity_logs   │
- └──────┬───────┘                 └──────────────────┘
-        │
-        │ 1:N
-        ▼
- ┌──────────────┐       N:M       ┌──────────────────┐
- │course_faculty◄─────────────────►     courses      │
- └──────────────┘ (is_co_coord)   └────────┬─────────┘
-                                           │
-                                           │ 1:N
-                                           ▼
- ┌───────────────────────────┐    1:N     ┌──────────────────┐
- │  practical_test_cases     ◄────────────┤    practicals    │
- └───────────────────────────┘            └────────┬─────────┘
-                                                   │
-                                                   │ 1:N
-                                                   ▼
- ┌───────────────────────────┐    1:N     ┌───────────────────────┐
- │ practical_submission_cases◄────────────┤ practical_submissions │
- └───────────────────────────┘            └───────────────────────┘
-```
+Practical/mapping mutations and their audit entries commit together through
+migration 003. Graded cases are immutable; metadata edits may retain identical
+cases, and deletion archives the practical to preserve grading history. Concurrent
+remapping and grading are coordinated through row locks.
 
----
+Faculty submission pages use opaque keyset cursors for every supported sort.
+Timestamp cursors retain PostgreSQL precision. The faculty table navigates pages;
+small practical selectors collect bounded pages. C and JavaScript function harnesses
+support all ten static problems and compare returned values outside the sandbox.
 
-## ⚡ Real-Time Sync & 15-Second Polling Architecture
+User mutations and faculty reassignment share a transactional management lock.
+Course matrices page both axes and use a single authorized SQL snapshot.
+Migration 004 bridges the deployed missing `updated_at` column.
 
-To ensure 100% data reliability even if WebSocket disconnects or network drops occur in lab environments, CodeRank implements a **hybrid real-time sync model**:
+Course and department mutations now commit with audits through migration 005.
+Course deletion rejects existing practicals; department deletion rejects referenced
+users. Migration 006 checks current faculty authority and resets grades atomically.
+Selector collections page at 100 by default, with a maximum of 500.
 
-```
-           ┌────────────────────────────────────────┐
-           │        Dashboard (Client Hook)         │
-           └──────┬──────────────────────────┬──────┘
-                  │                          │
-           Socket.io Event            usePolling Hook (15s)
-                  │                          │
-                  ▼                          ▼
-          Instant Push Update        Periodic Catch-up Poll
-                  │                          │
-                  └───────────┬──────────────┘
-                              ▼
-                   Live UI State Updated
-```
+HTTP authentication checks current database status, role and session. Password
+changes atomically rotate the session and return a replacement JWT. Realtime
+connections revalidate identity and room access periodically, enforce token expiry,
+and cap subscriptions at 64. Revocation latency includes the revalidation interval
+and database lookup duration.
 
-1. **Immediate Socket Push**:
-   - `practical_added` / `practical_updated` / `practical_deleted` broadcast to `course_{courseId}` rooms.
-   - `new_submission` / `new_submission_marks` broadcast to `practical_{practicalId}` and `course_{courseId}` rooms.
-2. **15-Second Polling (`usePolling`)**:
-   - Polling interval set to 15,000ms across Admin, Faculty, and Student modules.
-   - Utilizes Page Visibility API (`document.visibilityState`) to pause polling when tabs are backgrounded, eliminating wasted network requests.
+Workers publish short-lived readiness leases after Docker/image checks. Health
+requires a healthy execution worker. Shutdown bounds both queue pause and job drain;
+owner-index cleanup removes finished jobs without expiring pending admission slots.
 
-### Execution completion delivery
+Remaining work includes legacy directory retirement after deployment parity,
+retention policies, and host-level Docker/production-cluster/load validation.
 
-Code runs use a separate low-latency path: the worker emits `worker_job_complete`
-over Socket.IO as soon as BullMQ completes a job. If that socket delivery is
-unavailable, the coding workspace polls `/api/jobs/:jobId` after 250 ms, then
-backs off to 500 ms and a maximum of 1 second until it resolves. This keeps a
-socket failure from adding the previous fixed 1.5 second display delay without
-turning a large socket outage into permanent high-frequency polling.
+Database readiness requires the complete bundled migration ledger/checksums, not
+only a responsive SQL connection. A read-only check reports missing/pending/changed
+schemas as degraded. `db:manifest` regenerates metadata for new migrations, and
+CI verifies it against the SQL files. No schema writes happen on a health request.
 
----
-
-## 🚀 Execution Capacity and Scaling
-
-The queue accepts requests independently of sandbox capacity. On the calibrated
-local host, `MAX_CONCURRENT_JOBS=8` is the execution limit and `MAX_QUEUE_SIZE=500`
-is the admission buffer. This supports at least 50 simultaneous users without
-starting 50 competing Docker processes.
-
-- **Do not set worker concurrency to active-user count.** Code execution is
-  CPU-bound; higher concurrency increased queueing/CPU contention without
-  increasing throughput in local tests.
-- **Runner isolation:** each invocation uses a unique execution artifact name.
-  Source builds may remain content-addressed and cached, but inputs, outputs,
-  and errors are never shared between same-source jobs.
-- **Interpreted playground fast path:** Python and JavaScript source, input,
-  execution, and cleanup happen in one `docker exec` call instead of three.
-- **Horizontal scale:** for more sustained throughput, run more worker
-  processes/hosts and add matching sandbox-daemon replicas. All workers share
-  Redis; capacity then scales with the number of daemon CPU allocations.
-- **Observability:** track BullMQ waiting/active counts, completion latency,
-  worker failures, Docker CPU/memory, and Redis memory/evictions. Redis uses
-  `noeviction` so a full queue fails explicitly instead of silently dropping
-  jobs.
-
-### Runner isolation and graceful shutdown
-
-Workers consume the BullMQ queue concurrently up to `MAX_CONCURRENT_JOBS`.
-On `SIGTERM` or `SIGINT`, they pause queue intake, wait for active processors to
-finish, then close their Redis connections; `SHUTDOWN_GRACE_MS` supplies a
-bounded fail-safe deadline. Runner daemons use Docker network isolation,
-non-root execution, a read-only root filesystem, dropped capabilities,
-`no-new-privileges`, PID limits, CPU/memory limits, and tmpfs workspaces.
-The playground executor collects wall time plus `/usr/bin/time` CPU and peak
-RSS metrics from the process it started.
-
----
-
-## 🔒 Role-Based Access Control (RBAC) & Auth Flow
-
-```
-┌────────────────────────────────────────────────────────┐
-│                   User Login (/login)                  │
-│       POST /api/auth/login { email, password }         │
-└──────────────────────────┬─────────────────────────────┘
-                           │
-                           ▼
-┌────────────────────────────────────────────────────────┐
-│                  Authentication Flow                   │
-│   1. Validate user in PostgreSQL                       │
-│   2. Compare bcrypt hash (salt rounds: 10)             │
-│   3. Generate signed JWT token (24h validity)          │
-└──────────────────────────┬─────────────────────────────┘
-                           │
-             ┌─────────────┴─────────────┐
-             ▼                           ▼
-      Admin Role                  Faculty / Student
-┌─────────────────────────┐ ┌─────────────────────────┐
-│ /admin/* routes         │ │ /faculty/* or /student/* │
-│ useAdminAuth middleware │ │ Token verification hook │
-└─────────────────────────┘ └─────────────────────────┘
-```
-
----
-
-## 📁 Directory & Component Layout
-
-```
-CodeRank/
-├── apps/
-│   ├── web/                                # Next.js + custom Socket.IO server
-│   │   └── src/app/api/                    # HTTP API routes
-│   └── worker/                             # BullMQ execution and system workers
-│       └── src/execution/runners/          # Docker sandbox execution paths
-├── packages/core/                          # Shared DB, queue, auth and service code
-├── infrastructure/                         # Docker Compose and service configuration
-├── load-tests/                             # k6 regression/load benchmarks
-├── .env.example                            # Deployment configuration template
-├── README.md
-└── ARCHITECTURE.md
-```
+Real Redis recovery tests now kill worker child processes during processing and
+verify stalled redelivery, quota retention until terminal state, exhausted-stall
+failure and graceful intake pause/drain. These tests do not replace Docker crash
+and orphan-container validation.

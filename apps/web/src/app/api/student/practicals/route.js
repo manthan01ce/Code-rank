@@ -1,12 +1,12 @@
 import { NextResponse } from 'next/server';
 import sql from '@/lib/db';
-import { getUserFromRequest } from '@/lib/auth';
+import { authenticateRequest } from '@coderank/core/security/active-actor';
 
 export const dynamic = 'force-dynamic';
 
 export async function GET(request) {
   try {
-    const user = getUserFromRequest(request);
+    const user = await authenticateRequest(request);
     if (!user || user.role !== 'student') {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
@@ -80,6 +80,7 @@ export async function GET(request) {
 
     return NextResponse.json(practicals);
   } catch (error) {
+    if (error.status) return NextResponse.json({ error: error.message }, { status: error.status });
     console.error('Fetch student practicals error:', error);
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
   }

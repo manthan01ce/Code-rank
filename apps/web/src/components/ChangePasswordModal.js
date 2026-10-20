@@ -20,8 +20,8 @@ export default function ChangePasswordModal({ isOpen, onClose }) {
       return;
     }
 
-    if (newPassword.length < 6) {
-      setMessage({ type: 'error', text: 'New password must be at least 6 characters long' });
+    if (newPassword.length < 8) {
+      setMessage({ type: 'error', text: 'New password must be at least 8 characters long' });
       return;
     }
 
@@ -39,6 +39,12 @@ export default function ChangePasswordModal({ isOpen, onClose }) {
 
       const data = await res.json();
       if (res.ok) {
+        if (data.token) {
+          localStorage.setItem('token', data.token);
+          // Recreate shared realtime connections with the rotated session.
+          window.location.reload();
+          return;
+        }
         setMessage({ type: 'success', text: 'Password updated successfully!' });
         setTimeout(() => {
           onClose();

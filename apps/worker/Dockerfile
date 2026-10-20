@@ -1,16 +1,9 @@
-FROM node:20-alpine
-
+FROM node:24-alpine
+RUN apk add --no-cache docker-cli
 WORKDIR /app
-
-# Copy root workspace configurations
-COPY package.json turbo.json ./
-COPY packages/core ./packages/core
-COPY packages/config ./packages/config
+COPY package.json package-lock.json turbo.json ./
+COPY packages ./packages
 COPY apps/worker ./apps/worker
-
-# Install dependencies
-RUN npm install --workspace=@coderank/core --workspace=@coderank/worker
-
+RUN npm ci --workspace=@coderank/core --workspace=@coderank/worker --include-workspace-root --omit=dev --no-audit --no-fund
 WORKDIR /app/apps/worker
-
 CMD ["node", "src/index.js"]

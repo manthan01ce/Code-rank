@@ -1,4 +1,5 @@
 'use client';
+import { fetchCollection } from '@/lib/fetch-collection';
 
 import { useRouter } from 'next/navigation';
 import { useEffect, useState, useCallback } from 'react';
@@ -69,13 +70,10 @@ export default function StudentDashboard() {
           
           const sem = data.user?.extra_info?.semester;
           if (sem) {
-            const coursesRes = await fetch(`/api/courses?semester=${sem}`, {
+            const coursesData = await fetchCollection(`/api/courses?semester=${sem}`, {
               headers: { 'Authorization': `Bearer ${token}` }
             });
-            if (coursesRes.ok) {
-              const coursesData = await coursesRes.json();
-              setCourses(coursesData);
-            }
+            setCourses(coursesData);
           }
 
           // Fetch student's assigned practicals

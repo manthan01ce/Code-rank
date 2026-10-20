@@ -1,84 +1,16 @@
-import cluster from 'cluster';
-import os from 'os';
-import { logger } from '@coderank/core/utils/logger';
-
-// `npm run start` is the production entrypoint on every platform. Set this
-// before importing server.js so Next resolves the production build correctly.
+import '../../packages/core/src/config/env.js';
+import cluster from 'node:cluster';
+import { availableParallelism } from 'node:os';
 process.env.NODE_ENV ||= 'production';
-
-const numCPUs = os.cpus().length;
-// Socket.IO rooms are process-local. Do not create a cluster until a shared
-// adapter and sticky-session routing are configured, otherwise completion
-// events can be delivered to a different process than the connected client.
-const requestedCluster = process.env.CLUSTER_ENABLED === 'true';
-const socketAdapterConfigured = process.env.SOCKET_IO_ADAPTER === 'redis';
-const CLUSTER_ENABLED = requestedCluster && socketAdapterConfigured;
-const isDev = process.env.NODE_ENV !== 'production';
-
-// In development, only enable clustering if explicitly requested
-if (!CLUSTER_ENABLED) {
-  logger.info('Running in single-process mode', { 
-    reason: requestedCluster
-      ? 'Socket.IO Redis adapter/sticky-session routing is not configured'
-      : 'CLUSTER_ENABLED not set to true',
-    mode: isDev ? 'development' : 'production'
-  });
-  
-  // Import and run server directly
-  await import('./server.js');
-} else if (cluster.isPrimary) {
-  // Primary process: fork workers
-  logger.info('Starting CodeRank cluster', { 
-    workers: numCPUs, 
-    pid: process.pid 
-  });
-
-  // Fork workers
-  for (let i = 0; i < numCPUs; i++) {
-    cluster.fork();
-  }
-
-  // Handle worker exits and restart them
-  cluster.on('exit', (worker, code, signal) => {
-    logger.warn('Worker process died, restarting', { 
-      workerId: worker.id, 
-      workerPid: worker.process.pid,
-      code, 
-      signal 
-    });
-    
-    // Fork a new worker to replace the dead one
-    cluster.fork();
-  });
-
-  // Log when workers come online
-  cluster.on('online', (worker) => {
-    logger.info('Worker started', { 
-      workerId: worker.id, 
-      workerPid: worker.process.pid 
-    });
-  });
-
-  // Handle graceful shutdown
-  process.on('SIGTERM', () => {
-    logger.info('SIGTERM received, shutting down gracefully');
-    
-    for (const id in cluster.workers) {
-      cluster.workers[id].kill();
-    }
-  });
-
-  process.on('SIGINT', () => {
-    logger.info('SIGINT received, shutting down gracefully');
-    
-    for (const id in cluster.workers) {
-      cluster.workers[id].kill();
-    }
-    
-    process.exit(0);
-  });
-
-} else {
-  // Worker process: run the server
-  await import('./server.js');
-}
+const enabled=process.env.CLUSTER_ENABLED==='true';
+if(enabled&&process.env.REALTIME_REDIS_ENABLED!=='true')throw new Error('Cluster mode requires REALTIME_REDIS_ENABLED=true');
+const concurrency=Number(process.env.WEB_CONCURRENCY||Math.min(availableParallelism(),4));
+if(!Number.isSafeInteger(concurrency)||concurrency<1||concurrency>16)throw new Error('WEB_CONCURRENCY must be between 1 and 16');
+if(enabled&&cluster.isPrimary){
+ let stopping=false;
+ for(let i=0;i<concurrency;i++)cluster.fork();
+ let lastRestart=0,backoff=250;
+ cluster.on('exit',()=>{if(stopping)return;const now=Date.now();backoff=now-lastRestart<10000?Math.min(backoff*2,5000):250;lastRestart=now;setTimeout(()=>{if(!stopping)cluster.fork();},backoff);});
+ const stop=()=>{if(stopping)return;stopping=true;for(const worker of Object.values(cluster.workers))worker?.process.kill('SIGTERM');const timer=setTimeout(()=>{for(const worker of Object.values(cluster.workers))worker?.process.kill('SIGKILL');process.exit(1);},15000);timer.unref();};
+ process.on('SIGTERM',stop);process.on('SIGINT',stop);
+}else await import('./server.js');

@@ -1,5 +1,5 @@
+import { authenticateRequest } from '@coderank/core/security/active-actor';
 import { NextResponse } from 'next/server';
-import { getUserFromRequest } from '@coderank/core/utils/auth';
 import { SubmissionService } from '@coderank/core/services/SubmissionService';
 import os from 'os';
 
@@ -102,11 +102,7 @@ async function refreshDetailedHealth() {
 
 export async function GET(request) {
   try {
-    const user = getUserFromRequest(request);
-    if (!user || user.role !== 'admin') {
-      return NextResponse.json({ error: 'Unauthorized. Admin access required.' }, { status: 401 });
-    }
-
+    if ((await authenticateRequest(request))?.role !== 'admin') return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     const now = Date.now();
     const cacheAge = now - detailedHealthCacheTime;
 
@@ -114,7 +110,7 @@ export async function GET(request) {
     if (detailedHealthCache && cacheAge < DETAILED_HEALTH_CACHE_TTL) {
       const headers = new Headers({
         'X-Cache': 'HIT',
-        'Cache-Control': 's-maxage=10, stale-while-revalidate=20'
+        'Cache-Control': 'no-store'
       });
       return NextResponse.json(detailedHealthCache, { headers });
     }
@@ -123,7 +119,7 @@ export async function GET(request) {
     if (detailedHealthCache && cacheAge < DETAILED_HEALTH_CACHE_TTL * 2) {
       const headers = new Headers({
         'X-Cache': 'STALE',
-        'Cache-Control': 's-maxage=10, stale-while-revalidate=20'
+        'Cache-Control': 'no-store'
       });
       refreshDetailedHealth(); // Fire and forget background refresh
       return NextResponse.json(detailedHealthCache, { headers });
@@ -133,11 +129,12 @@ export async function GET(request) {
     const report = await refreshDetailedHealth();
     const headers = new Headers({
       'X-Cache': 'MISS',
-      'Cache-Control': 's-maxage=10, stale-while-revalidate=20'
+      'Cache-Control': 'no-store'
     });
     return NextResponse.json(report, { headers });
 
   } catch (error) {
+    if (error.status) return NextResponse.json({ error: error.message }, { status: error.status });
     console.error('[/api/health/detailed] Error:', error);
     return NextResponse.json({
       timestamp: new Date().toISOString(),

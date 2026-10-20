@@ -1,5 +1,6 @@
 'use client';
 
+import { waitForJob } from '@/lib/wait-for-job';
 import { useState, useEffect, useRef, useCallback } from 'react';
 import { Panel, Group as PanelGroup, Separator as PanelResizeHandle } from 'react-resizable-panels';
 import PythonEditor from './PythonEditor';
@@ -66,7 +67,12 @@ export default function PythonDashboard() {
         body: JSON.stringify({ code: currentCode, input: customInput }),
       });
 
-      const data = await response.json();
+      let data = await response.json();
+      if (!response.ok) throw new Error(data.error || 'Execution request failed');
+      if (data.jobId) {
+        data = await waitForJob({ jobId: data.jobId });
+        data = { ...data, status: data.success ? 'success' : 'runtime_error', timeMs: Math.round(data.runtimeMs || 0) };
+      }
       setResult(data);
     } catch (error) {
       setResult({
