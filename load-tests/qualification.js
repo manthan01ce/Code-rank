@@ -82,7 +82,7 @@ function execute(f, submit) {
       if (data.processedOn && data.enqueuedAt) queueWait.add(data.processedOn - data.enqueuedAt);
       if (data.finishedOn && data.processedOn) workerTime.add(data.finishedOn - data.processedOn);
       return check(data, {
-        'correct verdict': d => submit ? d.result?.status === f.expectedStatus : ['accepted', 'wrong_answer'].includes(d.result?.status),
+        'correct verdict': d => d.result?.status === f.expectedStatus,
         'all cases pass': d => d.result?.cases?.length > 0 && d.result.cases.every(c => c.passed),
         'submission persisted': d => !submit || !!d.result?.submissionId,
       });
