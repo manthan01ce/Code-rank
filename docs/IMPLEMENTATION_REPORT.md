@@ -287,3 +287,20 @@ schema and catalog API. Removed the unsupported status column and kept the
 original browser assertions. A further native-transport regression verifies that
 failed rollback discards the unsafe connection while preserving the original
 query failure. The local suite now passes 142 tests without skips/TODOs/failures.
+
+## Verified strict CI result
+
+Commit 4d2526e passed GitHub Actions run
+[39365103297](https://github.com/manthan01ce/Code-rank/actions/runs/39365103297).
+All 142 unit tests, seven Redis/PostgreSQL integration tests, ten Docker sandbox
+tests and four real Chromium role workflows passed with no skips or TODOs.
+Critical lint passed with zero warnings. Compose validation, sandbox and worker
+image builds, production Next build, guest execution and the authenticated
+two-worker cluster all passed. Both Vercel commit checks also succeeded.
+
+The earlier pending browser/cluster gate is closed by this run. It also verified
+real migrations in a disposable database, Docker grading with persisted attempt
+and best-grade rows, hidden-case redaction, password/session rotation and denied
+role mutations. CI preserves TAP, browser JSON/HTML, traces and stack diagnostics.
+Production migration, host readiness, k6 capacity and backup/orphan-recovery
+validation remain operational work; no public database was migrated.
