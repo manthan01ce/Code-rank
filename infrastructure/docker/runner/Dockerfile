@@ -1,5 +1,6 @@
-FROM alpine:3.19
+FROM alpine:3.23
 
+# Alpine 3.23 provides the GNU time package used for runner resource metrics.
 # Install base shell, compilers, and runtimes:
 # - bash & coreutils (for reliable scripting & base64 piping)
 # - gcc, g++, make, libc-dev (for C and C++)

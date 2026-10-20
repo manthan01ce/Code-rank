@@ -1,7 +1,7 @@
 # Architecture repair implementation report
 
 Branch: `fix/architecture-hardening`. Baseline: `f476fdc`.
-Changes are maintained on the local branch and remain unpushed. No migration has been applied to the application schema.
+The repair branch is published to GitHub. Historical publication blockers below were resolved on 2026-10-20. No migration has been applied to the application schema.
 
 ## Implemented across the repair increments
 
@@ -233,3 +233,13 @@ Final verification for this stage: 125 local tests passed with no skips/failures
 six real Redis integration tests passed; focused health-route lint had zero
 errors/warnings. Lockfile dry-run, workflow registration and whitespace checks
 passed. The root test command now has a 30-second test timeout.
+
+## GitHub publication and first full CI run
+
+Repository authorization was restored and the verified tree was published as
+72384e4 on fix/architecture-hardening. GitHub Actions run 39362785925 passed all
+125 regression tests and seven real Redis/PostgreSQL integration tests. The
+first sandbox image build failed because Alpine 3.19 does not provide the GNU
+time package requested by the Dockerfile. Updated the sandbox base to Alpine
+3.23, whose package repository provides GNU time; the Docker execution, worker
+image, production build and full-stack gates remain mandatory on the rerun.
