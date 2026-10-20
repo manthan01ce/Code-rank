@@ -76,6 +76,7 @@ export async function runDatabaseOperations({ databaseUrl, restoreAdminUrl, targ
   for (const pool of [source, admin]) pool.on('error', () => {});
   const cloneName = `coderank_restore_${randomBytes(12).toString('hex')}`;
   const cloneUrl = new URL(adminUrl); cloneUrl.pathname = '/' + cloneName;
+  report.restoreTarget = databaseIdentity(cloneUrl.href);
   let connection, clone, created = false, snapshot = false, stage = 'preflight';
   try {
     connection = await source.connect();

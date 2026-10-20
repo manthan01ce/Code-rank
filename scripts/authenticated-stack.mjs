@@ -15,7 +15,10 @@ import { once } from "node:events";
 import pg from "pg";
 import { hashPassword } from "../packages/core/src/utils/auth.js";
 import { createPostgresClient } from "../packages/database/src/postgres.js";
-import { migrate } from "../packages/database/src/migrations.js";
+import {
+  migrate,
+  loadMigrations,
+} from "../packages/database/src/migrations.js";
 import { checkDeployment } from "./lib/deployment-readiness.mjs";
 
 import { capacityOptions, runCapacity } from "../load-tests/capacity.mjs";
@@ -103,10 +106,10 @@ async function request(path, { token, body, method = "GET" } = {}) {
     ...(body ? { body: JSON.stringify(body) } : {}),
   });
 }
-async function login(email) {
+async function login(email, loginPassword = password) {
   const response = await request("/api/auth/login", {
     method: "POST",
-    body: { email, password },
+    body: { email, password: loginPassword },
   });
   assert.equal(response.status, 200, `Login ${email}`);
   return (await response.json()).token;
@@ -179,6 +182,20 @@ try {
   mkdirSync(`${root}/test-results/authenticated`, { recursive: true });
   await admin.query(`CREATE DATABASE ${database}`);
   created = true;
+  const initialMigration = await runDatabaseOperations({
+    databaseUrl: appUrl.href,
+    restoreAdminUrl: url.href,
+    target: databaseIdentity(appUrl.href),
+    output: `${root}/test-results/authenticated/database-migration`,
+    mode: "migrate",
+    maintenanceConfirmed: true,
+  });
+  assert.equal(
+    initialMigration.appliedMigrations.length,
+    (await loadMigrations(new URL("../database/migrations/", import.meta.url)))
+      .length,
+    "Fresh database must receive every migration after verified backup/rehearsal",
+  );
   sql = createPostgresClient(appUrl.href, { poolSize: 2, timeoutMs: 10000 });
   const adapter = {
     query: sql.query,
@@ -342,6 +359,10 @@ try {
     )[0].n,
     0,
   );
+  // Browser logins rotate the student's session. Use a freshly authenticated
+  // session for recovery instead of the now-revoked pre-browser JWT.
+  token = await login(env.E2E_STUDENT_EMAIL, newPassword);
+
   // Crash one web process and require the cluster to replace it while the
   // same rotated session remains valid through the surviving process.
   const recovery = {};
