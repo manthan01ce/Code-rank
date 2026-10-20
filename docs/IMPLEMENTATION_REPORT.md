@@ -304,3 +304,23 @@ and best-grade rows, hidden-case redaction, password/session rotation and denied
 role mutations. CI preserves TAP, browser JSON/HTML, traces and stack diagnostics.
 Production migration, host readiness, k6 capacity and backup/orphan-recovery
 validation remain operational work; no public database was migrated.
+
+## Deployment operations and end-to-end recovery stage
+
+Implemented explicit-target database backup/restore/migration orchestration with
+private evidence, direct-connection validation, snapshot-consistent custom archive,
+SHA256/TOC checks, isolated transactional restore, row-count comparison and migration
+rehearsal before optional source migration. No public database has been modified.
+Added a bounded portable capacity gate with strict readiness, real executions,
+exact output and latency/throughput thresholds; rate limits remain enabled.
+Added versioned deployment-scoped sandbox labels, bounded worker orphan cleanup,
+dry-run recovery CLI and a Docker owner-crash/frozen-supervisor recovery drill.
+
+The authenticated stack now replaces a killed web process, retains the rotated
+session, restarts a killed execution worker and completes the same job queued while
+it was absent, verifies grade/attempt persistence, runs measured capacity, and
+backs up/restores/rehearses migrations on its resulting disposable database.
+Operational commands and production prerequisites are in DEPLOYMENT_OPERATIONS.md.
+Actual new full-stack/Docker/backup verification is pending the next CI run; local
+regression coverage passes. Production requires an identified deployment origin,
+direct database connection, maintenance access and persistent private backup storage.

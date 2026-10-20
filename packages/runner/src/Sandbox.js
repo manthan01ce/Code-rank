@@ -1,5 +1,7 @@
 import { randomUUID } from 'node:crypto';
 import { dockerCommand } from './docker.js';
+import { SANDBOX_OWNER, SANDBOX_VERSION, SANDBOX_PREFIX, sandboxScope } from './sandbox-metadata.js';
+export { reapExpiredSandboxes, startSandboxReaper } from './reaper.js';
 
 export function jobLifetime(value = process.env.JOB_TIMEOUT_MS) {
   const duration = Number(value ?? 30000);
@@ -7,17 +9,25 @@ export function jobLifetime(value = process.env.JOB_TIMEOUT_MS) {
 }
 
 export class Sandbox {
-  constructor(runDocker = dockerCommand) {
+  constructor(runDocker = dockerCommand, { scope = sandboxScope() } = {}) {
     this.runDocker = runDocker;
     this.name = `coderank-job-${randomUUID()}`;
     this.lifetime = jobLifetime();
     this.deadline = Date.now() + this.lifetime;
     this.destroyed = false;
+    this.scope = sandboxScope(scope);
   }
   async start() {
     if (this.destroyed) throw new Error('Sandbox is closed');
+    const createdAt = Date.now();
     if (!this.starting) this.starting = this.runDocker([
       'run', '-d', '--rm', '--name', this.name, '--label', 'coderank.sandbox=true',
+      '--label', `${SANDBOX_PREFIX}version=${SANDBOX_VERSION}`,
+      '--label', `${SANDBOX_PREFIX}scope=${this.scope}`,
+      '--label', `${SANDBOX_PREFIX}owner=${SANDBOX_OWNER}`,
+      '--label', `${SANDBOX_PREFIX}created_at=${createdAt}`,
+      '--label', `${SANDBOX_PREFIX}expires_at=${createdAt + Math.ceil(this.lifetime / 1000) * 1000}`,
+      '--label', `${SANDBOX_PREFIX}lifetime_ms=${this.lifetime}`,
       '--network', 'none', '--read-only', '--cap-drop', 'ALL',
       '--security-opt', 'no-new-privileges:true', '--user', '0:0', '--init',
       '--pids-limit', '64', '--memory', '512m', '--memory-swap', '512m', '--cpus', '1',

@@ -130,3 +130,9 @@ for a standard PostgreSQL TCP connection; `DB_POOL_SIZE` bounds connections per
 process (1–50), so account for every web and worker process when sizing the
 server's connection budget. Query timeouts use `DB_QUERY_TIMEOUT_MS` (1–120000 ms
 for this transport). Changing the driver does not apply migrations.
+
+Deployment backup/migration rehearsal, portable measured capacity, scoped orphan
+cleanup and recovery drills are described in [DEPLOYMENT_OPERATIONS.md](docs/DEPLOYMENT_OPERATIONS.md).
+Use `db:operations`, `test:capacity` and `runner:reap` with explicit targets. The
+strict authenticated CI stack also verifies real process recovery and database
+backup/restore before reporting success.

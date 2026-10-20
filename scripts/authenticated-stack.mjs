@@ -3,7 +3,13 @@
 import assert from "node:assert/strict";
 import { spawn, spawnSync, execFileSync } from "node:child_process";
 import { randomBytes } from "node:crypto";
-import { mkdirSync, openSync, closeSync, readFileSync } from "node:fs";
+import {
+  mkdirSync,
+  openSync,
+  closeSync,
+  readFileSync,
+  writeFileSync,
+} from "node:fs";
 import { fileURLToPath } from "node:url";
 import { once } from "node:events";
 import pg from "pg";
@@ -11,6 +17,12 @@ import { hashPassword } from "../packages/core/src/utils/auth.js";
 import { createPostgresClient } from "../packages/database/src/postgres.js";
 import { migrate } from "../packages/database/src/migrations.js";
 import { checkDeployment } from "./lib/deployment-readiness.mjs";
+
+import { capacityOptions, runCapacity } from "../load-tests/capacity.mjs";
+import {
+  databaseIdentity,
+  runDatabaseOperations,
+} from "./lib/database-ops.mjs";
 
 const root = fileURLToPath(new URL("../", import.meta.url));
 const url = new URL(process.env.TEST_DATABASE_URL || "invalid:");
@@ -77,6 +89,7 @@ function start(name, script) {
     child.startupError = error;
   });
   children.push(child);
+  return child;
 }
 async function request(path, { token, body, method = "GET" } = {}) {
   return fetch(base + path, {
@@ -102,7 +115,11 @@ async function ready() {
   const deadline = Date.now() + 90000;
   while (Date.now() < deadline) {
     for (const child of children)
-      if (child.startupError || child.exitCode !== null)
+      if (
+        child.startupError ||
+        child.exitCode !== null ||
+        child.signalCode !== null
+      )
         throw Error("Cluster/worker exited; inspect authenticated logs");
     try {
       await checkDeployment(base);
@@ -136,7 +153,7 @@ async function waitJob(id, token) {
   throw Error("Authenticated submission completion timed out");
 }
 async function stop(child) {
-  if (child.exitCode !== null) return;
+  if (child.exitCode !== null || child.signalCode !== null) return;
   const exited = once(child, "exit");
   process.kill(-child.pid, "SIGTERM");
   let timer;
@@ -236,7 +253,7 @@ try {
       ],
     );
   start("web", "apps/web/cluster.js");
-  start("worker", "apps/worker/src/index.js");
+  const executionWorker = start("worker", "apps/worker/src/index.js");
   await ready();
   const clusterLog = readFileSync(
     `${root}/test-results/authenticated/web.log`,
@@ -324,6 +341,120 @@ try {
       )
     )[0].n,
     0,
+  );
+  // Crash one web process and require the cluster to replace it while the
+  // same rotated session remains valid through the surviving process.
+  const recovery = {};
+  const beforeWeb = Date.now();
+  const oldPids = new Set(
+    [
+      ...readFileSync(
+        `${root}/test-results/authenticated/web.log`,
+        "utf8",
+      ).matchAll(/Cluster worker listening pid=(\d+)/g),
+    ].map((match) => Number(match[1])),
+  );
+  process.kill([...oldPids][0], "SIGKILL");
+  const webDeadline = Date.now() + 30000;
+  let replaced = false;
+  while (Date.now() < webDeadline) {
+    const pids = [
+      ...readFileSync(
+        `${root}/test-results/authenticated/web.log`,
+        "utf8",
+      ).matchAll(/Cluster worker listening pid=(\d+)/g),
+    ].map((match) => Number(match[1]));
+    if (pids.some((pid) => !oldPids.has(pid))) {
+      replaced = true;
+      break;
+    }
+    await pause(100);
+  }
+  assert.ok(replaced, "Cluster must replace a crashed web worker");
+  assert.equal((await request("/api/auth/profile", { token })).status, 200);
+  recovery.webReplacementMs = Date.now() - beforeWeb;
+
+  // Stop the execution process, enqueue a real grade while it is offline,
+  // then prove the same durable job is consumed after restarting it.
+  const workerExited = once(executionWorker, "exit", {
+    signal: AbortSignal.timeout(10000),
+  });
+  process.kill(-executionWorker.pid, "SIGKILL");
+  await workerExited;
+  children.splice(children.indexOf(executionWorker), 1);
+  const pending = await request("/api/student/practicals/1/submit", {
+    method: "POST",
+    token,
+    body: { language: "python", code: "print('ok')" },
+  });
+  assert.equal(pending.status, 202);
+  const pendingId = (await pending.json()).jobId;
+  const waiting = await request(`/api/jobs/${pendingId}`, { token });
+  assert.equal(waiting.status, 200);
+  assert.equal((await waiting.json()).status, "waiting");
+  const beforeWorker = Date.now();
+  start("worker-restarted", "apps/worker/src/index.js");
+  const recovered = await waitJob(pendingId, token);
+  assert.equal(recovered.result.status, "accepted");
+  assert.equal(
+    (
+      await sql.query(
+        "SELECT count(*)::int n FROM submission_attempts WHERE job_id=$1",
+        [pendingId],
+      )
+    )[0].n,
+    1,
+  );
+  assert.equal(
+    (
+      await sql.query(
+        "SELECT count(*)::int n FROM practical_submissions WHERE student_id=3 AND practical_id=1",
+      )
+    )[0].n,
+    1,
+  );
+  recovery.executionRecoveryMs = Date.now() - beforeWorker;
+  await checkDeployment(base);
+  writeFileSync(
+    `${root}/test-results/authenticated/process-recovery.json`,
+    JSON.stringify(recovery, null, 2),
+  );
+
+  const capacity = await runCapacity(
+    capacityOptions({
+      BASE_URL: base,
+      JWT_TOKEN: token,
+      CAPACITY_JOBS: "12",
+      CAPACITY_CONCURRENCY: "2",
+      CAPACITY_P95_MS: "15000",
+      CAPACITY_MIN_RPS: "0.1",
+      CAPACITY_DURATION_MS: "60000",
+    }),
+  );
+  writeFileSync(
+    `${root}/test-results/authenticated/capacity.json`,
+    JSON.stringify(capacity, null, 2),
+  );
+  assert.equal(
+    capacity.passed,
+    true,
+    "Measured execution capacity gate must pass all thresholds",
+  );
+  console.log(
+    `Capacity passed: ${capacity.completed} jobs, ${capacity.achievedRps.toFixed(2)} jobs/s, p95 ${capacity.latencyMs.p95.toFixed(0)} ms`,
+  );
+
+  const databaseRecovery = await runDatabaseOperations({
+    databaseUrl: appUrl.href,
+    restoreAdminUrl: url.href,
+    target: databaseIdentity(appUrl.href),
+    output: `${root}/test-results/authenticated/database-recovery`,
+    mode: "migrate",
+    maintenanceConfirmed: true,
+  });
+  assert.ok(databaseRecovery);
+  console.log(
+    "Recovery passed: web replacement, queued grading after execution-worker crash, and verified database backup/restore rehearsal.",
   );
   console.log(
     "Authenticated cluster passed: real migrations, grading persistence, session rotation and browser role/privacy workflows.",
