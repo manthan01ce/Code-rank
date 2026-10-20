@@ -114,3 +114,19 @@ recovery and production graceful-drain tests. Their deliberately shortened lease
 are test-only; the production worker lock remains tied to the job lifetime.
 Recovery can execute a job again. Transactional submission idempotency prevents
 duplicate persisted grades; it is not an exactly-once execution guarantee.
+
+Strict CI runs `npm run lint:critical`, `npm test`, `npm run test:integration` and
+`npm run test:docker`. Test modes reject skipped, TODO, empty, filtered and
+incomplete runs; TAP evidence is saved under `test-results/`.
+`test:authenticated` additionally requires Docker, Chromium installed with
+`npx playwright install --with-deps chromium`, Redis and a loopback
+`TEST_DATABASE_URL` naming a disposable `*_test` database with CREATE DATABASE
+permission. It creates/drops a separate database, runs migrations and checks a
+two-process production cluster plus admin/faculty/student browser workflows.
+It binds port 3101. Use disposable Redis infrastructure for this gate.
+
+Neon remains the default database transport. Set `DATABASE_DRIVER=postgres` only
+for a standard PostgreSQL TCP connection; `DB_POOL_SIZE` bounds connections per
+process (1–50), so account for every web and worker process when sizing the
+server's connection budget. Query timeouts use `DB_QUERY_TIMEOUT_MS` (1–120000 ms
+for this transport). Changing the driver does not apply migrations.

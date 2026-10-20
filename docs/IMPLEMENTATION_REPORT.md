@@ -243,3 +243,39 @@ first sandbox image build failed because Alpine 3.19 does not provide the GNU
 time package requested by the Dockerfile. Updated the sandbox base to Alpine
 3.23, whose package repository provides GNU time; the Docker execution, worker
 image, production build and full-stack gates remain mandatory on the rerun.
+
+## Strict CI and authenticated deployment stage
+
+The Alpine correction passed GitHub Actions run 39363093657 at commit 6596e0f:
+125 unit tests, seven real Redis/PostgreSQL integration tests, ten Docker sandbox
+tests, worker image build, production Next build and the guest execution stack.
+This supersedes the publication and Docker blockers recorded above.
+
+The next stage adds a strict TAP gate for unit, integration and Docker suites.
+It rejects failures, skips, TODOs, empty/incomplete reports, filtered test runs,
+missing test files and exceeded process/output deadlines. CI retains TAP reports
+and diagnostics, runs critical backend/runner lint with zero warnings, and uses
+no test retries. Protocol regression tests exercise these rejection paths.
+
+An explicit optional DATABASE_DRIVER=postgres transport supports bounded native
+PostgreSQL pools while keeping Neon as the default. Parameterized statements,
+transaction rollback, connection release, pool validation and definitive
+transaction completion have regression coverage. Migration commands close pools.
+
+The authenticated production-stack gate creates and migrates a disposable local
+PostgreSQL database, seeds all three roles, requires two cluster workers and a
+healthy execution worker, grades a real Docker submission, checks grade/attempt
+persistence and hidden-case redaction, rotates a password/session, and executes
+four real Chromium role/reload/privacy workflows. It rejects skipped/flaky browser
+results and checks denied mutations did not persist. Cleanup stops process groups
+and drops only the generated database. It never uses the configured Neon database.
+
+Local verification: 141 unit tests passed with no skips/TODOs/failures. The new
+real browser/cluster gate must pass GitHub CI before this stage is considered
+verified; Docker is unavailable in the local workspace.
+
+Remaining operational stages: apply reviewed migrations to the intended deployment
+with a backup/rollback procedure; execute deployment:check against that deployment;
+measure capacity with k6 at expected concurrency; verify backup restoration and
+container-orphan cleanup on the deployment host. CI fixtures do not prove these
+production operations.

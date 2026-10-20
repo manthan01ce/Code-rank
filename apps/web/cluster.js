@@ -9,6 +9,7 @@ if(!Number.isSafeInteger(concurrency)||concurrency<1||concurrency>16)throw new E
 if(enabled&&cluster.isPrimary){
  let stopping=false;
  for(let i=0;i<concurrency;i++)cluster.fork();
+ cluster.on('listening', worker => console.log(`Cluster worker listening pid=${worker.process.pid}`));
  let lastRestart=0,backoff=250;
  cluster.on('exit',()=>{if(stopping)return;const now=Date.now();backoff=now-lastRestart<10000?Math.min(backoff*2,5000):250;lastRestart=now;setTimeout(()=>{if(!stopping)cluster.fork();},backoff);});
  const stop=()=>{if(stopping)return;stopping=true;for(const worker of Object.values(cluster.workers))worker?.process.kill('SIGTERM');const timer=setTimeout(()=>{for(const worker of Object.values(cluster.workers))worker?.process.kill('SIGKILL');process.exit(1);},15000);timer.unref();};

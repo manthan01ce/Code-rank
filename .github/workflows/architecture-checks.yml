@@ -11,7 +11,7 @@ concurrency:
 jobs:
   verify:
     runs-on: ubuntu-latest
-    timeout-minutes: 20
+    timeout-minutes: 30
     services:
       redis:
         image: redis:7-alpine
@@ -36,10 +36,14 @@ jobs:
           node-version: 24
           cache: npm
       - run: npm ci
+      - run: npm run lint:critical
       - run: npm test
-      - run: node --test tests/integration/queue.test.mjs tests/integration/realtime.test.mjs tests/integration/worker-readiness.test.mjs tests/integration/worker-recovery.test.mjs tests/integration/postgres.test.mjs
+        timeout-minutes: 5
+      - run: npm run test:integration
+        timeout-minutes: 5
       - run: docker build -t coderank-base:latest -f infrastructure/docker/runner/Dockerfile .
-      - run: node --test tests/integration/sandbox.test.mjs
+      - run: npm run test:docker
+        timeout-minutes: 5
       - name: Validate authoritative Compose configuration
         run: docker compose -f infrastructure/docker-compose.yml config --quiet
       - name: Build worker deployment image
@@ -47,10 +51,16 @@ jobs:
       - run: npm run build --workspace=apps/web
       - name: Full web-to-worker execution round trip
         run: npm run test:stack
-      - name: Preserve stack diagnostics
+      - name: Install real browser
+        run: npx playwright install --with-deps chromium
+        timeout-minutes: 5
+      - name: Verify authenticated database-backed cluster and role workflows
+        run: npm run test:authenticated
+        timeout-minutes: 8
+      - name: Preserve strict test reports and stack diagnostics
         if: always()
         uses: actions/upload-artifact@v4
         with:
-          name: stack-logs
-          path: test-results/stack/
-          if-no-files-found: ignore
+          name: strict-verification-${{ github.sha }}
+          path: test-results/
+          if-no-files-found: error

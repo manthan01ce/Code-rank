@@ -75,3 +75,5 @@ coderank-frontend/
 /.harness-*/
 
 /test-results/
+
+/playwright-report/

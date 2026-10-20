@@ -1,3 +1,4 @@
+import { fileURLToPath } from 'node:url';
 import { defineConfig, globalIgnores } from 'eslint/config';
 import nextCoreWebVitals from 'eslint-config-next/core-web-vitals';
 
@@ -9,6 +10,7 @@ export default defineConfig([
     // These React Compiler diagnostics require a component-by-component
     // migration. Keep them visible without blocking existing production code.
     rules: {
+      '@next/next/no-html-link-for-pages': ['error', fileURLToPath(new URL('./src/app', import.meta.url))],
       'react-hooks/immutability': 'warn',
       'react-hooks/refs': 'warn',
       'react-hooks/set-state-in-effect': 'warn',

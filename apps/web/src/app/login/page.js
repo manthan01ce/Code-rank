@@ -167,7 +167,7 @@ export default function Login() {
         <form onSubmit={handleLogin} style={{ display: 'flex', flexDirection: 'column', gap: '14px' }}>
           <input
             type="text"
-            placeholder="Username or Email"
+            placeholder="Username or Email" aria-label="Username or Email"
             value={email}
             onChange={(e) => setEmail(e.target.value)}
             required
@@ -190,7 +190,7 @@ export default function Login() {
           <div style={{ position: 'relative' }}>
             <input
               type={showPassword ? 'text' : 'password'}
-              placeholder="Password"
+              placeholder="Password" aria-label="Password"
               value={password}
               onChange={(e) => setPassword(e.target.value)}
               required

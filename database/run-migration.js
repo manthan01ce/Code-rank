@@ -1,12 +1,11 @@
 #!/usr/bin/env node
 import '../packages/core/src/config/env.js';
-import { neon } from '@neondatabase/serverless';
+import sql, {closeDatabase} from '../packages/database/src/client.js';
 import { migrate } from '../packages/database/src/migrations.js';
 
 if (!process.env.DATABASE_URL || /YOUR_PASSWORD|your-database-id/.test(process.env.DATABASE_URL)) {
   throw new Error('Configure a real DATABASE_URL before running migrations');
 }
-const sql = neon(process.env.DATABASE_URL);
 const adapter = {
   query: (text, values) => sql.query(text, values),
   apply: migration => sql.transaction(tx => [
@@ -21,4 +20,4 @@ try {
 } catch (error) {
   console.error('Migration failed; its transaction was rolled back:', error.message);
   process.exitCode = 1;
-}
+} finally { await closeDatabase(); }

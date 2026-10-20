@@ -14,30 +14,30 @@ export default function FacultyDashboard() {
   const [courses, setCourses] = useState([]);
   const [batches, setBatches] = useState([]);
   
-  // Context selection
-  const [selectedCourse, setSelectedCourse] = useState(() => {
-    if (typeof window !== 'undefined') return localStorage.getItem('facultySelectedCourse') || '';
-    return '';
-  });
-  useEffect(() => {
-    if (typeof window !== 'undefined') localStorage.setItem('facultySelectedCourse', selectedCourse);
-  }, [selectedCourse]);
+  // Read browser preferences after the first render so server and client
+  // render the same initial dashboard. Do not overwrite storage before restore.
+  const [preferencesReady, setPreferencesReady] = useState(false);
+  const [selectedCourse, setSelectedCourse] = useState('');
   const [selectedBatch, setSelectedBatch] = useState('');
-  
-  // Active Tab
-  const [activeTab, setActiveTab] = useState(() => {
-    if (typeof window !== 'undefined') {
-      return localStorage.getItem('facultyActiveTab') || 'practicals';
-    }
-    return 'practicals';
-  });
+  const [activeTab, setActiveTab] = useState('practicals');
 
   useEffect(() => {
-    if (typeof window !== 'undefined') {
-      localStorage.setItem('facultyActiveTab', activeTab);
-    }
-  }, [activeTab]); // 'practicals', 'submissions', 'marks'
-  
+    const params = new URLSearchParams(window.location.search);
+    const course = params.get('course') || localStorage.getItem('facultySelectedCourse') || '';
+    const tab = params.get('tab') || localStorage.getItem('facultyActiveTab');
+    setSelectedCourse(/^[1-9]\d*$/.test(course) ? course : '');
+    setActiveTab(['practicals', 'submissions', 'marks'].includes(tab) ? tab : 'practicals');
+    setPreferencesReady(true);
+  }, []);
+
+  useEffect(() => {
+    if (preferencesReady) localStorage.setItem('facultySelectedCourse', selectedCourse);
+  }, [selectedCourse, preferencesReady]);
+
+  useEffect(() => {
+    if (preferencesReady) localStorage.setItem('facultyActiveTab', activeTab);
+  }, [activeTab, preferencesReady]);
+
   // Practicals state
   const [practicals, setPracticals] = useState([]);
   const [loadingPracticals, setLoadingPracticals] = useState(false);
@@ -153,24 +153,6 @@ export default function FacultyDashboard() {
     fetchContextData(true);
   }, []);
 
-  useEffect(() => {
-    if (typeof window !== 'undefined') {
-      const params = new URLSearchParams(window.location.search);
-      const tab = params.get('tab');
-      if (tab === 'submissions') {
-        setActiveTab('submissions');
-      } else if (tab === 'marks') {
-        setActiveTab('marks');
-      } else {
-        setActiveTab('practicals');
-      }
-      const courseParam = params.get('course');
-      if (courseParam) {
-        setSelectedCourse(courseParam);
-      }
-    }
-  }, []);
-
   const fetchContextData = async (isInitialLoad = false) => {
     if (isInitialLoad) setLoading(true);
     try {
@@ -190,7 +172,7 @@ export default function FacultyDashboard() {
           if (stored && courseList.some(c => c.id.toString() === stored.toString())) {
             return stored;
           }
-          return prev || '';
+          return '';
         });
       }
       if (batchesRes) {

@@ -19,19 +19,23 @@
     "k6:api": "powershell -ExecutionPolicy Bypass -File ./load-tests/run-k6.ps1 -Test api",
     "k6:execution": "powershell -ExecutionPolicy Bypass -File ./load-tests/run-k6.ps1 -Test execution",
     "k6:all": "powershell -ExecutionPolicy Bypass -File ./load-tests/run-k6.ps1 -Test all",
-    "test": "node --experimental-test-module-mocks --test-concurrency=2 --test-timeout=30000 --test tests/*.test.mjs",
+    "test": "node scripts/ci/run-tests.mjs unit",
     "db:migrate": "node database/run-migration.js",
     "test:redis": "node --test tests/integration/queue.test.mjs tests/integration/realtime.test.mjs tests/integration/worker-readiness.test.mjs tests/integration/worker-recovery.test.mjs",
     "test:postgres": "node --test tests/integration/postgres.test.mjs",
-    "test:docker": "node --test tests/integration/sandbox.test.mjs",
+    "test:docker": "node scripts/ci/run-tests.mjs docker",
     "db:preflight": "node database/preflight.js",
     "test:neon": "node --test tests/integration/neon.test.mjs tests/integration/neon-upgrade.test.mjs",
     "test:stack": "node scripts/stack-smoke.mjs",
     "deployment:check": "node scripts/check-deployment.mjs",
-    "db:manifest": "node database/update-readiness-manifest.js"
+    "db:manifest": "node database/update-readiness-manifest.js",
+    "test:integration": "node scripts/ci/run-tests.mjs integration",
+    "test:authenticated": "node scripts/authenticated-stack.mjs",
+    "lint:critical": "eslint --config apps/web/eslint.config.mjs packages/core packages/database packages/queue packages/runner apps/worker scripts apps/web/src/app/api apps/web/src/lib apps/web/server.js apps/web/cluster.js --max-warnings=0"
   },
   "devDependencies": {
     "@electric-sql/pglite": "0.5.10",
+    "@playwright/test": "1.56.1",
     "pg": "8.23.1",
     "turbo": "^2.5.4"
   },
