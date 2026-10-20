@@ -20,7 +20,12 @@
     "k6:stress": "k6 run -e BASE_URL=http://localhost:3000 ./load-tests/stress-test.js",
     "k6:api": "powershell -ExecutionPolicy Bypass -File ./load-tests/run-k6.ps1 -Test api",
     "k6:execution": "powershell -ExecutionPolicy Bypass -File ./load-tests/run-k6.ps1 -Test execution",
-    "k6:all": "powershell -ExecutionPolicy Bypass -File ./load-tests/run-k6.ps1 -Test all"
+    "k6:all": "powershell -ExecutionPolicy Bypass -File ./load-tests/run-k6.ps1 -Test all",
+    "k6:qualify:smoke": "k6 run -e MODE=smoke load-tests/qualification.js",
+    "k6:qualify:api": "k6 run -e MODE=api load-tests/qualification.js",
+    "k6:qualify:run": "k6 run -e MODE=run load-tests/qualification.js",
+    "k6:qualify:submission": "k6 run -e MODE=submission load-tests/qualification.js",
+    "k6:qualify:concurrency": "k6 run -e MODE=concurrency load-tests/qualification.js"
   },
   "devDependencies": {
     "turbo": "^2.5.4"

@@ -70,3 +70,7 @@ backend/node_modules/
 
 coderank-backend/
 coderank-frontend/
+
+# Local load-test credentials and generated results
+load-tests/students.local.json
+qualification-*-summary.json
