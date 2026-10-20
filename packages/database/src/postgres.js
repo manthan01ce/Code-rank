@@ -53,6 +53,7 @@ export function createPostgresClient(
     )
       throw Error("Transaction callback must return SQL commands");
     const client = await pool.connect();
+    let releaseError;
     try {
       await client.query("BEGIN");
       const results = [];
@@ -63,12 +64,15 @@ export function createPostgresClient(
     } catch (error) {
       try {
         await client.query("ROLLBACK");
-      } catch {
-        /* retain the original transaction failure */
+      } catch (rollbackError) {
+        // The connection may still hold an open/aborted transaction. Discard
+        // it instead of returning it to another request, while propagating the
+        // original operation failure to this caller.
+        releaseError = rollbackError;
       }
       throw error;
     } finally {
-      client.release();
+      client.release(releaseError);
     }
   };
   let closing;

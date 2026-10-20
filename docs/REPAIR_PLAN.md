@@ -69,3 +69,11 @@ gates remain open until suitable infrastructure and repository access are availa
 Seventh increment: real child-process worker crash/stall recovery and production
 graceful-drain checks; read-only required-migration/checksum readiness; bundled
 manifest synchronization gate. Public database migrations remain unapplied.
+
+Eighth increment: repository authorization restored. GitHub CI run 39363093657
+verified real Docker sandbox execution, PostgreSQL/Redis integration, worker image,
+production build and guest full-stack execution. Strict TAP validation, zero-warning
+backend lint and authenticated PostgreSQL/Chromium cluster workflows are now
+mandatory gates on the working branch. See the latest implementation-report entry
+for their actual verification status. Production migration, host readiness, measured
+capacity and backup/orphan-recovery drills remain deployment work.

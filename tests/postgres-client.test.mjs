@@ -83,3 +83,43 @@ test("PostgreSQL transport rejects invalid pool/timeout configuration", () => {
       /DB_QUERY_TIMEOUT_MS/,
     );
 });
+
+test("failed rollback discards its connection and preserves the original failure", async () => {
+  const original = new Error("statement failed");
+  const rollbackFailure = new Error("connection lost during rollback");
+  const releases = [];
+  let cached, connections = 0;
+  class Pool {
+    on() {}
+    async connect() {
+      if (cached) return cached;
+      const first = ++connections === 1;
+      let transactionOpen = false;
+      cached = {
+        async query(text) {
+          if (text === "BEGIN") {
+            assert.equal(transactionOpen, false, "must not recycle an open transaction");
+            transactionOpen = true;
+          } else if (text === "FAIL") throw original;
+          else if (text === "ROLLBACK" && first) throw rollbackFailure;
+          else if (text === "COMMIT" || text === "ROLLBACK") transactionOpen = false;
+          return { rows: [] };
+        },
+        release(error) {
+          releases.push(error);
+          if (error) cached = undefined;
+        },
+      };
+      return cached;
+    }
+    async end() {}
+  }
+  const sql = createPostgresClient("postgresql://test", { Pool });
+  try {
+    await assert.rejects(sql.transaction(tx => [tx.query("FAIL")]), error => error === original);
+    assert.equal(releases[0], rollbackFailure);
+    await sql.transaction(tx => [tx.query("SELECT 1")]);
+    assert.equal(connections, 2, "next transaction must get a clean connection");
+    assert.equal(releases[1], undefined, "successful transactions remain reusable");
+  } finally { await sql.close(); }
+});

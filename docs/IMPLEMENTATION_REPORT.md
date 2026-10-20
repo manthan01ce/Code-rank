@@ -279,3 +279,11 @@ with a backup/rollback procedure; execute deployment:check against that deployme
 measure capacity with k6 at expected concurrency; verify backup restoration and
 container-orphan cleanup on the deployment host. CI fixtures do not prove these
 production operations.
+
+First strict run 39364648825 passed all legacy gates and three of four browser
+workflows. The admin courses browser trace exposed a real schema/UI mismatch:
+the table called toUpperCase on course.status, a field absent from the baseline
+schema and catalog API. Removed the unsupported status column and kept the
+original browser assertions. A further native-transport regression verifies that
+failed rollback discards the unsafe connection while preserving the original
+query failure. The local suite now passes 142 tests without skips/TODOs/failures.
