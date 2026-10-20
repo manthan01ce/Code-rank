@@ -7,6 +7,7 @@ function encodeBinaryCode(text) {
 }
 
 export async function runDynamicPractical({ language, code, dbId, userId, isSubmit = false }) {
+  let executor;
   try {
     const practicals = await sql`
       SELECT p.*, c.semester 
@@ -110,7 +111,7 @@ export async function runDynamicPractical({ language, code, dbId, userId, isSubm
     const casesReport = [];
     const submissionCasesToInsert = [];
 
-    const executor = new Executor(language.toLowerCase(), code, 3000, userId);
+    executor = new Executor(language.toLowerCase(), code, 3000, userId);
     const compileResult = await executor.compile();
 
     if (!compileResult.success) {
@@ -279,7 +280,7 @@ export async function runDynamicPractical({ language, code, dbId, userId, isSubm
     const allPassed = rawMarks === totalPracticalMarks;
 
     // Always clean up the workdir — do not leave artifacts in the daemon container.
-    executor.cleanup().catch(() => {});
+
 
     return {
       status: allPassed ? 'accepted' : 'wrong_answer',
@@ -304,5 +305,7 @@ export async function runDynamicPractical({ language, code, dbId, userId, isSubm
       runtimeError: error.message,
       cases: []
     };
+  } finally {
+    if (executor) await executor.cleanup();
   }
 }

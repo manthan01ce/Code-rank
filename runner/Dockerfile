@@ -9,6 +9,7 @@ FROM alpine:3.19
 RUN apk add --no-cache \
     bash \
     coreutils \
+    time \
     gcc \
     g++ \
     make \

@@ -219,67 +219,51 @@ export class Executor {
   async runBatch(testCases) {
     if (testCases.length === 0) return [];
 
-    const scriptLines = [`cd ${this.workdir}`];
-    const testCaseMap = new Map();
-
+    // One Docker process for execution and framed result collection. Base64 keeps
+    // arbitrary program output from corrupting the tab-delimited protocol.
+    const scriptLines = [`cd ${this.workdir} || exit 1`, 'ulimit -f 2048'];
     testCases.forEach((tc, idx) => {
-      // Keep per-execution artifacts private. The compiled source directory is
-      // shared by its content hash, so fixed names here caused concurrent
-      // submissions of the same source to overwrite each other's test data.
-      const inputFilename = `input_${this.executionId}_${idx}.txt`;
-      const outputFilename = `output_${this.executionId}_${idx}.txt`;
-      const errorFilename = `error_${this.executionId}_${idx}.txt`;
       const inputB64 = Buffer.from(tc.input || '').toString('base64');
-      const runCmd = this.config.runCmd.replace('input.txt', inputFilename);
-      
-      scriptLines.push(`echo '${inputB64}' | base64 -d > ${inputFilename}`);
-      scriptLines.push(`${runCmd} > ${outputFilename} 2> ${errorFilename} || echo "EXIT_CODE_NONZERO" > ${errorFilename}`);
-      
-      testCaseMap.set(idx, tc);
+      const limitMs = Number(tc.time_limit) > 0 ? Number(tc.time_limit) * 1000 : this.timeLimit;
+      const seconds = Math.max(0.001, limitMs / 1000);
+      scriptLines.push(
+        `printf '%s' '${inputB64}' | base64 -d > input.txt`,
+        'start=$(date +%s%N)',
+        `timeout -k 1s ${seconds}s /usr/bin/time -f '${RESOURCE_MARKER}:%U:%S:%M' ${this.config.runCmd} > output.txt 2> error.txt`,
+        'rc=$?',
+        'elapsed=$(( ($(date +%s%N) - start) / 1000000 ))',
+        `printf '${idx}\\t%s\\t%s\\t' "$rc" "$elapsed"`,
+        "base64 -w0 output.txt",
+        "printf '\\t'",
+        'base64 -w0 error.txt',
+        "printf '\\n'"
+      );
     });
-
-    const fullScript = scriptLines.join(' && ');
-    const batchCmd = `docker exec ${this.daemon} bash -c "${fullScript}"`;
-
-    try {
-      await execAsync(batchCmd, { timeout: this.timeLimit * testCases.length });
-    } catch (err) {}
-
-    const results = [];
-    for (let i = 0; i < testCases.length; i++) {
-      const tc = testCaseMap.get(i);
-      const inputFilename = `input_${this.executionId}_${i}.txt`;
-      const outputFilename = `output_${this.executionId}_${i}.txt`;
-      const errorFilename = `error_${this.executionId}_${i}.txt`;
-      
-      let stdout = '';
-      let stderr = '';
-      try {
-        const outRes = await execAsync(`docker exec ${this.daemon} cat ${this.workdir}/${outputFilename}`).catch(() => ({ stdout: '' }));
-        const errRes = await execAsync(`docker exec ${this.daemon} cat ${this.workdir}/${errorFilename}`).catch(() => ({ stdout: '' }));
-        stdout = outRes.stdout;
-        stderr = errRes.stdout;
-      } catch (e) {}
-
-      const actualNorm = normalizeOutput(stdout);
-      const expectedNorm = normalizeOutput(tc.expected);
-      const passed = actualNorm === expectedNorm;
-      
-      execAsync(`docker exec ${this.daemon} rm -f ${this.workdir}/${inputFilename} ${this.workdir}/${outputFilename} ${this.workdir}/${errorFilename}`).catch(() => {});
-
-      results.push({
-        testCaseId: tc.id,
-        idx: i,
-        passed,
+    const budget = testCases.reduce((sum, tc) => sum +
+      (Number(tc.time_limit) > 0 ? Number(tc.time_limit) * 1000 : this.timeLimit) + 1000, 5000);
+    const { stdout } = await execFileAsync('docker',
+      ['exec', this.daemon, 'bash', '-c', scriptLines.join('\n')],
+      { timeout: budget, killSignal: 'SIGKILL', maxBuffer: 16 * 1024 * 1024 });
+    const lines = stdout.replace(/\n$/, '').split('\n');
+    if (lines.length !== testCases.length) throw new Error('Incomplete execution batch');
+    const results = lines.map((line, idx) => {
+      const fields = line.split('\t');
+      if (fields.length !== 5 || Number(fields[0]) !== idx) throw new Error('Invalid execution batch');
+      const [, exitCode, elapsed, out, err] = fields;
+      const tc = testCases[idx];
+      const actual = Buffer.from(out, 'base64').toString();
+      const resources = extractResourceMetrics(Buffer.from(err, 'base64').toString());
+      const passed = Number(exitCode) === 0 && normalizeOutput(actual) === normalizeOutput(tc.expected);
+      return {
+        testCaseId: tc.id, idx, passed,
         marksAwarded: passed ? parseFloat(tc.marks || 0) : 0,
-        actualOutput: stdout.trim(),
-        errorMessage: stderr.trim(),
-        runtimeMs: 0,
-        expectedOutput: (tc.expected || '').trim(),
-        input: tc.input
-      });
-    }
-
+        actualOutput: actual.trim(),
+        errorMessage: ['124', '137'].includes(exitCode) ? 'Time Limit Exceeded' : resources.stderr,
+        runtimeMs: Number(elapsed), cpuTimeMs: resources.cpuTimeMs,
+        memoryBytes: resources.memoryBytes,
+        expectedOutput: String(tc.expected ?? '').trim(), input: tc.input
+      };
+    });
     return results;
   }
 
