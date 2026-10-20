@@ -6,6 +6,29 @@ Date: 2026-10-20 (Asia/Kolkata). Historical logs are repository artifacts, not n
 
 Historical results are poor for smoke latency and execution reliability. The fast API test does not establish code-execution capacity. Current end-to-end qualification is blocked: the configured public deployment previously returned DEPLOYMENT_NOT_FOUND; a fresh connection attempt timed out. A diagnostic local web server starts but health returns HTTP 503: database unreachable and Redis ECONNREFUSED at 127.0.0.1:6379. Docker is unavailable. Do not claim support for 200 active students until the strict suite passes with distinct authenticated fixtures.
 
+## New local diagnostic execution — 2026-10-20, 15:52 IST
+
+Started real web and BullMQ worker processes, then ran the existing smoke-test.js against http://127.0.0.1:3000. Overrode stages to 1s→1 VU, 5s at 1 VU, 1s→0 VUs. This is a dependency/startup diagnostic, not a 200-user capacity benchmark. No Redis, database, Docker or worker mocks were used. Ephemeral development secrets permitted startup; no production configuration was available.
+
+| Measurement | New measured result |
+|---|---|
+| Health preflight | HTTP 503, database degraded and Redis queue unavailable |
+| k6 outcome | FAILED, exit code 99; HTTP failure threshold exceeded |
+| HTTP traffic | 31 requests, 8 failures (25.80%) |
+| Functional checks | 56/70 passed (80%); 14 failed (20%) |
+| Job/backend health checks | All 7 health-200 checks and all 7 database-healthy checks failed |
+| Request duration | p95 649.45 ms; average 532.45 ms; maximum 14.56 s, including setup traffic |
+| Health-check duration | p95 14.64 ms; quick failures are not healthy service |
+| Workload completed | 7 iterations, 1 VU maximum, no interrupted iterations |
+| Worker | Started but Redis connection refused at 127.0.0.1:6379; no processing verified |
+| 200-VU profiles | Not started: dependency/smoke gates failed and authenticated fixtures unavailable |
+
+Evidence: local-diagnostic/diagnostic.json, local-diagnostic/smoke-summary.json, local-diagnostic/k6-smoke.log. Web logs also show the runtime's uv_resident_set_memory rendering error. Existing legacy smoke checks only inspect HTTP status for landing/login and accept queue 503, so their passing page checks do not establish valid page rendering or execution readiness. All diagnostic processes were stopped after capture.
+
+Reproduce with `K6_BIN=/path/to/k6 node load-tests/run-local-diagnostic.mjs` from the repository root. This runner intentionally performs a small smoke even against degraded health, captures evidence and returns nonzero; it never starts the 200-user profiles. Use load-tests/QUALIFICATION.md after restoring dependencies and supplying distinct student fixtures.
+
+The first improvement remains environment restoration: install/access Docker, start Redis and runner containers, configure the real Neon DATABASE_URL plus consistent application/service secrets, and verify worker connectivity. Repeat small smoke before increasing load. These new results do not measure the code-execution optimization's speedup.
+
 ## Available historical results
 
 | Test and evidence | Recorded load | Recorded result | Assessment and limits |
@@ -63,4 +86,4 @@ These gates are proposed qualification targets, not achieved results. Keep rate-
 
 The full Node suite passes 35 tests including lifecycle terminal errors, timeout/navigation, sample verdicts and the batch shell regression. Targeted frontend lint has zero errors, with React migration warnings still present. A production build and development page rendering hit ENOENT uv_resident_set_memory in this restricted runtime; visual/browser validation is therefore outstanding. Health returned 503 with database and Redis errors. The diagnostic web process was stopped after the check. No production deployment was changed.
 
-See load-tests/QUALIFICATION.md for executable commands and fixture format. No 200-user benchmark, production speedup, successful current smoke, or Grafana Cloud run is claimed.
+See load-tests/QUALIFICATION.md for executable commands and fixture format. A new local smoke was executed and failed as recorded above. No 200-user benchmark, production speedup, successful current smoke, or Grafana Cloud run is claimed.
