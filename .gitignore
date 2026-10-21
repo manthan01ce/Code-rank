@@ -77,3 +77,8 @@ coderank-frontend/
 /test-results/
 
 /playwright-report/
+
+# Local load-test credentials and generated results
+load-tests/students.local.json
+qualification-*-summary.json
+

@@ -62,6 +62,7 @@ export default async function StudentCodingPage({ params }) {
           id: `practical_${p.id}`,
           dbId: p.id,
           isPractical: true,
+          clipboardRestricted: p.starter_code?.exam_policy?.restrict_clipboard === true,
           title: p.title,
           description: p.description,
           difficulty: p.difficulty || 'Medium',
