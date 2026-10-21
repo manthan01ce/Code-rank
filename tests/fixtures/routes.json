@@ -1,0 +1,208 @@
+{
+  "apps/web/src/app/admin/courses/page.js": [
+    "PAGE"
+  ],
+  "apps/web/src/app/admin/departments/page.js": [
+    "PAGE"
+  ],
+  "apps/web/src/app/admin/faculty/page.js": [
+    "PAGE"
+  ],
+  "apps/web/src/app/admin/logs/page.js": [
+    "PAGE"
+  ],
+  "apps/web/src/app/admin/mapping/page.js": [
+    "PAGE"
+  ],
+  "apps/web/src/app/admin/page.js": [
+    "PAGE"
+  ],
+  "apps/web/src/app/admin/settings/page.js": [
+    "PAGE"
+  ],
+  "apps/web/src/app/admin/students/page.js": [
+    "PAGE"
+  ],
+  "apps/web/src/app/api/admin/bulk-upload/route.js": [
+    "POST"
+  ],
+  "apps/web/src/app/api/admin/password/route.js": [
+    "POST"
+  ],
+  "apps/web/src/app/api/auth/change-password/route.js": [
+    "POST"
+  ],
+  "apps/web/src/app/api/auth/login/route.js": [
+    "POST"
+  ],
+  "apps/web/src/app/api/auth/profile/route.js": [
+    "GET",
+    "PUT"
+  ],
+  "apps/web/src/app/api/c-run/route.js": [
+    "POST"
+  ],
+  "apps/web/src/app/api/courses/[id]/route.js": [
+    "DELETE",
+    "PUT"
+  ],
+  "apps/web/src/app/api/courses/route.js": [
+    "GET",
+    "POST"
+  ],
+  "apps/web/src/app/api/cpp-run/route.js": [
+    "POST"
+  ],
+  "apps/web/src/app/api/departments/[id]/route.js": [
+    "DELETE",
+    "PUT"
+  ],
+  "apps/web/src/app/api/departments/route.js": [
+    "GET",
+    "POST"
+  ],
+  "apps/web/src/app/api/execute/route.js": [
+    "GET",
+    "POST"
+  ],
+  "apps/web/src/app/api/faculty/batches/route.js": [
+    "GET"
+  ],
+  "apps/web/src/app/api/faculty/courses/[id]/stats/route.js": [
+    "GET"
+  ],
+  "apps/web/src/app/api/faculty/courses/route.js": [
+    "GET"
+  ],
+  "apps/web/src/app/api/faculty/practicals/[id]/extra-time/route.js": [
+    "POST"
+  ],
+  "apps/web/src/app/api/faculty/practicals/[id]/route.js": [
+    "DELETE",
+    "GET",
+    "PUT"
+  ],
+  "apps/web/src/app/api/faculty/practicals/[id]/stats/route.js": [
+    "GET"
+  ],
+  "apps/web/src/app/api/faculty/practicals/[id]/submissions/route.js": [
+    "GET"
+  ],
+  "apps/web/src/app/api/faculty/practicals/route.js": [
+    "GET",
+    "POST"
+  ],
+  "apps/web/src/app/api/faculty/submissions/[id]/route.js": [
+    "DELETE",
+    "GET"
+  ],
+  "apps/web/src/app/api/health/detailed/route.js": [
+    "GET"
+  ],
+  "apps/web/src/app/api/health/route.js": [
+    "GET"
+  ],
+  "apps/web/src/app/api/java-run/route.js": [
+    "POST"
+  ],
+  "apps/web/src/app/api/javascript-run/route.js": [
+    "POST"
+  ],
+  "apps/web/src/app/api/jobs/[jobId]/route.js": [
+    "GET"
+  ],
+  "apps/web/src/app/api/live/route.js": [
+    "GET"
+  ],
+  "apps/web/src/app/api/logs/route.js": [
+    "GET"
+  ],
+  "apps/web/src/app/api/mapping/route.js": [
+    "GET",
+    "POST"
+  ],
+  "apps/web/src/app/api/metrics/route.js": [
+    "GET"
+  ],
+  "apps/web/src/app/api/practice-run/route.js": [
+    "GET",
+    "POST"
+  ],
+  "apps/web/src/app/api/profile/[username]/route.js": [
+    "GET",
+    "PUT"
+  ],
+  "apps/web/src/app/api/python-run/route.js": [
+    "POST"
+  ],
+  "apps/web/src/app/api/queue/stats/route.js": [
+    "GET"
+  ],
+  "apps/web/src/app/api/run/route.js": [
+    "POST"
+  ],
+  "apps/web/src/app/api/stats/route.js": [
+    "GET"
+  ],
+  "apps/web/src/app/api/student/practicals/[id]/submissions/route.js": [
+    "GET"
+  ],
+  "apps/web/src/app/api/student/practicals/[id]/submit/route.js": [
+    "POST"
+  ],
+  "apps/web/src/app/api/student/practicals/route.js": [
+    "GET"
+  ],
+  "apps/web/src/app/api/student/submissions/route.js": [
+    "GET"
+  ],
+  "apps/web/src/app/api/student/workspaces/load/route.js": [
+    "GET"
+  ],
+  "apps/web/src/app/api/student/workspaces/save/route.js": [
+    "POST"
+  ],
+  "apps/web/src/app/api/submit/route.js": [
+    "POST"
+  ],
+  "apps/web/src/app/api/users/[id]/route.js": [
+    "DELETE",
+    "PUT"
+  ],
+  "apps/web/src/app/api/users/bulk/route.js": [
+    "POST"
+  ],
+  "apps/web/src/app/api/users/route.js": [
+    "DELETE",
+    "GET",
+    "POST",
+    "PUT"
+  ],
+  "apps/web/src/app/code/page.js": [
+    "PAGE"
+  ],
+  "apps/web/src/app/faculty/page.js": [
+    "PAGE"
+  ],
+  "apps/web/src/app/login/page.js": [
+    "PAGE"
+  ],
+  "apps/web/src/app/page.js": [
+    "PAGE"
+  ],
+  "apps/web/src/app/practice/page.js": [
+    "PAGE"
+  ],
+  "apps/web/src/app/profile/[username]/page.js": [
+    "PAGE"
+  ],
+  "apps/web/src/app/student/code/[id]/page.js": [
+    "PAGE"
+  ],
+  "apps/web/src/app/student/page.js": [
+    "PAGE"
+  ],
+  "apps/web/src/app/student/practicals/page.js": [
+    "PAGE"
+  ]
+}

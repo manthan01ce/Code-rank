@@ -71,6 +71,14 @@ backend/node_modules/
 coderank-backend/
 coderank-frontend/
 
+# Temporary native harness test directories
+/.harness-*/
+
+/test-results/
+
+/playwright-report/
+
 # Local load-test credentials and generated results
 load-tests/students.local.json
 qualification-*-summary.json
+

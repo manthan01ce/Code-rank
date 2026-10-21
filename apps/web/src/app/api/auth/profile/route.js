@@ -1,10 +1,10 @@
 import { NextResponse } from 'next/server';
 import { UserService } from '@coderank/core/services/UserService';
-import { getUserFromRequest } from '@coderank/core/utils/auth';
+import { authenticateRequest } from '@coderank/core/security/active-actor';
 
 export async function GET(request) {
   try {
-    const user = getUserFromRequest(request);
+    const user = await authenticateRequest(request);
     const profile = await UserService.getProfile(user);
     return NextResponse.json({ user: profile });
   } catch (error) {
@@ -18,7 +18,7 @@ export async function GET(request) {
 
 export async function PUT(request) {
   try {
-    const user = getUserFromRequest(request);
+    const user = await authenticateRequest(request);
     const body = await request.json();
     const result = await UserService.updateProfile(user, body);
     return NextResponse.json(result);

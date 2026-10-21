@@ -10,6 +10,7 @@
  * - Settings & Account menu: A User profile dropdown managing profile updates, password changes, preferences, and logout.
  */
 
+import { fetchCollection } from '@/lib/fetch-collection';
 import { useState, useEffect, useRef } from 'react';
 import { useRouter } from 'next/navigation';
 import { Panel, Group as PanelGroup, Separator as PanelResizeHandle } from 'react-resizable-panels';
@@ -94,14 +95,38 @@ rl.on('close', () => {
 
 // Module-level cache removed per binary save implementation
 
+// ── Friendly error message mapper ─────────────────────────────────────────────
+function friendlyError(err, fallback = 'Something went wrong. Please try again.') {
+  if (!err) return fallback;
+  const msg = (typeof err === 'string' ? err : err.message || '').toLowerCase();
+  if (msg.includes('unexpected end of json') || msg.includes('failed to parse')) {
+    return 'Received an unexpected response from the server. Please refresh and try again.';
+  }
+  if (msg.includes('fetch failed') || msg.includes('networkerror') || msg.includes('network error') || msg.includes('failed to fetch')) {
+    return 'Unable to reach the server. Check your internet connection and try again.';
+  }
+  if (msg.includes('unauthorized') || msg.includes('401')) {
+    return 'Your session has expired. Please log in again.';
+  }
+  if (msg.includes('429') || msg.includes('too many requests')) {
+    return 'Too many requests — please wait a moment and try again.';
+  }
+  if (msg.includes('500') || msg.includes('internal server')) {
+    return 'A server error occurred. Please try again shortly.';
+  }
+  // If short and human-looking, surface it; otherwise use fallback
+  const raw = typeof err === 'string' ? err : err.message || '';
+  return raw && raw.length < 120 ? raw : fallback;
+}
+
 export default function WorkspaceLayout({ problem }) {
   const router = useRouter();
-  const handleLogout = () => {
-    if (confirm('Are you sure you want to log out?')) {
-      localStorage.removeItem('token');
-      localStorage.removeItem('user');
-      router.push('/');
-    }
+  const [showLogoutModal, setShowLogoutModal] = useState(false);
+  const handleLogout = () => setShowLogoutModal(true);
+  const confirmLogout = () => {
+    localStorage.removeItem('token');
+    localStorage.removeItem('user');
+    router.push('/');
   };
   const [consoleOpen, setConsoleOpen] = useState(true);
   const [selectedLang, setSelectedLang] = useState(DEFAULT_LANGUAGE);
@@ -178,12 +203,10 @@ export default function WorkspaceLayout({ problem }) {
     setLoadingSubmissions(true);
     try {
       const token = localStorage.getItem('token');
-      const res = await fetch('/api/student/submissions', {
+      const data = await fetchCollection('/api/student/submissions', {
         headers: { Authorization: `Bearer ${token}` }
       });
-      if (res.ok) {
-        setUserSubmissions(await res.json());
-      }
+      setUserSubmissions(data);
     } catch (e) {
       console.error(e);
     } finally {
@@ -221,21 +244,38 @@ export default function WorkspaceLayout({ problem }) {
           newPassword: profileForm.newPassword
         })
       });
+      let data = {};
+      try {
+        const text = await res.text();
+        data = text ? JSON.parse(text) : {};
+      } catch {
+        data = {};
+      }
+
       if (res.ok) {
+        if (data.token) {
+          localStorage.setItem('token', data.token);
+          if (socket) {
+            socket.disconnect().connect();
+          }
+        }
         setProfileMsg({ type: 'success', text: 'Profile updated successfully!' });
         // Update user in localStorage
-        const userData = JSON.parse(localStorage.getItem('user'));
-        userData.name = profileForm.name;
-        userData.email = profileForm.email;
-        localStorage.setItem('user', JSON.stringify(userData));
+        try {
+          const userData = JSON.parse(localStorage.getItem('user') || '{}');
+          if (userData && typeof userData === 'object') {
+            userData.name = profileForm.name;
+            userData.email = profileForm.email;
+            localStorage.setItem('user', JSON.stringify(userData));
+          }
+        } catch {}
         // Clear password fields
         setProfileForm(prev => ({ ...prev, currentPassword: '', newPassword: '', confirmPassword: '' }));
       } else {
-        const data = await res.json();
-        setProfileMsg({ type: 'error', text: data.error || 'Failed to update profile.' });
+        setProfileMsg({ type: 'error', text: data.error || `Failed to update profile (${res.status}).` });
       }
     } catch (err) {
-      setProfileMsg({ type: 'error', text: err.message });
+      setProfileMsg({ type: 'error', text: friendlyError(err) });
     }
   };
 
@@ -335,6 +375,9 @@ export default function WorkspaceLayout({ problem }) {
 
   const [hasUnsavedChanges, setHasUnsavedChanges] = useState(false);
   const [isLoadingCode, setIsLoadingCode] = useState(false);
+  // 'idle' | 'saving' | 'saved' | 'error'
+  const [saveStatus, setSaveStatus] = useState('idle');
+  const saveStatusTimerRef = useRef(null);
 
   const [isRunning, setIsRunning] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -347,6 +390,15 @@ export default function WorkspaceLayout({ problem }) {
   const [actionMode, setActionMode] = useState('run'); // 'run' | 'submit'
   const [judgeState, setJudgeState] = useState('idle'); // 'idle' | 'loading' | 'success' | 'error'
   const [submitPhase, setSubmitPhase] = useState(null); // 'submitting' | 'judging' | null
+
+  // Non-blocking toast notification (replaces disruptive window.alert)
+  const [workspaceNotice, setWorkspaceNotice] = useState(null);
+  const noticeTimerRef = useRef(null);
+  const showNotice = (text, type = 'warning') => {
+    setWorkspaceNotice({ text, type });
+    if (noticeTimerRef.current) clearTimeout(noticeTimerRef.current);
+    noticeTimerRef.current = setTimeout(() => setWorkspaceNotice(null), 4500);
+  };
 
   // Keep code state fully synchronized whenever the routed problem changes
   useEffect(() => {
@@ -428,6 +480,7 @@ export default function WorkspaceLayout({ problem }) {
     draftVersion.current++;
     setDraftStatus('Unsynced changes');
     setHasUnsavedChanges(true);
+    setSaveStatus('idle');
   }
 
   async function handleLangChange(lang) {
@@ -545,6 +598,7 @@ export default function WorkspaceLayout({ problem }) {
   async function performAction(mode) {
     if (!(mode === 'run' ? canRun : canSubmit)) return;
     if (resolvedProblem.startTime && new Date() < new Date(resolvedProblem.startTime)) {
+      showNotice(`This practical has not started yet. Scheduled start time: ${new Date(resolvedProblem.startTime).toLocaleString()}`, 'warning');
       setDraftStatus(`This practical starts at ${new Date(resolvedProblem.startTime).toLocaleString()}`);
       return;
     }
@@ -598,9 +652,41 @@ export default function WorkspaceLayout({ problem }) {
   const canSubmit = isExecutable && !isRunning && !isSubmitting && !isSavingCode && !isLoadingCode && !lifecycle.busy;
 
   const getSubmitTooltip = () => {
-    if (!isExecutable) return `Language not yet executable`;
-    return null;
+    if (!isExecutable) return 'Selected language does not support running/submitting';
+    if (isRunning) return 'Execution in progress...';
+    if (isSubmitting) return 'Submission in progress...';
+    if (resolvedProblem?.startTime && new Date() < new Date(resolvedProblem.startTime)) {
+      return `Practical starts at ${new Date(resolvedProblem.startTime).toLocaleTimeString()}`;
+    }
+    if (resolvedProblem?.endTime && new Date() > new Date(resolvedProblem.endTime)) {
+      return 'Practical submission deadline has passed';
+    }
+    return '';
   };
+
+  // Universal Keyboard Shortcuts: Ctrl+Enter (Run), Ctrl+Shift+Enter (Submit), Ctrl+S (Save)
+  useEffect(() => {
+    const handleKeyDown = (e) => {
+      const isMac = typeof navigator !== 'undefined' && /Mac|iPod|iPhone|iPad/.test(navigator.platform);
+      const cmdOrCtrl = isMac ? e.metaKey : e.ctrlKey;
+      if (!cmdOrCtrl) return;
+
+      if (e.key === 'Enter') {
+        e.preventDefault();
+        if (e.shiftKey) {
+          if (canSubmit) handleSubmit();
+        } else {
+          if (canRun) handleRun();
+        }
+      } else if (e.key === 's' || e.key === 'S') {
+        e.preventDefault();
+        handleSaveCodeToDB();
+      }
+    };
+
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [canRun, canSubmit, selectedLang, codeByLang, resolvedProblem]);
 
   const editorPanel = (<MonacoEditorPanel
                     selectedLang={selectedLang}
@@ -630,6 +716,37 @@ export default function WorkspaceLayout({ problem }) {
 
   return (
     <div className="coding-workspace" style={{ display: 'flex', flexDirection: 'column', height: '100dvh', width: '100%', overflow: 'hidden', background: '#000000', color: '#ffffff', fontFamily: 'Inter, sans-serif', userSelect: 'none' }}>
+
+      {/* Floating Non-Blocking Toast Notification */}
+      {workspaceNotice && (
+        <div style={{
+          position: 'fixed',
+          top: '72px',
+          left: '50%',
+          transform: 'translateX(-50%)',
+          zIndex: 9999,
+          display: 'flex',
+          alignItems: 'center',
+          gap: '12px',
+          padding: '10px 20px',
+          borderRadius: '8px',
+          background: workspaceNotice.type === 'warning' ? '#291800' : workspaceNotice.type === 'error' ? '#290505' : '#052912',
+          border: `1px solid ${workspaceNotice.type === 'warning' ? '#f59e0b' : workspaceNotice.type === 'error' ? '#ef4444' : '#10b981'}`,
+          color: '#ffffff',
+          fontSize: '13px',
+          fontWeight: 600,
+          boxShadow: '0 10px 30px rgba(0,0,0,0.8)',
+        }}>
+          <span>{workspaceNotice.type === 'warning' ? '⚠️' : workspaceNotice.type === 'error' ? '❌' : '✓'}</span>
+          <span>{workspaceNotice.text}</span>
+          <button 
+            onClick={() => setWorkspaceNotice(null)}
+            style={{ background: 'none', border: 'none', color: '#999', cursor: 'pointer', fontSize: '14px', padding: '0 4px', marginLeft: '6px' }}
+          >
+            ✕
+          </button>
+        </div>
+      )}
 
       {/* ── Top Navigation Bar — 64px, true black ── */}
       <div style={{ height: '64px', background: '#000000', borderBottom: '1px solid #262626', display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '0 24px', flexShrink: 0 }}>
@@ -759,10 +876,9 @@ export default function WorkspaceLayout({ problem }) {
                       return (
                         <div
                           key={`practical_${p.id}`}
-                          onClick={() => {
+                          onClick={async () => {
                             if (hasUnsavedChanges) {
-                              alert('You have unsaved changes. Please save your code before switching problems.');
-                              return;
+                              await handleSaveCodeToDB();
                             }
                             setIsListOpen(false);
                             const targetSubject = selectedCourse !== 'All' ? selectedCourse : (p.course_code || '');
@@ -843,19 +959,19 @@ export default function WorkspaceLayout({ problem }) {
             ) : (
               <Play size={13} />
             )}
-            {isRunning ? `${lifecycle.phase}…` : 'Run samples'}
-            {!isRunning && <span style={{ opacity: 0.5, marginLeft: '4px', fontSize: '10px', textTransform: 'none', fontWeight: 500 }}>Ctrl+'</span>}
+            {isRunning ? `${lifecycle.phase}…` : 'Run'}
+            {!isRunning && <span style={{ opacity: 0.6, marginLeft: '4px', fontSize: '10px', textTransform: 'none', fontWeight: 500 }}>Ctrl+↵</span>}
           </button>
 
           <button suppressHydrationWarning
             id="btn-save-code"
             onClick={() => handleSaveCodeToDB().catch(error => setDraftStatus(error.message))}
             disabled={isSavingCode || isRunning || isSubmitting}
-            title="Save code to database"
+            title="Save code to database (Ctrl+S)"
             style={{
               background: 'transparent',
-              border: '1px solid #3c3c3c',
-              color: '#ffffff',
+              border: `1px solid ${saveStatus === 'error' ? '#ef4444' : saveStatus === 'saved' ? '#22c55e' : '#3c3c3c'}`,
+              color: saveStatus === 'error' ? '#ef4444' : saveStatus === 'saved' ? '#22c55e' : '#ffffff',
               fontSize: '11px',
               fontWeight: 700,
               letterSpacing: '1.5px',
@@ -866,6 +982,7 @@ export default function WorkspaceLayout({ problem }) {
               display: 'flex',
               alignItems: 'center',
               gap: '8px',
+              transition: 'border-color 0.3s, color 0.3s',
             }}
             onMouseEnter={e => { if(!isSavingCode && !isRunning && !isSubmitting) e.currentTarget.style.background = '#1a1a1a' }}
             onMouseLeave={e => { e.currentTarget.style.background = 'transparent' }}
@@ -877,13 +994,44 @@ export default function WorkspaceLayout({ problem }) {
             )}
             {isSavingCode ? 'Saving…' : 'Save'}
           </button>
+          {/* Save status pill */}
+          {saveStatus !== 'idle' && !isSavingCode && (
+            <span style={{
+              fontSize: '10px',
+              fontWeight: 600,
+              padding: '3px 10px',
+              borderRadius: '12px',
+              background: saveStatus === 'saved' ? 'rgba(34,197,94,0.12)' : saveStatus === 'error' ? 'rgba(239,68,68,0.12)' : 'rgba(255,255,255,0.06)',
+              color: saveStatus === 'saved' ? '#22c55e' : saveStatus === 'error' ? '#ef4444' : '#aaa',
+              border: `1px solid ${saveStatus === 'saved' ? 'rgba(34,197,94,0.3)' : saveStatus === 'error' ? 'rgba(239,68,68,0.3)' : 'rgba(255,255,255,0.1)'}`,
+              whiteSpace: 'nowrap',
+              letterSpacing: '0.3px',
+              transition: 'opacity 0.3s',
+            }}>
+              {saveStatus === 'saved' ? '✓ All changes saved' : saveStatus === 'error' ? '✕ Save failed' : 'Saving…'}
+            </span>
+          )}
+          {hasUnsavedChanges && saveStatus === 'idle' && (
+            <span style={{
+              fontSize: '10px',
+              fontWeight: 600,
+              padding: '3px 10px',
+              borderRadius: '12px',
+              background: 'rgba(251,191,36,0.1)',
+              color: '#fbbf24',
+              border: '1px solid rgba(251,191,36,0.25)',
+              whiteSpace: 'nowrap',
+            }}>
+              ● Unsaved
+            </span>
+          )}
 
           <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
             <button suppressHydrationWarning
               id="btn-submit-code"
               onClick={handleSubmit}
               disabled={!canSubmit}
-              title={getSubmitTooltip() || 'Submit code'}
+              title={getSubmitTooltip() || 'Submit code (Ctrl+Shift+Enter)'}
               style={{
                 background: '#0fa336',
                 border: 'none',
@@ -904,8 +1052,8 @@ export default function WorkspaceLayout({ problem }) {
               {isSubmitting ? (
                 <span style={{ width: '12px', height: '12px', border: '2px solid #ffffff', borderTopColor: 'transparent', borderRadius: '50%', display: 'inline-block', animation: 'spin 0.8s linear infinite' }} />
               ) : null}
-              {isSubmitting ? `${lifecycle.phase}…` : 'Submit for grading'}
-              {!isSubmitting && <span style={{ opacity: 0.6, marginLeft: '4px', fontSize: '10px', textTransform: 'none', fontWeight: 500 }}>Ctrl+Enter</span>}
+              {isSubmitting ? `${lifecycle.phase}…` : 'Submit'}
+              {!isSubmitting && <span style={{ opacity: 0.7, marginLeft: '4px', fontSize: '10px', textTransform: 'none', fontWeight: 500 }}>Ctrl+⇧+↵</span>}
             </button>
 
             {getSubmitTooltip() && (
@@ -988,7 +1136,7 @@ export default function WorkspaceLayout({ problem }) {
               </button>
               <div style={{ height: '1px', backgroundColor: '#333333', margin: '4px 0' }} />
               <button suppressHydrationWarning
-                onClick={handleLogout}
+                onClick={() => { setShowLogoutModal(true); setIsUserDropdownOpen(false); }}
                 style={{ background: 'transparent', border: 'none', color: '#ef4444', textAlign: 'left', padding: '10px 16px', fontSize: '13px', cursor: 'pointer', fontWeight: '600' }}
                 onMouseEnter={e => e.currentTarget.style.backgroundColor = '#2a2a2a'}
                 onMouseLeave={e => e.currentTarget.style.backgroundColor = 'transparent'}
@@ -1012,7 +1160,7 @@ export default function WorkspaceLayout({ problem }) {
       <div style={{ height: '3px', background: 'linear-gradient(to right, #0066b1, #1c69d4, #e22718)', flexShrink: 0 }} />
 
       {/* ── Main Workspace ── */}
-      <div style={{ flex: 1, overflow: 'hidden', background: '#000000' }}>
+      <div style={{ flex: 1, overflow: 'hidden', background: '#000000', width: '100%', height: '100%' }}>
         {narrow ? <div style={{ height: '100%', display: 'flex', flexDirection: 'column' }}>
           <div role="group" aria-label="Workspace view" style={{ display: 'flex', gap: 8, padding: 8 }}>
             {['problem', 'editor', 'results'].map(tab => <button key={tab} aria-pressed={workspaceTab === tab} onClick={() => setWorkspaceTab(tab)}>{tab}</button>)}
@@ -1023,21 +1171,21 @@ export default function WorkspaceLayout({ problem }) {
             {workspaceTab === 'results' && consolePanel}
           </div>
         </div> : (
-        <PanelGroup orientation="horizontal" style={{ height: '100%' }}>
+        <PanelGroup orientation="horizontal" direction="horizontal" style={{ height: '100%', width: '100%' }}>
 
           {/* LEFT: Problem Panel */}
-          <Panel defaultSize={40} minSize={25}>
+          <Panel defaultSize={40} minSize={20}>
             <div style={{ height: '100%', background: '#0d0d0d', overflow: 'hidden', display: 'flex', flexDirection: 'column' }}>
               <ProblemPanel problem={resolvedProblem} onLoadSubmissionCode={handleLoadSubmissionCode} />
             </div>
           </Panel>
 
           {/* Vertical resize handle */}
-          <PanelResizeHandle style={{ width: '1px', background: '#262626', cursor: 'col-resize', flexShrink: 0 }} />
+          <PanelResizeHandle style={{ width: '2px', background: '#262626', cursor: 'col-resize', flexShrink: 0 }} />
 
           {/* RIGHT: Editor (60%) + Console (40%) */}
           <Panel defaultSize={60} minSize={30}>
-            <PanelGroup orientation="vertical" style={{ height: '100%' }}>
+            <PanelGroup orientation="vertical" direction="vertical" style={{ height: '100%', width: '100%' }}>
 
               {/* Monaco Editor (upper right side covering 60% area by default) */}
               <Panel defaultSize={consoleOpen ? 60 : 100} minSize={25}>
@@ -1048,7 +1196,7 @@ export default function WorkspaceLayout({ problem }) {
 
               {consoleOpen && (
                 <>
-                  <PanelResizeHandle style={{ height: '1px', background: '#262626', cursor: 'row-resize', flexShrink: 0 }} />
+                  <PanelResizeHandle style={{ height: '2px', background: '#262626', cursor: 'row-resize', flexShrink: 0 }} />
                   {/* Console Output Screen (lower right side covering 40% area by default) */}
                   <Panel defaultSize={40} minSize={15}>
                     <div style={{ height: '100%', background: '#000000', borderLeft: '1px solid #262626', overflow: 'hidden', display: 'flex', flexDirection: 'column' }}>
@@ -1183,6 +1331,36 @@ export default function WorkspaceLayout({ problem }) {
             </div>
           </div>
         </dialog>
+      )}
+
+      {/* ── Logout Confirmation Modal ── */}
+      {showLogoutModal && (
+        <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.75)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 99999, backdropFilter: 'blur(4px)' }}>
+          <div style={{ background: '#161616', border: '1px solid #333', borderRadius: '12px', padding: '28px 32px', width: '360px', display: 'flex', flexDirection: 'column', gap: '16px' }}>
+            <h3 style={{ margin: 0, fontSize: '16px', fontWeight: 700, color: '#ffffff' }}>Sign out?</h3>
+            <p style={{ margin: 0, fontSize: '13px', color: '#aaa', lineHeight: 1.6 }}>
+              You will be signed out of your workspace. Any unsaved code changes have already been auto-saved.
+            </p>
+            <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '10px', marginTop: '4px' }}>
+              <button
+                onClick={() => setShowLogoutModal(false)}
+                style={{ padding: '8px 20px', borderRadius: '6px', border: '1px solid #3c3c3c', background: 'transparent', color: '#aaa', fontSize: '13px', cursor: 'pointer', fontWeight: 600 }}
+                onMouseEnter={e => e.currentTarget.style.color = '#fff'}
+                onMouseLeave={e => e.currentTarget.style.color = '#aaa'}
+              >
+                Cancel
+              </button>
+              <button
+                onClick={confirmLogout}
+                style={{ padding: '8px 20px', borderRadius: '6px', border: 'none', background: '#ef4444', color: '#ffffff', fontSize: '13px', cursor: 'pointer', fontWeight: 700 }}
+                onMouseEnter={e => e.currentTarget.style.background = '#dc2626'}
+                onMouseLeave={e => e.currentTarget.style.background = '#ef4444'}
+              >
+                Sign Out
+              </button>
+            </div>
+          </div>
+        </div>
       )}
 
       <style>{`

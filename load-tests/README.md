@@ -246,3 +246,24 @@ k6 run \
 
 > **Note**: `DISABLE_RATE_LIMIT` and `DISABLE_CACHE` are env vars passed to k6.
 > Your server must read and honour them (check your middleware config).
+
+## Output-verified execution measurements
+
+Use `runner-concurrency-benchmark.js` for a bounded initial capacity measurement.
+Both it and `execution-stress-test.js` require HTTP 202, successful execution,
+exit code zero and the expected stdout. A completed BullMQ job containing a
+runtime/compile error is a failure. Admission rejection, execution failure and
+polling errors have separate counters. Authentication/ownership failures stop
+polling immediately; waiting has a wall-clock deadline.
+
+Run against a staging deployment with its real rate limits first. Anonymous
+requests share the anonymous rate-limit bucket; supplying one JWT for every VU
+measures that owner's job quota. Use a representative identity distribution for
+a multi-user capacity claim. Do not treat rate-limit/quota rejection as runner
+capacity or change those controls on a live deployment to make a test pass.
+
+```sh
+k6 run -e BASE_URL=http://localhost:3000 -e VUS=2 -e DURATION=30s load-tests/runner-concurrency-benchmark.js
+```
+
+No new target-host capacity result has been measured in this repair stage.

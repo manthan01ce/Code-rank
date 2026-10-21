@@ -1,5 +1,7 @@
+import { withTimeout } from '@coderank/core/utils/timeout';
 import { NextResponse } from 'next/server';
 import sql from '@coderank/core/db';
+import { checkDatabaseReadiness } from '@coderank/core/db-readiness';
 import { SubmissionService } from '@coderank/core/services/SubmissionService';
 
 // Health must be evaluated by this server instance. The short in-memory cache
@@ -26,29 +28,24 @@ async function refreshHealthCache() {
         timestamp: new Date().toISOString(),
         services: {
           database: { status: 'unknown' },
-          queue: { status: 'unknown' }
+          queue: { status: 'unknown' },
+          execution: { status: 'unknown' }
         }
       };
 
-      const timeout = (ms) => new Promise((_, reject) => 
-        setTimeout(() => reject(new Error('Timeout')), ms)
-      );
-
       // Run DB and queue checks concurrently to minimize latency (3500ms timeout for cross-region Neon)
-      const [dbResult, queueResult] = await Promise.allSettled([
-        Promise.race([sql`SELECT 1 as active`, timeout(3500)]),
-        Promise.race([SubmissionService.getQueueStats(), timeout(1200)])
+      const [dbResult, queueResult, workerResult] = await Promise.allSettled([
+        withTimeout(checkDatabaseReadiness(sql.query), 3500),
+        withTimeout(SubmissionService.getQueueStats(), 1200),
+        withTimeout(SubmissionService.getWorkerStatus(), 1200)
       ]);
 
-      if (dbResult.status === 'fulfilled' && dbResult.value && dbResult.value[0]?.active === 1) {
-        report.services.database.status = 'healthy';
-      } else if (healthCache && healthCache.services?.database?.status === 'healthy') {
-        // Retain healthy status during transient cloud latency spike to US-East
-        report.services.database.status = 'healthy';
-        report.services.database.warning = dbResult.status === 'rejected' ? dbResult.reason?.message : 'Slow DB response';
+      if (dbResult.status === 'fulfilled' && dbResult.value?.healthy === true) {
+        report.services.database = {status: 'healthy', schema: 'current'};
       } else {
         report.services.database.status = 'degraded';
-        report.services.database.error = dbResult.status === 'rejected' ? dbResult.reason?.message : 'Database check failed';
+        report.services.database.schema = dbResult.status === 'fulfilled' ? dbResult.value.schema : 'unknown';
+        report.services.database.error = 'Database unavailable or required migrations are missing or changed';
       }
 
       if (queueResult.status === 'fulfilled' && !queueResult.value?.cached) {
@@ -63,6 +60,10 @@ async function refreshHealthCache() {
         report.services.queue.error = queueResult.status === 'rejected' ? queueResult.reason?.message : 'Queue check failed';
       }
 
+      report.services.execution = workerResult.status === 'fulfilled' && workerResult.value.healthy
+        ? {status:'healthy',healthyWorkers:workerResult.value.healthyWorkers}
+        : {status:'degraded',healthyWorkers:0};
+
       report.status = Object.values(report.services).every((service) => service.status === 'healthy')
         ? 'healthy'
         : 'degraded';
@@ -71,17 +72,16 @@ async function refreshHealthCache() {
       healthCacheTime = Date.now();
       return report;
     } catch (err) {
-      if (!healthCache) {
-        healthCache = {
-          status: 'healthy',
-          timestamp: new Date().toISOString(),
-          services: {
-            database: { status: 'degraded', error: err.message },
-            queue: { status: 'degraded' }
-          }
-        };
-        healthCacheTime = Date.now();
-      }
+      healthCache = {
+        status: 'degraded',
+        timestamp: new Date().toISOString(),
+        services: {
+          database: { status: 'degraded', error: err.message },
+          queue: { status: 'degraded' },
+          execution: { status: 'degraded' }
+        }
+      };
+      healthCacheTime = Date.now();
       return healthCache;
     } finally {
       refreshPromise = null;
@@ -95,31 +95,23 @@ export async function GET() {
   const now = Date.now();
   const cacheAge = now - healthCacheTime;
 
-  // If cache is fresh, return immediately with HIT
   if (healthCache && cacheAge < HEALTH_CACHE_TTL) {
-    const httpStatus = healthCache.status === 'healthy' ? 200 : 503;
-    return NextResponse.json(healthCache, {
-      status: httpStatus,
-      headers: { 'X-Cache': 'HIT', 'Cache-Control': 'no-store' }
+    return NextResponse.json(healthCache, { 
+      status: healthCache.status === 'healthy' ? 200 : 503,
+      headers: { 
+        'X-Cache': 'HIT',
+        'Cache-Control': 'no-store'
+      }
     });
   }
 
-  // If cache exists but is stale, return stale cache immediately and trigger background refresh
-  if (healthCache) {
-    refreshHealthCache().catch(() => {/* ignore */});
-    const httpStatus = healthCache.status === 'healthy' ? 200 : 503;
-    return NextResponse.json(healthCache, {
-      status: httpStatus,
-      headers: { 'X-Cache': 'STALE', 'Cache-Control': 'no-store' }
-    });
-  }
-
-  // Cold start (cache is null) - perform initial refresh
   await refreshHealthCache();
 
-  const httpStatus = healthCache.status === 'healthy' ? 200 : 503;
-  return NextResponse.json(healthCache, {
-    status: httpStatus,
-    headers: { 'X-Cache': 'MISS', 'Cache-Control': 'no-store' }
+  return NextResponse.json(healthCache, { 
+    status: healthCache.status === 'healthy' ? 200 : 503,
+    headers: { 
+      'X-Cache': 'MISS',
+      'Cache-Control': 'no-store'
+    }
   });
 }

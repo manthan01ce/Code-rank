@@ -1,4 +1,5 @@
 'use client';
+import { fetchCollection } from '@/lib/fetch-collection';
 
 import { useState, useEffect } from 'react';
 import LoadingOverlay from '@/components/LoadingOverlay';
@@ -30,10 +31,10 @@ export default function CoursesManagement() {
     try {
       const token = authToken;
       const url = search ? `/api/courses?search=${search}` : '/api/courses';
-      const res = await fetch(url, {
+      const rows = await fetchCollection(url, {
         headers: { 'Authorization': `Bearer ${token}` }
       });
-      if (res.ok) setCourses(await res.json());
+      setCourses(rows);
     } catch (e) {
       console.error(e);
     } finally {
@@ -183,7 +184,6 @@ export default function CoursesManagement() {
                 <th>Code</th>
                 <th>Name</th>
                 <th>Semester</th>
-                <th>Status</th>
                 <th>Actions</th>
               </tr>
             </thead>
@@ -193,11 +193,6 @@ export default function CoursesManagement() {
                   <td style={{ fontWeight: 600, color: 'var(--primary)' }}>{c.course_code}</td>
                   <td style={{ fontWeight: 600 }}>{c.name}</td>
                   <td>{c.semester}</td>
-                  <td>
-                    <span className={`status-badge ${c.status === 'ongoing' ? 'status-active' : 'status-inactive'}`}>
-                      {c.status.toUpperCase()}
-                    </span>
-                  </td>
                   <td>
                       <div className="btn-actions">
                         <button className="btn-small" style={{ backgroundColor: '#f59e0b', color: 'white' }} onClick={() => handleEditClick(c)}>
@@ -211,7 +206,7 @@ export default function CoursesManagement() {
                 </tr>
               ))}
               {!loading && courses.length === 0 && (
-                <tr><td colSpan="5" style={{ textAlign: 'center', color: '#888' }}>No courses found.</td></tr>
+                <tr><td colSpan="4" style={{ textAlign: 'center', color: '#888' }}>No courses found.</td></tr>
               )}
             </tbody>
           </table>

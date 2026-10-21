@@ -1,0 +1,16 @@
+{
+  "name": "@coderank/database",
+  "version": "1.1.0",
+  "private": true,
+  "type": "module",
+  "exports": {
+    ".": "./src/client.js",
+    "./migrations": "./src/migrations.js",
+    "./readiness": "./src/readiness.js",
+    "./postgres": "./src/postgres.js"
+  },
+  "dependencies": {
+    "@neondatabase/serverless": "^1.0.2",
+    "pg": "8.23.1"
+  }
+}

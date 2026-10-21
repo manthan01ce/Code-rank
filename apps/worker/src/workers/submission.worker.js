@@ -1,5 +1,8 @@
+import { createServiceToken } from '@coderank/core/security/service-token';
+import { publicResult } from '@coderank/core/security/execution';
 import { Worker } from 'bullmq';
 import { io } from 'socket.io-client';
+import { jobLifetime } from '@coderank/runner/sandbox';
 import {
   runDynamicPractical,
   runPython,
@@ -11,8 +14,10 @@ import {
 } from '../execution/runners/index.js';
 
 export function createSubmissionWorker() {
-  const MAX_CONCURRENT = parseInt(process.env.MAX_CONCURRENT_JOBS || '8', 10);
-  const JOB_TIMEOUT = parseInt(process.env.JOB_TIMEOUT_MS || '30000', 10);
+  const configuredConcurrency = Number(process.env.MAX_CONCURRENT_JOBS || 8);
+  if (!Number.isInteger(configuredConcurrency) || configuredConcurrency < 1 || configuredConcurrency > 64) throw new Error('MAX_CONCURRENT_JOBS must be an integer between 1 and 64');
+  const MAX_CONCURRENT = configuredConcurrency;
+  const JOB_TIMEOUT = jobLifetime();
   const verboseLogs = process.env.WORKER_VERBOSE_LOGS === 'true';
 
   const connection = {
@@ -21,14 +26,15 @@ export function createSubmissionWorker() {
     maxRetriesPerRequest: null,
   };
 
-  const socket = io(`http://127.0.0.1:${process.env.PORT || 3000}`, {
-    auth: {
-      serviceToken: process.env.WORKER_SERVICE_TOKEN || 'coderank-local-dev-service-token-32-chars-long-secure',
-    },
-    reconnection: true,
-    reconnectionAttempts: Infinity,
-    reconnectionDelay: 1000,
+  const socket = io(process.env.REALTIME_URL || `http://127.0.0.1:${process.env.PORT || 3000}`, { transports: ['websocket'], auth: callback => callback({ serviceToken: createServiceToken() }) });
+  let realtimeClosed = false;
+  socket.on('disconnect', reason => {
+    // Socket.IO does not reconnect an explicit server disconnect. A fresh
+    // connection runs the auth callback again and replaces an expired token.
+    // Authentication rejection raises connect_error, which we do not retry here.
+    if (reason === 'io server disconnect' && !realtimeClosed) socket.connect();
   });
+  const disconnectRealtime = () => { realtimeClosed = true; socket.disconnect(); };
 
   console.log(`[SubmissionWorker] Starting... Concurrency: ${MAX_CONCURRENT}`);
 
@@ -38,7 +44,7 @@ export function createSubmissionWorker() {
 
     let result;
     if (type === 'dynamic') {
-      result = await runDynamicPractical(payload);
+      result = await runDynamicPractical({ ...payload, userId, jobId: job.id, enqueuedAt: job.data.enqueuedAt || job.timestamp });
     } else if (type === 'playground') {
       result = await executeCode(payload.language, payload.code, payload.input);
     } else if (type === 'practice') {
@@ -53,15 +59,15 @@ export function createSubmissionWorker() {
       throw new Error(`Unknown job type: ${type}`);
     }
 
-    socket.emit('worker_job_complete', { jobId: job.id, result });
-    return result;
+    return publicResult(result);
   }, {
     connection,
     concurrency: MAX_CONCURRENT,
     lockDuration: JOB_TIMEOUT + 5000,
   });
 
-  worker.on('completed', (job) => {
+  worker.on('completed', (job, result) => {
+    socket.emit('worker_job_complete', { jobId: job.id, result: publicResult(result) });
     if (verboseLogs) console.log(`[SubmissionWorker] Job ${job.id} completed. Duration: ${job.finishedOn - job.processedOn}ms`);
   });
 
@@ -73,7 +79,7 @@ export function createSubmissionWorker() {
         result: { 
           status: 'internal_error', 
           summary: 'Execution failed internally', 
-          runtimeError: err.message 
+          runtimeError: 'Execution failed internally'
         } 
       });
     }
@@ -82,6 +88,9 @@ export function createSubmissionWorker() {
   worker.on('stalled', (jobId) => {
     console.warn(`[SubmissionWorker] Job ${jobId} stalled`);
   });
+  // BullMQ emits connection errors outside processor promises. Keep a listener
+  // so a temporary Redis outage does not become an unhandled EventEmitter error.
+  worker.on('error', error => console.error('[SubmissionWorker] Queue error:', error.message));
 
-  return { worker, socket };
+  return { worker, socket, disconnectRealtime };
 }

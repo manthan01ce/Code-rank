@@ -1,10 +1,10 @@
 import { NextResponse } from 'next/server';
-import { getUserFromRequest } from '@coderank/core/utils/auth';
+import { authenticateRequest } from '@coderank/core/security/active-actor';
 import { UserService } from '@coderank/core/services/UserService';
 
 export async function POST(request) {
   try {
-    const admin = getUserFromRequest(request);
+    const admin = await authenticateRequest(request);
     if (!admin || admin.role !== 'admin') {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }

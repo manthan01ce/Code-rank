@@ -44,8 +44,8 @@ echo ""
 # 2. Verify Node.js
 if ! command -v node >/dev/null 2>&1; then
     echo "❌ Error: Node.js is not installed."
-    echo "   Install Node.js (v18+) with:"
-    echo "   curl -fsSL https://deb.nodesource.com/setup_20.x | sudo -E bash -"
+    echo "   Install Node.js (v24+) with:"
+    echo "   curl -fsSL https://deb.nodesource.com/setup_24.x | sudo -E bash -"
     echo "   sudo apt-get install -y nodejs"
     exit 1
 fi
@@ -74,31 +74,18 @@ if ! docker info >/dev/null 2>&1; then
     COMPOSE_CMD="sudo $COMPOSE_CMD"
 fi
 
-# 4. Ensure environment variables exist
-if [ ! -f "apps/web/.env.local" ] && [ -f ".env.local" ]; then
-    cp .env.local apps/web/.env.local
+# Active workspaces load the root environment through packages/core/config.
+if [ ! -f .env ] && [ ! -f .env.local ]; then
+    echo "Create .env from .env.example and configure Neon and JWT_SECRET first."
+    exit 1
 fi
-if [ ! -f "apps/web/.env" ] && [ -f ".env" ]; then
-    cp .env apps/web/.env
-fi
-if [ ! -f "apps/worker/.env" ]; then
-    if [ -f ".env.local" ]; then
-        cp .env.local apps/worker/.env
-    elif [ -f ".env" ]; then
-        cp .env apps/worker/.env
-    fi
-fi
-
-# 5. Check dependencies
-if [ ! -d "node_modules" ]; then
-    echo "📦 Installing monorepo dependencies..."
-    npm install
-fi
-
-# 6. Start Redis & Execution Daemons
-echo ""
-echo "🚀 [1/3] Starting Redis and isolated compiler daemons in Docker..."
-$COMPOSE_CMD -f runner/docker-compose.yml up -d --build
+if [ ! -d node_modules ]; then npm ci --no-audit --no-fund; fi
+export HOSTNAME="0.0.0.0"
+export PORT="${PORT:-3000}"
+export ALLOWED_ORIGIN="${ALLOWED_ORIGIN:-http://localhost:$PORT,http://$HOST_IP:$PORT}"
+echo "Building the sandbox image and starting Redis..."
+$COMPOSE_CMD -f infrastructure/docker-compose.yml --profile build-image build runner-image
+$COMPOSE_CMD -f infrastructure/docker-compose.yml up -d redis
 
 # 7. Setup Process Cleanup Trap
 WORKER_PID=""
@@ -121,7 +108,7 @@ trap cleanup SIGINT SIGTERM EXIT
 
 # 8. Start Backend Worker
 echo "⚙️  [2/3] Starting BullMQ backend worker..."
-(cd apps/worker && node src/index.js) &
+npm run worker &
 WORKER_PID=$!
 
 # Wait briefly for worker to initialize
@@ -132,7 +119,7 @@ echo "🖥️  [3/3] Starting Frontend web server (0.0.0.0:3000)..."
 export HOSTNAME="0.0.0.0"
 export PORT="3000"
 
-(cd apps/web && node server.js) &
+npm run web &
 FRONTEND_PID=$!
 
 echo ""

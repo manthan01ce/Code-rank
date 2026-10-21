@@ -69,7 +69,7 @@ function EditModal({ user, onClose, onSave }) {
         extraInfoUpdate.department = dept;
       }
       
-      const res = await fetch(`/api/profile/${handle}`, {
+      const res = await fetch('/api/auth/profile', {
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json',
@@ -78,14 +78,35 @@ function EditModal({ user, onClose, onSave }) {
         body: JSON.stringify({
           name,
           extra_info: extraInfoUpdate,
-          currentPassword,
-          newPassword
+          currentPassword: currentPassword || undefined,
+          newPassword: newPassword || undefined
         }),
       });
-      if (!res.ok) {
-        const d = await res.json();
-        throw new Error(d.error || 'Save failed');
+
+      let d = {};
+      try {
+        const text = await res.text();
+        d = text ? JSON.parse(text) : {};
+      } catch {
+        d = {};
       }
+
+      if (!res.ok) {
+        throw new Error(d.error || `Save failed (${res.status})`);
+      }
+
+      if (d.token) {
+        localStorage.setItem('token', d.token);
+      }
+      try {
+        const stored = JSON.parse(localStorage.getItem('user') || '{}');
+        if (stored && typeof stored === 'object') {
+          stored.name = name;
+          stored.extra_info = extraInfoUpdate;
+          localStorage.setItem('user', JSON.stringify(stored));
+        }
+      } catch {}
+
       onSave({ name, extra_info: extraInfoUpdate });
       onClose();
     } catch (e) {

@@ -14,13 +14,28 @@
     "./utils/pdf-gen": "./src/utils/pdf-gen.js",
     "./utils/auth": "./src/utils/auth.js",
     "./utils/timeout": "./src/utils/timeout.js",
-    "./utils/circuit-breaker": "./src/utils/circuit-breaker.js"
+    "./utils/circuit-breaker": "./src/utils/circuit-breaker.js",
+    "./security/execution": "./src/security/execution.js",
+    "./services/PracticalService": "./src/services/PracticalService.js",
+    "./security/service-token": "./src/security/service-token.js",
+    "./services/GradingService": "./src/modules/submissions/GradingService.js",
+    "./services/PracticalManagementService": "./src/modules/practicals/PracticalManagementService.js",
+    "./services/MappingService": "./src/modules/mapping/MappingService.js",
+    "./services/SubmissionHistoryService": "./src/modules/submissions/SubmissionHistoryService.js",
+    "./services/UserManagementService": "./src/modules/users/UserManagementService.js",
+    "./services/CourseReportService": "./src/modules/reports/CourseReportService.js",
+    "./security/active-actor": "./src/security/active-actor.js",
+    "./db-readiness": "./src/db/readiness.js"
   },
   "dependencies": {
     "@neondatabase/serverless": "^1.0.2",
     "bcryptjs": "^3.0.3",
     "bullmq": "^6.3.4",
     "ioredis": "^6.0.0",
-    "jsonwebtoken": "^9.0.3"
+    "jsonwebtoken": "^9.0.3",
+    "dotenv": "^17.4.2",
+    "@coderank/database": "1.1.0",
+    "@coderank/queue": "1.1.0",
+    "redis": "6.2.1"
   }
 }

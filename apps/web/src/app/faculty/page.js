@@ -1,42 +1,47 @@
 'use client';
 import Editor from '@monaco-editor/react';
 
-import { useState, useEffect } from 'react';
+import { fetchCollection } from '@/lib/fetch-collection';
+import { useState, useEffect, useRef } from 'react';
 import { useRouter } from 'next/navigation';
 import LoadingOverlay from '@/components/LoadingOverlay';
 import { useSocket } from '@/hooks/useSocket';
 import { usePolling } from '@/hooks/usePolling';
+import { useFacultyAuth } from '@/hooks/useFacultyAuth';
 
 export default function FacultyDashboard() {
   const router = useRouter();
   const socket = useSocket();
+  const { token: authToken, isReady } = useFacultyAuth();
+  const token = () => authToken || (typeof window !== 'undefined' ? localStorage.getItem('token') : '') || '';
+
   const [courses, setCourses] = useState([]);
   const [batches, setBatches] = useState([]);
   
-  // Context selection
-  const [selectedCourse, setSelectedCourse] = useState(() => {
-    if (typeof window !== 'undefined') return localStorage.getItem('facultySelectedCourse') || '';
-    return '';
-  });
-  useEffect(() => {
-    if (typeof window !== 'undefined') localStorage.setItem('facultySelectedCourse', selectedCourse);
-  }, [selectedCourse]);
+  // Read browser preferences after the first render so server and client
+  // render the same initial dashboard. Do not overwrite storage before restore.
+  const [preferencesReady, setPreferencesReady] = useState(false);
+  const [selectedCourse, setSelectedCourse] = useState('');
   const [selectedBatch, setSelectedBatch] = useState('');
-  
-  // Active Tab
-  const [activeTab, setActiveTab] = useState(() => {
-    if (typeof window !== 'undefined') {
-      return localStorage.getItem('facultyActiveTab') || 'practicals';
-    }
-    return 'practicals';
-  });
+  const [activeTab, setActiveTab] = useState('practicals');
 
   useEffect(() => {
-    if (typeof window !== 'undefined') {
-      localStorage.setItem('facultyActiveTab', activeTab);
-    }
-  }, [activeTab]); // 'practicals', 'submissions', 'marks'
-  
+    const params = new URLSearchParams(window.location.search);
+    const course = params.get('course') || localStorage.getItem('facultySelectedCourse') || '';
+    const tab = params.get('tab') || localStorage.getItem('facultyActiveTab');
+    setSelectedCourse(/^[1-9]\d*$/.test(course) ? course : '');
+    setActiveTab(['practicals', 'submissions', 'marks'].includes(tab) ? tab : 'practicals');
+    setPreferencesReady(true);
+  }, []);
+
+  useEffect(() => {
+    if (preferencesReady) localStorage.setItem('facultySelectedCourse', selectedCourse);
+  }, [selectedCourse, preferencesReady]);
+
+  useEffect(() => {
+    if (preferencesReady) localStorage.setItem('facultyActiveTab', activeTab);
+  }, [activeTab, preferencesReady]);
+
   // Practicals state
   const [practicals, setPracticals] = useState([]);
   const [loadingPracticals, setLoadingPracticals] = useState(false);
@@ -68,6 +73,9 @@ export default function FacultyDashboard() {
 
   // Submissions state
   const [selectedPracticalId, setSelectedPracticalId] = useState('');
+  const [submissionCursor, setSubmissionCursor] = useState(null);
+  const [nextSubmissionCursor, setNextSubmissionCursor] = useState(null);
+  const submissionRequestVersion = useRef(0);
   const [submissions, setSubmissions] = useState([]);
   const [loadingSubmissions, setLoadingSubmissions] = useState(false);
   const [studentSearch, setStudentSearch] = useState('');
@@ -99,6 +107,10 @@ export default function FacultyDashboard() {
 
   // Marks Overview state
   const [selectedMarksPracticalId, setSelectedMarksPracticalId] = useState('');
+  const [statsStudentCursor, setStatsStudentCursor] = useState(null);
+  const [statsPracticalCursor, setStatsPracticalCursor] = useState(null);
+  const statsRequestVersion = useRef(0);
+  const statsRefresh = useRef(null);
   const [statsData, setStatsData] = useState(null);
   const [loadingStats, setLoadingStats] = useState(false);
 
@@ -107,72 +119,32 @@ export default function FacultyDashboard() {
   const [processing, setProcessing] = useState(false);
   const [toast, setToast] = useState(null);
 
-  const token = () => localStorage.getItem('token');
+
 
   const showToast = (type, msg) => {
     setToast({ type, msg });
     setTimeout(() => setToast(null), 4000);
   };
 
-  // Auth guard: redirect unauthenticated / non-faculty users to landing page
-  const [isHydrated, setIsHydrated] = useState(false);
-  
-  useEffect(() => {
-    // Wait for client-side hydration before accessing localStorage
-    setIsHydrated(true);
-  }, []);
+  // Auth guard handled by useFacultyAuth hook above — no duplicate needed here.
 
+  // Gate initial data fetch on isReady (token available from localStorage)
   useEffect(() => {
-    if (!isHydrated) return; // Don't check auth until hydrated
-    
-    const storedToken = localStorage.getItem('token');
-    const storedUser  = localStorage.getItem('user');
-    if (!storedToken || !storedUser) {
-      router.replace('/');
-      return;
-    }
-    try {
-      const parsed = JSON.parse(storedUser);
-      if (parsed.role !== 'faculty') {
-        router.replace('/');
-      }
-    } catch {
-      router.replace('/');
-    }
-  }, [router, isHydrated]);
-
-  useEffect(() => {
-    fetchContextData(true);
-  }, []);
-
-  useEffect(() => {
-    if (typeof window !== 'undefined') {
-      const params = new URLSearchParams(window.location.search);
-      const tab = params.get('tab');
-      if (tab === 'submissions') {
-        setActiveTab('submissions');
-      } else if (tab === 'marks') {
-        setActiveTab('marks');
-      } else {
-        setActiveTab('practicals');
-      }
-      const courseParam = params.get('course');
-      if (courseParam) {
-        setSelectedCourse(courseParam);
-      }
-    }
-  }, []);
+    if (isReady) fetchContextData(true);
+  }, [isReady]);
 
   const fetchContextData = async (isInitialLoad = false) => {
+    const activeToken = token();
+    if (!activeToken) return;
     if (isInitialLoad) setLoading(true);
     try {
       const [coursesRes, batchesRes] = await Promise.all([
-        fetch('/api/faculty/courses', { headers: { Authorization: `Bearer ${token()}` } }),
-        fetch('/api/faculty/batches', { headers: { Authorization: `Bearer ${token()}` } })
+        fetchCollection('/api/faculty/courses', { headers: { Authorization: `Bearer ${activeToken}` } }),
+        fetchCollection('/api/faculty/batches', { headers: { Authorization: `Bearer ${activeToken}` } })
       ]);
 
-      if (coursesRes.ok) {
-        const courseList = await coursesRes.json();
+      if (coursesRes) {
+        const courseList = coursesRes;
         setCourses(courseList);
         setSelectedCourse(prev => {
           if (prev && courseList.some(c => c.id.toString() === prev.toString())) {
@@ -182,11 +154,11 @@ export default function FacultyDashboard() {
           if (stored && courseList.some(c => c.id.toString() === stored.toString())) {
             return stored;
           }
-          return prev || '';
+          return '';
         });
       }
-      if (batchesRes.ok) {
-        const batchList = await batchesRes.json();
+      if (batchesRes) {
+        const batchList = batchesRes;
         setBatches(batchList);
         if (batchList.length > 0) {
           setSelectedBatch(batchList[0]);
@@ -212,11 +184,10 @@ export default function FacultyDashboard() {
   const fetchPracticals = async (showLoading = true) => {
     if (showLoading) setLoadingPracticals(true);
     try {
-      const res = await fetch(`/api/faculty/practicals?course_id=${selectedCourse}`, {
+      const data = await fetchCollection(`/api/faculty/practicals?course_id=${selectedCourse}`, {
         headers: { Authorization: `Bearer ${token()}` }
       });
-      if (res.ok) {
-        const data = await res.json();
+      {
         setPracticals(data);
         if (data.length > 0) {
           setSelectedPracticalId(prev => {
@@ -244,27 +215,33 @@ export default function FacultyDashboard() {
   // Load submissions
   useEffect(() => {
     if (selectedPracticalId && activeTab === 'submissions') {
-      fetchSubmissions(true);
+      fetchSubmissions(true, null);
     }
   }, [selectedPracticalId, activeTab, studentSearch, submissionStatusFilter, submissionSortBy, submissionSortOrder, submissionDivisionFilter]);
 
-  const fetchSubmissions = async (showLoading = true) => {
+  const fetchSubmissions = async (showLoading = true, cursor = submissionCursor) => {
+    const version = ++submissionRequestVersion.current;
     if (showLoading) setLoadingSubmissions(true);
     try {
       let url = `/api/faculty/practicals/${selectedPracticalId}/submissions?studentSearch=${encodeURIComponent(studentSearch)}&status=${submissionStatusFilter}&sortBy=${submissionSortBy}&sortOrder=${submissionSortOrder}`;
       if (submissionDivisionFilter && submissionDivisionFilter !== 'all') {
         url += `&division=${encodeURIComponent(submissionDivisionFilter)}`;
       }
+      if (cursor) url += `&cursor=${encodeURIComponent(cursor)}`;
       const res = await fetch(url, {
         headers: { Authorization: `Bearer ${token()}` }
       });
       if (res.ok) {
-        setSubmissions(await res.json());
+        const data = await res.json();
+        if (version !== submissionRequestVersion.current) return;
+        setSubmissions(data);
+        setSubmissionCursor(cursor);
+        setNextSubmissionCursor(res.headers.get('X-Next-Cursor') || null);
       }
     } catch (e) {
       console.error(e);
     } finally {
-      if (showLoading) setLoadingSubmissions(false);
+      if (version === submissionRequestVersion.current) setLoadingSubmissions(false);
     }
   };
 
@@ -304,31 +281,27 @@ export default function FacultyDashboard() {
     
     socket.emit('join_practical_room', selectedPracticalId);
     
-    const handleNewSubmission = (newSub) => {
-      setSubmissions(prev => {
-        if (prev.find(s => s.id === newSub.id)) return prev;
-        return [newSub, ...prev];
-      });
-    };
-    
+    // A new row can change sorting, filters and cursor boundaries.
+    const handleNewSubmission = () => { fetchSubmissions(false); };
+
     socket.on('new_submission', handleNewSubmission);
     
     return () => {
       socket.off('new_submission', handleNewSubmission);
       socket.emit('leave_practical_room', selectedPracticalId);
     };
-  }, [socket, selectedPracticalId]);
+  }, [socket, selectedPracticalId, submissionCursor, studentSearch, submissionStatusFilter, submissionSortBy, submissionSortOrder, submissionDivisionFilter]);
 
   // Load stats
   useEffect(() => {
     if (selectedCourse && activeTab === 'marks') {
-      fetchStats(true);
+      fetchStats(true, null, null);
     }
     
     if (!socket || !selectedCourse || activeTab !== 'marks') return;
     
     const handleNewSubmissionMarks = () => {
-      fetchStats(false);
+      statsRefresh.current?.();
     };
     
     socket.on('new_submission_marks', handleNewSubmissionMarks);
@@ -336,23 +309,29 @@ export default function FacultyDashboard() {
     return () => {
       socket.off('new_submission_marks', handleNewSubmissionMarks);
     };
-  }, [selectedCourse, activeTab, socket]);
+  }, [selectedCourse, activeTab, socket, selectedDepartmentFilter]);
 
-  const fetchStats = async (showLoading = true) => {
+  const fetchStats = async (showLoading = true, studentCursor = statsStudentCursor, practicalCursor = statsPracticalCursor) => {
+    const version = ++statsRequestVersion.current;
     if (showLoading) setLoadingStats(true);
     try {
-      const res = await fetch(`/api/faculty/courses/${selectedCourse}/stats`, {
+      const params = new URLSearchParams();
+      if (studentCursor) params.set('studentCursor', studentCursor);
+      if (practicalCursor) params.set('practicalCursor', practicalCursor);
+      if (selectedDepartmentFilter !== 'all') params.set('department', selectedDepartmentFilter);
+      const res = await fetch(`/api/faculty/courses/${selectedCourse}/stats?${params}`, {
         headers: { Authorization: `Bearer ${token()}` }
       });
       if (res.ok) {
-        setStatsData(await res.json());
+        const data = await res.json();
+        if (version !== statsRequestVersion.current) return;
+        setStatsData(data); setStatsStudentCursor(studentCursor); setStatsPracticalCursor(practicalCursor);
       }
-    } catch (e) {
-      console.error(e);
-    } finally {
-      if (showLoading) setLoadingStats(false);
-    }
+    } catch (e) { console.error(e); }
+    finally { if (version === statsRequestVersion.current) setLoadingStats(false); }
   };
+
+  useEffect(() => { statsRefresh.current = () => fetchStats(false); });
 
   // Background polling fallback (every 30s) - silent refresh so UI never flickers or resets
   usePolling(() => {
@@ -692,9 +671,17 @@ export default function FacultyDashboard() {
         headers: { Authorization: `Bearer ${token()}` }
       });
       if (res.ok) {
-          setViewingSubmission(await res.json());
-          setShowSubmissionModal(true);
-        } else {
+        const data = await res.json();
+        let code = data.code || '';
+        if (typeof code === 'string' && code.trim().length > 20 && code.trim().length % 4 === 0 && /^[A-Za-z0-9+/]+={0,2}$/.test(code.trim())) {
+          try {
+            const decoded = atob(code.trim());
+            if (btoa(decoded) === code.trim()) code = decoded;
+          } catch {}
+        }
+        setViewingSubmission({ ...data, code });
+        setShowSubmissionModal(true);
+      } else {
           const errData = await res.text();
           console.error("Submission fetch failed:", errData);
           showToast('error', 'Error: ' + errData.substring(0, 50));
@@ -755,10 +742,11 @@ export default function FacultyDashboard() {
       ...statsData.practicals.map((p, i) => `Practical ${i + 1} (${p.title})`)
     ];
 
+    const marks = new Map(statsData.submissions.map(s => [`${s.student_id}:${s.practical_id}`, s]));
     const rows = studentsToExport.map(s => {
       const row = [s.roll_number || '—', s.name, s.email, s.department || '—', s.division || '—'];
       statsData.practicals.forEach(p => {
-        const sub = statsData.submissions.find(sub => sub.student_id === s.id && sub.practical_id === p.id);
+        const sub = marks.get(`${s.id}:${p.id}`);
         if (sub) {
           const lateSuffix = sub.is_late ? ' (Late)' : '';
           row.push(`${sub.normalized_marks}${lateSuffix}`);
@@ -780,7 +768,7 @@ export default function FacultyDashboard() {
     link.setAttribute('href', url);
     const courseCodeStr = statsData.course?.course_code || 'course';
     const deptSuffix = selectedDepartmentFilter === 'all' ? 'All_Departments' : selectedDepartmentFilter.replace(/\s+/g, '_');
-    link.setAttribute('download', `${courseCodeStr.replace(/\s+/g, '_')}_${deptSuffix}_grades_matrix.csv`);
+    link.setAttribute('download', `${courseCodeStr.replace(/\s+/g, '_')}_${deptSuffix}_grades_matrix_page.csv`);
     document.body.appendChild(link);
     link.click();
     document.body.removeChild(link);
@@ -1200,6 +1188,11 @@ export default function FacultyDashboard() {
                 </tbody>
               </table>
             )}
+            <div style={{display: 'flex', gap: 12, padding: 16}}>
+              <button disabled={loadingSubmissions || !submissionCursor} onClick={() => fetchSubmissions(true, null)}>First page</button>
+              <span>{submissions.length} submissions on this page</span>
+              <button disabled={loadingSubmissions || !nextSubmissionCursor} onClick={() => fetchSubmissions(true, nextSubmissionCursor)}>Next page</button>
+            </div>
           </div>
         </div>
       )}
@@ -1222,11 +1215,9 @@ export default function FacultyDashboard() {
                     onChange={e => setSelectedDepartmentFilter(e.target.value)}
                     style={{ padding: '8px 12px', borderRadius: '6px', border: '1px solid var(--border-color)', backgroundColor: 'white', fontSize: '13px', fontWeight: 600 }}
                   >
-                    <option value="all">All Departments ({statsData.students?.length || 0})</option>
-                    {Array.from(new Set((statsData?.students || []).map(s => s.department).filter(Boolean))).sort().map(dept => (
-                      <option key={dept} value={dept}>
-                        {dept} ({(statsData.students || []).filter(s => s.department === dept).length})
-                      </option>
+                    <option value="all">All Departments</option>
+                    {(statsData.departments || []).filter(d => d.department).map(d => (
+                      <option key={d.department} value={d.department}>{d.department} ({d.count})</option>
                     ))}
                   </select>
                 </div>
@@ -1236,13 +1227,14 @@ export default function FacultyDashboard() {
                   style={{ width: 'auto', padding: '10px 18px', backgroundColor: '#10b981', margin: 0, display: 'flex', alignItems: 'center', gap: '6px' }}
                   onClick={handleExportCSV}
                 >
-                  ⬆ {selectedDepartmentFilter === 'all' ? 'Export All Marks (CSV)' : `Export ${selectedDepartmentFilter} Marks (CSV)`}
+                  ⬆ Export Current Page (CSV)
                 </button>
               </div>
             )}
           </div>
 
           {loadingStats ? <p>Loading marks matrix...</p> : statsData && statsData.practicals && (() => {
+            const marks = new Map(statsData.submissions.map(s => [`${s.student_id}:${s.practical_id}`, s]));
             const filteredStatsStudents = (statsData.students || []).filter(s => {
               if (selectedDepartmentFilter === 'all') return true;
               return (s.department || '').toUpperCase() === selectedDepartmentFilter.toUpperCase();
@@ -1250,6 +1242,13 @@ export default function FacultyDashboard() {
 
             return (
               <div>
+                <div style={{display: 'flex', gap: 12, flexWrap: 'wrap'}}>
+                  <button disabled={!statsStudentCursor} onClick={() => fetchStats(true, null, statsPracticalCursor)}>First student page</button>
+                  <button disabled={!statsData.pagination?.studentCursor} onClick={() => fetchStats(true, statsData.pagination.studentCursor, statsPracticalCursor)}>Next students</button>
+                  <button disabled={!statsPracticalCursor} onClick={() => fetchStats(true, statsStudentCursor, null)}>First practical page</button>
+                  <button disabled={!statsData.pagination?.practicalCursor} onClick={() => fetchStats(true, statsStudentCursor, statsData.pagination.practicalCursor)}>Next practicals</button>
+                  <span>{statsData.students.length} students × {statsData.practicals.length} practicals on this page</span>
+                </div>
                 <div className="table-container" style={{ overflowX: 'auto', marginTop: '15px' }}>
                   <table>
                     <thead>
@@ -1284,7 +1283,7 @@ export default function FacultyDashboard() {
                             </span>
                           </td>
                           {statsData.practicals.map(p => {
-                            const sub = statsData.submissions.find(sub => sub.student_id === s.id && sub.practical_id === p.id);
+                            const sub = marks.get(`${s.id}:${p.id}`);
                             return (
                               <td key={p.id} style={{ textAlign: 'center' }}>
                                 {sub ? (

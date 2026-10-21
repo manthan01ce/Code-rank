@@ -1,10 +1,11 @@
+import { jsonBody } from '@/lib/route-response';
 import { NextResponse } from 'next/server';
 import { UserService } from '@coderank/core/services/UserService';
-import { getUserFromRequest } from '@coderank/core/utils/auth';
+import { authenticateRequest } from '@coderank/core/security/active-actor';
 
 export async function GET(request) {
   try {
-    const user = getUserFromRequest(request);
+    const user = await authenticateRequest(request);
     if (!user || user.role !== 'admin') {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
@@ -15,21 +16,21 @@ export async function GET(request) {
     const status = searchParams.get('status');
     const division = searchParams.get('division');
 
-    const usersList = await UserService.listUsers({ role, search, status, division });
-    return NextResponse.json(usersList);
+    const usersList = await UserService.listUsers({ role, search, status, division, cursor: searchParams.get('cursor'), limit: searchParams.get('limit') || 100 });
+    return NextResponse.json(usersList, { headers: { 'X-Next-Cursor': usersList.length === Number(searchParams.get('limit') || 100) ? String(usersList.at(-1).id) : '', 'Cache-Control': 'no-store' } });
   } catch (error) {
     if (error.status) {
       return NextResponse.json({ error: error.message }, { status: error.status });
     }
     console.error('Fetch users error:', error);
-    return NextResponse.json({ error: 'Internal server error: ' + error.message }, { status: 500 });
+    return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
   }
 }
 
 export async function POST(request) {
   try {
-    const user = getUserFromRequest(request);
-    const body = await request.json();
+    const user = await authenticateRequest(request);
+    const body = await jsonBody(request);
     const result = await UserService.createUser(user, body);
     return NextResponse.json(result);
   } catch (error) {
@@ -43,8 +44,8 @@ export async function POST(request) {
 
 export async function PUT(request) {
   try {
-    const user = getUserFromRequest(request);
-    const body = await request.json();
+    const user = await authenticateRequest(request);
+    const body = await jsonBody(request);
     const result = await UserService.updateUser(user, body);
     return NextResponse.json(result);
   } catch (error) {
@@ -58,7 +59,7 @@ export async function PUT(request) {
 
 export async function DELETE(request) {
   try {
-    const user = getUserFromRequest(request);
+    const user = await authenticateRequest(request);
     const { searchParams } = new URL(request.url);
     const id = searchParams.get('id');
     const result = await UserService.deleteUser(user, id);
