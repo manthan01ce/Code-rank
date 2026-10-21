@@ -5,23 +5,30 @@ import { authenticateRequest } from '@coderank/core/security/active-actor';
 export async function GET(request, { params }) {
   try {
     const user = await authenticateRequest(request);
-    if (!user || user.role !== 'faculty') {
+    if (!user || (user.role !== 'faculty' && user.role !== 'admin')) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
     const { id } = await params;
     const practicalId = parseInt(id);
 
-    // Fetch practical & ownership
-    const practicals = await sql`
-      SELECT p.*, c.name as course_name, c.course_code, c.semester
-      FROM practicals p
-      JOIN courses c ON p.course_id = c.id
-      WHERE p.id = ${practicalId} AND p.faculty_id = ${user.id}
-    `;
+    // Admins can view any practical; faculty can only view practicals they own
+    const practicals = user.role === 'admin'
+      ? await sql`
+          SELECT p.*, c.name as course_name, c.course_code, c.semester
+          FROM practicals p
+          JOIN courses c ON p.course_id = c.id
+          WHERE p.id = ${practicalId}
+        `
+      : await sql`
+          SELECT p.*, c.name as course_name, c.course_code, c.semester
+          FROM practicals p
+          JOIN courses c ON p.course_id = c.id
+          WHERE p.id = ${practicalId} AND p.faculty_id = ${user.id}
+        `;
 
     if (practicals.length === 0) {
-      return NextResponse.json({ error: 'Practical not found or not owned by you' }, { status: 404 });
+      return NextResponse.json({ error: 'Practical not found or access denied' }, { status: 404 });
     }
 
     const practical = practicals[0];

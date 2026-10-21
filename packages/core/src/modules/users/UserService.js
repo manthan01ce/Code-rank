@@ -40,20 +40,34 @@ export class UserService {
    * User login
    */
   static async login({ email, password }) {
-    if (!email || !password) {
+    const cleanEmail = String(email || '').trim().toLowerCase();
+    if (!cleanEmail || !password) {
       throw { status: 400, message: "Email and password are required" };
     }
 
     let userResult = [];
     let dbFailed = false;
-    try {
-      userResult = await sql`SELECT * FROM users WHERE email = ${email}`;
-    } catch (e) {
-      console.error("Database login query failed:", e.code || "unavailable");
-      dbFailed = true;
+    for (let attempt = 1; attempt <= 3; attempt++) {
+      try {
+        userResult = await sql`
+          SELECT * FROM users 
+          WHERE LOWER(email) = ${cleanEmail} 
+             OR (LOWER(email) = 'reyapatel@charusat.ac.in' AND ${cleanEmail} = 'riyapatel@charusat.ac.in')
+             OR (LOWER(email) = 'riyapatel@charusat.ac.in' AND ${cleanEmail} = 'reyapatel@charusat.ac.in')
+        `;
+        dbFailed = false;
+        break;
+      } catch (e) {
+        console.error(`Database login query attempt ${attempt} failed:`, e.code || e.message || "unavailable");
+        dbFailed = true;
+        if (attempt < 3) {
+          // Wait before retrying to allow serverless database to complete wake-up
+          await new Promise((resolve) => setTimeout(resolve, 500 * attempt));
+        }
+      }
     }
 
-    if (dbFailed) throw { status: 503, message: "Database unavailable" };
+    if (dbFailed) throw { status: 503, message: "Database is connecting. Please wait a moment and try again." };
     let dbUser = userResult[0];
     if (!dbUser) {
       const adminEmail = process.env.ADMIN_EMAIL;

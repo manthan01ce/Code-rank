@@ -43,10 +43,14 @@ export function practiceHandler(fixedLanguage = null, submit = false) {
       const { code, problemId } = body;
       const language = fixedLanguage || body.language || 'python';
       validateExecution({ code, language });
-      if (typeof problemId === 'string' && problemId.startsWith('practical_')) {
-        const rawId = problemId.slice('practical_'.length);
-        if (!/^\d+$/.test(rawId)) throw { status: 400, message: 'Invalid practical ID' };
-        return await enqueueExecution(request, 'dynamic', { language, code, dbId: Number(rawId) }, { submit });
+      const isPractical = (typeof problemId === 'string' && problemId.startsWith('practical_')) || (typeof problemId === 'number') || (/^\d+$/.test(String(problemId || '')));
+      if (isPractical) {
+        const rawId = typeof problemId === 'string' && problemId.startsWith('practical_')
+          ? problemId.slice('practical_'.length)
+          : String(problemId);
+        if (/^\d+$/.test(rawId)) {
+          return await enqueueExecution(request, 'dynamic', { language, code, dbId: Number(rawId) }, { submit });
+        }
       }
       const problem = (Object.hasOwn(STATIC_PROBLEMS, problemId) ? STATIC_PROBLEMS[problemId] : null) || Object.values(STATIC_PROBLEMS).find(p => p.slug === problemId || p.id === Number(problemId));
       if (!problem || !Array.isArray(problem.testCases) || !problem.testCases.length) throw { status: 404, message: 'Problem not found' };

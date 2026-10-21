@@ -35,12 +35,32 @@ function getSql() {
   return cachedSql;
 }
 
+async function executeWithRetry(fn, retries = 2, delayMs = 500) {
+  for (let i = 0; i <= retries; i++) {
+    try {
+      return await fn();
+    } catch (err) {
+      const msg = (err?.message || '') + (err?.sourceError?.message || '');
+      const code = err?.code || err?.sourceError?.code;
+      const isConnError = msg.includes('fetch failed') || msg.includes('ECONNREFUSED') || code === 'ECONNREFUSED';
+      if (i < retries && isConnError) {
+        // Neon compute endpoint is waking up from suspension; wait and retry
+        await new Promise((resolve) => setTimeout(resolve, delayMs * (i + 1)));
+        continue;
+      }
+      throw err;
+    }
+  }
+}
+
 const sql = new Proxy(function () {}, {
   apply(_target, thisArg, argArray) {
-    const client = getSql();
-    const queryPromise = Reflect.apply(client, thisArg, argArray);
-    // Wrap the query with timeout protection
-    return withTimeout(queryPromise, DB_QUERY_TIMEOUT_MS);
+    return executeWithRetry(() => {
+      const client = getSql();
+      const queryPromise = Reflect.apply(client, thisArg, argArray);
+      // Wrap the query with timeout protection
+      return withTimeout(queryPromise, DB_QUERY_TIMEOUT_MS);
+    });
   },
   get(_target, prop, receiver) {
     const client = getSql();
@@ -49,7 +69,9 @@ const sql = new Proxy(function () {}, {
       // Native transactions must resolve only after definitive COMMIT/ROLLBACK.
       // A Promise.race here could report failure while a transaction still commits.
       if (prop === 'transaction' && process.env.DATABASE_DRIVER === 'postgres') return val.bind(client);
-      if (prop === 'query' || prop === 'transaction') return (...args) => withTimeout(val.apply(client, args), DB_QUERY_TIMEOUT_MS);
+      if (prop === 'query' || prop === 'transaction') {
+        return (...args) => executeWithRetry(() => withTimeout(val.apply(client, args), DB_QUERY_TIMEOUT_MS));
+      }
       return val.bind(client);
     }
     return val;

@@ -93,8 +93,10 @@ export async function checkRateLimit(identifier, category = 'default') {
       return { allowed: true };
     });
   } catch (err) {
-    console.error('Rate limiter unavailable:', err.message);
-    return { allowed: false, retryAfter: 5, unavailable: true };
+    // When Redis/rate-limiter is unavailable, fail OPEN so legitimate users are not
+    // blocked. Log a warning for observability but do not deny the request.
+    console.warn('[RateLimit] Unavailable, failing open:', err.message);
+    return { allowed: true, unavailable: true };
   }
 }
 

@@ -113,7 +113,7 @@ export class SubmissionService {
    * Get submission details
    */
   static async getSubmission(user, id) {
-    if (!user || (user.role !== 'faculty' && user.role !== 'student')) {
+    if (!user || (user.role !== 'faculty' && user.role !== 'student' && user.role !== 'admin')) {
       throw { status: 401, message: 'Unauthorized' };
     }
 
@@ -132,6 +132,7 @@ export class SubmissionService {
 
     const submission = submissions[0];
 
+    // Faculty must be assigned to the practical's course; admins bypass ownership check
     if (user.role === 'faculty') {
       const mapping = await sql`
         SELECT 1 FROM course_faculty cf
@@ -164,7 +165,7 @@ export class SubmissionService {
    * Delete submission (faculty only)
    */
   static async deleteSubmission(user, id) {
-    if (!user || user.role !== 'faculty') throw {status:401,message:'Unauthorized: Only faculty can delete submissions.'};
+    if (!user || (user.role !== 'faculty' && user.role !== 'admin')) throw {status:401,message:'Unauthorized: Only faculty or admins can delete submissions.'};
     const subId=Number(id);
     if(!Number.isSafeInteger(subId)||subId<=0)throw {status:400,message:'Invalid submission ID'};
     try {

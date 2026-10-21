@@ -7,10 +7,14 @@ import { useRouter } from 'next/navigation';
 import LoadingOverlay from '@/components/LoadingOverlay';
 import { useSocket } from '@/hooks/useSocket';
 import { usePolling } from '@/hooks/usePolling';
+import { useFacultyAuth } from '@/hooks/useFacultyAuth';
 
 export default function FacultyDashboard() {
   const router = useRouter();
   const socket = useSocket();
+  const { token: authToken, isReady } = useFacultyAuth();
+  const token = () => authToken || (typeof window !== 'undefined' ? localStorage.getItem('token') : '') || '';
+
   const [courses, setCourses] = useState([]);
   const [batches, setBatches] = useState([]);
   
@@ -115,50 +119,28 @@ export default function FacultyDashboard() {
   const [processing, setProcessing] = useState(false);
   const [toast, setToast] = useState(null);
 
-  const token = () => localStorage.getItem('token');
+
 
   const showToast = (type, msg) => {
     setToast({ type, msg });
     setTimeout(() => setToast(null), 4000);
   };
 
-  // Auth guard: redirect unauthenticated / non-faculty users to landing page
-  const [isHydrated, setIsHydrated] = useState(false);
-  
-  useEffect(() => {
-    // Wait for client-side hydration before accessing localStorage
-    setIsHydrated(true);
-  }, []);
+  // Auth guard handled by useFacultyAuth hook above — no duplicate needed here.
 
+  // Gate initial data fetch on isReady (token available from localStorage)
   useEffect(() => {
-    if (!isHydrated) return; // Don't check auth until hydrated
-    
-    const storedToken = localStorage.getItem('token');
-    const storedUser  = localStorage.getItem('user');
-    if (!storedToken || !storedUser) {
-      router.replace('/');
-      return;
-    }
-    try {
-      const parsed = JSON.parse(storedUser);
-      if (parsed.role !== 'faculty') {
-        router.replace('/');
-      }
-    } catch {
-      router.replace('/');
-    }
-  }, [router, isHydrated]);
-
-  useEffect(() => {
-    fetchContextData(true);
-  }, []);
+    if (isReady) fetchContextData(true);
+  }, [isReady]);
 
   const fetchContextData = async (isInitialLoad = false) => {
+    const activeToken = token();
+    if (!activeToken) return;
     if (isInitialLoad) setLoading(true);
     try {
       const [coursesRes, batchesRes] = await Promise.all([
-        fetchCollection('/api/faculty/courses', { headers: { Authorization: `Bearer ${token()}` } }),
-        fetchCollection('/api/faculty/batches', { headers: { Authorization: `Bearer ${token()}` } })
+        fetchCollection('/api/faculty/courses', { headers: { Authorization: `Bearer ${activeToken}` } }),
+        fetchCollection('/api/faculty/batches', { headers: { Authorization: `Bearer ${activeToken}` } })
       ]);
 
       if (coursesRes) {
@@ -689,9 +671,17 @@ export default function FacultyDashboard() {
         headers: { Authorization: `Bearer ${token()}` }
       });
       if (res.ok) {
-          setViewingSubmission(await res.json());
-          setShowSubmissionModal(true);
-        } else {
+        const data = await res.json();
+        let code = data.code || '';
+        if (typeof code === 'string' && code.trim().length > 20 && code.trim().length % 4 === 0 && /^[A-Za-z0-9+/]+={0,2}$/.test(code.trim())) {
+          try {
+            const decoded = atob(code.trim());
+            if (btoa(decoded) === code.trim()) code = decoded;
+          } catch {}
+        }
+        setViewingSubmission({ ...data, code });
+        setShowSubmissionModal(true);
+      } else {
           const errData = await res.text();
           console.error("Submission fetch failed:", errData);
           showToast('error', 'Error: ' + errData.substring(0, 50));

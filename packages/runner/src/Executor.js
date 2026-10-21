@@ -23,7 +23,7 @@ export class Executor {
   constructor(language, code, timeLimit = 3000, userId = null, { runDocker = dockerCommand } = {}) {
     if (!LANGUAGES[language]) throw new Error('Unsupported language');
     this.config = LANGUAGES[language];
-    this.sandbox = new Sandbox(runDocker);
+    this.sandbox = new Sandbox(runDocker, { language });
     this.code = language === 'java' && !code.includes('class Solution') ? `public class Solution {\n${code}\n}` : code;
     this.timeLimit = timeLimit;
     this.executionId = crypto.randomUUID();
@@ -79,5 +79,13 @@ export class Executor {
     }
     return results;
   }
-  async cleanup() { await this.sandbox.destroy(); }
+  async cleanup() {
+    try {
+      if (this.workdir) {
+        await this.sandbox.script(`rm -rf '${this.workdir}'`, 3000).catch(() => {});
+      }
+    } finally {
+      await this.sandbox.destroy();
+    }
+  }
 }

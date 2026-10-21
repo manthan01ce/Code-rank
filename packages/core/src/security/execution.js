@@ -48,9 +48,15 @@ export function assertPracticalPolicy(user, practical, profile, { submit = false
     }
     const extra = profile.extra_info || {};
     const batch = String(practical.batch_id || '').trim().toLowerCase();
-    if ((batch && batch !== 'all' && batch !== String(extra.batch || '').trim().toLowerCase()) ||
-        !Number.isInteger(Number(extra.semester)) || Number(extra.semester) <= 0 ||
-        Number(extra.semester) !== Number(practical.semester)) {
+    const studentBatch = String(extra.batch || '').trim().toLowerCase();
+    const studentDivision = String(extra.division || '').trim().toLowerCase();
+    const batchMatches = !batch || batch === 'all' || (studentBatch && batch === studentBatch) || (studentDivision && batch === studentDivision);
+
+    const practicalSemester = practical.semester != null ? Number(practical.semester) : null;
+    const studentSemester = Number(extra.semester);
+    const semMatches = practicalSemester == null || (Number.isInteger(studentSemester) && studentSemester > 0 && studentSemester === practicalSemester);
+
+    if (!batchMatches || !semMatches) {
       throw { status: 403, message: 'Practical is not assigned to your batch/semester' };
     }
   } else if (user.role !== 'admin' && !(user.role === 'faculty' && assignedFaculty)) {

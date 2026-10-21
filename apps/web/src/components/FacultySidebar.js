@@ -26,18 +26,29 @@ export default function FacultySidebar() {
     };
   }, []);
 
+  const [isHydrated, setIsHydrated] = useState(false);
+
+  // Wait for client-side hydration before reading localStorage
   useEffect(() => {
+    setIsHydrated(true);
+  }, []);
+
+  useEffect(() => {
+    if (!isHydrated) return;
     const userData = localStorage.getItem('user');
     if (userData) {
-      const parsed = JSON.parse(userData);
-      if (parsed.role !== 'faculty') {
-        router.push('/');
+      try {
+        const parsed = JSON.parse(userData);
+        if (parsed.role !== 'faculty' && parsed.role !== 'admin') {
+          router.replace('/login');
+          return;
+        }
+        setUser(parsed);
+      } catch {
+        router.replace('/login');
       }
-      setUser(parsed);
-    } else {
-      router.push('/');
     }
-  }, []);
+  }, [isHydrated, router]);
 
   const [activeMenu, setActiveMenu] = useState('dashboard');
 

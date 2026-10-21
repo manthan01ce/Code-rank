@@ -91,14 +91,26 @@ export class CourseService {
   }
 
   /**
-   * Get courses assigned to a faculty member
+   * Get courses assigned to a faculty member.
+   * Admins are also allowed — they see ALL courses (not filtered by faculty_id).
    */
   static async getFacultyCourses(facultyUser, options = {}) {
-    if (!facultyUser || facultyUser.role !== 'faculty') {
+    if (!facultyUser || !['faculty', 'admin'].includes(facultyUser.role)) {
       throw { status: 401, message: 'Unauthorized' };
     }
 
     const { cursor, limit } = listPage(options);
+
+    // Admins see all courses; faculty see only their assigned courses
+    if (facultyUser.role === 'admin') {
+      return await sql`
+        SELECT c.id, c.course_code, c.name, c.semester, false AS is_co_coordinator
+        FROM courses c
+        WHERE (${cursor}::integer IS NULL OR c.id < ${cursor})
+        ORDER BY c.id DESC LIMIT ${limit}
+      `;
+    }
+
     return await sql`
       SELECT c.id, c.course_code, c.name, c.semester, cf.is_co_coordinator 
       FROM course_faculty cf 

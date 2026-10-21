@@ -1,0 +1,9 @@
+'NODE_ENV' is not recognized as an internal or external command,
+operable program or batch file.
+npm error Lifecycle script `start` failed with error:
+npm error code 1
+npm error path C:\Users\Manthan\Desktop\Code-rank\apps\web
+npm error workspace @coderank/web@1.1.0
+npm error location C:\Users\Manthan\Desktop\Code-rank\apps\web
+npm error command failed
+npm error command C:\WINDOWS\system32\cmd.exe /d /s /c NODE_ENV=production node cluster.js

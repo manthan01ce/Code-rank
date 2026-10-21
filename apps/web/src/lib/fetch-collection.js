@@ -10,8 +10,19 @@ export async function fetchCollection(url, options = {}) {
         ? `${url.includes("?") ? "&" : "?"}cursor=${encodeURIComponent(cursor)}`
         : "");
     const response = await fetch(page, options);
-    if (!response.ok)
+    if (!response.ok) {
+      if (response.status === 401) {
+        if (typeof window !== 'undefined') {
+          const hasToken = !!localStorage.getItem('token');
+          if (!hasToken) {
+            localStorage.removeItem('user');
+            window.location.replace('/login');
+          }
+        }
+        throw Error('Session expired or unauthorized. Please log in again.');
+      }
       throw Error(`Collection request failed (${response.status})`);
+    }
     const data = await response.json();
     if (!Array.isArray(data)) throw Error("Invalid collection response");
     rows.push(...data);

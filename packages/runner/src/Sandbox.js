@@ -9,16 +9,27 @@ export function jobLifetime(value = process.env.JOB_TIMEOUT_MS) {
 }
 
 export class Sandbox {
-  constructor(runDocker = dockerCommand, { scope = sandboxScope() } = {}) {
+  constructor(runDocker = dockerCommand, { scope = sandboxScope(), language = null } = {}) {
     this.runDocker = runDocker;
-    this.name = `coderank-job-${randomUUID()}`;
+    this.language = language ? String(language).toLowerCase().trim() : null;
     this.lifetime = jobLifetime();
     this.deadline = Date.now() + this.lifetime;
     this.destroyed = false;
     this.scope = sandboxScope(scope);
+
+    // Warm daemon container support for local development / lab mode
+    const daemon = this.language ? `coderank-${this.language}-daemon` : null;
+    this.isWarm = Boolean(
+      daemon &&
+      runDocker === dockerCommand &&
+      process.env.USE_WARM_DAEMONS !== 'false'
+    );
+    this.name = this.isWarm ? daemon : `coderank-job-${randomUUID()}`;
   }
+
   async start() {
     if (this.destroyed) throw new Error('Sandbox is closed');
+    if (this.isWarm) return;
     const createdAt = Date.now();
     if (!this.starting) this.starting = this.runDocker([
       'run', '-d', '--rm', '--name', this.name, '--label', 'coderank.sandbox=true',
@@ -41,21 +52,34 @@ export class Sandbox {
     ], { timeout: 10000 });
     try { await this.starting; } catch (error) { error.infrastructure = true; throw error; }
   }
+
   async script(input, budget) {
-    await this.start();
+    if (!this.isWarm) await this.start();
     const remaining = Math.min(Number.isFinite(budget) && budget > 0 ? budget : this.lifetime, this.deadline - Date.now());
     if (remaining <= 0) { await this.destroy(); throw Object.assign(new Error('Job deadline exceeded'), { code: 124 }); }
     try {
       return await this.runDocker(['exec', '--user', '1000:1000', '-i', this.name, 'timeout', '-k', '1s', `${(remaining / 1000).toFixed(3)}s`, 'bash', '-s'], { input, timeout: remaining + 2000 });
     } catch (error) {
+      // If warm daemon is missing or offline, fall back to ephemeral container on next attempt
+      const errStr = (error.message || '') + (error.stderr || '');
+      if (this.isWarm && errStr.includes('No such container')) {
+        this.isWarm = false;
+        this.name = `coderank-job-${randomUUID()}`;
+        this.starting = null;
+        return this.script(input, budget);
+      }
       // Kill the whole container on timeout/output overflow, including detached children.
-      if (error.killed || error.code === 124 || error.code === 137 || error.code === 'ERR_CHILD_PROCESS_STDIO_MAXBUFFER') await this.destroy();
+      if (!this.isWarm && (error.killed || error.code === 124 || error.code === 137 || error.code === 'ERR_CHILD_PROCESS_STDIO_MAXBUFFER')) {
+        await this.destroy();
+      }
       throw error;
     }
   }
+
   async destroy() {
     if (this.destroyed) return;
     this.destroyed = true;
+    if (this.isWarm) return;
     if (!this.starting) return;
     await this.starting.catch(() => {});
     await this.runDocker(['rm', '-f', this.name], { timeout: 3000 }).catch(() => {
@@ -63,3 +87,4 @@ export class Sandbox {
     });
   }
 }
+

@@ -117,7 +117,7 @@ int main() {
 
 export async function runCpp({ code, problem, testCases }) {
   const timeoutMs = 5000;
-  const sandbox = new Sandbox(dockerCommand);
+  const sandbox = new Sandbox(dockerCommand, { language: 'cpp' });
   const uuid = crypto.randomUUID();
   const workdir = `/app/exec_${uuid}`;
 
@@ -223,6 +223,12 @@ export async function runCpp({ code, problem, testCases }) {
       cases: [],
     };
   } finally {
-    await sandbox.destroy();
+    try {
+      if (workdir) {
+        await sandbox.script(`rm -rf '${workdir}'`, 3000).catch(() => {});
+      }
+    } finally {
+      await sandbox.destroy();
+    }
   }
 }

@@ -122,7 +122,7 @@ public class Main {
 }
 
 export async function runJava({ code, problem, testCases = [], timeoutMs = 10000, memoryMb = 128 }) {
-  const sandbox = new Sandbox(dockerCommand);
+  const sandbox = new Sandbox(dockerCommand, { language: 'java' });
   const uuid = crypto.randomUUID();
   const workdir = `/app/exec_${uuid}`;
 
@@ -240,6 +240,12 @@ export async function runJava({ code, problem, testCases = [], timeoutMs = 10000
       if (sysErr.infrastructure) throw sysErr;
     return { status: 'internal_error', summary: 'Internal Execution Failure', exitCode: 500, compileError: null, runtimeError: sysErr.message, cases: [] };
   } finally {
-    await sandbox.destroy();
+    try {
+      if (workdir) {
+        await sandbox.script(`rm -rf '${workdir}'`, 3000).catch(() => {});
+      }
+    } finally {
+      await sandbox.destroy();
+    }
   }
 }

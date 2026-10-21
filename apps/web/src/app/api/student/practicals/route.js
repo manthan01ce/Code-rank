@@ -27,17 +27,16 @@ export async function GET(request) {
     const courseId = searchParams.get('course_id');
 
     const extra = students[0].extra_info || {};
-    const batch = extra.batch || '';
+    const batch = (extra.batch || '').trim();
+    const division = (extra.division || '').trim();
     const semester = parseInt(extra.semester) || 0;
 
     if (!semester) {
       return NextResponse.json([]);
     }
 
-    // Fetch practicals where practical batch matches and course semester matches student semester.
-    // Neon query promises cannot be nested as SQL fragments, so keep the query
-    // text and its parameters together while adding optional filters.
-    const params = [user.id, batch, batch, semester];
+    // Fetch practicals where practical batch matches (by batch or division or all) and course semester matches student semester.
+    const params = [user.id, batch, division, semester];
     let query = `
       SELECT p.id, p.course_id, p.batch_id, p.title, p.description, p.instructions, p.total_marks, p.difficulty, 
              p.is_challenge, p.input_format, p.output_format, p.constraints, 
@@ -58,7 +57,8 @@ export async function GET(request) {
         p.batch_id IS NULL 
         OR p.batch_id = '' 
         OR p.batch_id ILIKE 'all' 
-        OR ($2 != '' AND p.batch_id ILIKE $3)
+        OR ($2 != '' AND p.batch_id ILIKE $2)
+        OR ($3 != '' AND p.batch_id ILIKE $3)
       )
         AND c.semester = $4
         AND p.status = 'active'

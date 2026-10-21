@@ -5,7 +5,7 @@ export async function loadMigrations(directory) {
   const files = (await readdir(directory)).filter(name => /^\d+.*\.sql$/.test(name)).sort();
   return Promise.all(files.map(async name => {
     const source = await readFile(new URL(name, directory), 'utf8');
-    return { name, checksum: createHash('sha256').update(source).digest('hex'), statements: source.split(/^-- statement-breakpoint\s*$/m).map(s => s.trim()).filter(Boolean) };
+    return { name, checksum: createHash('sha256').update(source.replace(/\r\n/g, '\n')).digest('hex'), statements: source.split(/^-- statement-breakpoint\s*$/m).map(s => s.trim()).filter(Boolean) };
   }));
 }
 export const LEDGER_SQL = 'CREATE TABLE IF NOT EXISTS coderank_migrations (name text PRIMARY KEY, checksum text NOT NULL, applied_at timestamptz NOT NULL DEFAULT now())';

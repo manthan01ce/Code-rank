@@ -15,7 +15,7 @@ export async function POST(request) {
       return NextResponse.json({ error: 'Invalid login payload' }, { status: 400 });
     }
     const rate = await checkRateLimit(body.email.trim().toLowerCase(), 'login');
-    if (!rate.allowed) return NextResponse.json({ error: 'Too many login attempts' }, { status: 429 });
+    if (!rate.allowed) return NextResponse.json({ error: 'Too many login attempts. Please wait 1 minute before trying again.' }, { status: 429 });
     const result = await UserService.login(body);
     return NextResponse.json(result);
   } catch (error) {
