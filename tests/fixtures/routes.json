@@ -129,7 +129,8 @@
     "POST"
   ],
   "apps/web/src/app/api/profile/[username]/route.js": [
-    "GET"
+    "GET",
+    "PUT"
   ],
   "apps/web/src/app/api/python-run/route.js": [
     "POST"

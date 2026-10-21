@@ -22,7 +22,7 @@ export class Sandbox {
     this.isWarm = Boolean(
       daemon &&
       runDocker === dockerCommand &&
-      process.env.USE_WARM_DAEMONS !== 'false'
+      process.env.USE_WARM_DAEMONS === 'true'
     );
     this.name = this.isWarm ? daemon : `coderank-job-${randomUUID()}`;
   }
