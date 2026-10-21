@@ -21,7 +21,6 @@ import ConfirmAction from './ConfirmAction';
 import { Play, ChevronRight, Settings, User, List, Save } from 'lucide-react';
 import { DEFAULT_LANGUAGE, LANGUAGES } from './LanguageConfig';
 import { STATIC_PROBLEMS } from '@/lib/problems';
-import { waitForJob } from '@/lib/wait-for-job';
 import { useSocket } from '@/hooks/useSocket';
 import { useExecutionLifecycle } from '@/hooks/useExecutionLifecycle';
 import { boundedFetch, responseError, waitForJob } from '@/lib/job-lifecycle';
