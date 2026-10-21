@@ -1,4 +1,0 @@
-
-> @coderank/web@1.1.0 start
-> NODE_ENV=production node cluster.js
-
