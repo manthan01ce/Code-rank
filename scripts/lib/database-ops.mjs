@@ -95,6 +95,7 @@ export async function runDatabaseOperations({ databaseUrl, restoreAdminUrl, targ
     await connection.query('BEGIN ISOLATION LEVEL REPEATABLE READ READ ONLY'); snapshot = true;
     const snapshotId = (await connection.query('SELECT pg_export_snapshot() snapshot')).rows[0].snapshot;
     report.tables = await inventory(connection.query.bind(connection));
+    await writeFile(archive, '', { mode: 0o600 });
     await command(process.env.PG_DUMP_BIN || 'pg_dump', ['--format=custom', '--no-owner', '--no-acl', '--snapshot', snapshotId, '--file', archive], databaseCommandEnvironment(databaseUrl));
     await chmod(archive, 0o600);
     if ((await stat(archive)).size < 1) throw Error('Backup archive is empty');

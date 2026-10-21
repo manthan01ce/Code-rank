@@ -72,18 +72,16 @@ async function refreshHealthCache() {
       healthCacheTime = Date.now();
       return report;
     } catch (err) {
-      if (!healthCache) {
-        healthCache = {
-          status: 'degraded',
-          timestamp: new Date().toISOString(),
-          services: {
-            database: { status: 'degraded', error: err.message },
-            queue: { status: 'degraded' },
-            execution: { status: 'degraded' }
-          }
-        };
-        healthCacheTime = Date.now();
-      }
+      healthCache = {
+        status: 'degraded',
+        timestamp: new Date().toISOString(),
+        services: {
+          database: { status: 'degraded', error: err.message },
+          queue: { status: 'degraded' },
+          execution: { status: 'degraded' }
+        }
+      };
+      healthCacheTime = Date.now();
       return healthCache;
     } finally {
       refreshPromise = null;
@@ -97,22 +95,16 @@ export async function GET() {
   const now = Date.now();
   const cacheAge = now - healthCacheTime;
 
-  // Stale-While-Revalidate: If we have cached health data, return it immediately (<5ms)
-  if (healthCache) {
-    if (cacheAge >= HEALTH_CACHE_TTL && !refreshPromise) {
-      // Refresh in background without blocking this request
-      refreshHealthCache().catch(() => {});
-    }
+  if (healthCache && cacheAge < HEALTH_CACHE_TTL) {
     return NextResponse.json(healthCache, { 
       status: healthCache.status === 'healthy' ? 200 : 503,
       headers: { 
-        'X-Cache': cacheAge < HEALTH_CACHE_TTL ? 'HIT' : 'STALE',
+        'X-Cache': 'HIT',
         'Cache-Control': 'no-store'
       }
     });
   }
 
-  // Initial cold start only
   await refreshHealthCache();
 
   return NextResponse.json(healthCache, { 

@@ -59,8 +59,10 @@ test('database operations restore and rehearse before any source migration, pres
   assert.match(report.sha256, /^[0-9a-f]{64}$/);
   assert.ok(f.queries.some(query => query.text.startsWith('DROP DATABASE "coderank_restore_')));
   assert.ok(f.pools.every(pool => pool.ended));
-  assert.equal((await stat(path.join(output, 'backup.dump'))).mode & 0o777, 0o600);
-  assert.equal((await stat(output)).mode & 0o777, 0o700);
+  if (process.platform !== 'win32') {
+    assert.equal((await stat(path.join(output, 'backup.dump'))).mode & 0o777, 0o600);
+    assert.equal((await stat(output)).mode & 0o777, 0o700);
+  }
   const evidence = await readFile(path.join(output, 'manifest.json'), 'utf8');
   assert.ok(!evidence.includes('private-password'));
   for (const { args } of f.commands) assert.ok(!JSON.stringify(args).includes('private-password'));

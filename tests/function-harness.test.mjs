@@ -1,9 +1,15 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { mkdtempSync,writeFileSync,rmSync } from 'node:fs';
-import { execFileSync } from 'node:child_process';
+import { fileURLToPath } from 'node:url';
+import path from 'node:path';
+import { execFileSync, execSync } from 'node:child_process';
 import { buildFunctionSource,functionCases,sameFunctionValue } from '../packages/runner/src/function-harness.js';
 import { STATIC_PROBLEMS } from '../apps/web/src/lib/problems.js';
+const hasGcc = (() => {
+ try { execSync('gcc --version', { stdio: 'ignore' }); return true; } catch { return false; }
+})();
+const languages = ['javascript', ...(hasGcc ? ['c'] : [])];
 const c={
  twoSum:'int* twoSum(int*a,int n,int target,int*size){static int r[2];for(int i=0;i<n;i++)for(int j=i+1;j<n;j++)if(a[i]+a[j]==target){r[0]=j;r[1]=i;*size=2;return r;}*size=0;return r;}',
  reverseString:'void reverseString(char*s,int n){for(int i=0;i<n/2;i++){char c=s[i];s[i]=s[n-1-i];s[n-1-i]=c;}}',
@@ -24,14 +30,14 @@ const js={
  fib:'fib(n){let a=0,b=1;while(n--)[a,b]=[b,a+b];return a;}',isAnagram:'isAnagram(a,b){return [...a].sort().join("")===[...b].sort().join("");}',
  lengthOfLastWord:'lengthOfLastWord(s){return s.trim().split(/ +/).at(-1).length;}',addDigits:'addDigits(n){return n===0?0:1+(n-1)%9;}'
 };
-for(const problem of Object.values(STATIC_PROBLEMS))for(const language of ['c','javascript'])test(`${language} real harness: ${problem.slug}`,()=>{
- const method=problem.entry.methodName,dir=mkdtempSync(new URL('../.harness-',import.meta.url).pathname);
+for(const problem of Object.values(STATIC_PROBLEMS))for(const language of languages)test(`${language} real harness: ${problem.slug}`,()=>{
+ const method=problem.entry.methodName,dir=mkdtempSync(fileURLToPath(new URL('../.harness-',import.meta.url)));
  try{
   const source=buildFunctionSource(language,language==='c'?c[method]:`class Solution {${js[method]}}`,problem,problem.testCases);
-  const file=dir+(language==='c'?'/source.c':'/source.cjs');writeFileSync(file,source);
-  if(language==='c')execFileSync('gcc',['-std=c11','-Wall','-Werror=implicit-function-declaration',file,'-o',dir+'/solution'],{timeout:10000,stdio:'pipe'});
+  const file=path.join(dir,language==='c'?'source.c':'source.cjs');writeFileSync(file,source);
+  if(language==='c')execFileSync('gcc',['-std=c11','-Wall','-Werror=implicit-function-declaration',file,'-o',path.join(dir,'solution')],{timeout:10000,stdio:'pipe'});
   for(const [i,tc] of functionCases(language,problem.testCases).entries()){
-   const output=execFileSync(language==='c'?dir+'/solution':process.execPath,language==='c'?[]:[file],{input:tc.input,timeout:3000,encoding:'utf8'});
+   const output=execFileSync(language==='c'?path.join(dir,'solution'):process.execPath,language==='c'?[]:[file],{input:tc.input,timeout:3000,encoding:'utf8'});
    assert.ok(sameFunctionValue(output,problem.testCases[i].expected,method),`${output} !== ${tc.expected}`);
   }
  }finally{rmSync(dir,{recursive:true,force:true});}

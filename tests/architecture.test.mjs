@@ -2,6 +2,7 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import { readFileSync, readdirSync, existsSync } from 'node:fs';
 import path from 'node:path';
+import { fileURLToPath } from 'node:url';
 import ts from 'typescript';
 const root = new URL('../', import.meta.url);
 const read = p => readFileSync(new URL(p, root), 'utf8');
@@ -19,14 +20,14 @@ function walk(dir) {
   return readdirSync(dir, { withFileTypes: true }).flatMap(entry => ['node_modules', '.next'].includes(entry.name) ? [] : entry.isDirectory() ? walk(path.join(dir, entry.name)) : [path.join(dir, entry.name)]);
 }
 test('active JS/JSX parses and local imports resolve', () => {
-  for (const file of [...walk(new URL('apps/', root).pathname), ...walk(new URL('packages/', root).pathname)].filter(x => /\.(m?js)$/.test(x))) {
+  for (const file of [...walk(fileURLToPath(new URL('apps/', root))), ...walk(fileURLToPath(new URL('packages/', root)))].filter(x => /\.(m?js)$/.test(x))) {
     const source = readFileSync(file, 'utf8');
     const ast = ts.createSourceFile(file, source, ts.ScriptTarget.Latest, true, ts.ScriptKind.JSX);
     assert.deepEqual(ast.parseDiagnostics.map(d => ts.flattenDiagnosticMessageText(d.messageText, '\n')), [], file);
     for (const [, specifier] of source.matchAll(/(?:from\s*|import\s*)['"]([^'"]+)['"]/g)) {
       let target;
       if (specifier.startsWith('.')) target = path.resolve(path.dirname(file), specifier);
-      else if (specifier.startsWith('@/') && file.includes('/apps/web/')) target = new URL(`apps/web/src/${specifier.slice(2)}`, root).pathname;
+      else if (specifier.startsWith('@/') && file.replace(/\\/g, '/').includes('/apps/web/')) target = fileURLToPath(new URL(`apps/web/src/${specifier.slice(2)}`, root));
       else continue;
       assert.ok([target, `${target}.js`, `${target}.mjs`, `${target}.json`, `${target}/index.js`].some(existsSync), `${file}: ${specifier}`);
     }
