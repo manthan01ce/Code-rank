@@ -36,7 +36,7 @@ All functional checks pass; flow success >99%; HTTP failures <1%; no dropped ite
 
 Queue wait, worker duration and client turnaround are separate metrics. Capture server CPU/RSS, queue depth, Redis latency, DB connections/latency and runner CPU/RSS alongside k6. These gates are proposed, not measured baselines. Do not blindly raise worker concurrency to 200: each language daemon shares a 1-CPU/512-MiB container.
 
-Sample runs require every case to pass. The current backend may report wrong_answer despite passing samples because zero sample marks are compared with total practical marks; the suite tolerates that status only for sample runs. Final submissions must return accepted.
+Sample runs and final submissions both require accepted and every case passing. Sample-run verdicts now depend on case outcomes independently of grading marks.
 
 ## Current status, 2026-10-20
 

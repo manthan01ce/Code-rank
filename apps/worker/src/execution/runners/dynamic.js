@@ -1,5 +1,6 @@
 import sql from '@coderank/core/db';
 import { Executor } from './Executor.js';
+import { practicalPassed } from './verdict.js';
 
 function encodeBinaryCode(text) {
   if (!text) return '';
@@ -201,7 +202,8 @@ export async function runDynamicPractical({ language, code, dbId, userId, isSubm
 
     const totalPracticalMarks = parseFloat(practical.total_marks) || 1;
     const normalizedMarks = Math.min(10, Math.round(((rawMarks / totalPracticalMarks) * 10) * 100) / 100);
-    const overallStatus = rawMarks === totalPracticalMarks ? 'Accepted' : 'Wrong Answer';
+    const allPassed = practicalPassed({ isSubmit, rawMarks, totalMarks: totalPracticalMarks, cases: casesReport });
+    const overallStatus = allPassed ? 'Accepted' : 'Wrong Answer';
 
     let submissionId = null;
     let finalNormalizedMarks = normalizedMarks;
@@ -276,8 +278,6 @@ export async function runDynamicPractical({ language, code, dbId, userId, isSubm
         }
       }
     }
-
-    const allPassed = rawMarks === totalPracticalMarks;
 
     // Always clean up the workdir — do not leave artifacts in the daemon container.
 

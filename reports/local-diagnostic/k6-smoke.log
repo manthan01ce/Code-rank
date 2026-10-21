@@ -1,0 +1,151 @@
+
+         /\      Grafana   /‾‾/  
+    /\  /  \     |\  __   /  /   
+   /  \/    \    | |/ /  /   ‾‾\ 
+  /          \   |   (  |  (‾)  |
+ / __________ \  |_|\_\  \_____/ 
+
+     execution: local
+        script: load-tests/smoke-test.js
+        output: -
+
+     scenarios: (100.00%) 1 scenario, 1 max VUs, 37s max duration (incl. graceful stop):
+              * default: Up to 1 looping VUs for 7s over 3 stages (gracefulRampDown: 30s, gracefulStop: 30s)
+
+time="2026-10-20T07:22:07-03:00" level=info msg="🔥 Warming up application caches..." source=console
+
+Run       [ 100% ] setup()
+default   [   0% ]
+
+Run       [ 100% ] setup()
+default   [   0% ]
+
+Run       [ 100% ] setup()
+default   [   0% ]
+
+Run       [ 100% ] setup()
+default   [   0% ]
+
+Run       [ 100% ] setup()
+default   [   0% ]
+
+Run       [ 100% ] setup()
+default   [   0% ]
+
+Run       [ 100% ] setup()
+default   [   0% ]
+
+Run       [ 100% ] setup()
+default   [   0% ]
+
+Run       [ 100% ] setup()
+default   [   0% ]
+
+Run       [ 100% ] setup()
+default   [   0% ]
+
+Run       [ 100% ] setup()
+default   [   0% ]
+
+Run       [ 100% ] setup()
+default   [   0% ]
+
+Run       [ 100% ] setup()
+default   [   0% ]
+
+Run       [ 100% ] setup()
+default   [   0% ]
+
+Run       [ 100% ] setup()
+default   [   0% ]
+
+Run       [ 100% ] setup()
+default   [   0% ]
+
+Run       [ 100% ] setup()
+default   [   0% ]
+time="2026-10-20T07:22:25-03:00" level=info msg="✓ Warmup complete" source=console
+
+running (18.0s), 1/1 VUs, 0 complete and 0 interrupted iterations
+default   [   6% ] 1/1 VUs  0.4s/7.0s
+
+running (19.0s), 1/1 VUs, 1 complete and 0 interrupted iterations
+default   [  20% ] 1/1 VUs  1.4s/7.0s
+
+running (20.0s), 1/1 VUs, 1 complete and 0 interrupted iterations
+default   [  34% ] 1/1 VUs  2.4s/7.0s
+
+running (21.0s), 1/1 VUs, 2 complete and 0 interrupted iterations
+default   [  49% ] 1/1 VUs  3.4s/7.0s
+
+running (22.0s), 1/1 VUs, 3 complete and 0 interrupted iterations
+default   [  63% ] 1/1 VUs  4.4s/7.0s
+
+running (23.0s), 1/1 VUs, 4 complete and 0 interrupted iterations
+default   [  77% ] 1/1 VUs  5.4s/7.0s
+
+running (24.0s), 1/1 VUs, 5 complete and 0 interrupted iterations
+default   [  92% ] 1/1 VUs  6.4s/7.0s
+
+running (25.0s), 1/1 VUs, 6 complete and 0 interrupted iterations
+default ↓ [ 100% ] 1/1 VUs  7s
+
+
+  █ THRESHOLDS 
+
+    http_req_duration
+    ✓ 'p(95)<800' p(95)=649.45ms
+
+      {name:HealthCheck}
+      ✓ 'p(95)<500' p(95)=14.64ms
+
+      {name:LandingPage}
+      ✓ 'p(95)<1000' p(95)=55.56ms
+
+    http_req_failed
+    ✗ 'rate<0.01' rate=25.80%
+
+
+  █ TOTAL RESULTS 
+
+    checks_total.......: 70     2.742824/s
+    checks_succeeded...: 80.00% 56 out of 70
+    checks_failed......: 20.00% 14 out of 70
+
+    ✗ health status is 200
+      ↳  0% — ✓ 0 / ✗ 7
+    ✓ health response < 500ms
+    ✗ database is healthy
+      ↳  0% — ✓ 0 / ✗ 7
+    ✓ queue service responded
+    ✓ landing page status is 200
+    ✓ landing page loads < 1s
+    ✓ login page status is 200
+    ✓ login page loads < 1s
+    ✓ queue stats status is 200 or 503
+    ✓ queue stats response < 300ms
+
+    HTTP
+    http_req_duration..............: avg=532.45ms min=8.59ms  med=24.51ms max=14.56s  p(90)=62.54ms  p(95)=649.45ms
+      { expected_response:true }...: avg=713.06ms min=11.06ms med=27.96ms max=14.56s  p(90)=250.85ms p(95)=930.66ms
+      { name:HealthCheck }.........: avg=11.06ms  min=8.59ms  med=10.06ms max=15.22ms p(90)=14.06ms  p(95)=14.64ms 
+      { name:LandingPage }.........: avg=36.71ms  min=26.05ms med=33.27ms max=62.54ms p(90)=48.59ms  p(95)=55.56ms 
+    http_req_failed................: 25.80% 8 out of 31
+    http_reqs......................: 31     1.214679/s
+
+    EXECUTION
+    iteration_duration.............: avg=1.13s    min=1.07s   med=1.09s   max=1.38s   p(90)=1.22s    p(95)=1.3s    
+    iterations.....................: 7      0.274282/s
+    vus............................: 1      min=0       max=1
+    vus_max........................: 1      min=1       max=1
+
+    NETWORK
+    data_received..................: 387 kB 15 kB/s
+    data_sent......................: 2.4 kB 94 B/s
+
+
+
+
+running (25.5s), 0/1 VUs, 7 complete and 0 interrupted iterations
+default ✓ [ 100% ] 0/1 VUs  7s
+time="2026-10-20T07:22:36-03:00" level=error msg="thresholds on metrics 'http_req_failed' have been crossed"
