@@ -1,0 +1,1917 @@
+✓ Running next.config.mjs took 38ms
+{"level":"INFO","timestamp":"2026-10-22T15:52:23.507Z","message":"CodeRank Server ready","local":"http://localhost:3000","network":"http://0.0.0.0:3000","mode":"development","pid":11}
+(node:11) [DEP0169] DeprecationWarning: `url.parse()` behavior is not standardized and prone to errors that have security implications. Use the WHATWG URL API instead. CVEs are not issued for `url.parse()` vulnerabilities.
+(Use `node --trace-deprecation ...` to show where the warning was created)
+Execution queue unavailable: connect ECONNREFUSED 127.0.0.1:6379
+Execution queue unavailable: connect ECONNREFUSED 127.0.0.1:6379
+Execution queue unavailable: connect ECONNREFUSED 127.0.0.1:6379
+Execution queue unavailable: connect ECONNREFUSED 127.0.0.1:6379
+Execution queue unavailable: connect ECONNREFUSED 127.0.0.1:6379
+Queue owner cleanup unavailable: connect ECONNREFUSED 127.0.0.1:6379
+{"level":"WARN","timestamp":"2026-10-22T15:52:25.700Z","message":"HTTP request failed","method":"GET","path":"/api/health","statusCode":503,"durationMs":2160}
+Error: ENOENT: no such file or directory, uv_resident_set_memory
+    at ignore-listed frames {
+  errno: -2,
+  code: 'ENOENT',
+  syscall: 'uv_resident_set_memory'
+}
+ GET /api/health 503 in 2.1s (next.js: 233ms, proxy.ts: 223ms, application-code: 1685ms)
+{"level":"WARN","timestamp":"2026-10-22T15:52:25.817Z","message":"HTTP request failed","method":"GET","path":"/api/health","statusCode":503,"durationMs":36}
+ GET /api/health 503 in 30ms (next.js: 13ms, proxy.ts: 10ms, application-code: 7ms)
+Error: ENOENT: no such file or directory, uv_resident_set_memory
+    at ignore-listed frames {
+  errno: -2,
+  code: 'ENOENT',
+  syscall: 'uv_resident_set_memory'
+}
+Error: ENOENT: no such file or directory, uv_resident_set_memory
+    at ignore-listed frames {
+  errno: -2,
+  code: 'ENOENT',
+  syscall: 'uv_resident_set_memory'
+}
+Error: ENOENT: no such file or directory, uv_resident_set_memory
+    at ignore-listed frames {
+  errno: -2,
+  code: 'ENOENT',
+  syscall: 'uv_resident_set_memory'
+}
+ GET /api/queue/stats 200 in 69ms (next.js: 43ms, proxy.ts: 14ms, application-code: 12ms)
+Error: ENOENT: no such file or directory, uv_resident_set_memory
+    at ignore-listed frames {
+  errno: -2,
+  code: 'ENOENT',
+  syscall: 'uv_resident_set_memory'
+}
+Error: ENOENT: no such file or directory, uv_resident_set_memory
+    at ignore-listed frames {
+  errno: -2,
+  code: 'ENOENT',
+  syscall: 'uv_resident_set_memory'
+}
+○ Compiling / ...
+⚠ [next]/internal/font/google/inter_a869fe2d.module.css
+Warning: Error while requesting resource
+There was an issue establishing a connection while requesting https://fonts.googleapis.com/css2?family=Inter:wght@100..900&display=swap
+
+Import trace:
+  Server Component:
+    [next]/internal/font/google/inter_a869fe2d.module.css
+    [next]/internal/font/google/inter_a869fe2d.js
+    ./apps/web/src/app/layout.js
+
+
+⚠ [next]/internal/font/google/inter_a869fe2d.module.css
+Warning: next/font: warning:
+Failed to download Inter from Google Fonts. Using a fallback font instead.
+If you are offline or behind a proxy, self-host the font with next/font/local, or set HTTP_PROXY/HTTPS_PROXY so Next.js can reach fonts.googleapis.com.
+
+Import trace:
+  Server Component:
+    [next]/internal/font/google/inter_a869fe2d.module.css
+    [next]/internal/font/google/inter_a869fe2d.js
+    ./apps/web/src/app/layout.js
+
+
+ GET / 200 in 7.6s (next.js: 7.3s, application-code: 238ms)
+Error: ENOENT: no such file or directory, uv_resident_set_memory
+    at ignore-listed frames {
+  errno: -2,
+  code: 'ENOENT',
+  syscall: 'uv_resident_set_memory'
+}
+⚠ [next]/internal/font/google/inter_a869fe2d.module.css
+Warning: Error while requesting resource
+There was an issue establishing a connection while requesting https://fonts.googleapis.com/css2?family=Inter:wght@100..900&display=swap
+
+Import trace:
+  Server Component:
+    [next]/internal/font/google/inter_a869fe2d.module.css
+    [next]/internal/font/google/inter_a869fe2d.js
+    ./apps/web/src/app/layout.js
+
+
+⚠ [next]/internal/font/google/inter_a869fe2d.module.css
+Warning: next/font: warning:
+Failed to download Inter from Google Fonts. Using a fallback font instead.
+If you are offline or behind a proxy, self-host the font with next/font/local, or set HTTP_PROXY/HTTPS_PROXY so Next.js can reach fonts.googleapis.com.
+
+Import trace:
+  Server Component:
+    [next]/internal/font/google/inter_a869fe2d.module.css
+    [next]/internal/font/google/inter_a869fe2d.js
+    ./apps/web/src/app/layout.js
+
+
+Error: ENOENT: no such file or directory, uv_resident_set_memory
+    at ignore-listed frames {
+  errno: -2,
+  code: 'ENOENT',
+  syscall: 'uv_resident_set_memory'
+}
+⚠ [next]/internal/font/google/inter_a869fe2d.module.css
+Warning: Error while requesting resource
+There was an issue establishing a connection while requesting https://fonts.googleapis.com/css2?family=Inter:wght@100..900&display=swap
+
+Import trace:
+  Server Component:
+    [next]/internal/font/google/inter_a869fe2d.module.css
+    [next]/internal/font/google/inter_a869fe2d.js
+    ./apps/web/src/app/layout.js
+
+
+⚠ [next]/internal/font/google/inter_a869fe2d.module.css
+Warning: next/font: warning:
+Failed to download Inter from Google Fonts. Using a fallback font instead.
+If you are offline or behind a proxy, self-host the font with next/font/local, or set HTTP_PROXY/HTTPS_PROXY so Next.js can reach fonts.googleapis.com.
+
+Import trace:
+  Server Component:
+    [next]/internal/font/google/inter_a869fe2d.module.css
+    [next]/internal/font/google/inter_a869fe2d.js
+    ./apps/web/src/app/layout.js
+
+
+{"level":"WARN","timestamp":"2026-10-22T15:52:35.623Z","message":"HTTP request failed","method":"GET","path":"/api/health","statusCode":503,"durationMs":24}
+ GET /api/health 503 in 22ms (next.js: 7ms, proxy.ts: 6ms, application-code: 9ms)
+Error: ENOENT: no such file or directory, uv_resident_set_memory
+    at ignore-listed frames {
+  errno: -2,
+  code: 'ENOENT',
+  syscall: 'uv_resident_set_memory'
+}
+⚠ [next]/internal/font/google/inter_a869fe2d.module.css
+Warning: Error while requesting resource
+There was an issue establishing a connection while requesting https://fonts.googleapis.com/css2?family=Inter:wght@100..900&display=swap
+
+Import trace:
+  Server Component:
+    [next]/internal/font/google/inter_a869fe2d.module.css
+    [next]/internal/font/google/inter_a869fe2d.js
+    ./apps/web/src/app/layout.js
+
+
+⚠ [next]/internal/font/google/inter_a869fe2d.module.css
+Warning: next/font: warning:
+Failed to download Inter from Google Fonts. Using a fallback font instead.
+If you are offline or behind a proxy, self-host the font with next/font/local, or set HTTP_PROXY/HTTPS_PROXY so Next.js can reach fonts.googleapis.com.
+
+Import trace:
+  Server Component:
+    [next]/internal/font/google/inter_a869fe2d.module.css
+    [next]/internal/font/google/inter_a869fe2d.js
+    ./apps/web/src/app/layout.js
+
+
+Error: ENOENT: no such file or directory, uv_resident_set_memory
+    at ignore-listed frames {
+  errno: -2,
+  code: 'ENOENT',
+  syscall: 'uv_resident_set_memory'
+}
+⚠ [next]/internal/font/google/inter_a869fe2d.module.css
+Warning: Error while requesting resource
+There was an issue establishing a connection while requesting https://fonts.googleapis.com/css2?family=Inter:wght@100..900&display=swap
+
+Import trace:
+  Server Component:
+    [next]/internal/font/google/inter_a869fe2d.module.css
+    [next]/internal/font/google/inter_a869fe2d.js
+    ./apps/web/src/app/layout.js
+
+
+⚠ [next]/internal/font/google/inter_a869fe2d.module.css
+Warning: next/font: warning:
+Failed to download Inter from Google Fonts. Using a fallback font instead.
+If you are offline or behind a proxy, self-host the font with next/font/local, or set HTTP_PROXY/HTTPS_PROXY so Next.js can reach fonts.googleapis.com.
+
+Import trace:
+  Server Component:
+    [next]/internal/font/google/inter_a869fe2d.module.css
+    [next]/internal/font/google/inter_a869fe2d.js
+    ./apps/web/src/app/layout.js
+
+
+ GET / 200 in 62ms (next.js: 6ms, application-code: 56ms)
+Error: ENOENT: no such file or directory, uv_resident_set_memory
+    at ignore-listed frames {
+  errno: -2,
+  code: 'ENOENT',
+  syscall: 'uv_resident_set_memory'
+}
+⚠ [next]/internal/font/google/inter_a869fe2d.module.css
+Warning: Error while requesting resource
+There was an issue establishing a connection while requesting https://fonts.googleapis.com/css2?family=Inter:wght@100..900&display=swap
+
+Import trace:
+  Server Component:
+    [next]/internal/font/google/inter_a869fe2d.module.css
+    [next]/internal/font/google/inter_a869fe2d.js
+    ./apps/web/src/app/layout.js
+
+
+⚠ [next]/internal/font/google/inter_a869fe2d.module.css
+Warning: next/font: warning:
+Failed to download Inter from Google Fonts. Using a fallback font instead.
+If you are offline or behind a proxy, self-host the font with next/font/local, or set HTTP_PROXY/HTTPS_PROXY so Next.js can reach fonts.googleapis.com.
+
+Import trace:
+  Server Component:
+    [next]/internal/font/google/inter_a869fe2d.module.css
+    [next]/internal/font/google/inter_a869fe2d.js
+    ./apps/web/src/app/layout.js
+
+
+Error: ENOENT: no such file or directory, uv_resident_set_memory
+    at ignore-listed frames {
+  errno: -2,
+  code: 'ENOENT',
+  syscall: 'uv_resident_set_memory'
+}
+⚠ [next]/internal/font/google/inter_a869fe2d.module.css
+Warning: Error while requesting resource
+There was an issue establishing a connection while requesting https://fonts.googleapis.com/css2?family=Inter:wght@100..900&display=swap
+
+Import trace:
+  Server Component:
+    [next]/internal/font/google/inter_a869fe2d.module.css
+    [next]/internal/font/google/inter_a869fe2d.js
+    ./apps/web/src/app/layout.js
+
+
+⚠ [next]/internal/font/google/inter_a869fe2d.module.css
+Warning: next/font: warning:
+Failed to download Inter from Google Fonts. Using a fallback font instead.
+If you are offline or behind a proxy, self-host the font with next/font/local, or set HTTP_PROXY/HTTPS_PROXY so Next.js can reach fonts.googleapis.com.
+
+Import trace:
+  Server Component:
+    [next]/internal/font/google/inter_a869fe2d.module.css
+    [next]/internal/font/google/inter_a869fe2d.js
+    ./apps/web/src/app/layout.js
+
+
+ GET /login 200 in 63ms (next.js: 16ms, application-code: 47ms)
+Error: ENOENT: no such file or directory, uv_resident_set_memory
+    at ignore-listed frames {
+  errno: -2,
+  code: 'ENOENT',
+  syscall: 'uv_resident_set_memory'
+}
+⚠ [next]/internal/font/google/inter_a869fe2d.module.css
+Warning: Error while requesting resource
+There was an issue establishing a connection while requesting https://fonts.googleapis.com/css2?family=Inter:wght@100..900&display=swap
+
+Import trace:
+  Server Component:
+    [next]/internal/font/google/inter_a869fe2d.module.css
+    [next]/internal/font/google/inter_a869fe2d.js
+    ./apps/web/src/app/layout.js
+
+
+⚠ [next]/internal/font/google/inter_a869fe2d.module.css
+Warning: next/font: warning:
+Failed to download Inter from Google Fonts. Using a fallback font instead.
+If you are offline or behind a proxy, self-host the font with next/font/local, or set HTTP_PROXY/HTTPS_PROXY so Next.js can reach fonts.googleapis.com.
+
+Import trace:
+  Server Component:
+    [next]/internal/font/google/inter_a869fe2d.module.css
+    [next]/internal/font/google/inter_a869fe2d.js
+    ./apps/web/src/app/layout.js
+
+
+⚠ [next]/internal/font/google/inter_a869fe2d.module.css
+Warning: Error while requesting resource
+There was an issue establishing a connection while requesting https://fonts.googleapis.com/css2?family=Inter:wght@100..900&display=swap
+
+Import trace:
+  Server Component:
+    [next]/internal/font/google/inter_a869fe2d.module.css
+    [next]/internal/font/google/inter_a869fe2d.js
+    ./apps/web/src/app/layout.js
+
+
+⚠ [next]/internal/font/google/inter_a869fe2d.module.css
+Warning: next/font: warning:
+Failed to download Inter from Google Fonts. Using a fallback font instead.
+If you are offline or behind a proxy, self-host the font with next/font/local, or set HTTP_PROXY/HTTPS_PROXY so Next.js can reach fonts.googleapis.com.
+
+Import trace:
+  Server Component:
+    [next]/internal/font/google/inter_a869fe2d.module.css
+    [next]/internal/font/google/inter_a869fe2d.js
+    ./apps/web/src/app/layout.js
+
+
+Error: ENOENT: no such file or directory, uv_resident_set_memory
+    at ignore-listed frames {
+  errno: -2,
+  code: 'ENOENT',
+  syscall: 'uv_resident_set_memory'
+}
+⚠ [next]/internal/font/google/inter_a869fe2d.module.css
+Warning: Error while requesting resource
+There was an issue establishing a connection while requesting https://fonts.googleapis.com/css2?family=Inter:wght@100..900&display=swap
+
+Import trace:
+  Server Component:
+    [next]/internal/font/google/inter_a869fe2d.module.css
+    [next]/internal/font/google/inter_a869fe2d.js
+    ./apps/web/src/app/layout.js
+
+
+⚠ [next]/internal/font/google/inter_a869fe2d.module.css
+Warning: next/font: warning:
+Failed to download Inter from Google Fonts. Using a fallback font instead.
+If you are offline or behind a proxy, self-host the font with next/font/local, or set HTTP_PROXY/HTTPS_PROXY so Next.js can reach fonts.googleapis.com.
+
+Import trace:
+  Server Component:
+    [next]/internal/font/google/inter_a869fe2d.module.css
+    [next]/internal/font/google/inter_a869fe2d.js
+    ./apps/web/src/app/layout.js
+
+
+⚠ [next]/internal/font/google/inter_a869fe2d.module.css
+Warning: Error while requesting resource
+There was an issue establishing a connection while requesting https://fonts.googleapis.com/css2?family=Inter:wght@100..900&display=swap
+
+Import trace:
+  Server Component:
+    [next]/internal/font/google/inter_a869fe2d.module.css
+    [next]/internal/font/google/inter_a869fe2d.js
+    ./apps/web/src/app/layout.js
+
+
+⚠ [next]/internal/font/google/inter_a869fe2d.module.css
+Warning: next/font: warning:
+Failed to download Inter from Google Fonts. Using a fallback font instead.
+If you are offline or behind a proxy, self-host the font with next/font/local, or set HTTP_PROXY/HTTPS_PROXY so Next.js can reach fonts.googleapis.com.
+
+Import trace:
+  Server Component:
+    [next]/internal/font/google/inter_a869fe2d.module.css
+    [next]/internal/font/google/inter_a869fe2d.js
+    ./apps/web/src/app/layout.js
+
+
+ GET /api/queue/stats 200 in 28ms (next.js: 3ms, proxy.ts: 12ms, application-code: 13ms)
+Error: ENOENT: no such file or directory, uv_resident_set_memory
+    at ignore-listed frames {
+  errno: -2,
+  code: 'ENOENT',
+  syscall: 'uv_resident_set_memory'
+}
+⚠ [next]/internal/font/google/inter_a869fe2d.module.css
+Warning: Error while requesting resource
+There was an issue establishing a connection while requesting https://fonts.googleapis.com/css2?family=Inter:wght@100..900&display=swap
+
+Import trace:
+  Server Component:
+    [next]/internal/font/google/inter_a869fe2d.module.css
+    [next]/internal/font/google/inter_a869fe2d.js
+    ./apps/web/src/app/layout.js
+
+
+⚠ [next]/internal/font/google/inter_a869fe2d.module.css
+Warning: next/font: warning:
+Failed to download Inter from Google Fonts. Using a fallback font instead.
+If you are offline or behind a proxy, self-host the font with next/font/local, or set HTTP_PROXY/HTTPS_PROXY so Next.js can reach fonts.googleapis.com.
+
+Import trace:
+  Server Component:
+    [next]/internal/font/google/inter_a869fe2d.module.css
+    [next]/internal/font/google/inter_a869fe2d.js
+    ./apps/web/src/app/layout.js
+
+
+⚠ [next]/internal/font/google/inter_a869fe2d.module.css
+Warning: Error while requesting resource
+There was an issue establishing a connection while requesting https://fonts.googleapis.com/css2?family=Inter:wght@100..900&display=swap
+
+Import trace:
+  Server Component:
+    [next]/internal/font/google/inter_a869fe2d.module.css
+    [next]/internal/font/google/inter_a869fe2d.js
+    ./apps/web/src/app/layout.js
+
+
+⚠ [next]/internal/font/google/inter_a869fe2d.module.css
+Warning: next/font: warning:
+Failed to download Inter from Google Fonts. Using a fallback font instead.
+If you are offline or behind a proxy, self-host the font with next/font/local, or set HTTP_PROXY/HTTPS_PROXY so Next.js can reach fonts.googleapis.com.
+
+Import trace:
+  Server Component:
+    [next]/internal/font/google/inter_a869fe2d.module.css
+    [next]/internal/font/google/inter_a869fe2d.js
+    ./apps/web/src/app/layout.js
+
+
+Error: ENOENT: no such file or directory, uv_resident_set_memory
+    at ignore-listed frames {
+  errno: -2,
+  code: 'ENOENT',
+  syscall: 'uv_resident_set_memory'
+}
+⚠ [next]/internal/font/google/inter_a869fe2d.module.css
+Warning: Error while requesting resource
+There was an issue establishing a connection while requesting https://fonts.googleapis.com/css2?family=Inter:wght@100..900&display=swap
+
+Import trace:
+  Server Component:
+    [next]/internal/font/google/inter_a869fe2d.module.css
+    [next]/internal/font/google/inter_a869fe2d.js
+    ./apps/web/src/app/layout.js
+
+
+⚠ [next]/internal/font/google/inter_a869fe2d.module.css
+Warning: next/font: warning:
+Failed to download Inter from Google Fonts. Using a fallback font instead.
+If you are offline or behind a proxy, self-host the font with next/font/local, or set HTTP_PROXY/HTTPS_PROXY so Next.js can reach fonts.googleapis.com.
+
+Import trace:
+  Server Component:
+    [next]/internal/font/google/inter_a869fe2d.module.css
+    [next]/internal/font/google/inter_a869fe2d.js
+    ./apps/web/src/app/layout.js
+
+
+⚠ [next]/internal/font/google/inter_a869fe2d.module.css
+Warning: Error while requesting resource
+There was an issue establishing a connection while requesting https://fonts.googleapis.com/css2?family=Inter:wght@100..900&display=swap
+
+Import trace:
+  Server Component:
+    [next]/internal/font/google/inter_a869fe2d.module.css
+    [next]/internal/font/google/inter_a869fe2d.js
+    ./apps/web/src/app/layout.js
+
+
+⚠ [next]/internal/font/google/inter_a869fe2d.module.css
+Warning: next/font: warning:
+Failed to download Inter from Google Fonts. Using a fallback font instead.
+If you are offline or behind a proxy, self-host the font with next/font/local, or set HTTP_PROXY/HTTPS_PROXY so Next.js can reach fonts.googleapis.com.
+
+Import trace:
+  Server Component:
+    [next]/internal/font/google/inter_a869fe2d.module.css
+    [next]/internal/font/google/inter_a869fe2d.js
+    ./apps/web/src/app/layout.js
+
+
+{"level":"WARN","timestamp":"2026-10-22T15:52:38.395Z","message":"HTTP request failed","method":"GET","path":"/api/health","statusCode":503,"durationMs":1590}
+ GET /api/health 503 in 1579ms (next.js: 19ms, proxy.ts: 12ms, application-code: 1547ms)
+Error: ENOENT: no such file or directory, uv_resident_set_memory
+    at ignore-listed frames {
+  errno: -2,
+  code: 'ENOENT',
+  syscall: 'uv_resident_set_memory'
+}
+⚠ [next]/internal/font/google/inter_a869fe2d.module.css
+Warning: Error while requesting resource
+There was an issue establishing a connection while requesting https://fonts.googleapis.com/css2?family=Inter:wght@100..900&display=swap
+
+Import trace:
+  Server Component:
+    [next]/internal/font/google/inter_a869fe2d.module.css
+    [next]/internal/font/google/inter_a869fe2d.js
+    ./apps/web/src/app/layout.js
+
+
+⚠ [next]/internal/font/google/inter_a869fe2d.module.css
+Warning: next/font: warning:
+Failed to download Inter from Google Fonts. Using a fallback font instead.
+If you are offline or behind a proxy, self-host the font with next/font/local, or set HTTP_PROXY/HTTPS_PROXY so Next.js can reach fonts.googleapis.com.
+
+Import trace:
+  Server Component:
+    [next]/internal/font/google/inter_a869fe2d.module.css
+    [next]/internal/font/google/inter_a869fe2d.js
+    ./apps/web/src/app/layout.js
+
+
+⚠ [next]/internal/font/google/inter_a869fe2d.module.css
+Warning: Error while requesting resource
+There was an issue establishing a connection while requesting https://fonts.googleapis.com/css2?family=Inter:wght@100..900&display=swap
+
+Import trace:
+  Server Component:
+    [next]/internal/font/google/inter_a869fe2d.module.css
+    [next]/internal/font/google/inter_a869fe2d.js
+    ./apps/web/src/app/layout.js
+
+
+⚠ [next]/internal/font/google/inter_a869fe2d.module.css
+Warning: next/font: warning:
+Failed to download Inter from Google Fonts. Using a fallback font instead.
+If you are offline or behind a proxy, self-host the font with next/font/local, or set HTTP_PROXY/HTTPS_PROXY so Next.js can reach fonts.googleapis.com.
+
+Import trace:
+  Server Component:
+    [next]/internal/font/google/inter_a869fe2d.module.css
+    [next]/internal/font/google/inter_a869fe2d.js
+    ./apps/web/src/app/layout.js
+
+
+⚠ [next]/internal/font/google/inter_a869fe2d.module.css
+Warning: Error while requesting resource
+There was an issue establishing a connection while requesting https://fonts.googleapis.com/css2?family=Inter:wght@100..900&display=swap
+
+Import trace:
+  Server Component:
+    [next]/internal/font/google/inter_a869fe2d.module.css
+    [next]/internal/font/google/inter_a869fe2d.js
+    ./apps/web/src/app/layout.js
+
+
+⚠ [next]/internal/font/google/inter_a869fe2d.module.css
+Warning: next/font: warning:
+Failed to download Inter from Google Fonts. Using a fallback font instead.
+If you are offline or behind a proxy, self-host the font with next/font/local, or set HTTP_PROXY/HTTPS_PROXY so Next.js can reach fonts.googleapis.com.
+
+Import trace:
+  Server Component:
+    [next]/internal/font/google/inter_a869fe2d.module.css
+    [next]/internal/font/google/inter_a869fe2d.js
+    ./apps/web/src/app/layout.js
+
+
+Error: ENOENT: no such file or directory, uv_resident_set_memory
+    at ignore-listed frames {
+  errno: -2,
+  code: 'ENOENT',
+  syscall: 'uv_resident_set_memory'
+}
+ GET / 200 in 50ms (next.js: 3ms, application-code: 47ms)
+Error: ENOENT: no such file or directory, uv_resident_set_memory
+    at ignore-listed frames {
+  errno: -2,
+  code: 'ENOENT',
+  syscall: 'uv_resident_set_memory'
+}
+⚠ [next]/internal/font/google/inter_a869fe2d.module.css
+Warning: Error while requesting resource
+There was an issue establishing a connection while requesting https://fonts.googleapis.com/css2?family=Inter:wght@100..900&display=swap
+
+Import trace:
+  Server Component:
+    [next]/internal/font/google/inter_a869fe2d.module.css
+    [next]/internal/font/google/inter_a869fe2d.js
+    ./apps/web/src/app/layout.js
+
+
+⚠ [next]/internal/font/google/inter_a869fe2d.module.css
+Warning: next/font: warning:
+Failed to download Inter from Google Fonts. Using a fallback font instead.
+If you are offline or behind a proxy, self-host the font with next/font/local, or set HTTP_PROXY/HTTPS_PROXY so Next.js can reach fonts.googleapis.com.
+
+Import trace:
+  Server Component:
+    [next]/internal/font/google/inter_a869fe2d.module.css
+    [next]/internal/font/google/inter_a869fe2d.js
+    ./apps/web/src/app/layout.js
+
+
+⚠ [next]/internal/font/google/inter_a869fe2d.module.css
+Warning: Error while requesting resource
+There was an issue establishing a connection while requesting https://fonts.googleapis.com/css2?family=Inter:wght@100..900&display=swap
+
+Import trace:
+  Server Component:
+    [next]/internal/font/google/inter_a869fe2d.module.css
+    [next]/internal/font/google/inter_a869fe2d.js
+    ./apps/web/src/app/layout.js
+
+
+⚠ [next]/internal/font/google/inter_a869fe2d.module.css
+Warning: next/font: warning:
+Failed to download Inter from Google Fonts. Using a fallback font instead.
+If you are offline or behind a proxy, self-host the font with next/font/local, or set HTTP_PROXY/HTTPS_PROXY so Next.js can reach fonts.googleapis.com.
+
+Import trace:
+  Server Component:
+    [next]/internal/font/google/inter_a869fe2d.module.css
+    [next]/internal/font/google/inter_a869fe2d.js
+    ./apps/web/src/app/layout.js
+
+
+Error: ENOENT: no such file or directory, uv_resident_set_memory
+    at ignore-listed frames {
+  errno: -2,
+  code: 'ENOENT',
+  syscall: 'uv_resident_set_memory'
+}
+⚠ [next]/internal/font/google/inter_a869fe2d.module.css
+Warning: Error while requesting resource
+There was an issue establishing a connection while requesting https://fonts.googleapis.com/css2?family=Inter:wght@100..900&display=swap
+
+Import trace:
+  Server Component:
+    [next]/internal/font/google/inter_a869fe2d.module.css
+    [next]/internal/font/google/inter_a869fe2d.js
+    ./apps/web/src/app/layout.js
+
+
+⚠ [next]/internal/font/google/inter_a869fe2d.module.css
+Warning: next/font: warning:
+Failed to download Inter from Google Fonts. Using a fallback font instead.
+If you are offline or behind a proxy, self-host the font with next/font/local, or set HTTP_PROXY/HTTPS_PROXY so Next.js can reach fonts.googleapis.com.
+
+Import trace:
+  Server Component:
+    [next]/internal/font/google/inter_a869fe2d.module.css
+    [next]/internal/font/google/inter_a869fe2d.js
+    ./apps/web/src/app/layout.js
+
+
+ GET /login 200 in 58ms (next.js: 6ms, application-code: 52ms)
+Error: ENOENT: no such file or directory, uv_resident_set_memory
+    at ignore-listed frames {
+  errno: -2,
+  code: 'ENOENT',
+  syscall: 'uv_resident_set_memory'
+}
+⚠ [next]/internal/font/google/inter_a869fe2d.module.css
+Warning: Error while requesting resource
+There was an issue establishing a connection while requesting https://fonts.googleapis.com/css2?family=Inter:wght@100..900&display=swap
+
+Import trace:
+  Server Component:
+    [next]/internal/font/google/inter_a869fe2d.module.css
+    [next]/internal/font/google/inter_a869fe2d.js
+    ./apps/web/src/app/layout.js
+
+
+⚠ [next]/internal/font/google/inter_a869fe2d.module.css
+Warning: next/font: warning:
+Failed to download Inter from Google Fonts. Using a fallback font instead.
+If you are offline or behind a proxy, self-host the font with next/font/local, or set HTTP_PROXY/HTTPS_PROXY so Next.js can reach fonts.googleapis.com.
+
+Import trace:
+  Server Component:
+    [next]/internal/font/google/inter_a869fe2d.module.css
+    [next]/internal/font/google/inter_a869fe2d.js
+    ./apps/web/src/app/layout.js
+
+
+⚠ [next]/internal/font/google/inter_a869fe2d.module.css
+Warning: Error while requesting resource
+There was an issue establishing a connection while requesting https://fonts.googleapis.com/css2?family=Inter:wght@100..900&display=swap
+
+Import trace:
+  Server Component:
+    [next]/internal/font/google/inter_a869fe2d.module.css
+    [next]/internal/font/google/inter_a869fe2d.js
+    ./apps/web/src/app/layout.js
+
+
+⚠ [next]/internal/font/google/inter_a869fe2d.module.css
+Warning: next/font: warning:
+Failed to download Inter from Google Fonts. Using a fallback font instead.
+If you are offline or behind a proxy, self-host the font with next/font/local, or set HTTP_PROXY/HTTPS_PROXY so Next.js can reach fonts.googleapis.com.
+
+Import trace:
+  Server Component:
+    [next]/internal/font/google/inter_a869fe2d.module.css
+    [next]/internal/font/google/inter_a869fe2d.js
+    ./apps/web/src/app/layout.js
+
+
+Error: ENOENT: no such file or directory, uv_resident_set_memory
+    at ignore-listed frames {
+  errno: -2,
+  code: 'ENOENT',
+  syscall: 'uv_resident_set_memory'
+}
+⚠ [next]/internal/font/google/inter_a869fe2d.module.css
+Warning: Error while requesting resource
+There was an issue establishing a connection while requesting https://fonts.googleapis.com/css2?family=Inter:wght@100..900&display=swap
+
+Import trace:
+  Server Component:
+    [next]/internal/font/google/inter_a869fe2d.module.css
+    [next]/internal/font/google/inter_a869fe2d.js
+    ./apps/web/src/app/layout.js
+
+
+⚠ [next]/internal/font/google/inter_a869fe2d.module.css
+Warning: next/font: warning:
+Failed to download Inter from Google Fonts. Using a fallback font instead.
+If you are offline or behind a proxy, self-host the font with next/font/local, or set HTTP_PROXY/HTTPS_PROXY so Next.js can reach fonts.googleapis.com.
+
+Import trace:
+  Server Component:
+    [next]/internal/font/google/inter_a869fe2d.module.css
+    [next]/internal/font/google/inter_a869fe2d.js
+    ./apps/web/src/app/layout.js
+
+
+⚠ [next]/internal/font/google/inter_a869fe2d.module.css
+Warning: Error while requesting resource
+There was an issue establishing a connection while requesting https://fonts.googleapis.com/css2?family=Inter:wght@100..900&display=swap
+
+Import trace:
+  Server Component:
+    [next]/internal/font/google/inter_a869fe2d.module.css
+    [next]/internal/font/google/inter_a869fe2d.js
+    ./apps/web/src/app/layout.js
+
+
+⚠ [next]/internal/font/google/inter_a869fe2d.module.css
+Warning: next/font: warning:
+Failed to download Inter from Google Fonts. Using a fallback font instead.
+If you are offline or behind a proxy, self-host the font with next/font/local, or set HTTP_PROXY/HTTPS_PROXY so Next.js can reach fonts.googleapis.com.
+
+Import trace:
+  Server Component:
+    [next]/internal/font/google/inter_a869fe2d.module.css
+    [next]/internal/font/google/inter_a869fe2d.js
+    ./apps/web/src/app/layout.js
+
+
+ GET /api/queue/stats 200 in 16ms (next.js: 4ms, proxy.ts: 7ms, application-code: 5ms)
+Error: ENOENT: no such file or directory, uv_resident_set_memory
+    at ignore-listed frames {
+  errno: -2,
+  code: 'ENOENT',
+  syscall: 'uv_resident_set_memory'
+}
+⚠ [next]/internal/font/google/inter_a869fe2d.module.css
+Warning: Error while requesting resource
+There was an issue establishing a connection while requesting https://fonts.googleapis.com/css2?family=Inter:wght@100..900&display=swap
+
+Import trace:
+  Server Component:
+    [next]/internal/font/google/inter_a869fe2d.module.css
+    [next]/internal/font/google/inter_a869fe2d.js
+    ./apps/web/src/app/layout.js
+
+
+⚠ [next]/internal/font/google/inter_a869fe2d.module.css
+Warning: next/font: warning:
+Failed to download Inter from Google Fonts. Using a fallback font instead.
+If you are offline or behind a proxy, self-host the font with next/font/local, or set HTTP_PROXY/HTTPS_PROXY so Next.js can reach fonts.googleapis.com.
+
+Import trace:
+  Server Component:
+    [next]/internal/font/google/inter_a869fe2d.module.css
+    [next]/internal/font/google/inter_a869fe2d.js
+    ./apps/web/src/app/layout.js
+
+
+⚠ [next]/internal/font/google/inter_a869fe2d.module.css
+Warning: Error while requesting resource
+There was an issue establishing a connection while requesting https://fonts.googleapis.com/css2?family=Inter:wght@100..900&display=swap
+
+Import trace:
+  Server Component:
+    [next]/internal/font/google/inter_a869fe2d.module.css
+    [next]/internal/font/google/inter_a869fe2d.js
+    ./apps/web/src/app/layout.js
+
+
+⚠ [next]/internal/font/google/inter_a869fe2d.module.css
+Warning: next/font: warning:
+Failed to download Inter from Google Fonts. Using a fallback font instead.
+If you are offline or behind a proxy, self-host the font with next/font/local, or set HTTP_PROXY/HTTPS_PROXY so Next.js can reach fonts.googleapis.com.
+
+Import trace:
+  Server Component:
+    [next]/internal/font/google/inter_a869fe2d.module.css
+    [next]/internal/font/google/inter_a869fe2d.js
+    ./apps/web/src/app/layout.js
+
+
+Error: ENOENT: no such file or directory, uv_resident_set_memory
+    at ignore-listed frames {
+  errno: -2,
+  code: 'ENOENT',
+  syscall: 'uv_resident_set_memory'
+}
+⚠ [next]/internal/font/google/inter_a869fe2d.module.css
+Warning: Error while requesting resource
+There was an issue establishing a connection while requesting https://fonts.googleapis.com/css2?family=Inter:wght@100..900&display=swap
+
+Import trace:
+  Server Component:
+    [next]/internal/font/google/inter_a869fe2d.module.css
+    [next]/internal/font/google/inter_a869fe2d.js
+    ./apps/web/src/app/layout.js
+
+
+⚠ [next]/internal/font/google/inter_a869fe2d.module.css
+Warning: next/font: warning:
+Failed to download Inter from Google Fonts. Using a fallback font instead.
+If you are offline or behind a proxy, self-host the font with next/font/local, or set HTTP_PROXY/HTTPS_PROXY so Next.js can reach fonts.googleapis.com.
+
+Import trace:
+  Server Component:
+    [next]/internal/font/google/inter_a869fe2d.module.css
+    [next]/internal/font/google/inter_a869fe2d.js
+    ./apps/web/src/app/layout.js
+
+
+⚠ [next]/internal/font/google/inter_a869fe2d.module.css
+Warning: Error while requesting resource
+There was an issue establishing a connection while requesting https://fonts.googleapis.com/css2?family=Inter:wght@100..900&display=swap
+
+Import trace:
+  Server Component:
+    [next]/internal/font/google/inter_a869fe2d.module.css
+    [next]/internal/font/google/inter_a869fe2d.js
+    ./apps/web/src/app/layout.js
+
+
+⚠ [next]/internal/font/google/inter_a869fe2d.module.css
+Warning: next/font: warning:
+Failed to download Inter from Google Fonts. Using a fallback font instead.
+If you are offline or behind a proxy, self-host the font with next/font/local, or set HTTP_PROXY/HTTPS_PROXY so Next.js can reach fonts.googleapis.com.
+
+Import trace:
+  Server Component:
+    [next]/internal/font/google/inter_a869fe2d.module.css
+    [next]/internal/font/google/inter_a869fe2d.js
+    ./apps/web/src/app/layout.js
+
+
+{"level":"WARN","timestamp":"2026-10-22T15:52:39.559Z","message":"HTTP request failed","method":"GET","path":"/api/health","statusCode":503,"durationMs":20}
+ GET /api/health 503 in 17ms (next.js: 4ms, proxy.ts: 9ms, application-code: 4ms)
+Error: ENOENT: no such file or directory, uv_resident_set_memory
+    at ignore-listed frames {
+  errno: -2,
+  code: 'ENOENT',
+  syscall: 'uv_resident_set_memory'
+}
+⚠ [next]/internal/font/google/inter_a869fe2d.module.css
+Warning: Error while requesting resource
+There was an issue establishing a connection while requesting https://fonts.googleapis.com/css2?family=Inter:wght@100..900&display=swap
+
+Import trace:
+  Server Component:
+    [next]/internal/font/google/inter_a869fe2d.module.css
+    [next]/internal/font/google/inter_a869fe2d.js
+    ./apps/web/src/app/layout.js
+
+
+⚠ [next]/internal/font/google/inter_a869fe2d.module.css
+Warning: next/font: warning:
+Failed to download Inter from Google Fonts. Using a fallback font instead.
+If you are offline or behind a proxy, self-host the font with next/font/local, or set HTTP_PROXY/HTTPS_PROXY so Next.js can reach fonts.googleapis.com.
+
+Import trace:
+  Server Component:
+    [next]/internal/font/google/inter_a869fe2d.module.css
+    [next]/internal/font/google/inter_a869fe2d.js
+    ./apps/web/src/app/layout.js
+
+
+⚠ [next]/internal/font/google/inter_a869fe2d.module.css
+Warning: Error while requesting resource
+There was an issue establishing a connection while requesting https://fonts.googleapis.com/css2?family=Inter:wght@100..900&display=swap
+
+Import trace:
+  Server Component:
+    [next]/internal/font/google/inter_a869fe2d.module.css
+    [next]/internal/font/google/inter_a869fe2d.js
+    ./apps/web/src/app/layout.js
+
+
+⚠ [next]/internal/font/google/inter_a869fe2d.module.css
+Warning: next/font: warning:
+Failed to download Inter from Google Fonts. Using a fallback font instead.
+If you are offline or behind a proxy, self-host the font with next/font/local, or set HTTP_PROXY/HTTPS_PROXY so Next.js can reach fonts.googleapis.com.
+
+Import trace:
+  Server Component:
+    [next]/internal/font/google/inter_a869fe2d.module.css
+    [next]/internal/font/google/inter_a869fe2d.js
+    ./apps/web/src/app/layout.js
+
+
+Error: ENOENT: no such file or directory, uv_resident_set_memory
+    at ignore-listed frames {
+  errno: -2,
+  code: 'ENOENT',
+  syscall: 'uv_resident_set_memory'
+}
+⚠ [next]/internal/font/google/inter_a869fe2d.module.css
+Warning: Error while requesting resource
+There was an issue establishing a connection while requesting https://fonts.googleapis.com/css2?family=Inter:wght@100..900&display=swap
+
+Import trace:
+  Server Component:
+    [next]/internal/font/google/inter_a869fe2d.module.css
+    [next]/internal/font/google/inter_a869fe2d.js
+    ./apps/web/src/app/layout.js
+
+
+⚠ [next]/internal/font/google/inter_a869fe2d.module.css
+Warning: next/font: warning:
+Failed to download Inter from Google Fonts. Using a fallback font instead.
+If you are offline or behind a proxy, self-host the font with next/font/local, or set HTTP_PROXY/HTTPS_PROXY so Next.js can reach fonts.googleapis.com.
+
+Import trace:
+  Server Component:
+    [next]/internal/font/google/inter_a869fe2d.module.css
+    [next]/internal/font/google/inter_a869fe2d.js
+    ./apps/web/src/app/layout.js
+
+
+ GET / 200 in 44ms (next.js: 6ms, application-code: 38ms)
+Error: ENOENT: no such file or directory, uv_resident_set_memory
+    at ignore-listed frames {
+  errno: -2,
+  code: 'ENOENT',
+  syscall: 'uv_resident_set_memory'
+}
+⚠ [next]/internal/font/google/inter_a869fe2d.module.css
+Warning: Error while requesting resource
+There was an issue establishing a connection while requesting https://fonts.googleapis.com/css2?family=Inter:wght@100..900&display=swap
+
+Import trace:
+  Server Component:
+    [next]/internal/font/google/inter_a869fe2d.module.css
+    [next]/internal/font/google/inter_a869fe2d.js
+    ./apps/web/src/app/layout.js
+
+
+⚠ [next]/internal/font/google/inter_a869fe2d.module.css
+Warning: next/font: warning:
+Failed to download Inter from Google Fonts. Using a fallback font instead.
+If you are offline or behind a proxy, self-host the font with next/font/local, or set HTTP_PROXY/HTTPS_PROXY so Next.js can reach fonts.googleapis.com.
+
+Import trace:
+  Server Component:
+    [next]/internal/font/google/inter_a869fe2d.module.css
+    [next]/internal/font/google/inter_a869fe2d.js
+    ./apps/web/src/app/layout.js
+
+
+⚠ [next]/internal/font/google/inter_a869fe2d.module.css
+Warning: Error while requesting resource
+There was an issue establishing a connection while requesting https://fonts.googleapis.com/css2?family=Inter:wght@100..900&display=swap
+
+Import trace:
+  Server Component:
+    [next]/internal/font/google/inter_a869fe2d.module.css
+    [next]/internal/font/google/inter_a869fe2d.js
+    ./apps/web/src/app/layout.js
+
+
+⚠ [next]/internal/font/google/inter_a869fe2d.module.css
+Warning: next/font: warning:
+Failed to download Inter from Google Fonts. Using a fallback font instead.
+If you are offline or behind a proxy, self-host the font with next/font/local, or set HTTP_PROXY/HTTPS_PROXY so Next.js can reach fonts.googleapis.com.
+
+Import trace:
+  Server Component:
+    [next]/internal/font/google/inter_a869fe2d.module.css
+    [next]/internal/font/google/inter_a869fe2d.js
+    ./apps/web/src/app/layout.js
+
+
+Error: ENOENT: no such file or directory, uv_resident_set_memory
+    at ignore-listed frames {
+  errno: -2,
+  code: 'ENOENT',
+  syscall: 'uv_resident_set_memory'
+}
+⚠ [next]/internal/font/google/inter_a869fe2d.module.css
+Warning: Error while requesting resource
+There was an issue establishing a connection while requesting https://fonts.googleapis.com/css2?family=Inter:wght@100..900&display=swap
+
+Import trace:
+  Server Component:
+    [next]/internal/font/google/inter_a869fe2d.module.css
+    [next]/internal/font/google/inter_a869fe2d.js
+    ./apps/web/src/app/layout.js
+
+
+⚠ [next]/internal/font/google/inter_a869fe2d.module.css
+Warning: next/font: warning:
+Failed to download Inter from Google Fonts. Using a fallback font instead.
+If you are offline or behind a proxy, self-host the font with next/font/local, or set HTTP_PROXY/HTTPS_PROXY so Next.js can reach fonts.googleapis.com.
+
+Import trace:
+  Server Component:
+    [next]/internal/font/google/inter_a869fe2d.module.css
+    [next]/internal/font/google/inter_a869fe2d.js
+    ./apps/web/src/app/layout.js
+
+
+ GET /login 200 in 52ms (next.js: 13ms, application-code: 39ms)
+Error: ENOENT: no such file or directory, uv_resident_set_memory
+    at ignore-listed frames {
+  errno: -2,
+  code: 'ENOENT',
+  syscall: 'uv_resident_set_memory'
+}
+⚠ [next]/internal/font/google/inter_a869fe2d.module.css
+Warning: Error while requesting resource
+There was an issue establishing a connection while requesting https://fonts.googleapis.com/css2?family=Inter:wght@100..900&display=swap
+
+Import trace:
+  Server Component:
+    [next]/internal/font/google/inter_a869fe2d.module.css
+    [next]/internal/font/google/inter_a869fe2d.js
+    ./apps/web/src/app/layout.js
+
+
+⚠ [next]/internal/font/google/inter_a869fe2d.module.css
+Warning: next/font: warning:
+Failed to download Inter from Google Fonts. Using a fallback font instead.
+If you are offline or behind a proxy, self-host the font with next/font/local, or set HTTP_PROXY/HTTPS_PROXY so Next.js can reach fonts.googleapis.com.
+
+Import trace:
+  Server Component:
+    [next]/internal/font/google/inter_a869fe2d.module.css
+    [next]/internal/font/google/inter_a869fe2d.js
+    ./apps/web/src/app/layout.js
+
+
+⚠ [next]/internal/font/google/inter_a869fe2d.module.css
+Warning: Error while requesting resource
+There was an issue establishing a connection while requesting https://fonts.googleapis.com/css2?family=Inter:wght@100..900&display=swap
+
+Import trace:
+  Server Component:
+    [next]/internal/font/google/inter_a869fe2d.module.css
+    [next]/internal/font/google/inter_a869fe2d.js
+    ./apps/web/src/app/layout.js
+
+
+⚠ [next]/internal/font/google/inter_a869fe2d.module.css
+Warning: next/font: warning:
+Failed to download Inter from Google Fonts. Using a fallback font instead.
+If you are offline or behind a proxy, self-host the font with next/font/local, or set HTTP_PROXY/HTTPS_PROXY so Next.js can reach fonts.googleapis.com.
+
+Import trace:
+  Server Component:
+    [next]/internal/font/google/inter_a869fe2d.module.css
+    [next]/internal/font/google/inter_a869fe2d.js
+    ./apps/web/src/app/layout.js
+
+
+Error: ENOENT: no such file or directory, uv_resident_set_memory
+    at ignore-listed frames {
+  errno: -2,
+  code: 'ENOENT',
+  syscall: 'uv_resident_set_memory'
+}
+⚠ [next]/internal/font/google/inter_a869fe2d.module.css
+Warning: Error while requesting resource
+There was an issue establishing a connection while requesting https://fonts.googleapis.com/css2?family=Inter:wght@100..900&display=swap
+
+Import trace:
+  Server Component:
+    [next]/internal/font/google/inter_a869fe2d.module.css
+    [next]/internal/font/google/inter_a869fe2d.js
+    ./apps/web/src/app/layout.js
+
+
+⚠ [next]/internal/font/google/inter_a869fe2d.module.css
+Warning: next/font: warning:
+Failed to download Inter from Google Fonts. Using a fallback font instead.
+If you are offline or behind a proxy, self-host the font with next/font/local, or set HTTP_PROXY/HTTPS_PROXY so Next.js can reach fonts.googleapis.com.
+
+Import trace:
+  Server Component:
+    [next]/internal/font/google/inter_a869fe2d.module.css
+    [next]/internal/font/google/inter_a869fe2d.js
+    ./apps/web/src/app/layout.js
+
+
+⚠ [next]/internal/font/google/inter_a869fe2d.module.css
+Warning: Error while requesting resource
+There was an issue establishing a connection while requesting https://fonts.googleapis.com/css2?family=Inter:wght@100..900&display=swap
+
+Import trace:
+  Server Component:
+    [next]/internal/font/google/inter_a869fe2d.module.css
+    [next]/internal/font/google/inter_a869fe2d.js
+    ./apps/web/src/app/layout.js
+
+
+⚠ [next]/internal/font/google/inter_a869fe2d.module.css
+Warning: next/font: warning:
+Failed to download Inter from Google Fonts. Using a fallback font instead.
+If you are offline or behind a proxy, self-host the font with next/font/local, or set HTTP_PROXY/HTTPS_PROXY so Next.js can reach fonts.googleapis.com.
+
+Import trace:
+  Server Component:
+    [next]/internal/font/google/inter_a869fe2d.module.css
+    [next]/internal/font/google/inter_a869fe2d.js
+    ./apps/web/src/app/layout.js
+
+
+ GET /api/queue/stats 200 in 19ms (next.js: 3ms, proxy.ts: 11ms, application-code: 5ms)
+Error: ENOENT: no such file or directory, uv_resident_set_memory
+    at ignore-listed frames {
+  errno: -2,
+  code: 'ENOENT',
+  syscall: 'uv_resident_set_memory'
+}
+⚠ [next]/internal/font/google/inter_a869fe2d.module.css
+Warning: Error while requesting resource
+There was an issue establishing a connection while requesting https://fonts.googleapis.com/css2?family=Inter:wght@100..900&display=swap
+
+Import trace:
+  Server Component:
+    [next]/internal/font/google/inter_a869fe2d.module.css
+    [next]/internal/font/google/inter_a869fe2d.js
+    ./apps/web/src/app/layout.js
+
+
+⚠ [next]/internal/font/google/inter_a869fe2d.module.css
+Warning: next/font: warning:
+Failed to download Inter from Google Fonts. Using a fallback font instead.
+If you are offline or behind a proxy, self-host the font with next/font/local, or set HTTP_PROXY/HTTPS_PROXY so Next.js can reach fonts.googleapis.com.
+
+Import trace:
+  Server Component:
+    [next]/internal/font/google/inter_a869fe2d.module.css
+    [next]/internal/font/google/inter_a869fe2d.js
+    ./apps/web/src/app/layout.js
+
+
+⚠ [next]/internal/font/google/inter_a869fe2d.module.css
+Warning: Error while requesting resource
+There was an issue establishing a connection while requesting https://fonts.googleapis.com/css2?family=Inter:wght@100..900&display=swap
+
+Import trace:
+  Server Component:
+    [next]/internal/font/google/inter_a869fe2d.module.css
+    [next]/internal/font/google/inter_a869fe2d.js
+    ./apps/web/src/app/layout.js
+
+
+⚠ [next]/internal/font/google/inter_a869fe2d.module.css
+Warning: next/font: warning:
+Failed to download Inter from Google Fonts. Using a fallback font instead.
+If you are offline or behind a proxy, self-host the font with next/font/local, or set HTTP_PROXY/HTTPS_PROXY so Next.js can reach fonts.googleapis.com.
+
+Import trace:
+  Server Component:
+    [next]/internal/font/google/inter_a869fe2d.module.css
+    [next]/internal/font/google/inter_a869fe2d.js
+    ./apps/web/src/app/layout.js
+
+
+Error: ENOENT: no such file or directory, uv_resident_set_memory
+    at ignore-listed frames {
+  errno: -2,
+  code: 'ENOENT',
+  syscall: 'uv_resident_set_memory'
+}
+⚠ [next]/internal/font/google/inter_a869fe2d.module.css
+Warning: Error while requesting resource
+There was an issue establishing a connection while requesting https://fonts.googleapis.com/css2?family=Inter:wght@100..900&display=swap
+
+Import trace:
+  Server Component:
+    [next]/internal/font/google/inter_a869fe2d.module.css
+    [next]/internal/font/google/inter_a869fe2d.js
+    ./apps/web/src/app/layout.js
+
+
+⚠ [next]/internal/font/google/inter_a869fe2d.module.css
+Warning: next/font: warning:
+Failed to download Inter from Google Fonts. Using a fallback font instead.
+If you are offline or behind a proxy, self-host the font with next/font/local, or set HTTP_PROXY/HTTPS_PROXY so Next.js can reach fonts.googleapis.com.
+
+Import trace:
+  Server Component:
+    [next]/internal/font/google/inter_a869fe2d.module.css
+    [next]/internal/font/google/inter_a869fe2d.js
+    ./apps/web/src/app/layout.js
+
+
+⚠ [next]/internal/font/google/inter_a869fe2d.module.css
+Warning: Error while requesting resource
+There was an issue establishing a connection while requesting https://fonts.googleapis.com/css2?family=Inter:wght@100..900&display=swap
+
+Import trace:
+  Server Component:
+    [next]/internal/font/google/inter_a869fe2d.module.css
+    [next]/internal/font/google/inter_a869fe2d.js
+    ./apps/web/src/app/layout.js
+
+
+⚠ [next]/internal/font/google/inter_a869fe2d.module.css
+Warning: next/font: warning:
+Failed to download Inter from Google Fonts. Using a fallback font instead.
+If you are offline or behind a proxy, self-host the font with next/font/local, or set HTTP_PROXY/HTTPS_PROXY so Next.js can reach fonts.googleapis.com.
+
+Import trace:
+  Server Component:
+    [next]/internal/font/google/inter_a869fe2d.module.css
+    [next]/internal/font/google/inter_a869fe2d.js
+    ./apps/web/src/app/layout.js
+
+
+{"level":"WARN","timestamp":"2026-10-22T15:52:40.708Z","message":"HTTP request failed","method":"GET","path":"/api/health","statusCode":503,"durationMs":15}
+ GET /api/health 503 in 13ms (next.js: 3ms, proxy.ts: 4ms, application-code: 6ms)
+Error: ENOENT: no such file or directory, uv_resident_set_memory
+    at ignore-listed frames {
+  errno: -2,
+  code: 'ENOENT',
+  syscall: 'uv_resident_set_memory'
+}
+⚠ [next]/internal/font/google/inter_a869fe2d.module.css
+Warning: Error while requesting resource
+There was an issue establishing a connection while requesting https://fonts.googleapis.com/css2?family=Inter:wght@100..900&display=swap
+
+Import trace:
+  Server Component:
+    [next]/internal/font/google/inter_a869fe2d.module.css
+    [next]/internal/font/google/inter_a869fe2d.js
+    ./apps/web/src/app/layout.js
+
+
+⚠ [next]/internal/font/google/inter_a869fe2d.module.css
+Warning: next/font: warning:
+Failed to download Inter from Google Fonts. Using a fallback font instead.
+If you are offline or behind a proxy, self-host the font with next/font/local, or set HTTP_PROXY/HTTPS_PROXY so Next.js can reach fonts.googleapis.com.
+
+Import trace:
+  Server Component:
+    [next]/internal/font/google/inter_a869fe2d.module.css
+    [next]/internal/font/google/inter_a869fe2d.js
+    ./apps/web/src/app/layout.js
+
+
+⚠ [next]/internal/font/google/inter_a869fe2d.module.css
+Warning: Error while requesting resource
+There was an issue establishing a connection while requesting https://fonts.googleapis.com/css2?family=Inter:wght@100..900&display=swap
+
+Import trace:
+  Server Component:
+    [next]/internal/font/google/inter_a869fe2d.module.css
+    [next]/internal/font/google/inter_a869fe2d.js
+    ./apps/web/src/app/layout.js
+
+
+⚠ [next]/internal/font/google/inter_a869fe2d.module.css
+Warning: next/font: warning:
+Failed to download Inter from Google Fonts. Using a fallback font instead.
+If you are offline or behind a proxy, self-host the font with next/font/local, or set HTTP_PROXY/HTTPS_PROXY so Next.js can reach fonts.googleapis.com.
+
+Import trace:
+  Server Component:
+    [next]/internal/font/google/inter_a869fe2d.module.css
+    [next]/internal/font/google/inter_a869fe2d.js
+    ./apps/web/src/app/layout.js
+
+
+⚠ [next]/internal/font/google/inter_a869fe2d.module.css
+Warning: Error while requesting resource
+There was an issue establishing a connection while requesting https://fonts.googleapis.com/css2?family=Inter:wght@100..900&display=swap
+
+Import trace:
+  Server Component:
+    [next]/internal/font/google/inter_a869fe2d.module.css
+    [next]/internal/font/google/inter_a869fe2d.js
+    ./apps/web/src/app/layout.js
+
+
+⚠ [next]/internal/font/google/inter_a869fe2d.module.css
+Warning: next/font: warning:
+Failed to download Inter from Google Fonts. Using a fallback font instead.
+If you are offline or behind a proxy, self-host the font with next/font/local, or set HTTP_PROXY/HTTPS_PROXY so Next.js can reach fonts.googleapis.com.
+
+Import trace:
+  Server Component:
+    [next]/internal/font/google/inter_a869fe2d.module.css
+    [next]/internal/font/google/inter_a869fe2d.js
+    ./apps/web/src/app/layout.js
+
+
+Error: ENOENT: no such file or directory, uv_resident_set_memory
+    at ignore-listed frames {
+  errno: -2,
+  code: 'ENOENT',
+  syscall: 'uv_resident_set_memory'
+}
+ GET / 200 in 116ms (next.js: 7ms, application-code: 109ms)
+Error: ENOENT: no such file or directory, uv_resident_set_memory
+    at ignore-listed frames {
+  errno: -2,
+  code: 'ENOENT',
+  syscall: 'uv_resident_set_memory'
+}
+⚠ [next]/internal/font/google/inter_a869fe2d.module.css
+Warning: Error while requesting resource
+There was an issue establishing a connection while requesting https://fonts.googleapis.com/css2?family=Inter:wght@100..900&display=swap
+
+Import trace:
+  Server Component:
+    [next]/internal/font/google/inter_a869fe2d.module.css
+    [next]/internal/font/google/inter_a869fe2d.js
+    ./apps/web/src/app/layout.js
+
+
+⚠ [next]/internal/font/google/inter_a869fe2d.module.css
+Warning: next/font: warning:
+Failed to download Inter from Google Fonts. Using a fallback font instead.
+If you are offline or behind a proxy, self-host the font with next/font/local, or set HTTP_PROXY/HTTPS_PROXY so Next.js can reach fonts.googleapis.com.
+
+Import trace:
+  Server Component:
+    [next]/internal/font/google/inter_a869fe2d.module.css
+    [next]/internal/font/google/inter_a869fe2d.js
+    ./apps/web/src/app/layout.js
+
+
+⚠ [next]/internal/font/google/inter_a869fe2d.module.css
+Warning: Error while requesting resource
+There was an issue establishing a connection while requesting https://fonts.googleapis.com/css2?family=Inter:wght@100..900&display=swap
+
+Import trace:
+  Server Component:
+    [next]/internal/font/google/inter_a869fe2d.module.css
+    [next]/internal/font/google/inter_a869fe2d.js
+    ./apps/web/src/app/layout.js
+
+
+⚠ [next]/internal/font/google/inter_a869fe2d.module.css
+Warning: next/font: warning:
+Failed to download Inter from Google Fonts. Using a fallback font instead.
+If you are offline or behind a proxy, self-host the font with next/font/local, or set HTTP_PROXY/HTTPS_PROXY so Next.js can reach fonts.googleapis.com.
+
+Import trace:
+  Server Component:
+    [next]/internal/font/google/inter_a869fe2d.module.css
+    [next]/internal/font/google/inter_a869fe2d.js
+    ./apps/web/src/app/layout.js
+
+
+Error: ENOENT: no such file or directory, uv_resident_set_memory
+    at ignore-listed frames {
+  errno: -2,
+  code: 'ENOENT',
+  syscall: 'uv_resident_set_memory'
+}
+⚠ [next]/internal/font/google/inter_a869fe2d.module.css
+Warning: Error while requesting resource
+There was an issue establishing a connection while requesting https://fonts.googleapis.com/css2?family=Inter:wght@100..900&display=swap
+
+Import trace:
+  Server Component:
+    [next]/internal/font/google/inter_a869fe2d.module.css
+    [next]/internal/font/google/inter_a869fe2d.js
+    ./apps/web/src/app/layout.js
+
+
+⚠ [next]/internal/font/google/inter_a869fe2d.module.css
+Warning: next/font: warning:
+Failed to download Inter from Google Fonts. Using a fallback font instead.
+If you are offline or behind a proxy, self-host the font with next/font/local, or set HTTP_PROXY/HTTPS_PROXY so Next.js can reach fonts.googleapis.com.
+
+Import trace:
+  Server Component:
+    [next]/internal/font/google/inter_a869fe2d.module.css
+    [next]/internal/font/google/inter_a869fe2d.js
+    ./apps/web/src/app/layout.js
+
+
+ GET /login 200 in 69ms (next.js: 18ms, application-code: 51ms)
+Error: ENOENT: no such file or directory, uv_resident_set_memory
+    at ignore-listed frames {
+  errno: -2,
+  code: 'ENOENT',
+  syscall: 'uv_resident_set_memory'
+}
+⚠ [next]/internal/font/google/inter_a869fe2d.module.css
+Warning: Error while requesting resource
+There was an issue establishing a connection while requesting https://fonts.googleapis.com/css2?family=Inter:wght@100..900&display=swap
+
+Import trace:
+  Server Component:
+    [next]/internal/font/google/inter_a869fe2d.module.css
+    [next]/internal/font/google/inter_a869fe2d.js
+    ./apps/web/src/app/layout.js
+
+
+⚠ [next]/internal/font/google/inter_a869fe2d.module.css
+Warning: next/font: warning:
+Failed to download Inter from Google Fonts. Using a fallback font instead.
+If you are offline or behind a proxy, self-host the font with next/font/local, or set HTTP_PROXY/HTTPS_PROXY so Next.js can reach fonts.googleapis.com.
+
+Import trace:
+  Server Component:
+    [next]/internal/font/google/inter_a869fe2d.module.css
+    [next]/internal/font/google/inter_a869fe2d.js
+    ./apps/web/src/app/layout.js
+
+
+⚠ [next]/internal/font/google/inter_a869fe2d.module.css
+Warning: Error while requesting resource
+There was an issue establishing a connection while requesting https://fonts.googleapis.com/css2?family=Inter:wght@100..900&display=swap
+
+Import trace:
+  Server Component:
+    [next]/internal/font/google/inter_a869fe2d.module.css
+    [next]/internal/font/google/inter_a869fe2d.js
+    ./apps/web/src/app/layout.js
+
+
+⚠ [next]/internal/font/google/inter_a869fe2d.module.css
+Warning: next/font: warning:
+Failed to download Inter from Google Fonts. Using a fallback font instead.
+If you are offline or behind a proxy, self-host the font with next/font/local, or set HTTP_PROXY/HTTPS_PROXY so Next.js can reach fonts.googleapis.com.
+
+Import trace:
+  Server Component:
+    [next]/internal/font/google/inter_a869fe2d.module.css
+    [next]/internal/font/google/inter_a869fe2d.js
+    ./apps/web/src/app/layout.js
+
+
+Error: ENOENT: no such file or directory, uv_resident_set_memory
+    at ignore-listed frames {
+  errno: -2,
+  code: 'ENOENT',
+  syscall: 'uv_resident_set_memory'
+}
+⚠ [next]/internal/font/google/inter_a869fe2d.module.css
+Warning: Error while requesting resource
+There was an issue establishing a connection while requesting https://fonts.googleapis.com/css2?family=Inter:wght@100..900&display=swap
+
+Import trace:
+  Server Component:
+    [next]/internal/font/google/inter_a869fe2d.module.css
+    [next]/internal/font/google/inter_a869fe2d.js
+    ./apps/web/src/app/layout.js
+
+
+⚠ [next]/internal/font/google/inter_a869fe2d.module.css
+Warning: next/font: warning:
+Failed to download Inter from Google Fonts. Using a fallback font instead.
+If you are offline or behind a proxy, self-host the font with next/font/local, or set HTTP_PROXY/HTTPS_PROXY so Next.js can reach fonts.googleapis.com.
+
+Import trace:
+  Server Component:
+    [next]/internal/font/google/inter_a869fe2d.module.css
+    [next]/internal/font/google/inter_a869fe2d.js
+    ./apps/web/src/app/layout.js
+
+
+⚠ [next]/internal/font/google/inter_a869fe2d.module.css
+Warning: Error while requesting resource
+There was an issue establishing a connection while requesting https://fonts.googleapis.com/css2?family=Inter:wght@100..900&display=swap
+
+Import trace:
+  Server Component:
+    [next]/internal/font/google/inter_a869fe2d.module.css
+    [next]/internal/font/google/inter_a869fe2d.js
+    ./apps/web/src/app/layout.js
+
+
+⚠ [next]/internal/font/google/inter_a869fe2d.module.css
+Warning: next/font: warning:
+Failed to download Inter from Google Fonts. Using a fallback font instead.
+If you are offline or behind a proxy, self-host the font with next/font/local, or set HTTP_PROXY/HTTPS_PROXY so Next.js can reach fonts.googleapis.com.
+
+Import trace:
+  Server Component:
+    [next]/internal/font/google/inter_a869fe2d.module.css
+    [next]/internal/font/google/inter_a869fe2d.js
+    ./apps/web/src/app/layout.js
+
+
+ GET /api/queue/stats 200 in 18ms (next.js: 5ms, proxy.ts: 7ms, application-code: 6ms)
+Error: ENOENT: no such file or directory, uv_resident_set_memory
+    at ignore-listed frames {
+  errno: -2,
+  code: 'ENOENT',
+  syscall: 'uv_resident_set_memory'
+}
+⚠ [next]/internal/font/google/inter_a869fe2d.module.css
+Warning: Error while requesting resource
+There was an issue establishing a connection while requesting https://fonts.googleapis.com/css2?family=Inter:wght@100..900&display=swap
+
+Import trace:
+  Server Component:
+    [next]/internal/font/google/inter_a869fe2d.module.css
+    [next]/internal/font/google/inter_a869fe2d.js
+    ./apps/web/src/app/layout.js
+
+
+⚠ [next]/internal/font/google/inter_a869fe2d.module.css
+Warning: next/font: warning:
+Failed to download Inter from Google Fonts. Using a fallback font instead.
+If you are offline or behind a proxy, self-host the font with next/font/local, or set HTTP_PROXY/HTTPS_PROXY so Next.js can reach fonts.googleapis.com.
+
+Import trace:
+  Server Component:
+    [next]/internal/font/google/inter_a869fe2d.module.css
+    [next]/internal/font/google/inter_a869fe2d.js
+    ./apps/web/src/app/layout.js
+
+
+⚠ [next]/internal/font/google/inter_a869fe2d.module.css
+Warning: Error while requesting resource
+There was an issue establishing a connection while requesting https://fonts.googleapis.com/css2?family=Inter:wght@100..900&display=swap
+
+Import trace:
+  Server Component:
+    [next]/internal/font/google/inter_a869fe2d.module.css
+    [next]/internal/font/google/inter_a869fe2d.js
+    ./apps/web/src/app/layout.js
+
+
+⚠ [next]/internal/font/google/inter_a869fe2d.module.css
+Warning: next/font: warning:
+Failed to download Inter from Google Fonts. Using a fallback font instead.
+If you are offline or behind a proxy, self-host the font with next/font/local, or set HTTP_PROXY/HTTPS_PROXY so Next.js can reach fonts.googleapis.com.
+
+Import trace:
+  Server Component:
+    [next]/internal/font/google/inter_a869fe2d.module.css
+    [next]/internal/font/google/inter_a869fe2d.js
+    ./apps/web/src/app/layout.js
+
+
+Error: ENOENT: no such file or directory, uv_resident_set_memory
+    at ignore-listed frames {
+  errno: -2,
+  code: 'ENOENT',
+  syscall: 'uv_resident_set_memory'
+}
+⚠ [next]/internal/font/google/inter_a869fe2d.module.css
+Warning: Error while requesting resource
+There was an issue establishing a connection while requesting https://fonts.googleapis.com/css2?family=Inter:wght@100..900&display=swap
+
+Import trace:
+  Server Component:
+    [next]/internal/font/google/inter_a869fe2d.module.css
+    [next]/internal/font/google/inter_a869fe2d.js
+    ./apps/web/src/app/layout.js
+
+
+⚠ [next]/internal/font/google/inter_a869fe2d.module.css
+Warning: next/font: warning:
+Failed to download Inter from Google Fonts. Using a fallback font instead.
+If you are offline or behind a proxy, self-host the font with next/font/local, or set HTTP_PROXY/HTTPS_PROXY so Next.js can reach fonts.googleapis.com.
+
+Import trace:
+  Server Component:
+    [next]/internal/font/google/inter_a869fe2d.module.css
+    [next]/internal/font/google/inter_a869fe2d.js
+    ./apps/web/src/app/layout.js
+
+
+⚠ [next]/internal/font/google/inter_a869fe2d.module.css
+Warning: Error while requesting resource
+There was an issue establishing a connection while requesting https://fonts.googleapis.com/css2?family=Inter:wght@100..900&display=swap
+
+Import trace:
+  Server Component:
+    [next]/internal/font/google/inter_a869fe2d.module.css
+    [next]/internal/font/google/inter_a869fe2d.js
+    ./apps/web/src/app/layout.js
+
+
+⚠ [next]/internal/font/google/inter_a869fe2d.module.css
+Warning: next/font: warning:
+Failed to download Inter from Google Fonts. Using a fallback font instead.
+If you are offline or behind a proxy, self-host the font with next/font/local, or set HTTP_PROXY/HTTPS_PROXY so Next.js can reach fonts.googleapis.com.
+
+Import trace:
+  Server Component:
+    [next]/internal/font/google/inter_a869fe2d.module.css
+    [next]/internal/font/google/inter_a869fe2d.js
+    ./apps/web/src/app/layout.js
+
+
+{"level":"WARN","timestamp":"2026-10-22T15:52:41.956Z","message":"HTTP request failed","method":"GET","path":"/api/health","statusCode":503,"durationMs":26}
+ GET /api/health 503 in 24ms (next.js: 8ms, proxy.ts: 11ms, application-code: 5ms)
+Error: ENOENT: no such file or directory, uv_resident_set_memory
+    at ignore-listed frames {
+  errno: -2,
+  code: 'ENOENT',
+  syscall: 'uv_resident_set_memory'
+}
+⚠ [next]/internal/font/google/inter_a869fe2d.module.css
+Warning: Error while requesting resource
+There was an issue establishing a connection while requesting https://fonts.googleapis.com/css2?family=Inter:wght@100..900&display=swap
+
+Import trace:
+  Server Component:
+    [next]/internal/font/google/inter_a869fe2d.module.css
+    [next]/internal/font/google/inter_a869fe2d.js
+    ./apps/web/src/app/layout.js
+
+
+⚠ [next]/internal/font/google/inter_a869fe2d.module.css
+Warning: next/font: warning:
+Failed to download Inter from Google Fonts. Using a fallback font instead.
+If you are offline or behind a proxy, self-host the font with next/font/local, or set HTTP_PROXY/HTTPS_PROXY so Next.js can reach fonts.googleapis.com.
+
+Import trace:
+  Server Component:
+    [next]/internal/font/google/inter_a869fe2d.module.css
+    [next]/internal/font/google/inter_a869fe2d.js
+    ./apps/web/src/app/layout.js
+
+
+⚠ [next]/internal/font/google/inter_a869fe2d.module.css
+Warning: Error while requesting resource
+There was an issue establishing a connection while requesting https://fonts.googleapis.com/css2?family=Inter:wght@100..900&display=swap
+
+Import trace:
+  Server Component:
+    [next]/internal/font/google/inter_a869fe2d.module.css
+    [next]/internal/font/google/inter_a869fe2d.js
+    ./apps/web/src/app/layout.js
+
+
+⚠ [next]/internal/font/google/inter_a869fe2d.module.css
+Warning: next/font: warning:
+Failed to download Inter from Google Fonts. Using a fallback font instead.
+If you are offline or behind a proxy, self-host the font with next/font/local, or set HTTP_PROXY/HTTPS_PROXY so Next.js can reach fonts.googleapis.com.
+
+Import trace:
+  Server Component:
+    [next]/internal/font/google/inter_a869fe2d.module.css
+    [next]/internal/font/google/inter_a869fe2d.js
+    ./apps/web/src/app/layout.js
+
+
+Error: ENOENT: no such file or directory, uv_resident_set_memory
+    at ignore-listed frames {
+  errno: -2,
+  code: 'ENOENT',
+  syscall: 'uv_resident_set_memory'
+}
+⚠ [next]/internal/font/google/inter_a869fe2d.module.css
+Warning: Error while requesting resource
+There was an issue establishing a connection while requesting https://fonts.googleapis.com/css2?family=Inter:wght@100..900&display=swap
+
+Import trace:
+  Server Component:
+    [next]/internal/font/google/inter_a869fe2d.module.css
+    [next]/internal/font/google/inter_a869fe2d.js
+    ./apps/web/src/app/layout.js
+
+
+⚠ [next]/internal/font/google/inter_a869fe2d.module.css
+Warning: next/font: warning:
+Failed to download Inter from Google Fonts. Using a fallback font instead.
+If you are offline or behind a proxy, self-host the font with next/font/local, or set HTTP_PROXY/HTTPS_PROXY so Next.js can reach fonts.googleapis.com.
+
+Import trace:
+  Server Component:
+    [next]/internal/font/google/inter_a869fe2d.module.css
+    [next]/internal/font/google/inter_a869fe2d.js
+    ./apps/web/src/app/layout.js
+
+
+ GET / 200 in 45ms (next.js: 4ms, application-code: 40ms)
+Error: ENOENT: no such file or directory, uv_resident_set_memory
+    at ignore-listed frames {
+  errno: -2,
+  code: 'ENOENT',
+  syscall: 'uv_resident_set_memory'
+}
+⚠ [next]/internal/font/google/inter_a869fe2d.module.css
+Warning: Error while requesting resource
+There was an issue establishing a connection while requesting https://fonts.googleapis.com/css2?family=Inter:wght@100..900&display=swap
+
+Import trace:
+  Server Component:
+    [next]/internal/font/google/inter_a869fe2d.module.css
+    [next]/internal/font/google/inter_a869fe2d.js
+    ./apps/web/src/app/layout.js
+
+
+⚠ [next]/internal/font/google/inter_a869fe2d.module.css
+Warning: next/font: warning:
+Failed to download Inter from Google Fonts. Using a fallback font instead.
+If you are offline or behind a proxy, self-host the font with next/font/local, or set HTTP_PROXY/HTTPS_PROXY so Next.js can reach fonts.googleapis.com.
+
+Import trace:
+  Server Component:
+    [next]/internal/font/google/inter_a869fe2d.module.css
+    [next]/internal/font/google/inter_a869fe2d.js
+    ./apps/web/src/app/layout.js
+
+
+⚠ [next]/internal/font/google/inter_a869fe2d.module.css
+Warning: Error while requesting resource
+There was an issue establishing a connection while requesting https://fonts.googleapis.com/css2?family=Inter:wght@100..900&display=swap
+
+Import trace:
+  Server Component:
+    [next]/internal/font/google/inter_a869fe2d.module.css
+    [next]/internal/font/google/inter_a869fe2d.js
+    ./apps/web/src/app/layout.js
+
+
+⚠ [next]/internal/font/google/inter_a869fe2d.module.css
+Warning: next/font: warning:
+Failed to download Inter from Google Fonts. Using a fallback font instead.
+If you are offline or behind a proxy, self-host the font with next/font/local, or set HTTP_PROXY/HTTPS_PROXY so Next.js can reach fonts.googleapis.com.
+
+Import trace:
+  Server Component:
+    [next]/internal/font/google/inter_a869fe2d.module.css
+    [next]/internal/font/google/inter_a869fe2d.js
+    ./apps/web/src/app/layout.js
+
+
+⚠ [next]/internal/font/google/inter_a869fe2d.module.css
+Warning: Error while requesting resource
+There was an issue establishing a connection while requesting https://fonts.googleapis.com/css2?family=Inter:wght@100..900&display=swap
+
+Import trace:
+  Server Component:
+    [next]/internal/font/google/inter_a869fe2d.module.css
+    [next]/internal/font/google/inter_a869fe2d.js
+    ./apps/web/src/app/layout.js
+
+
+⚠ [next]/internal/font/google/inter_a869fe2d.module.css
+Warning: next/font: warning:
+Failed to download Inter from Google Fonts. Using a fallback font instead.
+If you are offline or behind a proxy, self-host the font with next/font/local, or set HTTP_PROXY/HTTPS_PROXY so Next.js can reach fonts.googleapis.com.
+
+Import trace:
+  Server Component:
+    [next]/internal/font/google/inter_a869fe2d.module.css
+    [next]/internal/font/google/inter_a869fe2d.js
+    ./apps/web/src/app/layout.js
+
+
+Error: ENOENT: no such file or directory, uv_resident_set_memory
+    at ignore-listed frames {
+  errno: -2,
+  code: 'ENOENT',
+  syscall: 'uv_resident_set_memory'
+}
+ GET /login 200 in 46ms (next.js: 3ms, application-code: 43ms)
+Error: ENOENT: no such file or directory, uv_resident_set_memory
+    at ignore-listed frames {
+  errno: -2,
+  code: 'ENOENT',
+  syscall: 'uv_resident_set_memory'
+}
+⚠ [next]/internal/font/google/inter_a869fe2d.module.css
+Warning: Error while requesting resource
+There was an issue establishing a connection while requesting https://fonts.googleapis.com/css2?family=Inter:wght@100..900&display=swap
+
+Import trace:
+  Server Component:
+    [next]/internal/font/google/inter_a869fe2d.module.css
+    [next]/internal/font/google/inter_a869fe2d.js
+    ./apps/web/src/app/layout.js
+
+
+⚠ [next]/internal/font/google/inter_a869fe2d.module.css
+Warning: next/font: warning:
+Failed to download Inter from Google Fonts. Using a fallback font instead.
+If you are offline or behind a proxy, self-host the font with next/font/local, or set HTTP_PROXY/HTTPS_PROXY so Next.js can reach fonts.googleapis.com.
+
+Import trace:
+  Server Component:
+    [next]/internal/font/google/inter_a869fe2d.module.css
+    [next]/internal/font/google/inter_a869fe2d.js
+    ./apps/web/src/app/layout.js
+
+
+⚠ [next]/internal/font/google/inter_a869fe2d.module.css
+Warning: Error while requesting resource
+There was an issue establishing a connection while requesting https://fonts.googleapis.com/css2?family=Inter:wght@100..900&display=swap
+
+Import trace:
+  Server Component:
+    [next]/internal/font/google/inter_a869fe2d.module.css
+    [next]/internal/font/google/inter_a869fe2d.js
+    ./apps/web/src/app/layout.js
+
+
+⚠ [next]/internal/font/google/inter_a869fe2d.module.css
+Warning: next/font: warning:
+Failed to download Inter from Google Fonts. Using a fallback font instead.
+If you are offline or behind a proxy, self-host the font with next/font/local, or set HTTP_PROXY/HTTPS_PROXY so Next.js can reach fonts.googleapis.com.
+
+Import trace:
+  Server Component:
+    [next]/internal/font/google/inter_a869fe2d.module.css
+    [next]/internal/font/google/inter_a869fe2d.js
+    ./apps/web/src/app/layout.js
+
+
+Error: ENOENT: no such file or directory, uv_resident_set_memory
+    at ignore-listed frames {
+  errno: -2,
+  code: 'ENOENT',
+  syscall: 'uv_resident_set_memory'
+}
+⚠ [next]/internal/font/google/inter_a869fe2d.module.css
+Warning: Error while requesting resource
+There was an issue establishing a connection while requesting https://fonts.googleapis.com/css2?family=Inter:wght@100..900&display=swap
+
+Import trace:
+  Server Component:
+    [next]/internal/font/google/inter_a869fe2d.module.css
+    [next]/internal/font/google/inter_a869fe2d.js
+    ./apps/web/src/app/layout.js
+
+
+⚠ [next]/internal/font/google/inter_a869fe2d.module.css
+Warning: next/font: warning:
+Failed to download Inter from Google Fonts. Using a fallback font instead.
+If you are offline or behind a proxy, self-host the font with next/font/local, or set HTTP_PROXY/HTTPS_PROXY so Next.js can reach fonts.googleapis.com.
+
+Import trace:
+  Server Component:
+    [next]/internal/font/google/inter_a869fe2d.module.css
+    [next]/internal/font/google/inter_a869fe2d.js
+    ./apps/web/src/app/layout.js
+
+
+⚠ [next]/internal/font/google/inter_a869fe2d.module.css
+Warning: Error while requesting resource
+There was an issue establishing a connection while requesting https://fonts.googleapis.com/css2?family=Inter:wght@100..900&display=swap
+
+Import trace:
+  Server Component:
+    [next]/internal/font/google/inter_a869fe2d.module.css
+    [next]/internal/font/google/inter_a869fe2d.js
+    ./apps/web/src/app/layout.js
+
+
+⚠ [next]/internal/font/google/inter_a869fe2d.module.css
+Warning: next/font: warning:
+Failed to download Inter from Google Fonts. Using a fallback font instead.
+If you are offline or behind a proxy, self-host the font with next/font/local, or set HTTP_PROXY/HTTPS_PROXY so Next.js can reach fonts.googleapis.com.
+
+Import trace:
+  Server Component:
+    [next]/internal/font/google/inter_a869fe2d.module.css
+    [next]/internal/font/google/inter_a869fe2d.js
+    ./apps/web/src/app/layout.js
+
+
+ GET /api/queue/stats 200 in 23ms (next.js: 3ms, proxy.ts: 17ms, application-code: 3ms)
+Error: ENOENT: no such file or directory, uv_resident_set_memory
+    at ignore-listed frames {
+  errno: -2,
+  code: 'ENOENT',
+  syscall: 'uv_resident_set_memory'
+}
+⚠ [next]/internal/font/google/inter_a869fe2d.module.css
+Warning: Error while requesting resource
+There was an issue establishing a connection while requesting https://fonts.googleapis.com/css2?family=Inter:wght@100..900&display=swap
+
+Import trace:
+  Server Component:
+    [next]/internal/font/google/inter_a869fe2d.module.css
+    [next]/internal/font/google/inter_a869fe2d.js
+    ./apps/web/src/app/layout.js
+
+
+⚠ [next]/internal/font/google/inter_a869fe2d.module.css
+Warning: next/font: warning:
+Failed to download Inter from Google Fonts. Using a fallback font instead.
+If you are offline or behind a proxy, self-host the font with next/font/local, or set HTTP_PROXY/HTTPS_PROXY so Next.js can reach fonts.googleapis.com.
+
+Import trace:
+  Server Component:
+    [next]/internal/font/google/inter_a869fe2d.module.css
+    [next]/internal/font/google/inter_a869fe2d.js
+    ./apps/web/src/app/layout.js
+
+
+⚠ [next]/internal/font/google/inter_a869fe2d.module.css
+Warning: Error while requesting resource
+There was an issue establishing a connection while requesting https://fonts.googleapis.com/css2?family=Inter:wght@100..900&display=swap
+
+Import trace:
+  Server Component:
+    [next]/internal/font/google/inter_a869fe2d.module.css
+    [next]/internal/font/google/inter_a869fe2d.js
+    ./apps/web/src/app/layout.js
+
+
+⚠ [next]/internal/font/google/inter_a869fe2d.module.css
+Warning: next/font: warning:
+Failed to download Inter from Google Fonts. Using a fallback font instead.
+If you are offline or behind a proxy, self-host the font with next/font/local, or set HTTP_PROXY/HTTPS_PROXY so Next.js can reach fonts.googleapis.com.
+
+Import trace:
+  Server Component:
+    [next]/internal/font/google/inter_a869fe2d.module.css
+    [next]/internal/font/google/inter_a869fe2d.js
+    ./apps/web/src/app/layout.js
+
+
+Error: ENOENT: no such file or directory, uv_resident_set_memory
+    at ignore-listed frames {
+  errno: -2,
+  code: 'ENOENT',
+  syscall: 'uv_resident_set_memory'
+}

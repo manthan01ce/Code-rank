@@ -1,0 +1,37 @@
+[
+  {
+    "path": "/api/health",
+    "statusCode": 503,
+    "durationMs": 2160
+  },
+  {
+    "path": "/api/health",
+    "statusCode": 503,
+    "durationMs": 36
+  },
+  {
+    "path": "/api/health",
+    "statusCode": 503,
+    "durationMs": 24
+  },
+  {
+    "path": "/api/health",
+    "statusCode": 503,
+    "durationMs": 1590
+  },
+  {
+    "path": "/api/health",
+    "statusCode": 503,
+    "durationMs": 20
+  },
+  {
+    "path": "/api/health",
+    "statusCode": 503,
+    "durationMs": 15
+  },
+  {
+    "path": "/api/health",
+    "statusCode": 503,
+    "durationMs": 26
+  }
+]
