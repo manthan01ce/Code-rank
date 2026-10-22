@@ -45,9 +45,9 @@ test('measure 20 successful sign-ins per fresh and reused browser condition',asy
     const dashboardData=Promise.all(['/api/faculty/courses','/api/faculty/batches'].map(path=>page.waitForResponse(r=>new URL(r.url()).pathname===path)));
     const start=performance.now();await page.getByRole('button',{name:'Sign In →',exact:true}).click();
     const response=await responsePromise;expect(response.status()).toBe(200);
-    const body=await response.json();expect(body.token).toBeTruthy();
     const sessionResponseMs=elapsed(start);
     await expect(page).toHaveURL(/\/faculty\/?$/);
+    expect(await page.evaluate(()=>localStorage.getItem('token'))).toBeTruthy();
     await expect(page.getByRole('heading',{name:'Select Allocated Subject',exact:true})).toBeVisible();
     for(const res of await dashboardData){expect(res.status()).toBe(200);await res.json();}
     const dashboardReadyMs=elapsed(start);
