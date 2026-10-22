@@ -1,0 +1,66 @@
+name: Authentication performance comparison
+on:
+  pull_request:
+    paths:
+      - 'apps/**'
+      - 'packages/**'
+      - 'tests/browser/auth-performance.spec.mjs'
+      - 'scripts/auth-performance-stack.mjs'
+      - '.github/workflows/auth-performance.yml'
+permissions:
+  contents: read
+jobs:
+  measure:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    strategy:
+      fail-fast: false
+      matrix:
+        target: [baseline, candidate]
+    services:
+      redis:
+        image: redis:7-alpine
+        ports: ['6379:6379']
+        options: --health-cmd 'redis-cli ping' --health-interval 5s --health-timeout 3s --health-retries 10
+      postgres:
+        image: postgres:16-alpine
+        ports: ['5432:5432']
+        env:
+          POSTGRES_PASSWORD: test-only-password
+          POSTGRES_DB: coderank_test
+        options: --health-cmd 'pg_isready -U postgres' --health-interval 5s --health-timeout 3s --health-retries 10
+    env:
+      TEST_DATABASE_URL: postgresql://postgres:test-only-password@127.0.0.1:5432/coderank_test
+      JWT_SECRET: ci-build-only-secret-not-for-production
+      NEXT_TELEMETRY_DISABLED: '1'
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          path: measurement
+      - uses: actions/checkout@v4
+        with:
+          path: subject
+          ref: ${{ matrix.target == 'baseline' && 'f165cdd9628900ed925aa2b66918e6592128a43b' || github.event.pull_request.head.sha }}
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+      - name: Use the identical measurement harness for both revisions
+        run: |
+          cp measurement/scripts/auth-performance-stack.mjs subject/scripts/auth-performance-stack.mjs
+          cp measurement/tests/browser/auth-performance.spec.mjs subject/tests/browser/auth-performance.spec.mjs
+      - run: npm ci
+        working-directory: subject
+      - run: docker build -t coderank-base:latest -f infrastructure/docker/runner/Dockerfile .
+        working-directory: subject
+      - run: npm run build --workspace=apps/web
+        working-directory: subject
+      - run: npx playwright install --with-deps chromium
+        working-directory: subject
+      - run: node scripts/auth-performance-stack.mjs
+        working-directory: subject
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: auth-timing-${{ matrix.target }}
+          path: subject/test-results/
+          if-no-files-found: warn

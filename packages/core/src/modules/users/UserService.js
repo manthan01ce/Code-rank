@@ -39,35 +39,25 @@ export class UserService {
   /**
    * User login
    */
-  static async login({ email, password }) {
+  static async login({ email, password }, {onTiming = () => {}} = {}) {
+    const lookupStart = performance.now();
     const cleanEmail = String(email || '').trim().toLowerCase();
     if (!cleanEmail || !password) {
       throw { status: 400, message: "Email and password are required" };
     }
 
-    let userResult = [];
-    let dbFailed = false;
-    for (let attempt = 1; attempt <= 3; attempt++) {
-      try {
-        userResult = await sql`
-          SELECT * FROM users 
-          WHERE LOWER(email) = ${cleanEmail} 
-             OR (LOWER(email) = 'reyapatel@charusat.ac.in' AND ${cleanEmail} = 'riyapatel@charusat.ac.in')
-             OR (LOWER(email) = 'riyapatel@charusat.ac.in' AND ${cleanEmail} = 'reyapatel@charusat.ac.in')
-        `;
-        dbFailed = false;
-        break;
-      } catch (e) {
-        console.error(`Database login query attempt ${attempt} failed:`, e.code || e.message || "unavailable");
-        dbFailed = true;
-        if (attempt < 3) {
-          // Wait before retrying to allow serverless database to complete wake-up
-          await new Promise((resolve) => setTimeout(resolve, 500 * attempt));
-        }
-      }
+    let userResult;
+    try {
+      // One bounded retry owner, restricted to this side-effect-free lookup.
+      userResult = await sql.readQuery(`SELECT * FROM users
+        WHERE LOWER(email) = $1
+          OR (LOWER(email) = 'reyapatel@charusat.ac.in' AND $1 = 'riyapatel@charusat.ac.in')
+          OR (LOWER(email) = 'riyapatel@charusat.ac.in' AND $1 = 'reyapatel@charusat.ac.in')`,
+      [cleanEmail], {budgetMs: 2500});
+    } catch {
+      throw {status: 503, message: 'Sign-in is temporarily unavailable. Please try again shortly.'};
     }
-
-    if (dbFailed) throw { status: 503, message: "Database is connecting. Please wait a moment and try again." };
+    onTiming('lookup', performance.now() - lookupStart);
     let dbUser = userResult[0];
     if (!dbUser) {
       const adminEmail = process.env.ADMIN_EMAIL;
@@ -96,7 +86,9 @@ export class UserService {
     }
 
     let passwordMatch = false;
+    const compareStart = performance.now();
     passwordMatch = await comparePassword(password, dbUser.password);
+    onTiming('password_compare', performance.now() - compareStart);
 
     if (!passwordMatch) {
       throw { status: 401, message: "Invalid email or password" };
@@ -107,12 +99,14 @@ export class UserService {
     }
 
     const sessionToken = crypto.randomUUID();
+    const commitStart = performance.now();
     const loginRows = await sql.query(
       `WITH updated AS (
       UPDATE users SET session_token=$1 WHERE id=$2 AND status='active' RETURNING id
     ) INSERT INTO activity_logs(user_id,action,details) SELECT id,'LOGIN','User logged in' FROM updated RETURNING user_id`,
       [sessionToken, dbUser.id],
     );
+    onTiming('session_commit', performance.now() - commitStart);
     if (loginRows.length !== 1)
       throw { status: 403, message: "Account changed during login" };
 
@@ -270,8 +264,8 @@ export class UserService {
   /**
    * Admin: Create single user
    */
-  static async createUser(admin, body) {
-    return UserManagementService.mutate(admin, null, "create", body);
+  static async createUser(admin, body, options) {
+    return UserManagementService.mutate(admin, null, "create", body, options);
   }
   static async updateUser(admin, body) {
     return (await UserManagementService.mutate(admin, body.id, "update", body))

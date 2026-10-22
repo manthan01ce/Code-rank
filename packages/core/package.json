@@ -25,7 +25,8 @@
     "./services/UserManagementService": "./src/modules/users/UserManagementService.js",
     "./services/CourseReportService": "./src/modules/reports/CourseReportService.js",
     "./security/active-actor": "./src/security/active-actor.js",
-    "./db-readiness": "./src/db/readiness.js"
+    "./db-readiness": "./src/db/readiness.js",
+    "./utils/request-timing": "./src/utils/request-timing.js"
   },
   "dependencies": {
     "@neondatabase/serverless": "^1.0.2",
