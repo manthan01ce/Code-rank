@@ -17,6 +17,7 @@ async function observer(context) {
  });
 }
 async function navigation(page) {
+ await page.evaluate(()=>new Promise(resolve=>requestAnimationFrame(()=>requestAnimationFrame(resolve))));
  return page.evaluate(()=>{const n=performance.getEntriesByType('navigation')[0];return {ttfbMs:n?.responseStart ?? null,domContentLoadedMs:n?.domContentLoadedEventEnd ?? null,observedLcpMs:window.__timingLcp};});
 }
 function save(name, samples) {mkdirSync(output,{recursive:true});writeFileSync(`${output}/${name}.json`,JSON.stringify({conditions:'Production-mode loopback stack. Cold means fresh browser context/cache, not restarted server or cold database.',samples},null,2));}

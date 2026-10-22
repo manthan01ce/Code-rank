@@ -1,0 +1,31 @@
+{
+  "method": "Actual bcrypt cost-10 and unavailable local dependency paths; no successful signup/login end-to-end measurement.",
+  "startedAt": "2026-10-22T16:13:03.877Z",
+  "passwordHash": {
+    "n": 10,
+    "minMs": 107.61,
+    "medianMs": 181.99,
+    "p95Ms": 859.76,
+    "maxMs": 859.76,
+    "avgMs": 235.15
+  },
+  "passwordCompare": {
+    "n": 10,
+    "minMs": 114.27,
+    "medianMs": 143.54,
+    "p95Ms": 1196.43,
+    "maxMs": 1196.43,
+    "avgMs": 382.4
+  },
+  "rateLimitResult": {
+    "allowed": false,
+    "unavailable": true
+  },
+  "rateLimitMs": 3083.19,
+  "directLoginService": {
+    "elapsedMs": 6142.82,
+    "status": 503,
+    "error": "Database is connecting. Please wait a moment and try again."
+  },
+  "finishedAt": "2026-10-22T16:13:19.282Z"
+}

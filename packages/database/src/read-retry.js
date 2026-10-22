@@ -7,7 +7,7 @@ export function transientConnectionError(error) {
 }
 // Opt-in for caller-reviewed side-effect-free reads only. Never replay writes.
 export async function retryRead(operation, {budgetMs = 2500, attempts = 3, delayMs = 250} = {}) {
-  if (!Number.isFinite(budgetMs) || budgetMs <= 0 || !Number.isInteger(attempts) || attempts < 1 || attempts > 3) throw Error('Invalid read retry budget');
+  if (!Number.isFinite(budgetMs) || budgetMs <= 0 || !Number.isInteger(attempts) || attempts < 1 || attempts > 3 || !Number.isFinite(delayMs) || delayMs < 0) throw Error('Invalid read retry budget');
   const deadline = performance.now() + budgetMs;
   for (let attempt = 0; attempt < attempts; attempt++) {
     const remaining = deadline - performance.now();

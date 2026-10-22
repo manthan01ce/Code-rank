@@ -1,0 +1,23 @@
+(node:12) ExperimentalWarning: Module mocking is an experimental feature and might change at any time
+(Use `node --trace-warnings ...` to show where the warning was created)
+(node:12) DeprecationWarning: mock.module(): options.namedExports is deprecated. Use options.exports instead.
+✔ safe read retry has one budget and does not retry permission failures (83.123968ms)
+✔ sign in distinguishes outage and throttling and aborts a stalled request without replay (17.717149ms)
+✔ login fails closed on limiter outage, preserves 429 and only authenticates allowed requests (5.989056ms)
+✔ timing headers accept only numeric durations and safe labels (0.648541ms)
+(node:13) ExperimentalWarning: Module mocking is an experimental feature and might change at any time
+(Use `node --trace-warnings ...` to show where the warning was created)
+(node:13) DeprecationWarning: mock.module(): options.namedExports is deprecated. Use options.exports instead.
+✔ native transaction awaits its definitive result instead of timing out before a late commit (43.200393ms)
+(node:14) ExperimentalWarning: Module mocking is an experimental feature and might change at any time
+(Use `node --trace-warnings ...` to show where the warning was created)
+(node:14) DeprecationWarning: mock.module(): options.namedExports is deprecated. Use options.exports instead.
+✔ uncertain writes and native transactions are never automatically replayed (8.971078ms)
+ℹ tests 6
+ℹ suites 0
+ℹ pass 6
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 487.716824

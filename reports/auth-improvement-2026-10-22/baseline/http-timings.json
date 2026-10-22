@@ -1,0 +1,456 @@
+{
+  "startedAt": "2026-10-22T16:12:12.512Z",
+  "commit": "f165cdd9628900ed925aa2b66918e6592128a43b",
+  "mode": "development",
+  "baseUrl": "http://127.0.0.1:3000",
+  "requests": [
+    {
+      "route": "/api/live",
+      "label": "liveness",
+      "method": "GET",
+      "status": 200,
+      "ttfbMs": 399.23,
+      "totalMs": 401.26,
+      "bytes": 54,
+      "contentType": "application/json",
+      "redirect": null,
+      "renderError": false
+    },
+    {
+      "route": "/api/health",
+      "label": "readiness cold",
+      "method": "GET",
+      "status": 503,
+      "ttfbMs": 1726.57,
+      "totalMs": 1727.14,
+      "bytes": 450,
+      "contentType": "application/json",
+      "redirect": null,
+      "renderError": false,
+      "health": {
+        "status": "degraded",
+        "timestamp": "2026-10-22T16:12:14.636Z",
+        "services": {
+          "database": {
+            "status": "degraded",
+            "schema": "unknown",
+            "error": "Database unavailable or required migrations are missing or changed"
+          },
+          "queue": {
+            "status": "degraded",
+            "stats": {
+              "waiting": 0,
+              "active": 0,
+              "completed": 0,
+              "failed": 0,
+              "delayed": 0,
+              "cached": true
+            },
+            "error": "Redis queue is unavailable; cached queue statistics are being returned"
+          },
+          "execution": {
+            "status": "degraded",
+            "healthyWorkers": 0
+          }
+        }
+      }
+    },
+    {
+      "route": "/api/health",
+      "label": "readiness cached",
+      "method": "GET",
+      "status": 503,
+      "ttfbMs": 35.84,
+      "totalMs": 36.28,
+      "bytes": 450,
+      "contentType": "application/json",
+      "redirect": null,
+      "renderError": false,
+      "health": {
+        "status": "degraded",
+        "timestamp": "2026-10-22T16:12:14.636Z",
+        "services": {
+          "database": {
+            "status": "degraded",
+            "schema": "unknown",
+            "error": "Database unavailable or required migrations are missing or changed"
+          },
+          "queue": {
+            "status": "degraded",
+            "stats": {
+              "waiting": 0,
+              "active": 0,
+              "completed": 0,
+              "failed": 0,
+              "delayed": 0,
+              "cached": true
+            },
+            "error": "Redis queue is unavailable; cached queue statistics are being returned"
+          },
+          "execution": {
+            "status": "degraded",
+            "healthyWorkers": 0
+          }
+        }
+      }
+    },
+    {
+      "route": "/",
+      "label": "first request in this process",
+      "method": "GET",
+      "status": 200,
+      "ttfbMs": 4990.63,
+      "totalMs": 5004.37,
+      "bytes": 30967,
+      "contentType": "text/html; charset=utf-8",
+      "redirect": null,
+      "renderError": true
+    },
+    {
+      "route": "/",
+      "label": "repeat 1",
+      "method": "GET",
+      "status": 200,
+      "ttfbMs": 52.19,
+      "totalMs": 59.4,
+      "bytes": 30967,
+      "contentType": "text/html; charset=utf-8",
+      "redirect": null,
+      "renderError": true
+    },
+    {
+      "route": "/",
+      "label": "repeat 2",
+      "method": "GET",
+      "status": 200,
+      "ttfbMs": 63.99,
+      "totalMs": 74.36,
+      "bytes": 30967,
+      "contentType": "text/html; charset=utf-8",
+      "redirect": null,
+      "renderError": true
+    },
+    {
+      "route": "/login",
+      "label": "first request in this process",
+      "method": "GET",
+      "status": 200,
+      "ttfbMs": 70.38,
+      "totalMs": 78.11,
+      "bytes": 17602,
+      "contentType": "text/html; charset=utf-8",
+      "redirect": null,
+      "renderError": true
+    },
+    {
+      "route": "/login",
+      "label": "repeat 1",
+      "method": "GET",
+      "status": 200,
+      "ttfbMs": 37.38,
+      "totalMs": 47.85,
+      "bytes": 17602,
+      "contentType": "text/html; charset=utf-8",
+      "redirect": null,
+      "renderError": true
+    },
+    {
+      "route": "/login",
+      "label": "repeat 2",
+      "method": "GET",
+      "status": 200,
+      "ttfbMs": 50.83,
+      "totalMs": 59.15,
+      "bytes": 17602,
+      "contentType": "text/html; charset=utf-8",
+      "redirect": null,
+      "renderError": true
+    },
+    {
+      "route": "/signup",
+      "label": "first request in this process",
+      "method": "GET",
+      "status": 404,
+      "ttfbMs": 375.62,
+      "totalMs": 386.97,
+      "bytes": 14355,
+      "contentType": "text/html; charset=utf-8",
+      "redirect": null,
+      "renderError": true
+    },
+    {
+      "route": "/signup",
+      "label": "repeat 1",
+      "method": "GET",
+      "status": 404,
+      "ttfbMs": 42.96,
+      "totalMs": 51.08,
+      "bytes": 14355,
+      "contentType": "text/html; charset=utf-8",
+      "redirect": null,
+      "renderError": true
+    },
+    {
+      "route": "/signup",
+      "label": "repeat 2",
+      "method": "GET",
+      "status": 404,
+      "ttfbMs": 43.07,
+      "totalMs": 50.71,
+      "bytes": 14355,
+      "contentType": "text/html; charset=utf-8",
+      "redirect": null,
+      "renderError": true
+    },
+    {
+      "route": "/student",
+      "label": "first request in this process",
+      "method": "GET",
+      "status": 200,
+      "ttfbMs": 500.2,
+      "totalMs": 510.42,
+      "bytes": 13449,
+      "contentType": "text/html; charset=utf-8",
+      "redirect": null,
+      "renderError": true
+    },
+    {
+      "route": "/student",
+      "label": "repeat 1",
+      "method": "GET",
+      "status": 200,
+      "ttfbMs": 42.95,
+      "totalMs": 50.1,
+      "bytes": 13449,
+      "contentType": "text/html; charset=utf-8",
+      "redirect": null,
+      "renderError": true
+    },
+    {
+      "route": "/student",
+      "label": "repeat 2",
+      "method": "GET",
+      "status": 200,
+      "ttfbMs": 46.9,
+      "totalMs": 54.32,
+      "bytes": 13449,
+      "contentType": "text/html; charset=utf-8",
+      "redirect": null,
+      "renderError": true
+    },
+    {
+      "route": "/student/practicals",
+      "label": "first request in this process",
+      "method": "GET",
+      "status": 200,
+      "ttfbMs": 371.13,
+      "totalMs": 379.64,
+      "bytes": 14108,
+      "contentType": "text/html; charset=utf-8",
+      "redirect": null,
+      "renderError": true
+    },
+    {
+      "route": "/student/practicals",
+      "label": "repeat 1",
+      "method": "GET",
+      "status": 200,
+      "ttfbMs": 33.64,
+      "totalMs": 49.38,
+      "bytes": 14108,
+      "contentType": "text/html; charset=utf-8",
+      "redirect": null,
+      "renderError": true
+    },
+    {
+      "route": "/student/practicals",
+      "label": "repeat 2",
+      "method": "GET",
+      "status": 200,
+      "ttfbMs": 52.11,
+      "totalMs": 63.18,
+      "bytes": 14108,
+      "contentType": "text/html; charset=utf-8",
+      "redirect": null,
+      "renderError": true
+    },
+    {
+      "route": "/faculty",
+      "label": "first request in this process",
+      "method": "GET",
+      "status": 200,
+      "ttfbMs": 463.03,
+      "totalMs": 482.78,
+      "bytes": 17126,
+      "contentType": "text/html; charset=utf-8",
+      "redirect": null,
+      "renderError": true
+    },
+    {
+      "route": "/faculty",
+      "label": "repeat 1",
+      "method": "GET",
+      "status": 200,
+      "ttfbMs": 42.72,
+      "totalMs": 49.68,
+      "bytes": 17126,
+      "contentType": "text/html; charset=utf-8",
+      "redirect": null,
+      "renderError": true
+    },
+    {
+      "route": "/faculty",
+      "label": "repeat 2",
+      "method": "GET",
+      "status": 200,
+      "ttfbMs": 30.22,
+      "totalMs": 38.23,
+      "bytes": 17126,
+      "contentType": "text/html; charset=utf-8",
+      "redirect": null,
+      "renderError": true
+    },
+    {
+      "route": "/admin",
+      "label": "first request in this process",
+      "method": "GET",
+      "status": 200,
+      "ttfbMs": 1541.56,
+      "totalMs": 1549.6,
+      "bytes": 19199,
+      "contentType": "text/html; charset=utf-8",
+      "redirect": null,
+      "renderError": true
+    },
+    {
+      "route": "/admin",
+      "label": "repeat 1",
+      "method": "GET",
+      "status": 200,
+      "ttfbMs": 38.78,
+      "totalMs": 45.25,
+      "bytes": 19199,
+      "contentType": "text/html; charset=utf-8",
+      "redirect": null,
+      "renderError": true
+    },
+    {
+      "route": "/admin",
+      "label": "repeat 2",
+      "method": "GET",
+      "status": 200,
+      "ttfbMs": 33.47,
+      "totalMs": 41,
+      "bytes": 19199,
+      "contentType": "text/html; charset=utf-8",
+      "redirect": null,
+      "renderError": true
+    },
+    {
+      "route": "/practice",
+      "label": "first request in this process",
+      "method": "GET",
+      "status": 200,
+      "ttfbMs": 402.69,
+      "totalMs": 432.46,
+      "bytes": 27201,
+      "contentType": "text/html; charset=utf-8",
+      "redirect": null,
+      "renderError": true
+    },
+    {
+      "route": "/practice",
+      "label": "repeat 1",
+      "method": "GET",
+      "status": 200,
+      "ttfbMs": 34.73,
+      "totalMs": 78,
+      "bytes": 27201,
+      "contentType": "text/html; charset=utf-8",
+      "redirect": null,
+      "renderError": true
+    },
+    {
+      "route": "/practice",
+      "label": "repeat 2",
+      "method": "GET",
+      "status": 200,
+      "ttfbMs": 35.82,
+      "totalMs": 42.45,
+      "bytes": 27201,
+      "contentType": "text/html; charset=utf-8",
+      "redirect": null,
+      "renderError": true
+    },
+    {
+      "route": "/api/auth/login",
+      "label": "valid-shaped sign-in attempt 1",
+      "method": "POST",
+      "status": 429,
+      "ttfbMs": 4025.62,
+      "totalMs": 4025.93,
+      "bytes": 78,
+      "contentType": "application/json",
+      "redirect": null,
+      "renderError": false,
+      "error": "Too many login attempts. Please wait 1 minute before trying again."
+    },
+    {
+      "route": "/api/auth/login",
+      "label": "valid-shaped sign-in attempt 2",
+      "method": "POST",
+      "status": 429,
+      "ttfbMs": 3028.41,
+      "totalMs": 3028.68,
+      "bytes": 78,
+      "contentType": "application/json",
+      "redirect": null,
+      "renderError": false,
+      "error": "Too many login attempts. Please wait 1 minute before trying again."
+    },
+    {
+      "route": "/api/auth/login",
+      "label": "invalid payload validation",
+      "method": "POST",
+      "status": 400,
+      "ttfbMs": 23.59,
+      "totalMs": 23.76,
+      "bytes": 33,
+      "contentType": "application/json",
+      "redirect": null,
+      "renderError": false,
+      "error": "Invalid login payload"
+    },
+    {
+      "route": "/api/users",
+      "label": "account creation unauthenticated access check",
+      "method": "POST",
+      "status": 401,
+      "ttfbMs": 528.28,
+      "totalMs": 528.69,
+      "bytes": 54,
+      "contentType": "application/json",
+      "redirect": null,
+      "renderError": false,
+      "error": "Authentication required or session expired"
+    },
+    {
+      "route": "/api/auth/signup",
+      "label": "public signup API existence check",
+      "method": "POST",
+      "status": 404,
+      "ttfbMs": 189.63,
+      "totalMs": 205.37,
+      "bytes": 14372,
+      "contentType": "text/html; charset=utf-8",
+      "redirect": null,
+      "renderError": true
+    }
+  ],
+  "limitations": [
+    "HTTP timing includes body download but not browser hydration, paint, LCP or interaction readiness.",
+    "Authenticated success paths require real database, Redis and valid fixtures.",
+    "No user accounts are created by this profiler."
+  ],
+  "finishedAt": "2026-10-22T16:12:34.755Z"
+}

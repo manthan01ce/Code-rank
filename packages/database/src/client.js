@@ -39,12 +39,9 @@ function getSql() {
 
 const sql = new Proxy(function () {}, {
   apply(_target, thisArg, argArray) {
-    return (() => {
-      const client = getSql();
-      const queryPromise = Reflect.apply(client, thisArg, argArray);
-      // Wrap the query with timeout protection
-      return withTimeout(queryPromise, DB_QUERY_TIMEOUT_MS);
-    })();
+    const client = getSql();
+    // One attempt: a transport failure cannot prove a write did not commit.
+    return withTimeout(Reflect.apply(client, thisArg, argArray), DB_QUERY_TIMEOUT_MS);
   },
   get(_target, prop, receiver) {
     if (prop === 'readQuery') return (text, values = [], options = {}) => retryRead(
