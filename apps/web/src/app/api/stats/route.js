@@ -1,13 +1,13 @@
 import { NextResponse } from 'next/server';
 import sql from '@/lib/db';
-import { getUserFromRequest } from '@/lib/auth';
+import { authenticateRequest } from '@coderank/core/security/active-actor';
 import { memoryCache } from '@/lib/cache';
 
 const STATS_CACHE_KEY = 'admin_stats';
 
 export async function GET(request) {
   try {
-    const user = getUserFromRequest(request);
+    const user = await authenticateRequest(request);
     if (!user || user.role !== 'admin') {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
@@ -37,6 +37,7 @@ export async function GET(request) {
 
     return NextResponse.json(stats);
   } catch (error) {
+    if (error.status) return NextResponse.json({ error: error.message }, { status: error.status });
     console.error('Stats fetch error:', error);
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
   }

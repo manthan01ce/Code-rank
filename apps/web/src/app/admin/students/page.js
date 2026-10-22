@@ -1,4 +1,5 @@
 'use client';
+import { fetchCollection } from '@/lib/fetch-collection';
 
 import { useState, useEffect, useRef } from 'react';
 import LoadingOverlay from '@/components/LoadingOverlay';
@@ -69,6 +70,9 @@ export default function StudentManagement() {
   const socket = useSocket();
 
   const [students, setStudents]       = useState([]);
+  const [pageCursor, setPageCursor] = useState(null);
+  const [nextCursor, setNextCursor] = useState(null);
+  const requestVersion = useRef(0);
   const [departmentsList, setDepartmentsList] = useState([]);
   const [loading, setLoading]         = useState(true);
   const [processing, setProcessing]   = useState(false);
@@ -101,15 +105,20 @@ export default function StudentManagement() {
   };
 
   // ── Fetch ──
-  const fetchStudents = async () => {
+  const fetchStudents = async (cursor = pageCursor) => {
+    const version = ++requestVersion.current;
     setLoading(true);
     try {
       let url = `/api/users?role=student&status=${statusFilter}`;
       if (search) url += `&search=${encodeURIComponent(search)}`;
       if (divisionFilter && divisionFilter !== 'all') url += `&division=${encodeURIComponent(divisionFilter)}`;
+      if (cursor) url += `&cursor=${cursor}`;
       const res = await fetch(url, { headers: { Authorization: `Bearer ${token()}` } });
       if (res.ok) {
         const data = await res.json();
+        if (version !== requestVersion.current) return;
+        setPageCursor(cursor);
+        setNextCursor(res.headers.get('X-Next-Cursor') || null);
         setStudents(Array.isArray(data) ? data : []);
         setLastUpdated(new Date());
       } else {
@@ -153,18 +162,11 @@ export default function StudentManagement() {
 
   const fetchDepartments = async () => {
     try {
-      const res = await fetch('/api/departments', { headers: { Authorization: `Bearer ${token()}` } });
-      if (res.ok) {
-        setDepartmentsList(await res.json());
-      } else if (res.status === 401) {
-        localStorage.removeItem('token');
-        localStorage.removeItem('user');
-        window.location.href = '/';
-      }
+      setDepartmentsList(await fetchCollection('/api/departments', { headers: { Authorization: `Bearer ${token()}` } }));
     } catch (e) { console.error(e); }
   };
 
-  useEffect(() => { if (isReady) { fetchStudents(); } }, [search, statusFilter, divisionFilter, isReady]);
+  useEffect(() => { if (isReady) { fetchStudents(null); } }, [search, statusFilter, divisionFilter, isReady]);
   useEffect(() => { if (isReady) fetchDepartments(); }, [isReady]);
 
   // ── Open modal ──
@@ -424,7 +426,7 @@ export default function StudentManagement() {
         <div>
           <h2 style={{ fontSize: '22px', fontWeight: 700 }}>Student Master</h2>
           <p style={{ color: 'var(--text-muted)', fontSize: '13px' }}>
-            {loading ? 'Loading...' : `${students.length} student${students.length !== 1 ? 's' : ''} total`}
+            {loading ? 'Loading...' : `${students.length} student${students.length !== 1 ? 's' : ''} on this page`}
           </p>
         </div>
         <div style={{ display: 'flex', gap: '12px', alignItems: 'center' }}>
@@ -622,6 +624,7 @@ export default function StudentManagement() {
         {loading ? (
           <p style={{ textAlign: 'center', padding: '40px', color: 'var(--text-muted)' }}>Loading students...</p>
         ) : (
+          <>
           <table>
             <thead>
               <tr>
@@ -696,6 +699,12 @@ export default function StudentManagement() {
               )}
             </tbody>
           </table>
+          <div style={{display: 'flex', gap: 12, padding: 16}}>
+            <button disabled={loading || !pageCursor} onClick={() => fetchStudents(null)}>First page</button>
+            <span>{students.length} shown on this page</span>
+            <button disabled={loading || !nextCursor} onClick={() => fetchStudents(nextCursor)}>Next page</button>
+          </div>
+          </>
         )}
       </div>
     </div>

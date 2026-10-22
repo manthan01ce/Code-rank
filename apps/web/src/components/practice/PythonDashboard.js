@@ -1,5 +1,6 @@
 'use client';
 
+import { waitForJob } from '@/lib/wait-for-job';
 import { useState, useEffect, useRef, useCallback } from 'react';
 import { Panel, Group as PanelGroup, Separator as PanelResizeHandle } from 'react-resizable-panels';
 import PythonEditor from './PythonEditor';
@@ -66,7 +67,12 @@ export default function PythonDashboard() {
         body: JSON.stringify({ code: currentCode, input: customInput }),
       });
 
-      const data = await response.json();
+      let data = await response.json();
+      if (!response.ok) throw new Error(data.error || 'Execution request failed');
+      if (data.jobId) {
+        data = await waitForJob({ jobId: data.jobId });
+        data = { ...data, status: data.success ? 'success' : 'runtime_error', timeMs: Math.round(data.runtimeMs || 0) };
+      }
       setResult(data);
     } catch (error) {
       setResult({
@@ -136,9 +142,9 @@ export default function PythonDashboard() {
       <div className="flex-1 overflow-hidden">
         {/* Desktop Layout — uses react-resizable-panels */}
         <div className="hidden lg:block h-full p-2">
-          <PanelGroup direction="horizontal" className="h-full">
+          <PanelGroup orientation="horizontal" direction="horizontal" className="h-full">
             {/* Left Editor Panel */}
-            <Panel defaultSize={65} minSize={40}>
+            <Panel defaultSize="65%" minSize="40%">
               <PythonEditor
                 defaultCode={DEFAULT_CODE}
                 onCodeChange={handleCodeChange}
@@ -153,10 +159,10 @@ export default function PythonDashboard() {
             </PanelResizeHandle>
 
             {/* Right Input / Output Panel */}
-            <Panel defaultSize={35} minSize={20}>
-              <PanelGroup direction="vertical">
+            <Panel defaultSize="35%" minSize="20%">
+              <PanelGroup orientation="vertical" direction="vertical">
                 {/* Input Panel */}
-                <Panel defaultSize={38} minSize={25}>
+                <Panel defaultSize="38%" minSize="25%">
                   <div className="h-full flex flex-col bg-[#282828] border border-[#3e3e42] rounded-lg overflow-hidden font-sans p-4">
                     <div className="flex flex-col gap-1 mb-2">
                       <div className="text-xs text-gray-400 uppercase tracking-wider font-semibold select-none">
@@ -181,7 +187,7 @@ export default function PythonDashboard() {
                 </PanelResizeHandle>
 
                 {/* Output Panel */}
-                <Panel defaultSize={62} minSize={30}>
+                <Panel defaultSize="62%" minSize="30%">
                   <PythonOutput
                     result={result}
                     isRunning={isRunning}

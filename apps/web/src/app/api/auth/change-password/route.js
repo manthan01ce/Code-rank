@@ -1,10 +1,10 @@
 import { NextResponse } from 'next/server';
 import { UserService } from '@coderank/core/services/UserService';
-import { getUserFromRequest } from '@coderank/core/utils/auth';
+import { authenticateRequest } from '@coderank/core/security/active-actor';
 
 export async function POST(request) {
   try {
-    const user = getUserFromRequest(request);
+    const user = await authenticateRequest(request);
     const body = await request.json();
     const result = await UserService.changePassword(user, body);
     return NextResponse.json(result);

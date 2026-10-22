@@ -1,0 +1,11 @@
+{
+  "name": "@coderank/runner",
+  "version": "1.1.0",
+  "private": true,
+  "type": "module",
+  "exports": {
+    ".": "./src/Executor.js",
+    "./sandbox": "./src/Sandbox.js",
+    "./languages": "./src/languages.js"
+  }
+}

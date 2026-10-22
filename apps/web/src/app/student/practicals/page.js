@@ -1,4 +1,5 @@
 'use client';
+import { fetchCollection } from '@/lib/fetch-collection';
 
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
@@ -82,12 +83,10 @@ export default function StudentPracticals() {
 
   const fetchStudentCourses = async (sem) => {
     try {
-      const res = await fetch(`/api/courses?semester=${sem}`, {
+      const rows = await fetchCollection(`/api/courses?semester=${sem}`, {
         headers: { Authorization: `Bearer ${token()}` }
       });
-      if (res.ok) {
-        setCourses(await res.json());
-      }
+      setCourses(rows);
     } catch (e) {
       console.error('Error fetching courses:', e);
     }
@@ -196,7 +195,7 @@ int main() {
     setLoadingHistory(true);
     try {
       // Get student submissions for this practical
-      const res = await fetch(`/api/faculty/practicals/${practicalId}/submissions?studentSearch=${user.email}`, {
+      const res = await fetch(`/api/student/practicals/${practicalId}/submissions`, {
         headers: { Authorization: `Bearer ${token()}` }
       });
       if (res.ok) {

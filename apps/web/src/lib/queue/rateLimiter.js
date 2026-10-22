@@ -51,8 +51,10 @@ const LIMITS = {
 // observing the same count and both being accepted at a rate-limit boundary.
 const RATE_LIMIT_SCRIPT = `
   redis.call('ZREMRANGEBYSCORE', KEYS[1], '-inf', ARGV[1])
-  redis.call('ZADD', KEYS[1], ARGV[2], ARGV[3])
   local count = redis.call('ZCARD', KEYS[1])
+  if count >= tonumber(ARGV[5]) then return count + 1 end
+  redis.call('ZADD', KEYS[1], ARGV[2], ARGV[3])
+  count = count + 1
   redis.call('PEXPIRE', KEYS[1], ARGV[4])
   return count
 `;
@@ -81,6 +83,7 @@ export async function checkRateLimit(identifier, category = 'default') {
           String(now),
           `${now}-${randomUUID()}`,
           String(limit.windowMs),
+          String(limit.max),
         ],
       });
       
@@ -90,8 +93,11 @@ export async function checkRateLimit(identifier, category = 'default') {
       return { allowed: true };
     });
   } catch (err) {
-    console.error('Rate limit error, failing open:', err);
-    return { allowed: true };
+    console.warn('[RateLimit] Unavailable:', err.message);
+    if (['login', 'submit', 'run'].includes(category)) {
+      return { allowed: false, unavailable: true };
+    }
+    return { allowed: true, unavailable: true };
   }
 }
 

@@ -43,6 +43,12 @@ export default function Settings() {
 
       const data = await res.json();
       if (res.ok) {
+        if (data.token) {
+          localStorage.setItem('token', data.token);
+          // Reload reconnects any shared socket with the replacement session.
+          window.location.reload();
+          return;
+        }
         setMessage('Password updated successfully!');
         setCurrentPassword('');
         setNewPassword('');

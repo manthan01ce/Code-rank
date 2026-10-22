@@ -14,7 +14,7 @@
  * @param {object|object[]} users  Single user or array of users.
  * Each user must have: { name, email, role, rawPassword }
  */
-export const generateUserCredentialsPDF = (users) => {
+export const generateUserCredentialsPDF = async (users) => {
   // Dynamic import to keep jsPDF browser-only
   if (typeof window === 'undefined') {
     throw new Error('generateUserCredentialsPDF can only be called in a browser context.');

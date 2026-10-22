@@ -1,4 +1,4 @@
-import 'dotenv/config';
+import '../../packages/core/src/config/env.js';
 import { createServer } from 'http';
 import { parse } from 'url';
 import { fileURLToPath } from 'url';
@@ -7,7 +7,15 @@ import next from 'next';
 import { Server } from 'socket.io';
 import compression from 'compression';
 import { performance } from 'perf_hooks';
-import { verifyToken } from '@coderank/core/utils/auth';
+import { configureRealtimeAdapter } from './src/lib/realtime-adapter.js';
+import { attachRealtime, revalidateRealtimeRooms } from './src/lib/realtime.js';
+import { guardRealtimeSession } from './src/lib/realtime-session.js';
+import { guestActor } from '@coderank/core/security/execution';
+import { verifyServiceToken } from '@coderank/core/security/service-token';
+import { PracticalService } from '@coderank/core/services/PracticalService';
+import { SubmissionService } from '@coderank/core/services/SubmissionService';
+import sql from '@coderank/core/db';
+import { authenticateToken } from '@coderank/core/security/active-actor';
 import { logger } from '@coderank/core/utils/logger';
 import { recordHttpRequest } from './src/lib/observability.js';
 
@@ -52,7 +60,7 @@ const compressionMiddleware = compression({
   }
 });
 
-app.prepare().then(() => {
+app.prepare().then(async () => {
   const server = createServer((req, res) => {
     const startedAt = performance.now();
     res.once('finish', () => {
@@ -95,7 +103,7 @@ app.prepare().then(() => {
 
   const io = new Server(server, {
     cors: {
-      origin: '*',
+      origin: (process.env.ALLOWED_ORIGIN || 'http://localhost:3000').split(',').map(value => value.trim()),
       methods: ['GET', 'POST']
     },
     // Performance optimizations for Socket.IO
@@ -103,197 +111,60 @@ app.prepare().then(() => {
     pingInterval: 25000,
     upgradeTimeout: 10000,
     maxHttpBufferSize: 1e6, // 1MB
-    transports: ['websocket', 'polling'], // Prefer websocket
+    transports: ['websocket'], // One connection stays on one process; no polling affinity required.
   });
 
-  // Track connected clients by role for debugging
-  const connectedClients = {
-    students: new Map(),
-    faculty: new Map(),
-    admin: new Map(),
+  const closeAdapter = await configureRealtimeAdapter(io);
+  const shutdown = async () => {
+    io.close();
+    server.close();
+    await closeAdapter();
+    await app.close();
+    process.exit(0);
   };
-
-  // Attach io to global so API routes can access it
+  process.once('SIGTERM', shutdown);
+  process.once('SIGINT', shutdown);
   global.io = io;
-
-  io.on('connection', (socket) => {
-    if (process.env.NODE_ENV !== 'production') {
-      logger.info(`New socket connection`, { socketId: socket.id });
-    }
-    
-    // Identify user role and id from auth data or JWT token
-    let userRole = socket.handshake?.auth?.role || 'anonymous';
-    let userId = socket.handshake?.auth?.userId;
-    const token = socket.handshake?.auth?.token;
-
-    if (token) {
-      try {
-        const decoded = verifyToken(token);
-        if (decoded) {
-          userRole = decoded.role || userRole;
-          userId = decoded.id || userId;
-        }
-      } catch (e) {}
-    }
-
-    if (process.env.NODE_ENV !== 'production') {
-      logger.info(`Socket authenticated`, { socketId: socket.id, userId, userRole });
-    }
-
-    // Track connected clients
-    if (userRole === 'student' && userId) {
-      connectedClients.students.set(socket.id, { userId, connectedAt: new Date() });
-    } else if (userRole === 'faculty' && userId) {
-      connectedClients.faculty.set(socket.id, { userId, connectedAt: new Date() });
-    } else if (userRole === 'admin' && userId) {
-      connectedClients.admin.set(socket.id, { userId, connectedAt: new Date() });
-    }
-
-    // Join a specific practical room for real-time updates
-    socket.on('join_practical_room', (practicalId) => {
-      const room = `practical_${practicalId}`;
-      socket.join(room);
-      if (process.env.NODE_ENV !== 'production') {
-        logger.info(`Socket joined practical room`, { socketId: socket.id, room });
-      }
-    });
-
-    // Join admin room for real-time system & audit updates
-    socket.on('join_admin_room', () => {
-      socket.join('admin_room');
-      if (process.env.NODE_ENV !== 'production') {
-        logger.info(`Socket joined admin room`, { socketId: socket.id });
-      }
-    });
-
-    socket.on('leave_admin_room', () => {
-      socket.leave('admin_room');
-      if (process.env.NODE_ENV !== 'production') {
-        logger.info(`Socket left admin room`, { socketId: socket.id });
-      }
-    });
-
-    // Auto-join admin room if authenticated as admin
-    if (userRole === 'admin') {
-      socket.join('admin_room');
-    }
-
-    socket.on('join_course_room', (courseId) => {
-      const room = `course_${courseId}`;
-      socket.join(room);
-      if (process.env.NODE_ENV !== 'production') {
-        logger.info(`Socket joined course room`, { socketId: socket.id, room });
-      }
-    });
-
-    socket.on('leave_course_room', (courseId) => {
-      const room = `course_${courseId}`;
-      socket.leave(room);
-      if (process.env.NODE_ENV !== 'production') {
-        logger.info(`Socket left course room`, { socketId: socket.id, room });
-      }
-    });
-
-    // Faculty practical events — broadcast to specific course room only
-    socket.on('faculty_practical_added', (data) => {
-      const practical = data?.practical || data;
-      const courseId = data?.course_id || practical?.course_id;
-      if (courseId) {
-        io.to(`course_${courseId}`).emit('practical_added', practical);
-      }
-      if (process.env.NODE_ENV !== 'production') {
-        logger.info(`Broadcasted practical_added`, { courseId, socketId: socket.id });
-      }
-    });
-
-    socket.on('faculty_practical_updated', (data) => {
-      const practical = data?.practical || data;
-      const courseId = data?.course_id || practical?.course_id;
-      if (courseId) {
-        io.to(`course_${courseId}`).emit('practical_updated', practical);
-      }
-      if (process.env.NODE_ENV !== 'production') {
-        logger.info(`Broadcasted practical_updated`, { courseId, socketId: socket.id });
-      }
-    });
-
-    socket.on('faculty_practical_deleted', (data) => {
-      const practicalId = data?.practicalId || data?.id || data;
-      const courseId = data?.course_id;
-      if (courseId) {
-        io.to(`course_${courseId}`).emit('practical_deleted', practicalId);
-      }
-      if (process.env.NODE_ENV !== 'production') {
-        logger.info(`Broadcasted practical_deleted`, { practicalId, courseId, socketId: socket.id });
-      }
-    });
-
-    socket.on('watch_job', (jobId) => {
-      const room = `job_${jobId}`;
-      socket.join(room);
-      if (process.env.NODE_ENV !== 'production') {
-        logger.info(`Socket watching job`, { socketId: socket.id, room });
-      }
-    });
-
-    socket.on('unwatch_job', (jobId) => {
-      const room = `job_${jobId}`;
-      socket.leave(room);
-      if (process.env.NODE_ENV !== 'production') {
-        logger.info(`Socket unwatching job`, { socketId: socket.id, room });
-      }
-    });
-
-    socket.on('worker_job_complete', (data) => {
-      if (process.env.NODE_ENV !== 'production') {
-        logger.info(`Job completed`, { jobId: data?.jobId });
-      }
-      if (data?.jobId) {
-        io.to(`job_${data.jobId}`).emit('job_complete', data.result);
-        if (process.env.NODE_ENV !== 'production') {
-          logger.info(`Emitted job_complete`, { jobId: data.jobId });
-        }
-      }
-    });
-
-    // Student submission events — notify practical room, course room, and globally
-    socket.on('student_new_submission', (data) => {
-      const submission = data?.submission || data;
-      const practicalId = data?.practical_id || submission?.practical_id;
-      const courseId = data?.course_id || submission?.course_id;
-
-      if (practicalId) {
-        io.to(`practical_${practicalId}`).emit('new_submission', submission);
-        if (process.env.NODE_ENV !== 'production') {
-          logger.info(`Emitted new_submission to practical room`, { practicalId });
-        }
-      }
-      if (courseId) {
-        io.to(`course_${courseId}`).emit('new_submission_marks', { 
-          course_id: courseId, 
-          practical_id: practicalId 
-        });
-        if (process.env.NODE_ENV !== 'production') {
-          logger.info(`Emitted new_submission_marks to course room`, { courseId });
-        }
-      }
-      io.emit('new_submission', submission);
-    });
-
-    socket.on('disconnect', () => {
-      // Clean up client tracking
-      ['students', 'faculty', 'admin'].forEach(role => {
-        if (connectedClients[role].has(socket.id)) {
-          const client = connectedClients[role].get(socket.id);
-          connectedClients[role].delete(socket.id);
-          if (process.env.NODE_ENV !== 'production') {
-            logger.info(`Socket disconnected`, { role, socketId: socket.id, userId: client.userId });
-          }
-        }
-      });
-      if (process.env.NODE_ENV !== 'production') {
-        logger.info(`Socket disconnected`, { socketId: socket.id });
-      }
+  io.use(async (socket, next) => {
+    try {
+      const serviceToken = socket.handshake.auth?.serviceToken;
+      const token = socket.handshake.auth?.token;
+      const service = serviceToken !== undefined ? verifyServiceToken(serviceToken) : null;
+      if (serviceToken !== undefined && !service) throw new Error('Invalid service credentials');
+      const actor = token !== undefined ? await authenticateToken(token)
+        : service ? null : guestActor(socket.handshake.headers.cookie || '');
+      if (!service && !actor) throw new Error('Authentication required');
+      socket.data.service = !!service;
+      socket.data.actor = actor;
+      socket.data.token = token;
+      socket.data.serviceToken = serviceToken;
+      socket.data.expiresAt = service ? service.exp * 1000
+        : actor.role === 'guest' ? Date.now() + 86400000 : actor.exp * 1000;
+      next();
+    } catch { next(new Error('Authentication required')); }
+  });
+  io.on('connection', socket => {
+    const authorization = {
+    refreshActor: () => socket.data.actor?.role === 'guest' ? socket.data.actor : authenticateToken(socket.data.token),
+    validateService: () => !!verifyServiceToken(socket.data.serviceToken),
+    authorizePractical: (actor, id) => PracticalService.authorize(actor, id),
+    getJobStatus: (id, actor) => SubmissionService.getJobStatus(id, actor),
+    authorizeCourse: async (actor, id) => {
+      if (!actor || actor.role === 'guest') throw new Error('Authentication required');
+      if (actor.role === 'admin') return;
+      const rows = actor.role === 'faculty'
+        ? await sql`SELECT 1 FROM course_faculty WHERE course_id = ${id} AND faculty_id = ${actor.id}`
+        : await sql`SELECT 1 FROM users u JOIN courses c ON c.semester = (u.extra_info->>'semester')::int WHERE u.id = ${actor.id} AND u.status = 'active' AND c.id = ${id} AND (u.session_token IS NULL OR u.session_token = ${actor.session_token || ''})`;
+      if (!rows.length) throw new Error('Course access denied');
+    },
+    };
+    attachRealtime(io, socket, authorization);
+    guardRealtimeSession(socket, {
+      expiresAt: socket.data.expiresAt,
+      revalidate: !socket.data.service ? async () => {
+        if (socket.data.actor?.role !== 'guest') socket.data.actor = await authenticateToken(socket.data.token);
+        await revalidateRealtimeRooms(socket, { ...authorization, actor: socket.data.actor });
+      } : undefined,
     });
   });
 
@@ -310,4 +181,4 @@ app.prepare().then(() => {
         pid: process.pid
       });
     });
-});
+}).catch(error => { logger.error('Web startup failed', error); process.exit(1); });

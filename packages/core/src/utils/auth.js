@@ -7,9 +7,10 @@ import jwt from 'jsonwebtoken';
 import bcrypt from 'bcryptjs';
 import crypto from 'crypto';
 
-const JWT_SECRET = process.env.JWT_SECRET;
-if (!JWT_SECRET) {
-  throw new Error('FATAL: JWT_SECRET environment variable is missing.');
+function getJwtSecret() {
+  const secret = process.env.JWT_SECRET;
+  if (!secret) throw new Error('FATAL: JWT_SECRET environment variable is missing.');
+  return secret;
 }
 
 export function generateToken(user) {
@@ -21,14 +22,15 @@ export function generateToken(user) {
       name: user.name,
       session_token: user.session_token,
     },
-    JWT_SECRET,
+    getJwtSecret(),
     { expiresIn: '7d' }
   );
 }
 
 export function verifyToken(token) {
   try {
-    return jwt.verify(token, JWT_SECRET);
+    const user = jwt.verify(token, getJwtSecret(), { algorithms: ['HS256'] });
+    return user.id !== undefined && ['student', 'faculty', 'admin'].includes(user.role) && !user.aud ? user : null;
   } catch {
     return null;
   }

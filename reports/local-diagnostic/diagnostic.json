@@ -1,0 +1,36 @@
+{
+  "startedAt": "2026-10-20T10:22:05.573Z",
+  "baseUrl": "http://127.0.0.1:3000",
+  "notes": [
+    "Real application/worker processes; no Docker, Redis or DB mocks.",
+    "Development-mode smoke, not a production capacity benchmark."
+  ],
+  "health": {
+    "status": 503,
+    "body": {
+      "status": "degraded",
+      "timestamp": "2026-10-20T10:22:06.999Z",
+      "services": {
+        "database": {
+          "status": "degraded",
+          "error": "Error connecting to database: TypeError: fetch failed"
+        },
+        "queue": {
+          "status": "degraded",
+          "stats": {
+            "waiting": 0,
+            "active": 0,
+            "completed": 0,
+            "failed": 0,
+            "delayed": 0,
+            "cached": true
+          },
+          "error": "Redis queue is unavailable; cached queue statistics are being returned"
+        }
+      }
+    }
+  },
+  "k6ExitCode": 99,
+  "capacityTests": "BLOCKED: dependency or smoke gates failed; 200-VU workloads not started",
+  "finishedAt": "2026-10-20T10:22:37.378Z"
+}

@@ -1,4 +1,5 @@
 @echo off
+cd /d "%~dp0"
 setlocal enabledelayedexpansion
 
 echo ========================================================
@@ -36,40 +37,21 @@ if %errorLevel% == 0 (
 )
 echo.
 
-:: 1. Copy env if missing
-if not exist "frontend\.env.local" (
-    if exist ".env.local" copy ".env.local" "frontend\.env.local" >nul
-)
-if not exist "backend\.env.local" (
-    if exist ".env.local" copy ".env.local" "backend\.env.local" >nul
-)
-
-:: Check dependencies
-if not exist "frontend\node_modules" (
-    echo [INFO] Installing frontend dependencies...
-    cd frontend && npm install && cd ..
-)
-if not exist "backend\node_modules" (
-    echo [INFO] Installing backend dependencies...
-    cd backend && npm install && cd ..
-)
-
-:: 2. Start Redis and compiler daemons in Docker
-echo [1/3] Starting Redis and compiler daemons...
-docker compose -f runner\docker-compose.yml up -d --build
-if errorlevel 1 (
-    echo [ERROR] Failed to start Docker containers. Make sure Docker Desktop is running.
-    pause
+:: Active workspaces load the root environment.
+if not exist ".env" if not exist ".env.local" (
+    echo [ERROR] Create .env from .env.example and configure Neon and JWT_SECRET.
     exit /b 1
 )
-
-:: 3. Start Backend Worker in separate window
-echo [2/3] Starting backend worker...
-start "CodeRank Backend Worker" cmd /k "cd backend && node src\worker.js"
-
-:: 4. Start Frontend
-echo [3/3] Starting frontend server on 0.0.0.0:3000...
+if not exist "node_modules" (
+    call npm ci --no-audit --no-fund
+    if errorlevel 1 exit /b 1
+)
+docker compose -f infrastructure\docker-compose.yml --profile build-image build runner-image
+if errorlevel 1 exit /b 1
+docker compose -f infrastructure\docker-compose.yml up -d redis
+if errorlevel 1 exit /b 1
 set HOSTNAME=0.0.0.0
 set PORT=3000
-cd frontend
-node server.js
+if not defined ALLOWED_ORIGIN set ALLOWED_ORIGIN=http://localhost:3000,http://!HOST_IP!:3000
+start "CodeRank Worker" cmd /k "npm run worker"
+call npm run web

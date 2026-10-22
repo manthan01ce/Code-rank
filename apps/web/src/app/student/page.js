@@ -1,4 +1,5 @@
 'use client';
+import { fetchCollection } from '@/lib/fetch-collection';
 
 import { useRouter } from 'next/navigation';
 import { useEffect, useState, useCallback } from 'react';
@@ -15,6 +16,7 @@ export default function StudentDashboard() {
   const [user, setUser] = useState(null);
   const [profile, setProfile] = useState(null);
   const [loading, setLoading] = useState(true);
+  const [isHydrated, setIsHydrated] = useState(false);
   const [courses, setCourses] = useState([]);
   const [practicals, setPracticals] = useState([]);
   const [lastUpdated, setLastUpdated] = useState(null);
@@ -42,6 +44,13 @@ export default function StudentDashboard() {
   usePolling(fetchStudentPracticals, 15_000, !!user);
 
   useEffect(() => {
+    // Wait for client-side hydration before accessing localStorage
+    setIsHydrated(true);
+  }, []);
+
+  useEffect(() => {
+    if (!isHydrated) return; // Don't check auth until hydrated
+    
     const userData = localStorage.getItem('user');
     const token = localStorage.getItem('token');
     if (!userData || !token) {
@@ -68,13 +77,10 @@ export default function StudentDashboard() {
           
           const sem = data.user?.extra_info?.semester;
           if (sem) {
-            const coursesRes = await fetch(`/api/courses?semester=${sem}`, {
+            const coursesData = await fetchCollection(`/api/courses?semester=${sem}`, {
               headers: { 'Authorization': `Bearer ${token}` }
             });
-            if (coursesRes.ok) {
-              const coursesData = await coursesRes.json();
-              setCourses(coursesData);
-            }
+            setCourses(coursesData);
           }
 
           // Fetch student's assigned practicals
@@ -92,7 +98,7 @@ export default function StudentDashboard() {
     };
     
     fetchData();
-  }, [router, fetchStudentPracticals]);
+  }, [router, fetchStudentPracticals, isHydrated]);
 
   // Real-time socket updates for new, updated, or deleted practicals
   useEffect(() => {

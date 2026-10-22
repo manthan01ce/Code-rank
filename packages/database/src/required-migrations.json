@@ -1,0 +1,30 @@
+[
+  {
+    "name": "000_baseline.sql",
+    "checksum": "1f86d97708422cdf734c3d451e0f778e0096070501dac102ffec8353ee62e204"
+  },
+  {
+    "name": "001_add_performance_indexes.sql",
+    "checksum": "933bb28909503dcdc4757bdfb48ffd71de028bb02c90efb74b67f038e56ca66b"
+  },
+  {
+    "name": "002_submission_attempts.sql",
+    "checksum": "a745d76ad672e31d820be3433a1b05bb763f236d48379efddda1928fc6a784ff"
+  },
+  {
+    "name": "003_admin_transactions.sql",
+    "checksum": "a5ea50806058fba51305babac9a228ec85b0c4f007e18b18f40bfc2eddbb7359"
+  },
+  {
+    "name": "004_user_management.sql",
+    "checksum": "dacec7d60838604067a2fc3610a6dcd7625cfd7bd80c734f215aff8c5cdfcd16"
+  },
+  {
+    "name": "005_course_department_management.sql",
+    "checksum": "e5598ee011e3b4131fb19442e97e477281cf290f19d81a0d109f59373122ee2c"
+  },
+  {
+    "name": "006_authorized_submission_reset.sql",
+    "checksum": "44a25034144095c56b0fab5c858911812e1472de0b0c8810159494e486b28ae5"
+  }
+]

@@ -16,8 +16,9 @@ export async function generateMetadata({ params }) {
   const { id } = await params;
   
   let problem = null;
-  if (id.startsWith('practical_')) {
-    const practicalId = parseInt(id.replace('practical_', ''));
+  const isPractical = id.startsWith('practical_') || /^\d+$/.test(id);
+  if (isPractical) {
+    const practicalId = parseInt(id.replace('practical_', ''), 10);
     try {
       const res = await sql`
         SELECT title FROM practicals WHERE id = ${practicalId}
@@ -45,8 +46,9 @@ export default async function StudentCodingPage({ params }) {
   const { id } = await params;
 
   let problem = null;
-  if (id.startsWith('practical_')) {
-    const practicalId = parseInt(id.replace('practical_', ''));
+  const isPractical = id.startsWith('practical_') || /^\d+$/.test(id);
+  if (isPractical) {
+    const practicalId = parseInt(id.replace('practical_', ''), 10);
     try {
       const res = await sql`
         SELECT p.*, c.name as course_name, c.course_code 
@@ -60,6 +62,7 @@ export default async function StudentCodingPage({ params }) {
           id: `practical_${p.id}`,
           dbId: p.id,
           isPractical: true,
+          clipboardRestricted: p.starter_code?.exam_policy?.restrict_clipboard === true,
           title: p.title,
           description: p.description,
           difficulty: p.difficulty || 'Medium',
@@ -69,7 +72,8 @@ export default async function StudentCodingPage({ params }) {
           sampleOutput: p.sample_output,
           constraints: p.constraints,
           instructions: p.instructions,
-          allowedLanguages: p.starter_code?.allowed_languages || ['python', 'cpp'],
+          starter_code: p.starter_code,
+          allowedLanguages: p.starter_code?.allowed_languages || ['python', 'cpp', 'java', 'c', 'javascript'],
           startTime: p.start_time,
           endTime: p.end_time,
           testCases: []
@@ -78,7 +82,12 @@ export default async function StudentCodingPage({ params }) {
     } catch (e) {
       console.error('Error fetching practical:', e);
     }
+  } else {
+    const staticProblem = STATIC_PROBLEMS[id] || Object.values(STATIC_PROBLEMS).find(p => p.slug === id);
+    if (staticProblem) {
+      problem = staticProblem;
+    }
   }
-  // If it's not a dynamic practical, it will be loaded as null, which renders the placeholder screen asking to select a practical.
+
   return <WorkspaceClientWrapper problem={problem} />;
 }

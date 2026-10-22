@@ -29,5 +29,6 @@ export function createSystemWorker() {
     concurrency: 2,
   });
 
+  worker.on('error', error => logger.error('[SystemWorker] Queue error', { message: error.message }));
   return worker;
 }

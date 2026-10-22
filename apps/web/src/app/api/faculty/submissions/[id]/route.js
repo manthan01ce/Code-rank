@@ -1,11 +1,11 @@
 import { NextResponse } from 'next/server';
 import { SubmissionService } from '@coderank/core/services/SubmissionService';
-import { getUserFromRequest } from '@coderank/core/utils/auth';
+import { authenticateRequest } from '@coderank/core/security/active-actor';
 import { decodeBinaryCode } from '@/lib/binaryCode';
 
 export async function GET(request, { params }) {
   try {
-    const user = getUserFromRequest(request);
+    const user = await authenticateRequest(request);
     const { id } = await params;
     const submission = await SubmissionService.getSubmission(user, id);
 
@@ -24,7 +24,7 @@ export async function GET(request, { params }) {
 
 export async function DELETE(request, { params }) {
   try {
-    const user = getUserFromRequest(request);
+    const user = await authenticateRequest(request);
     const { id } = await params;
     const result = await SubmissionService.deleteSubmission(user, id);
     return NextResponse.json(result);

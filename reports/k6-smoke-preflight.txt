@@ -1,0 +1,36 @@
+
+         /\      Grafana   /‾‾/  
+    /\  /  \     |\  __   /  /   
+   /  \/    \    | |/ /  /   ‾‾\ 
+  /          \   |   (  |  (‾)  |
+ / __________ \  |_|\_\  \_____/ 
+
+     execution: local
+        script: load-tests/qualification.js
+        output: -
+
+     scenarios: (100.00%) 1 scenario, 1 max VUs, 3m30s max duration (incl. graceful stop):
+              * qualification: 1 iterations for each of 1 VUs (maxDuration: 3m0s, gracefulStop: 30s)
+
+
+Run             [ 100% ] setup()
+qualification   [   0% ]
+
+Run             [ 100% ] setup()
+qualification   [   0% ]
+
+Run             [ 100% ] setup()
+qualification   [   0% ]
+
+Run             [ 100% ] setup()
+qualification   [   0% ]
+
+Run             [ 100% ] setup()
+qualification   [   0% ]
+
+Run             [ 100% ] setup()
+qualification   [   0% ]
+
+Run             [ 100% ] setup()
+qualification   [   0% ]
+time="2026-10-20T06:59:14-03:00" level=error msg="Error: Execution target unavailable\n\tat setup (file:///workspace/scratch/463e7b504bd7/Code-rank/load-tests/qualification.js:56:73(27))\n" hint="script exception"

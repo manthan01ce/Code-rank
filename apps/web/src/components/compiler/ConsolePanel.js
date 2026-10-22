@@ -161,25 +161,47 @@ export default function ConsolePanel({
       {/* ── Console Body ── */}
       <div style={{ flex: 1, display: 'flex', flexDirection: 'column', background: '#000000', overflow: 'hidden' }}>
 
-        {/* 1. Loading State Panel */}
+        {/* 1. Loading State Panel with Phased Stepper */}
         {judgeState === 'loading' && (
-          <div style={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: '16px', color: '#ffffff', padding: '20px' }}>
-            <Loader2 size={32} style={{ color: '#0066b1', animation: 'spin 0.8s linear infinite' }} />
-            <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '4px', textAlign: 'center' }}>
-              <span style={{ fontSize: '14px', fontWeight: 700, letterSpacing: '0.5px' }}>
+          <div style={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: '20px', color: '#ffffff', padding: '24px' }}>
+            <div style={{ position: 'relative', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+              <Loader2 size={36} style={{ color: '#0066b1', animation: 'spin 0.8s linear infinite' }} />
+              <div style={{ position: 'absolute', width: '48px', height: '48px', borderRadius: '50%', border: '1px solid rgba(0,102,177,0.2)', animation: 'ping 2s cubic-bezier(0, 0, 0.2, 1) infinite' }} />
+            </div>
+
+            <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '6px', textAlign: 'center' }}>
+              <span style={{ fontSize: '15px', fontWeight: 700, letterSpacing: '0.5px' }}>
                 {actionMode === 'submit'
-                  ? (submitPhase === 'submitting' ? 'Submitting your solution...' : 'Judging...')
-                  : 'Executing code...'
+                  ? (submitPhase === 'submitting' ? 'Submitting solution...' : 'Evaluating against test cases...')
+                  : 'Executing code in sandbox...'
                 }
               </span>
-              <span style={{ color: '#7e7e7e', fontSize: '12px', maxWidth: '300px', lineHeight: 1.4 }}>
+              <span style={{ color: '#888888', fontSize: '12px', maxWidth: '380px', lineHeight: 1.5 }}>
                 {actionMode === 'submit'
                   ? (submitPhase === 'submitting'
-                      ? 'Sending code to sandboxed compiler environment...'
-                      : 'Running against official hidden test cases...')
-                  : 'Running Python script in sandboxed container...'
+                      ? 'Dispatching code to secure execution worker queue...'
+                      : 'Running all configured evaluation test cases...')
+                  : 'Compiling & evaluating input in isolated environment...'
                 }
               </span>
+            </div>
+
+            {/* Visual execution phase milestones */}
+            <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginTop: '4px', background: '#0d0d0d', border: '1px solid #262626', borderRadius: '24px', padding: '6px 16px' }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '6px', fontSize: '11px', color: '#10b981', fontWeight: 600 }}>
+                <span style={{ width: '6px', height: '6px', borderRadius: '50%', background: '#10b981' }} />
+                Queue Dispatched
+              </div>
+              <span style={{ color: '#444' }}>→</span>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '6px', fontSize: '11px', color: '#38bdf8', fontWeight: 600 }}>
+                <span style={{ width: '6px', height: '6px', borderRadius: '50%', background: '#38bdf8', animation: 'pulse 1.2s infinite' }} />
+                Sandbox Active
+              </div>
+              <span style={{ color: '#444' }}>→</span>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '6px', fontSize: '11px', color: '#777', fontWeight: 500 }}>
+                <span style={{ width: '6px', height: '6px', borderRadius: '50%', background: '#555' }} />
+                Verifying Results
+              </div>
             </div>
           </div>
         )}

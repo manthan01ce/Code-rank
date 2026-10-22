@@ -100,8 +100,7 @@ function EditProfileModal({ user, onClose, onSave }) {
         extraInfoUpdate.employee_id = empId;
         extraInfoUpdate.department = dept;
       }
-
-      const res = await fetch(`/api/profile/${handle}`, {
+      const res = await fetch('/api/auth/profile', {
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json',
@@ -125,6 +124,43 @@ function EditProfileModal({ user, onClose, onSave }) {
       }, 1000);
     } catch (err) {
       setError(err.message);
+=======
+          name,
+          extra_info: extraInfoUpdate,
+          currentPassword: currentPassword || undefined,
+          newPassword: newPassword || undefined
+        }),
+      });
+
+      let d = {};
+      try {
+        const text = await res.text();
+        d = text ? JSON.parse(text) : {};
+      } catch {
+        d = {};
+      }
+
+      if (!res.ok) {
+        throw new Error(d.error || `Save failed (${res.status})`);
+      }
+
+      if (d.token) {
+        localStorage.setItem('token', d.token);
+      }
+      try {
+        const stored = JSON.parse(localStorage.getItem('user') || '{}');
+        if (stored && typeof stored === 'object') {
+          stored.name = name;
+          stored.extra_info = extraInfoUpdate;
+          localStorage.setItem('user', JSON.stringify(stored));
+        }
+      } catch {}
+
+      onSave({ name, extra_info: extraInfoUpdate });
+      onClose();
+    } catch (e) {
+      setError(e.message);
+>>>>>>> f70aed08a7a51dc018a3984678f48a650abd444d
     } finally {
       setSaving(false);
     }

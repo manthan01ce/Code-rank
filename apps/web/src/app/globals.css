@@ -245,3 +245,11 @@ th {
   background: white;
   cursor: pointer;
 }
+
+.coding-workspace :focus-visible { outline: 2px solid #60a5fa !important; outline-offset: 3px; }
+.coding-workspace dialog::backdrop { background: rgb(0 0 0 / 85%); }
+@media (max-width: 767px) {
+  .coding-workspace button { min-height: 44px; }
+  .coding-workspace > div { max-width: 100%; }
+  .coding-workspace > div:first-child { overflow-x: auto; flex-shrink: 0; }
+}

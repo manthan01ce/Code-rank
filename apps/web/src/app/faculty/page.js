@@ -1,44 +1,47 @@
 'use client';
 import Editor from '@monaco-editor/react';
 
-import { useState, useEffect } from 'react';
+import { fetchCollection } from '@/lib/fetch-collection';
+import { useState, useEffect, useRef } from 'react';
 import { useRouter } from 'next/navigation';
-import { Radio } from 'lucide-react';
 import LoadingOverlay from '@/components/LoadingOverlay';
 import { useSocket } from '@/hooks/useSocket';
-import RefreshButton from '@/components/RefreshButton';
+import { usePolling } from '@/hooks/usePolling';
+import { useFacultyAuth } from '@/hooks/useFacultyAuth';
 
 export default function FacultyDashboard() {
   const router = useRouter();
   const socket = useSocket();
+  const { token: authToken, isReady } = useFacultyAuth();
+  const token = () => authToken || (typeof window !== 'undefined' ? localStorage.getItem('token') : '') || '';
+
   const [courses, setCourses] = useState([]);
   const [batches, setBatches] = useState([]);
-  const [lastUpdated, setLastUpdated] = useState(null);
   
-  // Context selection
-  const [selectedCourse, setSelectedCourse] = useState(() => {
-    if (typeof window !== 'undefined') return localStorage.getItem('facultySelectedCourse') || '';
-    return '';
-  });
-  useEffect(() => {
-    if (typeof window !== 'undefined') localStorage.setItem('facultySelectedCourse', selectedCourse);
-  }, [selectedCourse]);
+  // Read browser preferences after the first render so server and client
+  // render the same initial dashboard. Do not overwrite storage before restore.
+  const [preferencesReady, setPreferencesReady] = useState(false);
+  const [selectedCourse, setSelectedCourse] = useState('');
   const [selectedBatch, setSelectedBatch] = useState('');
-  
-  // Active Tab
-  const [activeTab, setActiveTab] = useState(() => {
-    if (typeof window !== 'undefined') {
-      return localStorage.getItem('facultyActiveTab') || 'practicals';
-    }
-    return 'practicals';
-  });
+  const [activeTab, setActiveTab] = useState('practicals');
 
   useEffect(() => {
-    if (typeof window !== 'undefined') {
-      localStorage.setItem('facultyActiveTab', activeTab);
-    }
-  }, [activeTab]); // 'practicals', 'submissions', 'marks'
-  
+    const params = new URLSearchParams(window.location.search);
+    const course = params.get('course') || localStorage.getItem('facultySelectedCourse') || '';
+    const tab = params.get('tab') || localStorage.getItem('facultyActiveTab');
+    setSelectedCourse(/^[1-9]\d*$/.test(course) ? course : '');
+    setActiveTab(['practicals', 'submissions', 'marks'].includes(tab) ? tab : 'practicals');
+    setPreferencesReady(true);
+  }, []);
+
+  useEffect(() => {
+    if (preferencesReady) localStorage.setItem('facultySelectedCourse', selectedCourse);
+  }, [selectedCourse, preferencesReady]);
+
+  useEffect(() => {
+    if (preferencesReady) localStorage.setItem('facultyActiveTab', activeTab);
+  }, [activeTab, preferencesReady]);
+
   // Practicals state
   const [practicals, setPracticals] = useState([]);
   const [loadingPracticals, setLoadingPracticals] = useState(false);
@@ -70,6 +73,9 @@ export default function FacultyDashboard() {
 
   // Submissions state
   const [selectedPracticalId, setSelectedPracticalId] = useState('');
+  const [submissionCursor, setSubmissionCursor] = useState(null);
+  const [nextSubmissionCursor, setNextSubmissionCursor] = useState(null);
+  const submissionRequestVersion = useRef(0);
   const [submissions, setSubmissions] = useState([]);
   const [loadingSubmissions, setLoadingSubmissions] = useState(false);
   const [studentSearch, setStudentSearch] = useState('');
@@ -84,11 +90,14 @@ export default function FacultyDashboard() {
   const [copyCodeSuccess, setCopyCodeSuccess] = useState(false);
 
   // Live timer tick for real-time countdown
-  const [currentTime, setCurrentTime] = useState(Date.now());
+  // Keep rendering deterministic; initialise the clock after mount.
+  const [currentTime, setCurrentTime] = useState(0);
   useEffect(() => {
-    const timer = setInterval(() => {
+    const tick = () => {
       setCurrentTime(Date.now());
-    }, 1000);
+    };
+    tick();
+    const timer = setInterval(tick, 1000);
     return () => clearInterval(timer);
   }, []);
 
@@ -98,6 +107,10 @@ export default function FacultyDashboard() {
 
   // Marks Overview state
   const [selectedMarksPracticalId, setSelectedMarksPracticalId] = useState('');
+  const [statsStudentCursor, setStatsStudentCursor] = useState(null);
+  const [statsPracticalCursor, setStatsPracticalCursor] = useState(null);
+  const statsRequestVersion = useRef(0);
+  const statsRefresh = useRef(null);
   const [statsData, setStatsData] = useState(null);
   const [loadingStats, setLoadingStats] = useState(false);
 
@@ -105,67 +118,47 @@ export default function FacultyDashboard() {
   const [loading, setLoading] = useState(true);
   const [processing, setProcessing] = useState(false);
   const [toast, setToast] = useState(null);
-  const [refreshing, setRefreshing] = useState(false);
 
-  const token = () => localStorage.getItem('token');
+
 
   const showToast = (type, msg) => {
     setToast({ type, msg });
     setTimeout(() => setToast(null), 4000);
   };
 
-  // Auth guard: redirect unauthenticated / non-faculty users to landing page
-  useEffect(() => {
-    const storedToken = localStorage.getItem('token');
-    const storedUser  = localStorage.getItem('user');
-    if (!storedToken || !storedUser) {
-      router.replace('/');
-      return;
-    }
-    try {
-      const parsed = JSON.parse(storedUser);
-      if (parsed.role !== 'faculty') {
-        router.replace('/');
-      }
-    } catch {
-      router.replace('/');
-    }
-  }, [router]);
+  // Auth guard handled by useFacultyAuth hook above — no duplicate needed here.
 
+  // Gate initial data fetch on isReady (token available from localStorage)
   useEffect(() => {
-    fetchContextData();
-  }, []);
+    if (isReady) fetchContextData(true);
+  }, [isReady]);
 
-  useEffect(() => {
-    if (typeof window !== 'undefined') {
-      const params = new URLSearchParams(window.location.search);
-      const tab = params.get('tab');
-      if (tab === 'submissions') {
-        setActiveTab('submissions');
-      } else if (tab === 'marks') {
-        setActiveTab('marks');
-      } else {
-        setActiveTab('practicals');
-        setSelectedCourse('');
-      }
-    }
-  }, [typeof window !== 'undefined' ? window.location.search : '']);
-
-  const fetchContextData = async () => {
-    setLoading(true);
+  const fetchContextData = async (isInitialLoad = false) => {
+    const activeToken = token();
+    if (!activeToken) return;
+    if (isInitialLoad) setLoading(true);
     try {
       const [coursesRes, batchesRes] = await Promise.all([
-        fetch('/api/faculty/courses', { headers: { Authorization: `Bearer ${token()}` } }),
-        fetch('/api/faculty/batches', { headers: { Authorization: `Bearer ${token()}` } })
+        fetchCollection('/api/faculty/courses', { headers: { Authorization: `Bearer ${activeToken}` } }),
+        fetchCollection('/api/faculty/batches', { headers: { Authorization: `Bearer ${activeToken}` } })
       ]);
 
-      if (coursesRes.ok) {
-        const courseList = await coursesRes.json();
+      if (coursesRes) {
+        const courseList = coursesRes;
         setCourses(courseList);
-        setSelectedCourse('');
+        setSelectedCourse(prev => {
+          if (prev && courseList.some(c => c.id.toString() === prev.toString())) {
+            return prev;
+          }
+          const stored = typeof window !== 'undefined' ? localStorage.getItem('facultySelectedCourse') : null;
+          if (stored && courseList.some(c => c.id.toString() === stored.toString())) {
+            return stored;
+          }
+          return '';
+        });
       }
-      if (batchesRes.ok) {
-        const batchList = await batchesRes.json();
+      if (batchesRes) {
+        const batchList = batchesRes;
         setBatches(batchList);
         if (batchList.length > 0) {
           setSelectedBatch(batchList[0]);
@@ -177,30 +170,34 @@ export default function FacultyDashboard() {
       console.error(e);
       showToast('error', 'Error loading course or batch metadata.');
     } finally {
-      setLoading(false);
+      if (isInitialLoad) setLoading(false);
     }
   };
 
   // Load practicals when selected course changes
   useEffect(() => {
     if (selectedCourse) {
-      fetchPracticals();
+      fetchPracticals(true);
     }
   }, [selectedCourse]);
 
-  const fetchPracticals = async () => {
-    setLoadingPracticals(true);
+  const fetchPracticals = async (showLoading = true) => {
+    if (showLoading) setLoadingPracticals(true);
     try {
-      const res = await fetch(`/api/faculty/practicals?course_id=${selectedCourse}`, {
+      const data = await fetchCollection(`/api/faculty/practicals?course_id=${selectedCourse}`, {
         headers: { Authorization: `Bearer ${token()}` }
       });
-      if (res.ok) {
-        const data = await res.json();
+      {
         setPracticals(data);
-        setLastUpdated(new Date());
         if (data.length > 0) {
-          setSelectedPracticalId(data[0].id.toString());
-          setSelectedMarksPracticalId(data[0].id.toString());
+          setSelectedPracticalId(prev => {
+            if (prev && data.some(p => p.id.toString() === prev.toString())) return prev;
+            return data[0].id.toString();
+          });
+          setSelectedMarksPracticalId(prev => {
+            if (prev && data.some(p => p.id.toString() === prev.toString())) return prev;
+            return data[0].id.toString();
+          });
         } else {
           setSelectedPracticalId('');
           setSelectedMarksPracticalId('');
@@ -211,131 +208,141 @@ export default function FacultyDashboard() {
     } catch (e) {
       console.error(e);
     } finally {
-      setLoadingPracticals(false);
+      if (showLoading) setLoadingPracticals(false);
     }
   };
 
   // Load submissions
   useEffect(() => {
     if (selectedPracticalId && activeTab === 'submissions') {
-      fetchSubmissions();
+      fetchSubmissions(true, null);
     }
   }, [selectedPracticalId, activeTab, studentSearch, submissionStatusFilter, submissionSortBy, submissionSortOrder, submissionDivisionFilter]);
 
-  const fetchSubmissions = async () => {
-    setLoadingSubmissions(true);
+  const fetchSubmissions = async (showLoading = true, cursor = submissionCursor) => {
+    const version = ++submissionRequestVersion.current;
+    if (showLoading) setLoadingSubmissions(true);
     try {
       let url = `/api/faculty/practicals/${selectedPracticalId}/submissions?studentSearch=${encodeURIComponent(studentSearch)}&status=${submissionStatusFilter}&sortBy=${submissionSortBy}&sortOrder=${submissionSortOrder}`;
       if (submissionDivisionFilter && submissionDivisionFilter !== 'all') {
         url += `&division=${encodeURIComponent(submissionDivisionFilter)}`;
       }
+      if (cursor) url += `&cursor=${encodeURIComponent(cursor)}`;
       const res = await fetch(url, {
         headers: { Authorization: `Bearer ${token()}` }
       });
       if (res.ok) {
-        setSubmissions(await res.json());
-        setLastUpdated(new Date());
+        const data = await res.json();
+        if (version !== submissionRequestVersion.current) return;
+        setSubmissions(data);
+        setSubmissionCursor(cursor);
+        setNextSubmissionCursor(res.headers.get('X-Next-Cursor') || null);
       }
     } catch (e) {
       console.error(e);
     } finally {
-      setLoadingSubmissions(false);
+      if (version === submissionRequestVersion.current) setLoadingSubmissions(false);
     }
   };
 
+  // Socket: 실시간 practical updates between faculty and co-coordinator
+  useEffect(() => {
+    if (!socket) return;
+
+    const handlePracticalChanged = () => {
+      if (selectedCourse) {
+        fetchPracticals(false);
+      }
+    };
+
+    socket.on('practical_added', handlePracticalChanged);
+    socket.on('practical_updated', handlePracticalChanged);
+    socket.on('practical_deleted', handlePracticalChanged);
+
+    return () => {
+      socket.off('practical_added', handlePracticalChanged);
+      socket.off('practical_updated', handlePracticalChanged);
+      socket.off('practical_deleted', handlePracticalChanged);
+    };
+  }, [socket, selectedCourse]);
+
+  // Join course room when a course is selected
+  useEffect(() => {
+    if (!socket || !selectedCourse) return;
+    socket.emit('join_course_room', selectedCourse);
+    return () => {
+      socket.emit('leave_course_room', selectedCourse);
+    };
+  }, [socket, selectedCourse]);
+
+  // Socket: Submissions room for active practical
   useEffect(() => {
     if (!socket || !selectedPracticalId) return;
     
     socket.emit('join_practical_room', selectedPracticalId);
     
-    const handleNewSubmission = (newSub) => {
-      setSubmissions(prev => {
-        if (prev.find(s => s.id === newSub.id)) return prev;
-        return [newSub, ...prev];
-      });
-    };
-    
+    // A new row can change sorting, filters and cursor boundaries.
+    const handleNewSubmission = () => { fetchSubmissions(false); };
+
     socket.on('new_submission', handleNewSubmission);
     
     return () => {
       socket.off('new_submission', handleNewSubmission);
       socket.emit('leave_practical_room', selectedPracticalId);
     };
-  }, [socket, selectedPracticalId]);
+  }, [socket, selectedPracticalId, submissionCursor, studentSearch, submissionStatusFilter, submissionSortBy, submissionSortOrder, submissionDivisionFilter]);
 
-  // Course-level real-time socket events (practicals, marks)
-  useEffect(() => {
-    if (!socket || !selectedCourse) return;
-
-    socket.emit('join_course_room', selectedCourse);
-
-    const handlePracticalEvent = () => {
-      fetchPracticals();
-    };
-
-    const handleNewSubmissionMarks = () => {
-      if (activeTab === 'marks') {
-        fetchStats();
-      }
-      // Also update practicals count
-      fetchPracticals();
-    };
-
-    socket.on('practical_added', handlePracticalEvent);
-    socket.on('practical_updated', handlePracticalEvent);
-    socket.on('practical_deleted', handlePracticalEvent);
-    socket.on('new_submission_marks', handleNewSubmissionMarks);
-
-    return () => {
-      socket.off('practical_added', handlePracticalEvent);
-      socket.off('practical_updated', handlePracticalEvent);
-      socket.off('practical_deleted', handlePracticalEvent);
-      socket.off('new_submission_marks', handleNewSubmissionMarks);
-      socket.emit('leave_course_room', selectedCourse);
-    };
-  }, [selectedCourse, activeTab, socket]);
-
-  // Load stats when marks tab active
+  // Load stats
   useEffect(() => {
     if (selectedCourse && activeTab === 'marks') {
-      fetchStats();
+      fetchStats(true, null, null);
     }
-  }, [selectedCourse, activeTab]);
+    
+    if (!socket || !selectedCourse || activeTab !== 'marks') return;
+    
+    const handleNewSubmissionMarks = () => {
+      statsRefresh.current?.();
+    };
+    
+    socket.on('new_submission_marks', handleNewSubmissionMarks);
+    
+    return () => {
+      socket.off('new_submission_marks', handleNewSubmissionMarks);
+    };
+  }, [selectedCourse, activeTab, socket, selectedDepartmentFilter]);
 
-  const fetchStats = async () => {
-    setLoadingStats(true);
+  const fetchStats = async (showLoading = true, studentCursor = statsStudentCursor, practicalCursor = statsPracticalCursor) => {
+    const version = ++statsRequestVersion.current;
+    if (showLoading) setLoadingStats(true);
     try {
-      const res = await fetch(`/api/faculty/courses/${selectedCourse}/stats`, {
+      const params = new URLSearchParams();
+      if (studentCursor) params.set('studentCursor', studentCursor);
+      if (practicalCursor) params.set('practicalCursor', practicalCursor);
+      if (selectedDepartmentFilter !== 'all') params.set('department', selectedDepartmentFilter);
+      const res = await fetch(`/api/faculty/courses/${selectedCourse}/stats?${params}`, {
         headers: { Authorization: `Bearer ${token()}` }
       });
       if (res.ok) {
-        setStatsData(await res.json());
-        setLastUpdated(new Date());
+        const data = await res.json();
+        if (version !== statsRequestVersion.current) return;
+        setStatsData(data); setStatsStudentCursor(studentCursor); setStatsPracticalCursor(practicalCursor);
       }
-    } catch (e) {
-      console.error(e);
-    } finally {
-      setLoadingStats(false);
-    }
+    } catch (e) { console.error(e); }
+    finally { if (version === statsRequestVersion.current) setLoadingStats(false); }
   };
 
-  const handleRefreshActiveTab = async () => {
-    try {
-      if (!selectedCourse) {
-        await fetchContextData();
-      } else if (activeTab === 'practicals') {
-        await fetchPracticals();
-      } else if (selectedPracticalId && activeTab === 'submissions') {
-        await fetchSubmissions();
-      } else if (activeTab === 'marks') {
-        await fetchStats();
-      }
-      setLastUpdated(new Date());
-    } catch (err) {
-      console.error('Refresh error:', err);
-      throw err;
+  useEffect(() => { statsRefresh.current = () => fetchStats(false); });
+
+  // Background polling fallback (every 30s) - silent refresh so UI never flickers or resets
+  usePolling(() => {
+    if (selectedCourse && activeTab === 'practicals') {
+      fetchPracticals(false);
+    } else if (selectedPracticalId && activeTab === 'submissions') {
+      fetchSubmissions(false);
+    } else if (selectedCourse && activeTab === 'marks') {
+      fetchStats(false);
     }
-  };
+  }, 30_000, Boolean(selectedCourse));
 
   const handleOpenAddPractical = () => {
     setEditingPractical(null);
@@ -500,6 +507,13 @@ export default function FacultyDashboard() {
         showToast('success', editingPractical ? 'Practical updated successfully.' : 'Practical created successfully.');
         setShowPracticalModal(false);
         fetchPracticals();
+        if (socket) {
+          const evt = editingPractical ? 'faculty_practical_updated' : 'faculty_practical_added';
+          socket.emit(evt, {
+            course_id: parseInt(selectedCourse),
+            practical: data.practical || { id: editingPractical?.id, title: pracTitle, course_id: parseInt(selectedCourse) }
+          });
+        }
       } else {
         showToast('error', data.error || 'Submission failed.');
       }
@@ -527,6 +541,12 @@ export default function FacultyDashboard() {
       if (res.ok) {
         showToast('success', data.message || 'Practical deleted successfully.');
         fetchPracticals();
+        if (socket) {
+          socket.emit('faculty_practical_deleted', {
+            course_id: parseInt(selectedCourse),
+            practicalId: p.id
+          });
+        }
       } else {
         showToast('error', data.error || 'Failed to delete practical.');
       }
@@ -557,9 +577,16 @@ export default function FacultyDashboard() {
       const data = await res.json();
       if (res.ok) {
         showToast('success', data.message || 'Extra time granted successfully!');
+        const practicalId = extraTimePractical.id;
         setExtraTimePractical(null);
         setCustomEndTimeInput('');
         fetchPracticals();
+        if (socket) {
+          socket.emit('faculty_practical_updated', {
+            course_id: parseInt(selectedCourse),
+            practical: data.practical || { id: practicalId, course_id: parseInt(selectedCourse) }
+          });
+        }
       } else {
         showToast('error', data.error || 'Failed to grant extra time.');
       }
@@ -644,9 +671,17 @@ export default function FacultyDashboard() {
         headers: { Authorization: `Bearer ${token()}` }
       });
       if (res.ok) {
-          setViewingSubmission(await res.json());
-          setShowSubmissionModal(true);
-        } else {
+        const data = await res.json();
+        let code = data.code || '';
+        if (typeof code === 'string' && code.trim().length > 20 && code.trim().length % 4 === 0 && /^[A-Za-z0-9+/]+={0,2}$/.test(code.trim())) {
+          try {
+            const decoded = atob(code.trim());
+            if (btoa(decoded) === code.trim()) code = decoded;
+          } catch {}
+        }
+        setViewingSubmission({ ...data, code });
+        setShowSubmissionModal(true);
+      } else {
           const errData = await res.text();
           console.error("Submission fetch failed:", errData);
           showToast('error', 'Error: ' + errData.substring(0, 50));
@@ -707,10 +742,11 @@ export default function FacultyDashboard() {
       ...statsData.practicals.map((p, i) => `Practical ${i + 1} (${p.title})`)
     ];
 
+    const marks = new Map(statsData.submissions.map(s => [`${s.student_id}:${s.practical_id}`, s]));
     const rows = studentsToExport.map(s => {
       const row = [s.roll_number || '—', s.name, s.email, s.department || '—', s.division || '—'];
       statsData.practicals.forEach(p => {
-        const sub = statsData.submissions.find(sub => sub.student_id === s.id && sub.practical_id === p.id);
+        const sub = marks.get(`${s.id}:${p.id}`);
         if (sub) {
           const lateSuffix = sub.is_late ? ' (Late)' : '';
           row.push(`${sub.normalized_marks}${lateSuffix}`);
@@ -732,7 +768,7 @@ export default function FacultyDashboard() {
     link.setAttribute('href', url);
     const courseCodeStr = statsData.course?.course_code || 'course';
     const deptSuffix = selectedDepartmentFilter === 'all' ? 'All_Departments' : selectedDepartmentFilter.replace(/\s+/g, '_');
-    link.setAttribute('download', `${courseCodeStr.replace(/\s+/g, '_')}_${deptSuffix}_grades_matrix.csv`);
+    link.setAttribute('download', `${courseCodeStr.replace(/\s+/g, '_')}_${deptSuffix}_grades_matrix_page.csv`);
     document.body.appendChild(link);
     link.click();
     document.body.removeChild(link);
@@ -757,17 +793,9 @@ export default function FacultyDashboard() {
           </div>
         )}
 
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '30px', flexWrap: 'wrap', gap: '16px' }}>
-          <div>
-            <h2 style={{ fontSize: '24px', fontWeight: '700', color: 'var(--text-main)', marginBottom: '8px' }}>Select Allocated Subject</h2>
-            <p style={{ color: 'var(--text-muted)', fontSize: '14.5px', margin: 0 }}>Choose a course below to manage its assignments, view student grades, and download spreadsheets.</p>
-          </div>
-          <RefreshButton
-            onRefresh={fetchContextData}
-            lastUpdated={lastUpdated}
-            label="Refresh"
-            variant="default"
-          />
+        <div>
+          <h2 style={{ fontSize: '24px', fontWeight: '700', color: 'var(--text-main)', marginBottom: '8px' }}>Select Allocated Subject</h2>
+          <p style={{ color: 'var(--text-muted)', fontSize: '14.5px', marginBottom: '30px' }}>Choose a course below to manage its assignments, view student grades, and download spreadsheets.</p>
         </div>
 
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(280px, 1fr))', gap: '20px' }}>
@@ -793,7 +821,18 @@ export default function FacultyDashboard() {
               }}
             >
               <div>
-                <span style={{ fontSize: '12px', fontWeight: 700, color: 'var(--primary)', textTransform: 'uppercase', tracking: 'wide' }}>{c.course_code}</span>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                  <span style={{ fontSize: '12px', fontWeight: 700, color: 'var(--primary)', textTransform: 'uppercase', letterSpacing: '0.5px' }}>{c.course_code}</span>
+                  {c.is_co_coordinator ? (
+                    <span style={{ fontSize: '11px', fontWeight: 700, backgroundColor: '#fefce8', color: '#92400e', border: '1px solid #fde68a', padding: '2px 8px', borderRadius: '12px', display: 'inline-flex', alignItems: 'center', gap: '4px' }}>
+                      👑 Co-coordinator
+                    </span>
+                  ) : (
+                    <span style={{ fontSize: '11px', fontWeight: 600, backgroundColor: '#f1f5f9', color: '#64748b', border: '1px solid #cbd5e1', padding: '2px 8px', borderRadius: '12px', display: 'inline-flex', alignItems: 'center', gap: '4px' }}>
+                      👁 View-only
+                    </span>
+                  )}
+                </div>
                 <h3 style={{ fontSize: '18px', fontWeight: 600, marginTop: '8px', color: '#1e293b' }}>{c.name}</h3>
               </div>
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', fontSize: '13px', color: '#64748b' }}>
@@ -833,7 +872,7 @@ export default function FacultyDashboard() {
       )}
 
       {/* Header Selector Context */}
-      <div className="header" style={{ borderBottom: '1px solid var(--border-color)', pb: '20px', mb: '20px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+      <div className="header" style={{ borderBottom: '1px solid var(--border-color)', paddingBottom: '20px', marginBottom: '20px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
         <div>
           <span style={{ fontSize: '12px', fontWeight: 700, color: 'var(--primary)', textTransform: 'uppercase' }}>
             {activeCourse?.course_code}
@@ -864,36 +903,8 @@ export default function FacultyDashboard() {
           </div>
         </div>
         
-        <div style={{ display: 'flex', alignItems: 'center', gap: '12px', flexWrap: 'wrap' }}>
-          {/* Live WebSocket Status Indicator */}
-          <span
-            style={{
-              display: 'inline-flex',
-              alignItems: 'center',
-              gap: '5px',
-              fontSize: '11px',
-              fontWeight: 600,
-              padding: '4px 10px',
-              borderRadius: '999px',
-              backgroundColor: socket?.isConnected ? '#ecfdf5' : '#fffbeb',
-              color: socket?.isConnected ? '#059669' : '#d97706',
-              border: `1px solid ${socket?.isConnected ? '#a7f3d0' : '#fde68a'}`,
-            }}
-            title={socket?.isConnected ? 'Connected to WebSocket server' : 'Reconnecting to WebSocket server'}
-          >
-            <Radio size={12} style={{ animation: socket?.isConnected ? 'pulse 2s infinite' : 'none' }} />
-            {socket?.isConnected ? 'WebSocket Live' : 'Reconnecting...'}
-          </span>
-
-          <RefreshButton
-            onRefresh={handleRefreshActiveTab}
-            lastUpdated={lastUpdated}
-            label="Refresh"
-            variant="default"
-          />
-
+        <div>
           <button 
-            type="button"
             onClick={() => setSelectedCourse('')}
             style={{
               padding: '8px 16px', borderRadius: '8px', border: '1px solid var(--border-color)',
@@ -906,8 +917,7 @@ export default function FacultyDashboard() {
       </div>
 
       {/* Tab Navigation */}
-      <div style={{ display: 'flex', borderBottom: '1px solid var(--border-color)', marginBottom: '25px', alignItems: 'center', justifyContent: 'space-between' }}>
-        <div style={{ display: 'flex' }}>
+      <div style={{ display: 'flex', borderBottom: '1px solid var(--border-color)', marginBottom: '25px' }}>
         <button
           onClick={() => setActiveTab('practicals')}
           style={{
@@ -935,25 +945,12 @@ export default function FacultyDashboard() {
         >
            Marks Overview
         </button>
-        </div>
-        <button
-          onClick={handleRefreshActiveTab}
-          disabled={refreshing}
-          style={{
-            padding: '8px 16px', borderRadius: '8px', border: '1px solid var(--border-color)',
-            background: 'transparent', cursor: refreshing ? 'not-allowed' : 'pointer',
-            fontWeight: 600, fontSize: '13px', color: 'var(--text-muted)', opacity: refreshing ? 0.6 : 1,
-            marginBottom: '3px',
-          }}
-        >
-          {refreshing ? '↻ Refreshing...' : '↻ Refresh'}
-        </button>
       </div>
 
       {/* TAB 1: PRACTICALS LIST */}
       {activeTab === 'practicals' && (
         <div>
-          <div style={{ display: 'flex', justifyContent: 'space-between', mb: '20px', alignItems: 'center' }}>
+          <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '20px', alignItems: 'center' }}>
             <h3 style={{ fontSize: '18px', fontWeight: 600 }}>Available Practicals</h3>
             {activeCourse?.is_co_coordinator && (
               <button className="btn-primary" style={{ width: 'auto', padding: '10px 20px', margin: 0 }} onClick={handleOpenAddPractical}>
@@ -1044,7 +1041,7 @@ export default function FacultyDashboard() {
       {/* TAB 2: STUDENT SUBMISSIONS */}
       {activeTab === 'submissions' && (
         <div>
-          <div style={{ display: 'flex', justifyContent: 'space-between', gap: '15px', mb: '20px', alignItems: 'center', flexWrap: 'wrap' }}>
+          <div style={{ display: 'flex', justifyContent: 'space-between', gap: '15px', marginBottom: '20px', alignItems: 'center', flexWrap: 'wrap' }}>
             <div style={{ display: 'flex', gap: '12px', flex: 1, minWidth: '300px' }}>
               <select
                 value={selectedPracticalId}
@@ -1191,6 +1188,11 @@ export default function FacultyDashboard() {
                 </tbody>
               </table>
             )}
+            <div style={{display: 'flex', gap: 12, padding: 16}}>
+              <button disabled={loadingSubmissions || !submissionCursor} onClick={() => fetchSubmissions(true, null)}>First page</button>
+              <span>{submissions.length} submissions on this page</span>
+              <button disabled={loadingSubmissions || !nextSubmissionCursor} onClick={() => fetchSubmissions(true, nextSubmissionCursor)}>Next page</button>
+            </div>
           </div>
         </div>
       )}
@@ -1198,7 +1200,7 @@ export default function FacultyDashboard() {
       {/* TAB 3: MARKS OVERVIEW */}
       {activeTab === 'marks' && (
         <div>
-          <div style={{ display: 'flex', justifyContent: 'space-between', gap: '15px', mb: '20px', alignItems: 'center', flexWrap: 'wrap' }}>
+          <div style={{ display: 'flex', justifyContent: 'space-between', gap: '15px', marginBottom: '20px', alignItems: 'center', flexWrap: 'wrap' }}>
             <div>
               <h3 style={{ fontSize: '18px', fontWeight: 600 }}>Grades Matrix (Pivot View)</h3>
               <p style={{ color: 'var(--text-muted)', fontSize: '13px' }}>Grid layout showing each student's score across all active course practicals.</p>
@@ -1213,11 +1215,9 @@ export default function FacultyDashboard() {
                     onChange={e => setSelectedDepartmentFilter(e.target.value)}
                     style={{ padding: '8px 12px', borderRadius: '6px', border: '1px solid var(--border-color)', backgroundColor: 'white', fontSize: '13px', fontWeight: 600 }}
                   >
-                    <option value="all">All Departments ({statsData.students?.length || 0})</option>
-                    {Array.from(new Set((statsData?.students || []).map(s => s.department).filter(Boolean))).sort().map(dept => (
-                      <option key={dept} value={dept}>
-                        {dept} ({(statsData.students || []).filter(s => s.department === dept).length})
-                      </option>
+                    <option value="all">All Departments</option>
+                    {(statsData.departments || []).filter(d => d.department).map(d => (
+                      <option key={d.department} value={d.department}>{d.department} ({d.count})</option>
                     ))}
                   </select>
                 </div>
@@ -1227,13 +1227,14 @@ export default function FacultyDashboard() {
                   style={{ width: 'auto', padding: '10px 18px', backgroundColor: '#10b981', margin: 0, display: 'flex', alignItems: 'center', gap: '6px' }}
                   onClick={handleExportCSV}
                 >
-                  ⬆ {selectedDepartmentFilter === 'all' ? 'Export All Marks (CSV)' : `Export ${selectedDepartmentFilter} Marks (CSV)`}
+                  ⬆ Export Current Page (CSV)
                 </button>
               </div>
             )}
           </div>
 
           {loadingStats ? <p>Loading marks matrix...</p> : statsData && statsData.practicals && (() => {
+            const marks = new Map(statsData.submissions.map(s => [`${s.student_id}:${s.practical_id}`, s]));
             const filteredStatsStudents = (statsData.students || []).filter(s => {
               if (selectedDepartmentFilter === 'all') return true;
               return (s.department || '').toUpperCase() === selectedDepartmentFilter.toUpperCase();
@@ -1241,6 +1242,13 @@ export default function FacultyDashboard() {
 
             return (
               <div>
+                <div style={{display: 'flex', gap: 12, flexWrap: 'wrap'}}>
+                  <button disabled={!statsStudentCursor} onClick={() => fetchStats(true, null, statsPracticalCursor)}>First student page</button>
+                  <button disabled={!statsData.pagination?.studentCursor} onClick={() => fetchStats(true, statsData.pagination.studentCursor, statsPracticalCursor)}>Next students</button>
+                  <button disabled={!statsPracticalCursor} onClick={() => fetchStats(true, statsStudentCursor, null)}>First practical page</button>
+                  <button disabled={!statsData.pagination?.practicalCursor} onClick={() => fetchStats(true, statsStudentCursor, statsData.pagination.practicalCursor)}>Next practicals</button>
+                  <span>{statsData.students.length} students × {statsData.practicals.length} practicals on this page</span>
+                </div>
                 <div className="table-container" style={{ overflowX: 'auto', marginTop: '15px' }}>
                   <table>
                     <thead>
@@ -1275,7 +1283,7 @@ export default function FacultyDashboard() {
                             </span>
                           </td>
                           {statsData.practicals.map(p => {
-                            const sub = statsData.submissions.find(sub => sub.student_id === s.id && sub.practical_id === p.id);
+                            const sub = marks.get(`${s.id}:${p.id}`);
                             return (
                               <td key={p.id} style={{ textAlign: 'center' }}>
                                 {sub ? (

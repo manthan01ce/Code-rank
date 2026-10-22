@@ -1,5 +1,5 @@
 import { NextResponse } from 'next/server';
-import { getUserFromRequest } from '@coderank/core/utils/auth';
+import { authenticateRequest } from '@coderank/core/security/active-actor';
 import { UserService } from '@coderank/core/services/UserService';
 import { parse } from 'csv-parse/sync';
 import ExcelJS from 'exceljs';
@@ -7,7 +7,7 @@ import path from 'path';
 
 export async function POST(request) {
   try {
-    const user = getUserFromRequest(request);
+    const user = await authenticateRequest(request);
     if (!user || user.role !== 'admin') {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }

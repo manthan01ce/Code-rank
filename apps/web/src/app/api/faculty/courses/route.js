@@ -1,12 +1,13 @@
 import { NextResponse } from 'next/server';
 import { CourseService } from '@coderank/core/services/CourseService';
-import { getUserFromRequest } from '@coderank/core/utils/auth';
+import { authenticateRequest } from '@coderank/core/security/active-actor';
 
 export async function GET(request) {
   try {
-    const user = getUserFromRequest(request);
-    const courses = await CourseService.getFacultyCourses(user);
-    return NextResponse.json(courses);
+    const user = await authenticateRequest(request);
+    const { searchParams } = new URL(request.url);
+    const courses = await CourseService.getFacultyCourses(user, { cursor: searchParams.get('cursor'), limit: searchParams.get('limit') || 100 });
+    return NextResponse.json(courses, { headers: { 'X-Next-Cursor': courses.length === Number(searchParams.get('limit') || 100) ? String(courses.at(-1).id) : '', 'Cache-Control': 'no-store' } });
   } catch (error) {
     if (error.status) {
       return NextResponse.json({ error: error.message }, { status: error.status });

@@ -10,16 +10,20 @@
  * - Settings & Account menu: A User profile dropdown managing profile updates, password changes, preferences, and logout.
  */
 
+import { fetchCollection } from '@/lib/fetch-collection';
 import { useState, useEffect, useRef } from 'react';
 import { useRouter } from 'next/navigation';
 import { Panel, Group as PanelGroup, Separator as PanelResizeHandle } from 'react-resizable-panels';
 import ProblemPanel from './ProblemPanel';
 import MonacoEditorPanel from './MonacoEditorPanel';
 import ConsolePanel from './ConsolePanel';
+import ConfirmAction from './ConfirmAction';
 import { Play, ChevronRight, Settings, User, List, Save } from 'lucide-react';
 import { DEFAULT_LANGUAGE, LANGUAGES } from './LanguageConfig';
 import { STATIC_PROBLEMS } from '@/lib/problems';
 import { useSocket } from '@/hooks/useSocket';
+import { useExecutionLifecycle } from '@/hooks/useExecutionLifecycle';
+import { boundedFetch, responseError, waitForJob } from '@/lib/job-lifecycle';
 
 // ── Stdin/Stdout boilerplates for practicals (main() style) ──────────────────
 // Practicals use stdin/stdout execution, NOT the class-based function runner.
@@ -91,14 +95,38 @@ rl.on('close', () => {
 
 // Module-level cache removed per binary save implementation
 
+// ── Friendly error message mapper ─────────────────────────────────────────────
+function friendlyError(err, fallback = 'Something went wrong. Please try again.') {
+  if (!err) return fallback;
+  const msg = (typeof err === 'string' ? err : err.message || '').toLowerCase();
+  if (msg.includes('unexpected end of json') || msg.includes('failed to parse')) {
+    return 'Received an unexpected response from the server. Please refresh and try again.';
+  }
+  if (msg.includes('fetch failed') || msg.includes('networkerror') || msg.includes('network error') || msg.includes('failed to fetch')) {
+    return 'Unable to reach the server. Check your internet connection and try again.';
+  }
+  if (msg.includes('unauthorized') || msg.includes('401')) {
+    return 'Your session has expired. Please log in again.';
+  }
+  if (msg.includes('429') || msg.includes('too many requests')) {
+    return 'Too many requests — please wait a moment and try again.';
+  }
+  if (msg.includes('500') || msg.includes('internal server')) {
+    return 'A server error occurred. Please try again shortly.';
+  }
+  // If short and human-looking, surface it; otherwise use fallback
+  const raw = typeof err === 'string' ? err : err.message || '';
+  return raw && raw.length < 120 ? raw : fallback;
+}
+
 export default function WorkspaceLayout({ problem }) {
   const router = useRouter();
-  const handleLogout = () => {
-    if (confirm('Are you sure you want to log out?')) {
-      localStorage.removeItem('token');
-      localStorage.removeItem('user');
-      router.push('/');
-    }
+  const [showLogoutModal, setShowLogoutModal] = useState(false);
+  const handleLogout = () => setShowLogoutModal(true);
+  const confirmLogout = () => {
+    localStorage.removeItem('token');
+    localStorage.removeItem('user');
+    router.push('/');
   };
   const [consoleOpen, setConsoleOpen] = useState(true);
   const [selectedLang, setSelectedLang] = useState(DEFAULT_LANGUAGE);
@@ -175,12 +203,10 @@ export default function WorkspaceLayout({ problem }) {
     setLoadingSubmissions(true);
     try {
       const token = localStorage.getItem('token');
-      const res = await fetch('/api/student/submissions', {
+      const data = await fetchCollection('/api/student/submissions', {
         headers: { Authorization: `Bearer ${token}` }
       });
-      if (res.ok) {
-        setUserSubmissions(await res.json());
-      }
+      setUserSubmissions(data);
     } catch (e) {
       console.error(e);
     } finally {
@@ -218,21 +244,38 @@ export default function WorkspaceLayout({ problem }) {
           newPassword: profileForm.newPassword
         })
       });
+      let data = {};
+      try {
+        const text = await res.text();
+        data = text ? JSON.parse(text) : {};
+      } catch {
+        data = {};
+      }
+
       if (res.ok) {
+        if (data.token) {
+          localStorage.setItem('token', data.token);
+          if (socket) {
+            socket.disconnect().connect();
+          }
+        }
         setProfileMsg({ type: 'success', text: 'Profile updated successfully!' });
         // Update user in localStorage
-        const userData = JSON.parse(localStorage.getItem('user'));
-        userData.name = profileForm.name;
-        userData.email = profileForm.email;
-        localStorage.setItem('user', JSON.stringify(userData));
+        try {
+          const userData = JSON.parse(localStorage.getItem('user') || '{}');
+          if (userData && typeof userData === 'object') {
+            userData.name = profileForm.name;
+            userData.email = profileForm.email;
+            localStorage.setItem('user', JSON.stringify(userData));
+          }
+        } catch {}
         // Clear password fields
         setProfileForm(prev => ({ ...prev, currentPassword: '', newPassword: '', confirmPassword: '' }));
       } else {
-        const data = await res.json();
-        setProfileMsg({ type: 'error', text: data.error || 'Failed to update profile.' });
+        setProfileMsg({ type: 'error', text: data.error || `Failed to update profile (${res.status}).` });
       }
     } catch (err) {
-      setProfileMsg({ type: 'error', text: err.message });
+      setProfileMsg({ type: 'error', text: friendlyError(err) });
     }
   };
 
@@ -312,16 +355,29 @@ export default function WorkspaceLayout({ problem }) {
 
   const [codeByLang, setCodeByLang] = useState({});
 
+  const lifecycle = useExecutionLifecycle(resolvedProblem.id);
+  const [draftStatus, setDraftStatus] = useState('Not synced');
+  const draftVersion = useRef(0);
+  const [narrow, setNarrow] = useState(false);
+  const [workspaceTab, setWorkspaceTab] = useState('editor');
+  const settingsRef = useRef(null);
+  const [confirmation, setConfirmation] = useState(null);
+  const [undoDraft, setUndoDraft] = useState(null);
   const handleLoadSubmissionCode = (code, language) => {
-    if (confirm("Are you sure you want to load this past submission? Your current editor code will be replaced.")) {
-        setSelectedLang(language || 'txt');
-        setCodeByLang(prev => ({ ...prev, [language || 'txt']: code }));
-        setHasUnsavedChanges(true);
-    }
+    if (lifecycle.busy) return;
+    setConfirmation({ title: 'Load past submission?', message: 'Your current draft will be available with Undo.', confirm: () => {
+      setUndoDraft({ code: codeByLang[selectedLang], language: selectedLang });
+      setSelectedLang(language || selectedLang);
+      setCodeByLang(prev => ({ ...prev, [language || selectedLang]: code }));
+      draftVersion.current++; setHasUnsavedChanges(true); setDraftStatus('Unsynced changes');
+    } });
   };
 
   const [hasUnsavedChanges, setHasUnsavedChanges] = useState(false);
   const [isLoadingCode, setIsLoadingCode] = useState(false);
+  // 'idle' | 'saving' | 'saved' | 'error'
+  const [saveStatus, setSaveStatus] = useState('idle');
+  const saveStatusTimerRef = useRef(null);
 
   const [isRunning, setIsRunning] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -335,6 +391,15 @@ export default function WorkspaceLayout({ problem }) {
   const [judgeState, setJudgeState] = useState('idle'); // 'idle' | 'loading' | 'success' | 'error'
   const [submitPhase, setSubmitPhase] = useState(null); // 'submitting' | 'judging' | null
 
+  // Non-blocking toast notification (replaces disruptive window.alert)
+  const [workspaceNotice, setWorkspaceNotice] = useState(null);
+  const noticeTimerRef = useRef(null);
+  const showNotice = (text, type = 'warning') => {
+    setWorkspaceNotice({ text, type });
+    if (noticeTimerRef.current) clearTimeout(noticeTimerRef.current);
+    noticeTimerRef.current = setTimeout(() => setWorkspaceNotice(null), 4500);
+  };
+
   // Keep code state fully synchronized whenever the routed problem changes
   useEffect(() => {
     if (!resolvedProblem?.id) return;
@@ -347,6 +412,7 @@ export default function WorkspaceLayout({ problem }) {
     }
     setSelectedLang(currentLang);
 
+    const controller = new AbortController();
     const fetchCodeFromDB = async () => {
       setIsLoadingCode(true);
       const token = localStorage.getItem('token');
@@ -359,7 +425,8 @@ export default function WorkspaceLayout({ problem }) {
 
       if (token) {
         try {
-          const res = await fetch(`/api/student/workspaces/load?practical_id=${resolvedProblem.id}&language=${currentLang}`, {
+          const res = await boundedFetch(`/api/student/workspaces/load?practical_id=${resolvedProblem.id}&language=${currentLang}`, {
+            signal: controller.signal,
             headers: { 'Authorization': `Bearer ${token}` }
           });
           if (res.ok) {
@@ -372,6 +439,7 @@ export default function WorkspaceLayout({ problem }) {
             throw new Error('DB load failed, trying cache');
           }
         } catch (err) {
+          if (controller.signal.aborted) return;
           console.error('Failed to load code from DB:', err);
           // Try localStorage as fallback
           try {
@@ -387,6 +455,13 @@ export default function WorkspaceLayout({ problem }) {
         }
       }
       
+      if (controller.signal.aborted) return;
+      const pendingKey = `workspace_${resolvedProblem.id}_${currentLang}`;
+      if (localStorage.getItem(`${pendingKey}_pending`) === 'true') {
+        const pending = localStorage.getItem(pendingKey);
+        if (pending !== null) initialMap[currentLang] = pending;
+        setDraftStatus('Restored device draft · use Save to sync');
+      }
       setCodeByLang(initialMap);
       setHasUnsavedChanges(false);
       setIsLoadingCode(false);
@@ -397,18 +472,20 @@ export default function WorkspaceLayout({ problem }) {
     setJudgeState('idle');
     setLastRunCode('');
     setHasSuccessfulRun(false);
+    return () => controller.abort();
   }, [resolvedProblem.id, resolvedProblem.allowedLanguages]);
 
   function handleCodeChange(newCode) {
     setCodeByLang((prev) => ({ ...prev, [selectedLang]: newCode }));
+    draftVersion.current++;
+    setDraftStatus('Unsynced changes');
     setHasUnsavedChanges(true);
+    setSaveStatus('idle');
   }
 
   async function handleLangChange(lang) {
-    if (hasUnsavedChanges) {
-      alert('You have unsaved changes. Please save your code before switching languages.');
-      return;
-    }
+    if (lifecycle.busy || isSavingCode) return;
+    await handleSaveCodeToDB();
     setSelectedLang(lang);
     localStorage.setItem(`coderank_selected_lang_${resolvedProblem.id}`, lang);
     setOutput(null);
@@ -418,7 +495,7 @@ export default function WorkspaceLayout({ problem }) {
 
     setIsLoadingCode(true);
     const token = localStorage.getItem('token');
-    let loadedCode = getBoilerplate(resolvedProblem.id, lang);
+    let loadedCode = codeByLang[lang] ?? getBoilerplate(resolvedProblem.id, lang);
     if (token) {
       try {
         const res = await fetch(`/api/student/workspaces/load?practical_id=${resolvedProblem.id}&language=${lang}`, {
@@ -434,322 +511,242 @@ export default function WorkspaceLayout({ problem }) {
         console.error(err);
       }
     }
+    const key = `workspace_${resolvedProblem.id}_${lang}`;
+    if (localStorage.getItem(`${key}_pending`) === 'true') loadedCode = localStorage.getItem(key) ?? loadedCode;
     setCodeByLang((prev) => ({ ...prev, [lang]: loadedCode }));
     setIsLoadingCode(false);
   }
 
   function handleResetCode() {
-    if (window.confirm('Reset code to default template?')) {
-      const bp = getBoilerplate(resolvedProblem.id, selectedLang);
-      setCodeByLang((prev) => ({ ...prev, [selectedLang]: bp }));
-      setHasUnsavedChanges(true);
-    }
+    if (lifecycle.busy) return;
+    setConfirmation({ title: 'Reset this draft?', message: 'Your current code will be available with Undo.', confirm: () => {
+      setUndoDraft({ code: codeByLang[selectedLang], language: selectedLang });
+      setCodeByLang(prev => ({ ...prev, [selectedLang]: getBoilerplate(resolvedProblem.id, selectedLang) }));
+      draftVersion.current++; setHasUnsavedChanges(true); setDraftStatus('Unsynced changes');
+    } });
   }
 
-  async function handleRun() {
-    if (!canRun) return;
-
-    if (resolvedProblem.startTime && new Date() < new Date(resolvedProblem.startTime)) {
-      alert(`This practical has not started yet. Scheduled start time: ${new Date(resolvedProblem.startTime).toLocaleString()}`);
-      return;
-    }
-
-    const code = codeByLang[selectedLang];
-    if (!code?.trim()) return;
-
-    // Auto-save code before running
-    await handleSaveCodeToDB();
-
-    setActionMode('run');
-    setJudgeState('loading');
-    setIsRunning(true);
-    setConsoleOpen(true);
-    setOutput(null);
-
-    try {
-      const runEndpoint = `/api/${selectedLang}-run`;
-      const token = localStorage.getItem('token');
-      const runHeaders = { 'Content-Type': 'application/json' };
-      if (token) runHeaders['Authorization'] = `Bearer ${token}`;
-
-      const res = await fetch(runEndpoint, {
-        method: 'POST',
-        headers: runHeaders,
-        body: JSON.stringify({
-          code,
-          problemId: resolvedProblem.id,
-          language: selectedLang,
-        }),
-      });
-      
-      const contentType = res.headers.get('content-type') || '';
-      let data;
-      if (contentType.includes('application/json')) {
-        data = await res.json();
-      } else {
-        const text = await res.text();
-        throw new Error(`Server response error (${res.status}): ${text.slice(0, 150)}`);
-      }
-
-      if (!res.ok) {
-        throw new Error(data.error || 'Server error occurred during execution.');
-      }
-
-      // If it's a background job, wait for completion
-      if (data.jobId) {
-        data = await new Promise((resolve) => {
-          let isResolved = false;
-          let pollTimeout;
-
-          const onComplete = (result) => {
-            if (isResolved) return;
-            isResolved = true;
-            if (socket) {
-              socket.off('job_complete', onComplete);
-              socket.emit('unwatch_job', data.jobId);
-            }
-            clearTimeout(pollTimeout);
-            resolve(result);
-          };
-
-          if (socket) {
-            socket.on('job_complete', onComplete);
-            socket.emit('watch_job', data.jobId);
-          }
-
-          let pollAttempt = 0;
-          const nextPollDelay = () => Math.min(1000, 250 * (2 ** pollAttempt++));
-          const poll = async () => {
-            if (isResolved) return;
-            try {
-              const token = localStorage.getItem('token');
-              const headers = token ? { Authorization: `Bearer ${token}` } : {};
-              const pRes = await fetch(`/api/jobs/${data.jobId}`, { headers });
-              if (pRes.ok) {
-                const pData = await pRes.json();
-                if (pData.status === 'completed') return onComplete(pData.result);
-                if (pData.status === 'failed') {
-                   return onComplete({
-                     status: 'internal_error',
-                     summary: 'Job Failed',
-                     runtimeError: pData.failedReason,
-                     cases: []
-                   });
-                }
-              }
-            } catch (e) {
-               // Ignore and retry
-            }
-            if (!isResolved) pollTimeout = setTimeout(poll, nextPollDelay());
-          };
-          pollTimeout = setTimeout(poll, nextPollDelay());
-        });
-      }
-
-      setOutput(data);
-      setJudgeState('success');
-      setLastRunCode(code);
-      setHasSuccessfulRun(true);
-    } catch (err) {
-      setOutput({
-        status: 'internal_error',
-        summary: 'Execution Error',
-        exitCode: 1,
-        compileError: null,
-        runtimeError: err.message,
-        cases: [],
-      });
-      setJudgeState('error');
-    } finally {
-      setIsRunning(false);
-    }
-  }
-
-  async function handleSaveCodeToDB() {
-    if (!resolvedProblem || !resolvedProblem.id) return;
-    const code = codeByLang[selectedLang];
-    if (!code?.trim()) return;
-
-    setIsSavingCode(true);
-    const token = localStorage.getItem('token');
-    let saved = false;
-    
-    try {
-      // Try saving to database
-      const res = await fetch('/api/student/workspaces/save', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${token}`
-        },
-        body: JSON.stringify({
-          practical_id: resolvedProblem.id,
-          language: selectedLang,
-          code
-        }),
-      });
-
-      if (!res.ok) {
-        const err = await res.json();
-        throw new Error(err.error || 'Failed to save code');
-      }
-      saved = true;
-      setHasUnsavedChanges(false);
-      console.log('Code saved to database successfully');
-    } catch (err) {
-      console.error('Failed to save to database:', err);
-      // Fallback: save to localStorage
+  useEffect(() => {
+    const media = window.matchMedia('(max-width: 767px)');
+    const update = () => setNarrow(media.matches);
+    update(); media.addEventListener('change', update);
+    return () => media.removeEventListener('change', update);
+  }, []);
+  useEffect(() => {
+    setIsRunning(false); setIsSubmitting(false); setIsSavingCode(false);
+    setConfirmation(null); setUndoDraft(null); draftVersion.current++;
+  }, [resolvedProblem.id]);
+  useEffect(() => {
+    if (!showSettingsModal) return;
+    const previous = document.activeElement;
+    settingsRef.current?.showModal();
+    return () => previous?.focus();
+  }, [showSettingsModal]);
+  useEffect(() => {
+    if (!hasUnsavedChanges) return;
+    const save = () => {
       try {
-        const cacheKey = `workspace_${resolvedProblem.id}_${selectedLang}`;
-        localStorage.setItem(cacheKey, code);
-        localStorage.setItem(`${cacheKey}_timestamp`, new Date().toISOString());
-        saved = true;
+        const key = `workspace_${resolvedProblem.id}_${selectedLang}`;
+        localStorage.setItem(key, codeByLang[selectedLang] || '');
+        localStorage.setItem(`${key}_pending`, 'true');
+      } catch { /* Explicit Save reports storage errors. */ }
+    };
+    save();
+    window.addEventListener('pagehide', save);
+    return () => { window.removeEventListener('pagehide', save); };
+  }, [codeByLang, selectedLang, resolvedProblem.id, hasUnsavedChanges]);
+
+  async function handleSaveCodeToDB(snapshot, signal) {
+    // Button events are not snapshots.
+    const draft = snapshot?.code !== undefined ? snapshot : {
+      code: codeByLang[selectedLang], language: selectedLang,
+      problemId: resolvedProblem.id, version: draftVersion.current,
+    };
+    if (!draft.code?.trim()) return;
+    setIsSavingCode(true);
+    const cacheKey = `workspace_${draft.problemId}_${draft.language}`;
+    let localSaved = false;
+    try {
+      localStorage.setItem(cacheKey, draft.code);
+      localStorage.setItem(`${cacheKey}_timestamp`, new Date().toISOString());
+      localStorage.setItem(`${cacheKey}_pending`, 'true');
+      localSaved = true;
+      setDraftStatus('Saved on this device · syncing…');
+    } catch { setDraftStatus('Device storage unavailable · syncing…'); }
+    try {
+      const token = localStorage.getItem('token');
+      if (!token) throw new Error('Sign in to sync your draft');
+      const res = await boundedFetch('/api/student/workspaces/save', {
+        method: 'POST', signal,
+        headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
+        body: JSON.stringify({ practical_id: draft.problemId, language: draft.language, code: draft.code }),
+      }, 8000);
+      if (!res.ok) throw new Error(responseError(res, await res.json()));
+      if (signal?.aborted) return;
+      if (draft.version === draftVersion.current) {
+        localStorage.removeItem(`${cacheKey}_pending`);
         setHasUnsavedChanges(false);
-        console.log('Code saved to browser cache (database unavailable)');
-      } catch (localErr) {
-        console.error('Failed to save to localStorage:', localErr);
-        alert('Failed to save code: ' + err.message);
+        setDraftStatus(`Synced at ${new Date().toLocaleTimeString()}`);
       }
-    } finally {
-      setIsSavingCode(false);
-    }
+    } catch (error) {
+      if (signal?.aborted) return;
+      setDraftStatus(localSaved ? 'Saved on this device · sync failed; use Save to retry' : `Save failed: ${error.message}`);
+      if (!localSaved) throw error;
+    } finally { if (!signal?.aborted) setIsSavingCode(false); }
   }
 
-  async function handleSubmit() {
-    if (!canSubmit) return;
-
+  async function performAction(mode) {
+    if (!(mode === 'run' ? canRun : canSubmit)) return;
     if (resolvedProblem.startTime && new Date() < new Date(resolvedProblem.startTime)) {
-      alert(`This practical has not started yet. Scheduled start time: ${new Date(resolvedProblem.startTime).toLocaleString()}`);
+      showNotice(`This practical has not started yet. Scheduled start time: ${new Date(resolvedProblem.startTime).toLocaleString()}`, 'warning');
+      setDraftStatus(`This practical starts at ${new Date(resolvedProblem.startTime).toLocaleString()}`);
       return;
     }
-
-    const code = codeByLang[selectedLang];
-    if (!code?.trim()) return;
-
-    // Auto-save code before submitting
-    await handleSaveCodeToDB();
-
-    setActionMode('submit');
-    setJudgeState('loading');
-    setSubmitPhase('submitting');
-    setIsSubmitting(true);
-    setConsoleOpen(true);
-    setOutput(null);
-
-    const token = localStorage.getItem('token');
-
+    const snapshot = Object.freeze({ code: codeByLang[selectedLang], language: selectedLang,
+      problemId: resolvedProblem.id, version: draftVersion.current });
+    if (!snapshot.code?.trim()) return;
+    const action = lifecycle.begin(); // Synchronous lock covers repeated keyboard/click events.
+    if (!action) return;
+    const signal = action.controller.signal;
+    setActionMode(mode); setWorkspaceTab('results'); setJudgeState('loading'); setConsoleOpen(true); setOutput(null);
+    setIsRunning(mode === 'run'); setIsSubmitting(mode === 'submit');
     try {
-      const res = await fetch('/api/submit', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${token}`
-        },
-        body: JSON.stringify({
-          problemId: resolvedProblem.id,
-          language: selectedLang,
-          code
-        }),
+      await handleSaveCodeToDB(snapshot, signal);
+      if (signal.aborted) return;
+      lifecycle.update(action, 'Sending');
+      const token = localStorage.getItem('token');
+      const res = await boundedFetch(mode === 'run' ? `/api/${snapshot.language}-run` : '/api/submit', {
+        method: 'POST', signal,
+        headers: { 'Content-Type': 'application/json', ...(token ? { Authorization: `Bearer ${token}` } : {}) },
+        body: JSON.stringify(snapshot),
       });
-
-      const contentType = res.headers.get('content-type') || '';
       let data;
-      if (contentType.includes('application/json')) {
-        data = await res.json();
-      } else {
-        const text = await res.text();
-        throw new Error(`Server response error (${res.status}): ${text.slice(0, 150)}`);
-      }
-
-      if (!res.ok) {
-        throw new Error(data.error || 'Server error occurred during submission.');
-      }
-
-      setSubmitPhase('judging');
-
-      // Wait for job completion
+      try { data = await res.json(); } catch { throw new Error(`Invalid server response (${res.status}). Your draft is preserved.`); }
+      if (!res.ok) throw new Error(responseError(res, data));
       if (data.jobId) {
-        data = await new Promise((resolve) => {
-          let isResolved = false;
-          let pollTimeout;
-
-          const onComplete = (result) => {
-            if (isResolved) return;
-            isResolved = true;
-            if (socket) {
-              socket.off('job_complete', onComplete);
-              socket.emit('unwatch_job', data.jobId);
-            }
-            clearTimeout(pollTimeout);
-            resolve(result);
-          };
-
-          if (socket) {
-            socket.on('job_complete', onComplete);
-            socket.emit('watch_job', data.jobId);
-          }
-
-          let pollAttempt = 0;
-          const nextPollDelay = () => Math.min(1000, 250 * (2 ** pollAttempt++));
-          const poll = async () => {
-            if (isResolved) return;
-            try {
-              const headers = token ? { Authorization: `Bearer ${token}` } : {};
-              const pRes = await fetch(`/api/jobs/${data.jobId}`, { headers });
-              if (pRes.ok) {
-                const pData = await pRes.json();
-                if (pData.status === 'completed') return onComplete(pData.result);
-                if (pData.status === 'failed') {
-                   return onComplete({
-                     status: 'internal_error',
-                     summary: 'Job Failed',
-                     runtimeError: pData.failedReason,
-                     cases: []
-                   });
-                }
-              }
-            } catch (e) {
-               // Ignore and retry
-            }
-            if (!isResolved) pollTimeout = setTimeout(poll, nextPollDelay());
-          };
-          pollTimeout = setTimeout(poll, nextPollDelay());
-        });
+        lifecycle.update(action, 'Queued');
+        setSubmitPhase(mode === 'submit' ? 'judging' : null);
+        data = await waitForJob(data.jobId, { token, signal,
+          onPhase: phase => lifecycle.update(action, phase) });
       }
-
-      setOutput(data);
-      setJudgeState('success');
-      setSubmitPhase(null);
-    } catch (err) {
-      setOutput({
-        status: 'internal_error',
-        summary: 'Network Error',
-        exitCode: 1,
-        compileError: null,
-        runtimeError: `Network error: ${err.message}`,
-        cases: [],
-      });
-      setJudgeState('error');
-      setSubmitPhase(null);
+      if (signal.aborted) return;
+      setOutput(data); setJudgeState('success');
+      if (mode === 'run') { setLastRunCode(snapshot.code); setHasSuccessfulRun(true); }
+      lifecycle.finish(action, 'Done');
+    } catch (error) {
+      if (signal.aborted) return;
+      setOutput({ status: 'internal_error', summary: 'Action could not finish', runtimeError: error.message, cases: [] });
+      setJudgeState('error'); lifecycle.finish(action, 'Needs attention');
     } finally {
-      setIsSubmitting(false);
+      if (!signal.aborted) { setIsRunning(false); setIsSubmitting(false); setSubmitPhase(null); }
     }
   }
+  const handleRun = () => performAction('run');
+  const handleSubmit = () => performAction('submit');
 
   const currentCode = codeByLang[selectedLang] || '';
   const isCodeUnchanged = hasSuccessfulRun && currentCode.trim() === lastRunCode.trim();
 
   const isExecutable = LANGUAGES[selectedLang]?.executableInPhase1;
-  const canRun = isExecutable && !isRunning && !isSubmitting;
-  const canSubmit = isExecutable && !isRunning && !isSubmitting;
+  const canRun = isExecutable && !isRunning && !isSubmitting && !isSavingCode && !isLoadingCode && !lifecycle.busy;
+  const canSubmit = isExecutable && !isRunning && !isSubmitting && !isSavingCode && !isLoadingCode && !lifecycle.busy;
 
   const getSubmitTooltip = () => {
-    if (!isExecutable) return `Language not yet executable`;
-    return null;
+    if (!isExecutable) return 'Selected language does not support running/submitting';
+    if (isRunning) return 'Execution in progress...';
+    if (isSubmitting) return 'Submission in progress...';
+    if (resolvedProblem?.startTime && new Date() < new Date(resolvedProblem.startTime)) {
+      return `Practical starts at ${new Date(resolvedProblem.startTime).toLocaleTimeString()}`;
+    }
+    if (resolvedProblem?.endTime && new Date() > new Date(resolvedProblem.endTime)) {
+      return 'Practical submission deadline has passed';
+    }
+    return '';
   };
 
+  // Universal Keyboard Shortcuts: Ctrl+Enter (Run), Ctrl+Shift+Enter (Submit), Ctrl+S (Save)
+  useEffect(() => {
+    const handleKeyDown = (e) => {
+      const isMac = typeof navigator !== 'undefined' && /Mac|iPod|iPhone|iPad/.test(navigator.platform);
+      const cmdOrCtrl = isMac ? e.metaKey : e.ctrlKey;
+      if (!cmdOrCtrl) return;
+
+      if (e.key === 'Enter') {
+        e.preventDefault();
+        if (e.shiftKey) {
+          if (canSubmit) handleSubmit();
+        } else {
+          if (canRun) handleRun();
+        }
+      } else if (e.key === 's' || e.key === 'S') {
+        e.preventDefault();
+        handleSaveCodeToDB();
+      }
+    };
+
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [canRun, canSubmit, selectedLang, codeByLang, resolvedProblem]);
+
+  const editorPanel = (<MonacoEditorPanel
+                    selectedLang={selectedLang}
+                    onLangChange={handleLangChange}
+                    code={codeByLang[selectedLang] || ''}
+                    onCodeChange={handleCodeChange}
+                    onReset={handleResetCode}
+                    isRunning={isRunning || isSubmitting || isSavingCode}
+                    activeProblem={resolvedProblem}
+                    onRun={handleRun}
+                    onSubmit={handleSubmit}
+                    fontSize={editorFontSize}
+                    tabSize={editorTabSize}
+                    theme={editorTheme}
+                    wordWrap={editorWordWrap}
+                    minimap={editorMinimap}
+                  />);
+  const consolePanel = (<ConsolePanel
+                        output={output}
+                        isRunning={isRunning}
+                        isSubmitting={isSubmitting}
+                        actionMode={actionMode}
+                        judgeState={judgeState}
+                        submitPhase={submitPhase}
+                        onClose={() => setConsoleOpen(false)}
+                      />);
+
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', height: '100vh', width: '100%', overflow: 'hidden', background: '#000000', color: '#ffffff', fontFamily: 'Inter, sans-serif', userSelect: 'none' }}>
+    <div className="coding-workspace" style={{ display: 'flex', flexDirection: 'column', height: '100dvh', width: '100%', overflow: 'hidden', background: '#000000', color: '#ffffff', fontFamily: 'Inter, sans-serif', userSelect: 'none' }}>
+
+      {/* Floating Non-Blocking Toast Notification */}
+      {workspaceNotice && (
+        <div style={{
+          position: 'fixed',
+          top: '72px',
+          left: '50%',
+          transform: 'translateX(-50%)',
+          zIndex: 9999,
+          display: 'flex',
+          alignItems: 'center',
+          gap: '12px',
+          padding: '10px 20px',
+          borderRadius: '8px',
+          background: workspaceNotice.type === 'warning' ? '#291800' : workspaceNotice.type === 'error' ? '#290505' : '#052912',
+          border: `1px solid ${workspaceNotice.type === 'warning' ? '#f59e0b' : workspaceNotice.type === 'error' ? '#ef4444' : '#10b981'}`,
+          color: '#ffffff',
+          fontSize: '13px',
+          fontWeight: 600,
+          boxShadow: '0 10px 30px rgba(0,0,0,0.8)',
+        }}>
+          <span>{workspaceNotice.type === 'warning' ? '⚠️' : workspaceNotice.type === 'error' ? '❌' : '✓'}</span>
+          <span>{workspaceNotice.text}</span>
+          <button 
+            onClick={() => setWorkspaceNotice(null)}
+            style={{ background: 'none', border: 'none', color: '#999', cursor: 'pointer', fontSize: '14px', padding: '0 4px', marginLeft: '6px' }}
+          >
+            ✕
+          </button>
+        </div>
+      )}
 
       {/* ── Top Navigation Bar — 64px, true black ── */}
       <div style={{ height: '64px', background: '#000000', borderBottom: '1px solid #262626', display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '0 24px', flexShrink: 0 }}>
@@ -879,10 +876,9 @@ export default function WorkspaceLayout({ problem }) {
                       return (
                         <div
                           key={`practical_${p.id}`}
-                          onClick={() => {
+                          onClick={async () => {
                             if (hasUnsavedChanges) {
-                              alert('You have unsaved changes. Please save your code before switching problems.');
-                              return;
+                              await handleSaveCodeToDB();
                             }
                             setIsListOpen(false);
                             const targetSubject = selectedCourse !== 'All' ? selectedCourse : (p.course_code || '');
@@ -963,19 +959,19 @@ export default function WorkspaceLayout({ problem }) {
             ) : (
               <Play size={13} />
             )}
-            {isRunning ? 'Running…' : 'Run'}
-            {!isRunning && <span style={{ opacity: 0.5, marginLeft: '4px', fontSize: '10px', textTransform: 'none', fontWeight: 500 }}>Ctrl+'</span>}
+            {isRunning ? `${lifecycle.phase}…` : 'Run'}
+            {!isRunning && <span style={{ opacity: 0.6, marginLeft: '4px', fontSize: '10px', textTransform: 'none', fontWeight: 500 }}>Ctrl+↵</span>}
           </button>
 
           <button suppressHydrationWarning
             id="btn-save-code"
-            onClick={handleSaveCodeToDB}
+            onClick={() => handleSaveCodeToDB().catch(error => setDraftStatus(error.message))}
             disabled={isSavingCode || isRunning || isSubmitting}
-            title="Save code to database"
+            title="Save code to database (Ctrl+S)"
             style={{
               background: 'transparent',
-              border: '1px solid #3c3c3c',
-              color: '#ffffff',
+              border: `1px solid ${saveStatus === 'error' ? '#ef4444' : saveStatus === 'saved' ? '#22c55e' : '#3c3c3c'}`,
+              color: saveStatus === 'error' ? '#ef4444' : saveStatus === 'saved' ? '#22c55e' : '#ffffff',
               fontSize: '11px',
               fontWeight: 700,
               letterSpacing: '1.5px',
@@ -986,6 +982,7 @@ export default function WorkspaceLayout({ problem }) {
               display: 'flex',
               alignItems: 'center',
               gap: '8px',
+              transition: 'border-color 0.3s, color 0.3s',
             }}
             onMouseEnter={e => { if(!isSavingCode && !isRunning && !isSubmitting) e.currentTarget.style.background = '#1a1a1a' }}
             onMouseLeave={e => { e.currentTarget.style.background = 'transparent' }}
@@ -997,13 +994,44 @@ export default function WorkspaceLayout({ problem }) {
             )}
             {isSavingCode ? 'Saving…' : 'Save'}
           </button>
+          {/* Save status pill */}
+          {saveStatus !== 'idle' && !isSavingCode && (
+            <span style={{
+              fontSize: '10px',
+              fontWeight: 600,
+              padding: '3px 10px',
+              borderRadius: '12px',
+              background: saveStatus === 'saved' ? 'rgba(34,197,94,0.12)' : saveStatus === 'error' ? 'rgba(239,68,68,0.12)' : 'rgba(255,255,255,0.06)',
+              color: saveStatus === 'saved' ? '#22c55e' : saveStatus === 'error' ? '#ef4444' : '#aaa',
+              border: `1px solid ${saveStatus === 'saved' ? 'rgba(34,197,94,0.3)' : saveStatus === 'error' ? 'rgba(239,68,68,0.3)' : 'rgba(255,255,255,0.1)'}`,
+              whiteSpace: 'nowrap',
+              letterSpacing: '0.3px',
+              transition: 'opacity 0.3s',
+            }}>
+              {saveStatus === 'saved' ? '✓ All changes saved' : saveStatus === 'error' ? '✕ Save failed' : 'Saving…'}
+            </span>
+          )}
+          {hasUnsavedChanges && saveStatus === 'idle' && (
+            <span style={{
+              fontSize: '10px',
+              fontWeight: 600,
+              padding: '3px 10px',
+              borderRadius: '12px',
+              background: 'rgba(251,191,36,0.1)',
+              color: '#fbbf24',
+              border: '1px solid rgba(251,191,36,0.25)',
+              whiteSpace: 'nowrap',
+            }}>
+              ● Unsaved
+            </span>
+          )}
 
           <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
             <button suppressHydrationWarning
               id="btn-submit-code"
               onClick={handleSubmit}
               disabled={!canSubmit}
-              title={getSubmitTooltip() || 'Submit code'}
+              title={getSubmitTooltip() || 'Submit code (Ctrl+Shift+Enter)'}
               style={{
                 background: '#0fa336',
                 border: 'none',
@@ -1024,8 +1052,8 @@ export default function WorkspaceLayout({ problem }) {
               {isSubmitting ? (
                 <span style={{ width: '12px', height: '12px', border: '2px solid #ffffff', borderTopColor: 'transparent', borderRadius: '50%', display: 'inline-block', animation: 'spin 0.8s linear infinite' }} />
               ) : null}
-              {isSubmitting ? 'Submitting…' : 'Submit'}
-              {!isSubmitting && <span style={{ opacity: 0.6, marginLeft: '4px', fontSize: '10px', textTransform: 'none', fontWeight: 500 }}>Ctrl+Enter</span>}
+              {isSubmitting ? `${lifecycle.phase}…` : 'Submit'}
+              {!isSubmitting && <span style={{ opacity: 0.7, marginLeft: '4px', fontSize: '10px', textTransform: 'none', fontWeight: 500 }}>Ctrl+⇧+↵</span>}
             </button>
 
             {getSubmitTooltip() && (
@@ -1108,7 +1136,7 @@ export default function WorkspaceLayout({ problem }) {
               </button>
               <div style={{ height: '1px', backgroundColor: '#333333', margin: '4px 0' }} />
               <button suppressHydrationWarning
-                onClick={handleLogout}
+                onClick={() => { setShowLogoutModal(true); setIsUserDropdownOpen(false); }}
                 style={{ background: 'transparent', border: 'none', color: '#ef4444', textAlign: 'left', padding: '10px 16px', fontSize: '13px', cursor: 'pointer', fontWeight: '600' }}
                 onMouseEnter={e => e.currentTarget.style.backgroundColor = '#2a2a2a'}
                 onMouseLeave={e => e.currentTarget.style.backgroundColor = 'transparent'}
@@ -1120,64 +1148,59 @@ export default function WorkspaceLayout({ problem }) {
         </div>
       </div>
 
+      <div role="status" aria-live="polite" style={{ padding: '8px 16px', color: '#cbd5e1', fontSize: '12px' }}>
+        {draftStatus} · {lifecycle.phase}{!lifecycle.busy && output?.summary ? ` · ${output.summary}` : ''}
+        {undoDraft && !lifecycle.busy && <button onClick={() => {
+          setSelectedLang(undoDraft.language); setCodeByLang(prev => ({ ...prev, [undoDraft.language]: undoDraft.code }));
+          draftVersion.current++; setHasUnsavedChanges(true); setDraftStatus('Draft restored · unsynced'); setUndoDraft(null);
+        }}>Undo draft replacement</button>}
+      </div>
+      {lifecycle.busy && <span role="timer" aria-live="off" style={{ padding: '0 16px' }}>{lifecycle.elapsed}s elapsed</span>}
       {/* M-Stripe Divider */}
       <div style={{ height: '3px', background: 'linear-gradient(to right, #0066b1, #1c69d4, #e22718)', flexShrink: 0 }} />
 
       {/* ── Main Workspace ── */}
-      <div style={{ flex: 1, overflow: 'hidden', background: '#000000' }}>
-        <PanelGroup direction="horizontal" style={{ height: '100%' }}>
+      <div style={{ flex: 1, overflow: 'hidden', background: '#000000', width: '100%', height: '100%' }}>
+        {narrow ? <div style={{ height: '100%', display: 'flex', flexDirection: 'column' }}>
+          <div role="group" aria-label="Workspace view" style={{ display: 'flex', gap: 8, padding: 8 }}>
+            {['problem', 'editor', 'results'].map(tab => <button key={tab} aria-pressed={workspaceTab === tab} onClick={() => setWorkspaceTab(tab)}>{tab}</button>)}
+          </div>
+          <div style={{ flex: 1, minHeight: 0, overflow: 'auto' }}>
+            {workspaceTab === 'problem' && <ProblemPanel problem={resolvedProblem} onLoadSubmissionCode={handleLoadSubmissionCode} />}
+            <div style={{ height: '100%', display: workspaceTab === 'editor' ? 'block' : 'none' }}>{editorPanel}</div>
+            {workspaceTab === 'results' && consolePanel}
+          </div>
+        </div> : (
+        <PanelGroup orientation="horizontal" direction="horizontal" style={{ height: '100%', width: '100%' }}>
 
           {/* LEFT: Problem Panel */}
-          <Panel defaultSize={40} minSize={25}>
+          <Panel defaultSize={40} minSize={20}>
             <div style={{ height: '100%', background: '#0d0d0d', overflow: 'hidden', display: 'flex', flexDirection: 'column' }}>
               <ProblemPanel problem={resolvedProblem} onLoadSubmissionCode={handleLoadSubmissionCode} />
             </div>
           </Panel>
 
           {/* Vertical resize handle */}
-          <PanelResizeHandle style={{ width: '1px', background: '#262626', cursor: 'col-resize', flexShrink: 0 }} />
+          <PanelResizeHandle style={{ width: '2px', background: '#262626', cursor: 'col-resize', flexShrink: 0 }} />
 
           {/* RIGHT: Editor (60%) + Console (40%) */}
           <Panel defaultSize={60} minSize={30}>
-            <PanelGroup direction="vertical" style={{ height: '100%' }}>
+            <PanelGroup orientation="vertical" direction="vertical" style={{ height: '100%', width: '100%' }}>
 
               {/* Monaco Editor (upper right side covering 60% area by default) */}
               <Panel defaultSize={consoleOpen ? 60 : 100} minSize={25}>
                 <div style={{ height: '100%', background: '#000000', borderLeft: '1px solid #262626', overflow: 'hidden', display: 'flex', flexDirection: 'column' }}>
-                  <MonacoEditorPanel
-                    selectedLang={selectedLang}
-                    onLangChange={handleLangChange}
-                    code={codeByLang[selectedLang] || ''}
-                    onCodeChange={handleCodeChange}
-                    onReset={handleResetCode}
-                    isRunning={isRunning || isSubmitting}
-                    activeProblem={resolvedProblem}
-                    onRun={handleRun}
-                    onSubmit={handleSubmit}
-                    fontSize={editorFontSize}
-                    tabSize={editorTabSize}
-                    theme={editorTheme}
-                    wordWrap={editorWordWrap}
-                    minimap={editorMinimap}
-                  />
+                  {editorPanel}
                 </div>
               </Panel>
 
               {consoleOpen && (
                 <>
-                  <PanelResizeHandle style={{ height: '1px', background: '#262626', cursor: 'row-resize', flexShrink: 0 }} />
+                  <PanelResizeHandle style={{ height: '2px', background: '#262626', cursor: 'row-resize', flexShrink: 0 }} />
                   {/* Console Output Screen (lower right side covering 40% area by default) */}
                   <Panel defaultSize={40} minSize={15}>
                     <div style={{ height: '100%', background: '#000000', borderLeft: '1px solid #262626', overflow: 'hidden', display: 'flex', flexDirection: 'column' }}>
-                      <ConsolePanel
-                        output={output}
-                        isRunning={isRunning}
-                        isSubmitting={isSubmitting}
-                        actionMode={actionMode}
-                        judgeState={judgeState}
-                        submitPhase={submitPhase}
-                        onClose={() => setConsoleOpen(false)}
-                      />
+                      {consolePanel}
                     </div>
                   </Panel>
                 </>
@@ -1186,15 +1209,17 @@ export default function WorkspaceLayout({ problem }) {
           </Panel>
 
         </PanelGroup>
+        )}
       </div>
 
+      {confirmation && <ConfirmAction action={confirmation} onClose={() => setConfirmation(null)} />}
       {/* ── SETTINGS MODAL ── */}
       {showSettingsModal && (
-        <div style={{ position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, backgroundColor: 'rgba(0,0,0,0.85)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 10000, backdropFilter: 'blur(4px)' }}>
-          <div style={{ backgroundColor: '#161616', border: '1px solid #333', borderRadius: '12px', padding: '30px', width: '450px', display: 'flex', flexDirection: 'column', gap: '20px' }}>
+        <dialog ref={settingsRef} aria-labelledby="settings-title" onCancel={() => setShowSettingsModal(false)} style={{ padding: 0, border: 0, background: 'transparent' }}>
+          <div style={{ backgroundColor: '#161616', border: '1px solid #333', borderRadius: '12px', padding: '30px', width: 'min(450px, calc(100vw - 24px))', maxHeight: '90dvh', overflowY: 'auto', display: 'flex', flexDirection: 'column', gap: '20px' }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-              <h3 style={{ fontSize: '18px', fontWeight: 700, color: '#ffffff', margin: 0 }}> Workspace Customization</h3>
-              <button suppressHydrationWarning onClick={() => setShowSettingsModal(false)} style={{ border: 'none', background: 'transparent', color: '#888', cursor: 'pointer', fontSize: '18px' }}>×</button>
+              <h3 id="settings-title" style={{ fontSize: '18px', fontWeight: 700, color: '#ffffff', margin: 0 }}> Workspace Customization</h3>
+              <button suppressHydrationWarning aria-label="Close settings" onClick={() => setShowSettingsModal(false)} style={{ border: 'none', background: 'transparent', color: '#888', cursor: 'pointer', fontSize: '18px' }}>×</button>
             </div>
 
             <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
@@ -1302,6 +1327,36 @@ export default function WorkspaceLayout({ problem }) {
             <div style={{ display: 'flex', justifyContent: 'flex-end', marginTop: '10px' }}>
               <button suppressHydrationWarning onClick={() => setShowSettingsModal(false)} style={{ padding: '10px 24px', borderRadius: '6px', border: 'none', backgroundColor: '#4f46e5', color: '#fff', fontSize: '14px', fontWeight: 600, cursor: 'pointer' }}>
                 Apply Preferences
+              </button>
+            </div>
+          </div>
+        </dialog>
+      )}
+
+      {/* ── Logout Confirmation Modal ── */}
+      {showLogoutModal && (
+        <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.75)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 99999, backdropFilter: 'blur(4px)' }}>
+          <div style={{ background: '#161616', border: '1px solid #333', borderRadius: '12px', padding: '28px 32px', width: '360px', display: 'flex', flexDirection: 'column', gap: '16px' }}>
+            <h3 style={{ margin: 0, fontSize: '16px', fontWeight: 700, color: '#ffffff' }}>Sign out?</h3>
+            <p style={{ margin: 0, fontSize: '13px', color: '#aaa', lineHeight: 1.6 }}>
+              You will be signed out of your workspace. Any unsaved code changes have already been auto-saved.
+            </p>
+            <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '10px', marginTop: '4px' }}>
+              <button
+                onClick={() => setShowLogoutModal(false)}
+                style={{ padding: '8px 20px', borderRadius: '6px', border: '1px solid #3c3c3c', background: 'transparent', color: '#aaa', fontSize: '13px', cursor: 'pointer', fontWeight: 600 }}
+                onMouseEnter={e => e.currentTarget.style.color = '#fff'}
+                onMouseLeave={e => e.currentTarget.style.color = '#aaa'}
+              >
+                Cancel
+              </button>
+              <button
+                onClick={confirmLogout}
+                style={{ padding: '8px 20px', borderRadius: '6px', border: 'none', background: '#ef4444', color: '#ffffff', fontSize: '13px', cursor: 'pointer', fontWeight: 700 }}
+                onMouseEnter={e => e.currentTarget.style.background = '#dc2626'}
+                onMouseLeave={e => e.currentTarget.style.background = '#ef4444'}
+              >
+                Sign Out
               </button>
             </div>
           </div>

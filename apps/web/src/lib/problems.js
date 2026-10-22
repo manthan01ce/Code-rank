@@ -405,3 +405,27 @@ public:
     ]
   }
 };
+
+// Function signatures are shared with the C/JavaScript practice harnesses.
+const cSignatures = {
+  twoSum: 'int* twoSum(int* nums, int numsSize, int target, int* returnSize) {\n    *returnSize = 0;\n    return NULL;\n}',
+  reverseString: 'void reverseString(char* s, int sSize) {\n    // Modify s in place.\n}',
+  isPalindrome: 'bool isPalindrome(int x) {\n    return false;\n}',
+  fizzBuzz: 'char** fizzBuzz(int n, int* returnSize) {\n    *returnSize = 0;\n    return NULL;\n}',
+  singleNumber: 'int singleNumber(int* nums, int numsSize) {\n    return 0;\n}',
+  containsDuplicate: 'bool containsDuplicate(int* nums, int numsSize) {\n    return false;\n}',
+  fib: 'int fib(int n) {\n    return 0;\n}',
+  isAnagram: 'bool isAnagram(char* s, char* t) {\n    return false;\n}',
+  lengthOfLastWord: 'int lengthOfLastWord(char* s) {\n    return 0;\n}',
+  addDigits: 'int addDigits(int num) {\n    return 0;\n}',
+};
+const jsArguments = {
+  twoSum: 'nums, target', reverseString: 's', isPalindrome: 'x', fizzBuzz: 'n',
+  singleNumber: 'nums', containsDuplicate: 'nums', fib: 'n', isAnagram: 's, t',
+  lengthOfLastWord: 's', addDigits: 'num',
+};
+for (const problem of Object.values(STATIC_PROBLEMS)) {
+  const method = problem.entry.methodName;
+  problem.boilerplates.c = '#include <stdlib.h>\n#include <stdbool.h>\n\n' + cSignatures[method];
+  problem.boilerplates.javascript = `class Solution {\n    ${method}(${jsArguments[method]}) {\n        // Write your code here.\n    }\n}`;
+}

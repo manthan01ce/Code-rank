@@ -1,0 +1,12 @@
+.git
+**/node_modules
+**/.next
+**/.turbo
+**/.env*
+**/*.env
+**/code-storage
+**/logs
+test-results
+load-tests/reports
+*.bundle
+.harness-*

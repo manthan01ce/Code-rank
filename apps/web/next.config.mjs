@@ -1,3 +1,4 @@
+import '../../packages/core/src/config/env.js';
 /** @type {import('next').NextConfig} */
 const nextConfig = {
   poweredByHeader: false,

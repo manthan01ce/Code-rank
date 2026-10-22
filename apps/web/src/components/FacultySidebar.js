@@ -12,22 +12,31 @@ export default function FacultySidebar() {
   const [user, setUser] = useState(null);
   const [activeMenu, setActiveMenu] = useState('dashboard');
 
+  const [isHydrated, setIsHydrated] = useState(false);
+
+  // Wait for client-side hydration before reading localStorage
   useEffect(() => {
+    setIsHydrated(true);
+  }, []);
+
+  useEffect(() => {
+    if (!isHydrated) return;
     const userData = localStorage.getItem('user');
     if (userData) {
       try {
         const parsed = JSON.parse(userData);
-        if (parsed.role !== 'faculty') {
-          router.push('/');
+        if (parsed.role !== 'faculty' && parsed.role !== 'admin') {
+          router.replace('/login');
+          return;
         }
         setUser(parsed);
       } catch {
-        router.push('/');
+        router.replace('/login');
       }
     } else {
-      router.push('/');
+      router.replace('/login');
     }
-  }, [router]);
+  }, [isHydrated, router]);
 
   useEffect(() => {
     if (typeof window !== 'undefined') {

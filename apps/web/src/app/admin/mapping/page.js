@@ -1,6 +1,8 @@
 'use client';
+import { fetchCollection } from '@/lib/fetch-collection';
 
-import { useState, useEffect } from 'react';
+import { fetchUserOptions } from '@/lib/fetch-user-options';
+import { useState, useEffect, useRef } from 'react';
 import LoadingOverlay from '@/components/LoadingOverlay';
 import { useAdminAuth } from '@/hooks/useAdminAuth';
 import { useSocket } from '@/hooks/useSocket';
@@ -35,13 +37,13 @@ export default function CourseMapping() {
 
       // Fetch courses, faculties, and current mappings in parallel
       const [cRes, fRes, mRes] = await Promise.all([
-        fetch('/api/courses', { headers }),
-        fetch('/api/users?role=faculty&status=active', { headers }),
+        fetchCollection('/api/courses', { headers }),
+        fetchUserOptions('/api/users?role=faculty&status=active', { headers }),
         fetch('/api/mapping', { headers })
       ]);
 
-      if (cRes.ok) setCourses(await cRes.json());
-      if (fRes.ok) setFaculties(await fRes.json());
+      setCourses(cRes);
+      setFaculties(fRes);
       if (mRes.ok) {
         const mappingData = await mRes.json();
         const initialMap = {};

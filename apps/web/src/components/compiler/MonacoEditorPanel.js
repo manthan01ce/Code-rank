@@ -22,13 +22,13 @@ export default function MonacoEditorPanel({
   wordWrap,
 }) {
   const langConfig = LANGUAGES[selectedLang];
+  const clipboardRestricted = activeProblem?.clipboardRestricted === true;
   const onRunRef = useRef(onRun);
   const onSubmitRef = useRef(onSubmit);
   const editorContainerRef = useRef(null);
 
   // Keep refs updated to avoid stale closures in Monaco actions
-  onRunRef.current = onRun;
-  onSubmitRef.current = onSubmit;
+  useEffect(() => { onRunRef.current = onRun; onSubmitRef.current = onSubmit; }, [onRun, onSubmit]);
 
   function handleEditorDidMount(editor, monaco) {
     // ── Run & Submit keyboard shortcuts ──
@@ -50,6 +50,7 @@ export default function MonacoEditorPanel({
       }
     });
 
+    if (clipboardRestricted) {
     // ── Copy-Paste restrictions ──
     // Block Ctrl+V / Cmd+V inside Monaco
     editor.addCommand(monaco.KeyMod.CtrlCmd | monaco.KeyCode.KeyV, () => {
@@ -81,6 +82,7 @@ export default function MonacoEditorPanel({
         e.preventDefault();
         e.stopPropagation();
       }, true);
+    }
     }
   }
 
@@ -129,13 +131,13 @@ export default function MonacoEditorPanel({
   };
 
   return (
-    <div style={{ height: '100%', display: 'flex', flexDirection: 'column', background: '#1e1e1e' }}>
+    <div ref={editorContainerRef} style={{ height: '100%', display: 'flex', flexDirection: 'column', background: '#1e1e1e' }}>
 
       {/* Header */}
       <div style={headerStyle}>
         <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
           <Code2 size={14} color="#0066b1" />
-          <select
+          <select aria-label="Programming language"
             id="language-selector"
             style={selectStyle}
             value={selectedLang}
@@ -160,13 +162,13 @@ export default function MonacoEditorPanel({
           )}
         </div>
         <div style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
-          <button style={iconBtnStyle} title="Reset to Boilerplate" onClick={handleReset} disabled={isRunning}
+          <button style={iconBtnStyle} aria-label="Reset to boilerplate" title="Reset to Boilerplate" onClick={handleReset} disabled={isRunning}
             onMouseEnter={e => e.currentTarget.style.color = '#ffffff'}
             onMouseLeave={e => e.currentTarget.style.color = '#7e7e7e'}
           >
             <RotateCcw size={13} />
           </button>
-          <button style={iconBtnStyle} title="Fullscreen"
+          <button style={iconBtnStyle} aria-label="Toggle editor fullscreen" title="Fullscreen" onClick={() => { const node = editorContainerRef.current; if (document.fullscreenElement) document.exitFullscreen(); else node?.requestFullscreen(); }}
             onMouseEnter={e => e.currentTarget.style.color = '#ffffff'}
             onMouseLeave={e => e.currentTarget.style.color = '#7e7e7e'}
           >
@@ -175,9 +177,10 @@ export default function MonacoEditorPanel({
         </div>
       </div>
 
+      {clipboardRestricted && <p role="note" style={{ margin: 8 }}>Exam policy: clipboard operations are disabled.</p>}
       {/* Monaco Editor */}
       <div style={{ flex: 1, minHeight: 0, position: 'relative' }}>
-        <Editor
+        <Editor key={`${activeProblem?.id}:${clipboardRestricted}`}
           height="100%"
           language={langConfig.monacoLang}
           theme={theme || "vs-dark"}
@@ -203,7 +206,7 @@ export default function MonacoEditorPanel({
             cursorSmoothCaretAnimation: 'on',
             readOnly: isRunning,
             automaticLayout: true,
-            contextmenu: false,
+            contextmenu: !clipboardRestricted,
             scrollbar: {
               vertical: 'auto',
               horizontal: 'auto',

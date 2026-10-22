@@ -1,4 +1,5 @@
 'use client';
+import { fetchCollection } from '@/lib/fetch-collection';
 
 import { useState, useEffect } from 'react';
 import LoadingOverlay from '@/components/LoadingOverlay';
@@ -33,14 +34,9 @@ export default function DepartmentMaster() {
     try {
       let url = '/api/departments';
       if (search) url += `?search=${encodeURIComponent(search)}`;
-      const res = await fetch(url, { headers: { Authorization: `Bearer ${token()}` } });
-      if (res.ok) {
-        const data = await res.json();
-        setDepartments(Array.isArray(data) ? data : []);
-        setLastUpdated(new Date());
-      } else {
-        setDepartments([]);
-      }
+      const rows = await fetchCollection(url, { headers: { Authorization: `Bearer ${token()}` } });
+      setDepartments(rows);
+      setLastUpdated(new Date());
     } catch (e) {
       console.error(e);
       setDepartments([]);
