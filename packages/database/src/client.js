@@ -1,5 +1,6 @@
 import { neon } from '@neondatabase/serverless';
 import { withTimeout } from './timeout.js';
+import { retryRead } from './read-retry.js';
 import { createPostgresClient } from './postgres.js';
 
 /**
@@ -35,34 +36,16 @@ function getSql() {
   return cachedSql;
 }
 
-async function executeWithRetry(fn, retries = 2, delayMs = 500) {
-  for (let i = 0; i <= retries; i++) {
-    try {
-      return await fn();
-    } catch (err) {
-      const msg = (err?.message || '') + (err?.sourceError?.message || '');
-      const code = err?.code || err?.sourceError?.code;
-      const isConnError = msg.includes('fetch failed') || msg.includes('ECONNREFUSED') || code === 'ECONNREFUSED';
-      if (i < retries && isConnError) {
-        // Neon compute endpoint is waking up from suspension; wait and retry
-        await new Promise((resolve) => setTimeout(resolve, delayMs * (i + 1)));
-        continue;
-      }
-      throw err;
-    }
-  }
-}
 
 const sql = new Proxy(function () {}, {
   apply(_target, thisArg, argArray) {
-    return executeWithRetry(() => {
-      const client = getSql();
-      const queryPromise = Reflect.apply(client, thisArg, argArray);
-      // Wrap the query with timeout protection
-      return withTimeout(queryPromise, DB_QUERY_TIMEOUT_MS);
-    });
+    const client = getSql();
+    // One attempt: a transport failure cannot prove a write did not commit.
+    return withTimeout(Reflect.apply(client, thisArg, argArray), DB_QUERY_TIMEOUT_MS);
   },
   get(_target, prop, receiver) {
+    if (prop === 'readQuery') return (text, values = [], options = {}) => retryRead(
+      remaining => withTimeout(getSql().query(text, values), Math.min(DB_QUERY_TIMEOUT_MS, remaining)), options);
     const client = getSql();
     const val = Reflect.get(client, prop, receiver);
     if (typeof val === 'function') {
@@ -70,7 +53,7 @@ const sql = new Proxy(function () {}, {
       // A Promise.race here could report failure while a transaction still commits.
       if (prop === 'transaction' && process.env.DATABASE_DRIVER === 'postgres') return val.bind(client);
       if (prop === 'query' || prop === 'transaction') {
-        return (...args) => executeWithRetry(() => withTimeout(val.apply(client, args), DB_QUERY_TIMEOUT_MS));
+        return (...args) => withTimeout(val.apply(client, args), DB_QUERY_TIMEOUT_MS);
       }
       return val.bind(client);
     }

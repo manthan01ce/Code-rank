@@ -1,0 +1,27 @@
+npm warn Unknown env config "http-proxy". This will stop working in the next major version of npm.
+
+> @coderank/web@1.1.0 build
+> next build --webpack
+
+▲ Next.js 16.3.7 (webpack)
+✓ Running next.config.mjs took 32ms
+- Experiments (use with caution):
+  ✓ optimizeCss
+  · serverActions
+
+  Creating an optimized production build ...
+
+> Build error occurred
+Error: ENOENT: no such file or directory, uv_resident_set_memory
+    at ignore-listed frames {
+  errno: -2,
+  code: 'ENOENT',
+  syscall: 'uv_resident_set_memory'
+}
+npm error Lifecycle script `build` failed with error:
+npm error code 1
+npm error path /workspace/scratch/463e7b504bd7/Code-rank/apps/web
+npm error workspace @coderank/web@1.1.0
+npm error location /workspace/scratch/463e7b504bd7/Code-rank/apps/web
+npm error command failed
+npm error command sh -c next build --webpack

@@ -1,3 +1,4 @@
+import { requestTiming } from '@coderank/core/utils/request-timing';
 import { jsonBody } from '@/lib/route-response';
 import { NextResponse } from 'next/server';
 import { UserService } from '@coderank/core/services/UserService';
@@ -28,11 +29,14 @@ export async function GET(request) {
 }
 
 export async function POST(request) {
+  const timing = requestTiming();
+  const authStart = performance.now();
   try {
     const user = await authenticateRequest(request);
+    timing.record('auth', performance.now() - authStart);
     const body = await jsonBody(request);
-    const result = await UserService.createUser(user, body);
-    return NextResponse.json(result);
+    const result = await UserService.createUser(user, body, {onTiming: timing.record});
+    return NextResponse.json(result, {headers: {'Cache-Control': 'no-store', 'Server-Timing': timing.header()}});
   } catch (error) {
     if (error.status) {
       return NextResponse.json({ error: error.message }, { status: error.status });

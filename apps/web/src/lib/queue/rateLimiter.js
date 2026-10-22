@@ -1,5 +1,6 @@
 import { createClient } from 'redis';
 import { randomUUID } from 'crypto';
+import { withTimeout } from '@coderank/core/utils/timeout';
 import { CircuitBreaker } from '@coderank/core/utils/circuit-breaker';
 
 let redis = null;
@@ -18,11 +19,12 @@ async function getRedis() {
   redisConnecting = (async () => {
     try {
       const client = createClient({
+        disableOfflineQueue: true,
         socket: { 
           host: process.env.REDIS_HOST || '127.0.0.1', 
           port: parseInt(process.env.REDIS_PORT || '6379', 10),
-          connectTimeout: 2000,
-          reconnectStrategy: (retries) => (retries > 3 ? false : Math.min(retries * 500, 2000))
+          connectTimeout: 1000,
+          reconnectStrategy: false
         }
       });
       client.on('error', () => {}); // Silently catch offline errors
@@ -76,7 +78,8 @@ export async function checkRateLimit(identifier, category = 'default') {
       const client = await getRedis();
       if (!client) throw new Error('Redis client unavailable');
 
-      const count = await client.eval(RATE_LIMIT_SCRIPT, {
+      let count;
+      try { count = await withTimeout(client.eval(RATE_LIMIT_SCRIPT, {
         keys: [key],
         arguments: [
           String(windowStart),
@@ -85,7 +88,11 @@ export async function checkRateLimit(identifier, category = 'default') {
           String(limit.windowMs),
           String(limit.max),
         ],
-      });
+      }), 1000); } catch (error) {
+        client.destroy?.();
+        if (redis === client) redis = null;
+        throw error;
+      }
       
       if (count > limit.max) {
         return { allowed: false, retryAfter: Math.ceil(limit.windowMs / 1000) };

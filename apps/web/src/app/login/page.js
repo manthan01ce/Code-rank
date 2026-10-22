@@ -1,6 +1,7 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useRef, useEffect } from 'react';
+import { signInRequest } from '@/lib/sign-in-request';
 import Link from 'next/link';
 
 export default function Login() {
@@ -10,22 +11,20 @@ export default function Login() {
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
   const [loading, setLoading] = useState(false);
+  const pending = useRef(null);
+  useEffect(() => () => pending.current?.abort(), []);
 
   const handleLogin = async (e) => {
     e.preventDefault();
+    if (pending.current) return;
+    const controller = new AbortController();
+    pending.current = controller;
     setError('');
     setLoading(true);
 
     try {
-      const res = await fetch('/api/auth/login', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ email, password }),
-      });
+      const data = await signInRequest({email, password}, {signal: controller.signal});
 
-      const data = await res.json();
-
-      if (res.ok) {
         localStorage.setItem('token', data.token);
         localStorage.setItem('user', JSON.stringify(data.user));
 
@@ -40,10 +39,8 @@ export default function Login() {
         } else {
           setSuccess(`Login Successful! Logged in as ${data.user.role.toUpperCase()}.`);
         }
-      } else {
-        setError(data.error || 'Login failed');
-      }
     } catch (err) {
+      if (controller.signal.aborted) return;
       const msg = err.message || '';
       if (msg.toLowerCase().includes('fetch') || msg.toLowerCase().includes('network')) {
         setError('Unable to reach the server. Please check your connection.');
@@ -53,7 +50,8 @@ export default function Login() {
         setError(msg || 'Something went wrong. Please try again.');
       }
     } finally {
-      setLoading(false);
+      if (pending.current === controller) pending.current = null;
+      if (!controller.signal.aborted) setLoading(false);
     }
   };
 
@@ -183,7 +181,7 @@ export default function Login() {
 
           {/* Error Banner */}
           {error && (
-            <div style={{
+            <div role="alert" style={{
               background: '#fef2f2',
               border: '1px solid #fecaca',
               color: '#dc2626',
