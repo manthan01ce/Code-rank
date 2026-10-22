@@ -14,6 +14,7 @@ export default function StudentDashboard() {
   const [user, setUser] = useState(null);
   const [profile, setProfile] = useState(null);
   const [loading, setLoading] = useState(true);
+  const [loadError, setLoadError] = useState('');
   const [isHydrated, setIsHydrated] = useState(false);
   const [courses, setCourses] = useState([]);
   const [practicals, setPracticals] = useState([]);
@@ -58,40 +59,56 @@ export default function StudentDashboard() {
       return;
     }
     
-    // Fetch user profile, courses, and practicals
+    // Profile determines the course filter; practicals can load independently.
+    const controller = new AbortController();
+    const timer = setTimeout(() => controller.abort(), 12000);
+    let active = true;
+    const options = {headers: {'Authorization': `Bearer ${token}`}, signal: controller.signal};
+    setLoading(true);
+    setLoadError('');
+    const read = async (url) => {
+      const res = await fetch(url, options);
+      if (res.status === 401 || res.status === 403) {
+        localStorage.removeItem('token');
+        localStorage.removeItem('user');
+        router.replace('/login');
+        throw Error('Please sign in again.');
+      }
+      if (!res.ok) throw Error(`Request failed (${res.status})`);
+      return res.json();
+    };
     const fetchData = async () => {
       try {
-        const res = await fetch('/api/auth/profile', {
-          headers: { 'Authorization': `Bearer ${token}` }
-        });
-        if (res.ok) {
-          const data = await res.json();
-          setProfile(data);
-          
-          const sem = data.user?.extra_info?.semester;
-          if (sem) {
-            const coursesData = await fetchCollection(`/api/courses?semester=${sem}`, {
-              headers: { 'Authorization': `Bearer ${token}` }
-            });
-            setCourses(coursesData);
-          }
-
-          // Fetch student's assigned practicals
-          await fetchStudentPracticals();
-        } else if (res.status === 401) {
-          localStorage.removeItem('token');
-          localStorage.removeItem('user');
-          router.push('/');
+        const results = await Promise.allSettled([
+          (async () => {
+            const data = await read('/api/auth/profile');
+            if (!active) return;
+            setProfile(data);
+            const sem = data.user?.extra_info?.semester;
+            if (sem) {
+              const rows = await fetchCollection(`/api/courses?semester=${encodeURIComponent(sem)}`, options);
+              if (active) setCourses(rows);
+            }
+          })(),
+          (async () => {
+            const rows = await read('/api/student/practicals');
+            if (!Array.isArray(rows)) throw Error('Invalid practicals response');
+            if (active) setPracticals(rows);
+          })(),
+        ]);
+        if (active && results.some(result => result.status === 'rejected')) {
+          setLoadError(controller.signal.aborted
+            ? 'Loading took too long. Check your connection and retry.'
+            : 'Some dashboard sections could not load. Please retry.');
         }
-      } catch (err) {
-        console.error('Error fetching profile or courses:', err);
       } finally {
-        setLoading(false);
+        clearTimeout(timer);
+        if (active) setLoading(false);
       }
     };
-    
     fetchData();
-  }, [router, fetchStudentPracticals, isHydrated]);
+    return () => {active = false; clearTimeout(timer); controller.abort();};
+  }, [router, isHydrated]);
 
   // Real-time socket updates for new, updated, or deleted practicals
   useEffect(() => {
@@ -144,6 +161,10 @@ export default function StudentDashboard() {
   return (
     <div style={{ minHeight: '100vh', backgroundColor: '#f8fafc', fontFamily: 'Inter, sans-serif' }}>
       {loading && <LoadingOverlay />}
+      {loadError && <div role="alert" style={{padding: '12px 20px', background: '#fff3cd', color: '#664d03', display: 'flex', flexWrap: 'wrap', gap: '12px', alignItems: 'center'}}>
+        <span>{loadError}</span>
+        <button type="button" onClick={() => window.location.reload()}>Retry loading</button>
+      </div>}
       
       {/* Top Navbar */}
       <div style={{
