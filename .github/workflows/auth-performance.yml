@@ -5,6 +5,7 @@ on:
       - 'apps/**'
       - 'packages/**'
       - 'tests/browser/auth-performance.spec.mjs'
+      - 'tests/browser/playwright.config.mjs'
       - 'scripts/auth-performance-stack.mjs'
       - '.github/workflows/auth-performance.yml'
 permissions:
@@ -21,14 +22,14 @@ jobs:
       redis:
         image: redis:7-alpine
         ports: ['6379:6379']
-        options: --health-cmd 'redis-cli ping' --health-interval 5s --health-timeout 3s --health-retries 10
+        options: --health-cmd "redis-cli ping" --health-interval 5s --health-timeout 3s --health-retries 10
       postgres:
         image: postgres:16-alpine
         ports: ['5432:5432']
         env:
           POSTGRES_PASSWORD: test-only-password
           POSTGRES_DB: coderank_test
-        options: --health-cmd 'pg_isready -U postgres' --health-interval 5s --health-timeout 3s --health-retries 10
+        options: --health-cmd "pg_isready -U postgres" --health-interval 5s --health-timeout 3s --health-retries 10
     env:
       TEST_DATABASE_URL: postgresql://postgres:test-only-password@127.0.0.1:5432/coderank_test
       JWT_SECRET: ci-build-only-secret-not-for-production
@@ -48,6 +49,7 @@ jobs:
         run: |
           cp measurement/scripts/auth-performance-stack.mjs subject/scripts/auth-performance-stack.mjs
           cp measurement/tests/browser/auth-performance.spec.mjs subject/tests/browser/auth-performance.spec.mjs
+          cp measurement/tests/browser/playwright.config.mjs subject/tests/browser/playwright.config.mjs
       - run: npm ci
         working-directory: subject
       - run: docker build -t coderank-base:latest -f infrastructure/docker/runner/Dockerfile .
