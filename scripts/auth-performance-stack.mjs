@@ -22,7 +22,7 @@ async function stop(child){if(child.exitCode!==null||child.signalCode!==null)ret
 try{
  await admin.query(`CREATE DATABASE ${name}`);created=true;
  sql=createPostgresClient(dbUrl.href,{poolSize:2,timeoutMs:5000});
- await migrate({query:(text,values)=>sql.query(text,values),transaction:m=>sql.transaction(tx=>[tx.query('SELECT pg_advisory_xact_lock(20401017,1)'),...m.statements.map(text=>tx.query(text)),tx.query('INSERT INTO coderank_migrations(name,checksum) VALUES($1,$2)',[m.name,m.checksum])])},new URL('../database/migrations/',import.meta.url));
+ await migrate({query:(text,values)=>sql.query(text,values),apply:m=>sql.transaction(tx=>[tx.query('SELECT pg_advisory_xact_lock(20401017,1)'),...m.statements.map(text=>tx.query(text)),tx.query('INSERT INTO coderank_migrations(name,checksum) VALUES($1,$2)',[m.name,m.checksum])])},new URL('../database/migrations/',import.meta.url));
  await sql.query("INSERT INTO users(name,email,password,role,status) VALUES('Timing Admin',$1,$2,'admin','active')",[env.E2E_ADMIN_EMAIL,await hashPassword(password)]);
  await sql.query("INSERT INTO departments(name,institute_name) VALUES('CI Department','CI Institute')");
  start('apps/web/cluster.js','web');start('apps/worker/src/index.js','worker');
