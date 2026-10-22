@@ -4,16 +4,24 @@ import {registerHooks} from 'node:module';
 import {retryRead} from '../packages/database/src/read-retry.js';
 import {signInRequest} from '../apps/web/src/lib/sign-in-request.js';
 
-test('safe read retry has one budget and does not retry permission failures', async () => {
+test('safe read retry has one budget and does not retry permission failures', async (t) => {
+  // Control the retry budget independently of scheduling delays on busy CI hosts.
+  let now=0;
+  t.mock.method(performance,'now',()=>now);
   let calls=0;
   assert.deepEqual(await retryRead(async()=>{if(++calls<3)throw Object.assign(Error('refused'),{code:'ECONNREFUSED'});return [1];},{delayMs:1,budgetMs:100}),[1]);
   assert.equal(calls,3);
   calls=0;
   await assert.rejects(retryRead(async()=>{calls++;throw Object.assign(Error('denied'),{code:'42501'});},{delayMs:1}),/denied/);
   assert.equal(calls,1);
-  const start=performance.now();
+  calls=0;
+  await assert.rejects(retryRead(async()=>{
+    calls++;now=101;
+    throw Object.assign(Error('budget exhausted'),{code:'ECONNREFUSED'});
+  },{budgetMs:100,delayMs:1}),/budget exhausted/);
+  assert.equal(calls,1,'An exhausted budget must not start another attempt');
+  now=0;
   await assert.rejects(retryRead(()=>new Promise(()=>{}),{budgetMs:15}),/timed out/);
-  assert.ok(performance.now()-start<200);
 });
 test('sign in distinguishes outage and throttling and aborts a stalled request without replay',async()=>{
   await assert.rejects(signInRequest({}, {fetchImpl:async()=>Response.json({}, {status:503})}),/temporarily unavailable/);
