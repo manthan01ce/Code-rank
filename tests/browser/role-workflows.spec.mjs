@@ -135,7 +135,8 @@ test('public pages preserve theme and remain usable at phone, tablet and desktop
    await page.goto(route);
    await expect(page.locator('h1')).toBeVisible();
    expect(await page.locator('.admin-desktop-sidebar').count()).toBe(0);
-   expect(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth+1),'No horizontal page clipping').toBe(true);
+   const layout=await page.evaluate(()=>({width:innerWidth,scrollWidth:document.documentElement.scrollWidth,overflow:Array.from(document.querySelectorAll('body *')).filter(el=>el.getBoundingClientRect().right>innerWidth+1).slice(0,8).map(el=>({tag:el.tagName,text:el.textContent?.slice(0,50),right:el.getBoundingClientRect().right}))}));
+   expect(layout.scrollWidth,`No horizontal page clipping: ${route} ${JSON.stringify(layout)}`).toBeLessThanOrEqual(layout.width+1);
    if(route==='/'){
     await expect(page.getByRole('heading',{name:'RANK UP CODING'})).toBeVisible();
     expect(await page.locator('footer input, footer a[href^="mailto:"]').count()).toBe(0);
