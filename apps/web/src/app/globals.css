@@ -313,8 +313,8 @@ th {
 @media(max-width:767px){.auth-visual{display:none;}.home-starfield i{animation:none;}.admin-desktop-sidebar{display:none;}.admin-shell{display:block;}.admin-content{padding:20px 12px;}.admin-mobile-sidebar{display:block;padding:12px;border-bottom:1px solid var(--border-color);}.admin-mobile-sidebar button{min-height:44px;min-width:44px;background:var(--card-bg);color:var(--text-main);border:1px solid var(--border-color);border-radius:8px;}.admin-mobile-menu{position:fixed;inset:0;z-index:200;background:var(--card-bg);overflow:auto;padding:20px;animation:slideRightIn .2s;}.home-footer small{margin-left:0;}}
 @media(prefers-reduced-motion:reduce){.typing-cursor,.home-starfield i,.animate-element,.animate-slide-right,.animate-testimonial,.admin-mobile-menu{animation:none!important;opacity:1!important;filter:none!important;transform:none!important;}.admin-desktop-sidebar{transition:none;}}
 
-@media(max-width:767px){.rank-home > header{height:auto!important;min-height:68px;padding:12px!important;flex-wrap:wrap;gap:12px;}.rank-home > header > div{flex-wrap:wrap;gap:12px!important;}.rank-home > header nav{flex-wrap:wrap;gap:12px!important;}.rank-home section[style*="grid-template-columns"],.rank-home div[style*="grid-template-columns"]{grid-template-columns:minmax(0,1fr)!important;}.rank-home pre{overflow:auto;max-width:100%;}.rank-home h1{min-height:2.3em;}}
-@media(max-width:767px){
+@media(max-width:1023px){.rank-home > header{height:auto!important;min-height:68px;padding:12px!important;flex-wrap:wrap;gap:12px;}.rank-home > header > div{flex-wrap:wrap;gap:12px!important;}.rank-home > header nav{flex-wrap:wrap;gap:12px!important;}.rank-home section[style*="grid-template-columns"],.rank-home div[style*="grid-template-columns"]{grid-template-columns:minmax(0,1fr)!important;}.rank-home pre{overflow:auto;max-width:100%;}.rank-home h1{min-height:2.3em;}}
+@media(max-width:1023px){
   .rank-home {overflow-wrap:anywhere;}
   .rank-home section,.rank-home section div {min-width:0;}
   .rank-home #roles div[style*="display: flex"] {flex-wrap:wrap;}
