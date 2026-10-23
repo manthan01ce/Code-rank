@@ -12,7 +12,7 @@ export async function GET(request, { params }) {
     const { id } = await params;
     const practicalId = parseInt(id);
 
-    // Admins can view any practical; faculty can only view practicals they own
+    // Admins can view any practical; faculty can view practicals for courses they are assigned to
     const practicals = user.role === 'admin'
       ? await sql`
           SELECT p.*, c.name as course_name, c.course_code, c.semester
@@ -24,7 +24,8 @@ export async function GET(request, { params }) {
           SELECT p.*, c.name as course_name, c.course_code, c.semester
           FROM practicals p
           JOIN courses c ON p.course_id = c.id
-          WHERE p.id = ${practicalId} AND p.faculty_id = ${user.id}
+          JOIN course_faculty cf ON cf.course_id = p.course_id
+          WHERE p.id = ${practicalId} AND cf.faculty_id = ${user.id}
         `;
 
     if (practicals.length === 0) {

@@ -119,6 +119,7 @@ export class SubmissionService {
 
     const submissions = await sql`
       SELECT s.*, u.name as student_name, u.email as student_email,
+             u.extra_info->>'roll_number' as roll_number,
              p.title as practical_title, p.total_marks as practical_total_marks, p.faculty_id
       FROM practical_submissions s
       JOIN users u ON s.student_id = u.id
