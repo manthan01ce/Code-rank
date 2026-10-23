@@ -7,6 +7,7 @@ on:
       - 'tests/browser/auth-performance.spec.mjs'
       - 'tests/browser/playwright.config.mjs'
       - 'scripts/auth-performance-stack.mjs'
+      - 'scripts/ci/install-browser.mjs'
       - '.github/workflows/auth-performance.yml'
 permissions:
   contents: read
@@ -48,6 +49,7 @@ jobs:
       - name: Use the identical measurement harness for both revisions
         run: |
           cp measurement/scripts/auth-performance-stack.mjs subject/scripts/auth-performance-stack.mjs
+          cp measurement/scripts/ci/install-browser.mjs subject/scripts/ci/install-browser.mjs
           cp measurement/tests/browser/auth-performance.spec.mjs subject/tests/browser/auth-performance.spec.mjs
           cp measurement/tests/browser/playwright.config.mjs subject/tests/browser/playwright.config.mjs
       - run: npm ci
@@ -56,7 +58,8 @@ jobs:
         working-directory: subject
       - run: npm run build --workspace=apps/web
         working-directory: subject
-      - run: npx playwright install --with-deps chromium
+      - run: node scripts/ci/install-browser.mjs
+        timeout-minutes: 14
         working-directory: subject
       - run: node scripts/auth-performance-stack.mjs
         working-directory: subject

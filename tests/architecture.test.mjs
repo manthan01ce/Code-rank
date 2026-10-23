@@ -19,17 +19,17 @@ test('all 46 API paths and 17 pages retain their HTTP methods and locations', ()
 function walk(dir) {
   return readdirSync(dir, { withFileTypes: true }).flatMap(entry => ['node_modules', '.next'].includes(entry.name) ? [] : entry.isDirectory() ? walk(path.join(dir, entry.name)) : [path.join(dir, entry.name)]);
 }
-test('active JS/JSX parses and local imports resolve', () => {
-  for (const file of [...walk(fileURLToPath(new URL('apps/', root))), ...walk(fileURLToPath(new URL('packages/', root)))].filter(x => /\.(m?js)$/.test(x))) {
+test('active JS/TS/TSX parses and local imports resolve', () => {
+  for (const file of [...walk(fileURLToPath(new URL('apps/', root))), ...walk(fileURLToPath(new URL('packages/', root)))].filter(x => /\.(?:m?js|tsx?)$/.test(x))) {
     const source = readFileSync(file, 'utf8');
-    const ast = ts.createSourceFile(file, source, ts.ScriptTarget.Latest, true, ts.ScriptKind.JSX);
+    const ast = ts.createSourceFile(file, source, ts.ScriptTarget.Latest, true, /\.tsx?$/.test(file) ? ts.ScriptKind.TSX : ts.ScriptKind.JSX);
     assert.deepEqual(ast.parseDiagnostics.map(d => ts.flattenDiagnosticMessageText(d.messageText, '\n')), [], file);
     for (const [, specifier] of source.matchAll(/(?:from\s*|import\s*)['"]([^'"]+)['"]/g)) {
       let target;
       if (specifier.startsWith('.')) target = path.resolve(path.dirname(file), specifier);
       else if (specifier.startsWith('@/') && file.replace(/\\/g, '/').includes('/apps/web/')) target = fileURLToPath(new URL(`apps/web/src/${specifier.slice(2)}`, root));
       else continue;
-      assert.ok([target, `${target}.js`, `${target}.mjs`, `${target}.json`, `${target}/index.js`].some(existsSync), `${file}: ${specifier}`);
+      assert.ok([target, `${target}.js`, `${target}.mjs`, `${target}.ts`, `${target}.tsx`, `${target}.json`, `${target}/index.js`, `${target}/index.ts`, `${target}/index.tsx`].some(existsSync), `${file}: ${specifier}`);
     }
   }
 });

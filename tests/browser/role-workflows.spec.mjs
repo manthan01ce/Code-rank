@@ -124,3 +124,44 @@ test('browser sessions enforce role mutations, grade ownership and hidden-case p
     await facultyContext.close();
   }
 });
+
+// Capture only public pages or disposable fixture data; never capture login credentials.
+test('public pages preserve theme and remain usable at phone, tablet and desktop widths', async ({page}) => {
+ const assertNoErrors=failOnPageErrors(page);
+ await page.emulateMedia({reducedMotion:'reduce'});
+ for(const width of [360,768,1280]) {
+  await page.setViewportSize({width,height:900});
+  for(const route of ['/', '/login', '/signup']) {
+   await page.goto(route);
+   await expect(page.locator('h1')).toBeVisible();
+   expect(await page.locator('.admin-desktop-sidebar').count()).toBe(0);
+   const layout=await page.evaluate(()=>({width:innerWidth,scrollWidth:document.documentElement.scrollWidth,overflow:Array.from(document.querySelectorAll('body *')).filter(el=>el.getBoundingClientRect().right>innerWidth+1).slice(0,8).map(el=>({tag:el.tagName,text:el.textContent?.slice(0,50),right:el.getBoundingClientRect().right}))}));
+   expect(layout.scrollWidth,`No horizontal page clipping: ${route} ${JSON.stringify(layout)}`).toBeLessThanOrEqual(layout.width+1);
+   if(route==='/'){
+    await expect(page.getByRole('heading',{name:'RANK UP CODING'})).toBeVisible();
+    expect(await page.locator('footer input, footer a[href^="mailto:"]').count()).toBe(0);
+   }
+   if(route==='/login') {
+    await page.getByLabel('Password',{exact:true}).fill('');
+    await expect(page.getByRole('button',{name:'Sign In →',exact:true})).toBeVisible();
+   }
+   await page.screenshot({path:`test-results/ui-review/${route==='/'?'home':route.slice(1)}-${width}.png`,fullPage:true,animations:'disabled'});
+  }
+ }
+ assertNoErrors();
+});
+test('admin menu preserves existing destinations and keyboard operation on mobile', async ({page}) => {
+ await login(page,'admin');
+ await page.setViewportSize({width:360,height:900});
+ expect(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth+1),'Admin overflow stays inside content').toBe(true);
+ await page.getByRole('button',{name:'Open admin menu'}).click();
+ const menu=page.getByRole('dialog',{name:'Admin menu'});
+ await expect(menu).toBeVisible();
+ for(const label of ['Dashboard','Department Master','Faculty Master','Student Master','Courses','Course Mapping','Activity Logs','Settings','Profile'])await expect(menu.getByRole('link',{name:label,exact:true})).toBeVisible();
+ await expect(menu.getByRole('button',{name:'Change Password',exact:true})).toBeVisible();
+ await expect(menu.getByRole('button',{name:'Logout',exact:true})).toBeVisible();
+ await page.screenshot({path:'test-results/ui-review/admin-mobile.png',fullPage:true,animations:'disabled'});
+ await page.keyboard.press('Escape');
+ await expect(menu).not.toBeVisible();
+ await expect(page.getByRole('button',{name:'Open admin menu'})).toBeFocused();
+});
