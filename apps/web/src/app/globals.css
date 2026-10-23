@@ -320,3 +320,4 @@ th {
   .rank-home #roles div[style*="display: flex"] {flex-wrap:wrap;}
   .rank-home #roles > div[style*="padding: 36px"] {padding:20px!important;}
 }
+.admin-content {overflow-x:auto;max-width:100%;}

@@ -153,6 +153,7 @@ test('public pages preserve theme and remain usable at phone, tablet and desktop
 test('admin menu preserves existing destinations and keyboard operation on mobile', async ({page}) => {
  await login(page,'admin');
  await page.setViewportSize({width:360,height:900});
+ expect(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth+1),'Admin overflow stays inside content').toBe(true);
  await page.getByRole('button',{name:'Open admin menu'}).click();
  const menu=page.getByRole('dialog',{name:'Admin menu'});
  await expect(menu).toBeVisible();
