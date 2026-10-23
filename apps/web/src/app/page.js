@@ -3,7 +3,9 @@
 import { useEffect, useState, useMemo } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
-import dynamic from 'next/dynamic';
+import TextType from '@/components/ui/TextType';
+import HomeFooter from '@/components/ui/home-footer';
+import HomeStarfield from '@/components/ui/home-starfield';
 
 export default function HomePage() {
   const router = useRouter();
@@ -30,7 +32,8 @@ export default function HomePage() {
   };
 
   return (
-    <div style={{
+    <div className="rank-home" style={{
+      position: 'relative', isolation: 'isolate',
       minHeight: '100vh',
       backgroundColor: '#f8fafc',
       color: '#1e293b',
@@ -38,6 +41,7 @@ export default function HomePage() {
       display: 'flex',
       flexDirection: 'column'
     }}>
+      <HomeStarfield />
       {/* ─── Top Navigation Header ─── */}
       <header style={{
         position: 'sticky',
@@ -193,14 +197,14 @@ export default function HomePage() {
           </div>
 
           <h1 style={{
-            fontSize: '44px',
+            fontSize: 'clamp(2rem, 5vw, 44px)',
             fontWeight: 800,
             lineHeight: 1.15,
             color: '#0f172a',
             letterSpacing: '-1px',
             marginBottom: '18px'
           }}>
-            Institutional Coding Lab & <span style={{ color: '#4F46E5' }}>Practical Evaluation</span> System
+            <TextType text={["RANK UP CODING"]} typingSpeed={75} pauseDuration={1500} deletingSpeed={50} cursorColor="currentColor" prefixColor="currentColor" />
           </h1>
 
           <p style={{
@@ -799,24 +803,7 @@ export default function HomePage() {
       </section>
 
       {/* ─── Footer ─── */}
-      <footer style={{
-        backgroundColor: '#f8fafc',
-        borderTop: '1px solid #e2e8f0',
-        padding: '32px 24px',
-        textAlign: 'center',
-        fontSize: '13px',
-        color: '#64748b'
-      }}>
-        <div style={{ maxWidth: '1240px', margin: '0 auto', display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '16px' }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-            <span style={{ fontWeight: 800, color: '#0f172a' }}>CodeRank</span>
-            <span>— Institutional Code Assessment Engine</span>
-          </div>
-          <div>
-            &copy; {new Date().getFullYear()} CodeRank. All rights reserved.
-          </div>
-        </div>
-      </footer>
+      <HomeFooter />
     </div>
   );
 }

@@ -1,0 +1,2 @@
+import Link from "next/link";
+export default function SignUp(){return <main className="auth-shell bg-background text-foreground"><section className="auth-form"><Link href="/" className="auth-brand">CodeRank</Link><h1>Get your CodeRank account</h1><p>Accounts are created by your institution. Ask your faculty or administrator to add you and provide your sign-in credentials.</p><p>Public registration is not enabled for this institution.</p><Link href="/login" className="auth-submit">Back to sign in</Link></section></main>;}
