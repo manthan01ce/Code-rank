@@ -25,3 +25,9 @@ There is no existing Google login, unauthenticated password reset or public sign
 ## Local verification
 
 TypeScript and critical lint pass. Architecture parsing/import tests pass. Local production build still fails at ENOENT uv_resident_set_memory. A development server startup reached “Server ready,” but a separate loopback probe could not connect from this restricted execution environment. A usable local review server is therefore not established; no visual sign-off is claimed. CI on the normal host must verify the production build, role workflows and screenshots.
+
+## Verified browser results
+
+Commit 98420ee passed Architecture checks (39921983200) and Authentication performance comparison (39921983192). This includes real role flows, mobile menu navigation, public page overflow checks at 360/768/1280px, capacity and recovery. CI produced ten screenshots. Review found and fixed portal tab wrapping, tablet navigation width and dashboard table overflow. Sign-in uses the real coding photograph, and public/admin layouts retain the existing palette. Screenshots now disable transient CSS animations to capture their final state.
+
+A fresh isolated local profiler successfully reached its own dev server and performed HTTP checks. Rendering still fails with uv_resident_set_memory and local readiness remains degraded; HTTP 200 HTML with embedded error markers is not usable rendering. Diagnostic processes were cleaned up. This updates the earlier separate-loopback connection failure; neither result establishes a working local review environment.
