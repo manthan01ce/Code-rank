@@ -1,0 +1,1126 @@
+npm warn Unknown env config "http-proxy". This will stop working in the next major version of npm.
+
+> coderank-monorepo@1.1.0 test
+> node scripts/ci/run-tests.mjs unit
+
+TAP version 13
+# Subtest: active authentication validates database identity, roles and current session
+ok 1 - active authentication validates database identity, roles and current session
+  ---
+  duration_ms: 11.17631
+  type: 'test'
+  ...
+# Subtest: legacy sessionless accounts remain compatible until a session is established
+ok 2 - legacy sessionless accounts remain compatible until a session is established
+  ---
+  duration_ms: 0.786244
+  type: 'test'
+  ...
+# Subtest: invalid tokens and nonpersistent identities never reach database authentication
+ok 3 - invalid tokens and nonpersistent identities never reach database authentication
+  ---
+  duration_ms: 1.19643
+  type: 'test'
+  ...
+# Subtest: optional authentication only permits absence of credentials, never invalid bearer downgrade
+ok 4 - optional authentication only permits absence of credentials, never invalid bearer downgrade
+  ---
+  duration_ms: 3.091859
+  type: 'test'
+  ...
+# Subtest: authentication lookup outages fail closed with service unavailable
+ok 5 - authentication lookup outages fail closed with service unavailable
+  ---
+  duration_ms: 0.913425
+  type: 'test'
+  ...
+# (node:38) ExperimentalWarning: Module mocking is an experimental feature and might change at any time
+# (Use `node --trace-warnings ...` to show where the warning was created)
+# (node:38) DeprecationWarning: mock.module(): options.defaultExport is deprecated. Use options.exports.default instead.
+# (node:38) DeprecationWarning: mock.module(): options.namedExports is deprecated. Use options.exports instead.
+# Subtest: practical adapters enforce role and payloads, preserve response and notify only on commit
+ok 6 - practical adapters enforce role and payloads, preserve response and notify only on commit
+  ---
+  duration_ms: 30.8469
+  type: 'test'
+  ...
+# Subtest: mapping adapter normalizes IDs and denies duplicate or unauthorized writes
+ok 7 - mapping adapter normalizes IDs and denies duplicate or unauthorized writes
+  ---
+  duration_ms: 4.312078
+  type: 'test'
+  ...
+# (node:53) ExperimentalWarning: Module mocking is an experimental feature and might change at any time
+# (Use `node --trace-warnings ...` to show where the warning was created)
+# (node:53) DeprecationWarning: mock.module(): options.defaultExport is deprecated. Use options.exports.default instead.
+# Database login query attempt 1 failed: OFFLINE
+# Database login query attempt 2 failed: OFFLINE
+# Database login query attempt 3 failed: OFFLINE
+# Subtest: configured admin bootstraps a persistent identity and never logs in without a committed session
+ok 8 - configured admin bootstraps a persistent identity and never logs in without a committed session
+  ---
+  duration_ms: 2026.6712
+  type: 'test'
+  ...
+# Subtest: mapping and practical changes commit audit/cases atomically and preserve graded history
+ok 9 - mapping and practical changes commit audit/cases atomically and preserve graded history
+  ---
+  duration_ms: 3521.320746
+  type: 'test'
+  ...
+# Subtest: all 46 API paths and 17 pages retain their HTTP methods and locations
+ok 10 - all 46 API paths and 17 pages retain their HTTP methods and locations
+  ---
+  duration_ms: 11.001937
+  type: 'test'
+  ...
+# Subtest: active JS/JSX parses and local imports resolve
+ok 11 - active JS/JSX parses and local imports resolve
+  ---
+  duration_ms: 526.541363
+  type: 'test'
+  ...
+# Subtest: active lab launchers use the workspace and authoritative infrastructure
+ok 12 - active lab launchers use the workspace and authoritative infrastructure
+  ---
+  duration_ms: 3.069004
+  type: 'test'
+  ...
+# Subtest: guest socket auth omits bearer credentials and reconnects read the current token
+ok 13 - guest socket auth omits bearer credentials and reconnects read the current token
+  ---
+  duration_ms: 2.272375
+  type: 'test'
+  ...
+# (node:89) ExperimentalWarning: Module mocking is an experimental feature and might change at any time
+# (Use `node --trace-warnings ...` to show where the warning was created)
+# (node:89) DeprecationWarning: mock.module(): options.namedExports is deprecated. Use options.exports instead.
+# Subtest: bulk CSV validates roles/limits and reports only committed rows without leaking DB errors
+ok 14 - bulk CSV validates roles/limits and reports only committed rows without leaking DB errors
+  ---
+  duration_ms: 235.404571
+  type: 'test'
+  ...
+# Subtest: capacity runner requires an explicit origin and strictly bounded parameters
+ok 15 - capacity runner requires an explicit origin and strictly bounded parameters
+  ---
+  duration_ms: 3.383953
+  type: 'test'
+  ...
+# Subtest: real loopback capacity run checks output, per-job ownership cookie and bounded concurrency
+ok 16 - real loopback capacity run checks output, per-job ownership cookie and bounded concurrency
+  ---
+  duration_ms: 131.87892
+  type: 'test'
+  ...
+# Subtest: capacity run fails honestly for rate-limit
+ok 17 - capacity run fails honestly for rate-limit
+  ---
+  duration_ms: 34.134588
+  type: 'test'
+  ...
+# Subtest: capacity run fails honestly for poll-error
+ok 18 - capacity run fails honestly for poll-error
+  ---
+  duration_ms: 30.14831
+  type: 'test'
+  ...
+# Subtest: capacity run fails honestly for wrong-output
+ok 19 - capacity run fails honestly for wrong-output
+  ---
+  duration_ms: 51.406925
+  type: 'test'
+  ...
+# Subtest: capacity run fails honestly for runtime
+ok 20 - capacity run fails honestly for runtime
+  ---
+  duration_ms: 45.032898
+  type: 'test'
+  ...
+# Subtest: capacity run fails honestly for failed
+ok 21 - capacity run fails honestly for failed
+  ---
+  duration_ms: 45.009018
+  type: 'test'
+  ...
+# Subtest: capacity run fails honestly for timeout
+ok 22 - capacity run fails honestly for timeout
+  ---
+  duration_ms: 325.0967
+  type: 'test'
+  ...
+# Subtest: unready deployment fails before admitting any execution workload
+ok 23 - unready deployment fails before admitting any execution workload
+  ---
+  duration_ms: 4.74744
+  type: 'test'
+  ...
+# Subtest: achieved throughput and latency thresholds affect the result
+ok 24 - achieved throughput and latency thresholds affect the result
+  ---
+  duration_ms: 61.625136
+  type: 'test'
+  ...
+# Subtest: whole-run deadline bounds outstanding polling and prevents further admissions
+ok 25 - whole-run deadline bounds outstanding polling and prevents further admissions
+  ---
+  duration_ms: 122.298251
+  type: 'test'
+  ...
+# Subtest: strict deployment readiness or redirects reject cached-health
+ok 26 - strict deployment readiness or redirects reject cached-health
+  ---
+  duration_ms: 3.510244
+  type: 'test'
+  ...
+# Subtest: strict deployment readiness or redirects reject stale-health
+ok 27 - strict deployment readiness or redirects reject stale-health
+  ---
+  duration_ms: 4.322348
+  type: 'test'
+  ...
+# Subtest: strict deployment readiness or redirects reject db-unready
+ok 28 - strict deployment readiness or redirects reject db-unready
+  ---
+  duration_ms: 6.052778
+  type: 'test'
+  ...
+# Subtest: strict deployment readiness or redirects reject no-workers
+ok 29 - strict deployment readiness or redirects reject no-workers
+  ---
+  duration_ms: 2.642399
+  type: 'test'
+  ...
+# Subtest: strict deployment readiness or redirects reject redirect
+ok 30 - strict deployment readiness or redirects reject redirect
+  ---
+  duration_ms: 5.210899
+  type: 'test'
+  ...
+# Subtest: strict TAP accepts complete actual Node pass protocol
+ok 31 - strict TAP accepts complete actual Node pass protocol
+  ---
+  duration_ms: 247.206299
+  type: 'test'
+  ...
+# Subtest: strict TAP accepts complete actual Node nested protocol
+ok 32 - strict TAP accepts complete actual Node nested protocol
+  ---
+  duration_ms: 244.93261
+  type: 'test'
+  ...
+# Subtest: strict TAP accepts complete actual Node siblings protocol
+ok 33 - strict TAP accepts complete actual Node siblings protocol
+  ---
+  duration_ms: 249.241523
+  type: 'test'
+  ...
+# Subtest: strict TAP rejects actual Node empty protocol
+ok 34 - strict TAP rejects actual Node empty protocol
+  ---
+  duration_ms: 241.383064
+  type: 'test'
+  ...
+# Subtest: strict TAP rejects actual Node skip protocol
+ok 35 - strict TAP rejects actual Node skip protocol
+  ---
+  duration_ms: 223.546091
+  type: 'test'
+  ...
+# Subtest: strict TAP rejects actual Node todo protocol
+ok 36 - strict TAP rejects actual Node todo protocol
+  ---
+  duration_ms: 248.609393
+  type: 'test'
+  ...
+# Subtest: strict TAP rejects actual Node fail protocol
+ok 37 - strict TAP rejects actual Node fail protocol
+  ---
+  duration_ms: 236.873695
+  type: 'test'
+  ...
+# Subtest: strict TAP rejects actual Node cancel protocol
+ok 38 - strict TAP rejects actual Node cancel protocol
+  ---
+  duration_ms: 241.468687
+  type: 'test'
+  ...
+# Subtest: strict TAP rejects actual Node only protocol
+ok 39 - strict TAP rejects actual Node only protocol
+  ---
+  duration_ms: 258.028215
+  type: 'test'
+  ...
+# Subtest: strict TAP rejects an explicitly focused invocation even when Node reports all green
+ok 40 - strict TAP rejects an explicitly focused invocation even when Node reports all green
+  ---
+  duration_ms: 240.629853
+  type: 'test'
+  ...
+# Subtest: strict TAP rejects truncated, empty, forged count and plan streams
+ok 41 - strict TAP rejects truncated, empty, forged count and plan streams
+  ---
+  duration_ms: 233.775635
+  type: 'test'
+  ...
+# Subtest: strict test configurations cannot recurse into fixtures or forward caller filters
+ok 42 - strict test configurations cannot recurse into fixtures or forward caller filters
+  ---
+  duration_ms: 31.099847
+  type: 'test'
+  ...
+# Subtest: strict subprocess hard deadline terminates a real hung Node test process
+ok 43 - strict subprocess hard deadline terminates a real hung Node test process
+  ---
+  duration_ms: 264.386588
+  type: 'test'
+  ...
+# Subtest: cluster refuses unshared realtime and invalid worker counts before startup
+ok 44 - cluster refuses unshared realtime and invalid worker counts before startup
+  ---
+  duration_ms: 199.015743
+  type: 'test'
+  ...
+# (node:188) ExperimentalWarning: Module mocking is an experimental feature and might change at any time
+# (Use `node --trace-warnings ...` to show where the warning was created)
+# (node:188) DeprecationWarning: mock.module(): options.defaultExport is deprecated. Use options.exports.default instead.
+# Subtest: catalog service validates payloads and identifiers before database access
+ok 45 - catalog service validates payloads and identifiers before database access
+  ---
+  duration_ms: 4.865483
+  type: 'test'
+  ...
+# Subtest: catalog service delegates one parameterized atomic write and maps database errors
+ok 46 - catalog service delegates one parameterized atomic write and maps database errors
+  ---
+  duration_ms: 1.055703
+  type: 'test'
+  ...
+# Subtest: catalog mutations preserve history, department references and audit atomicity
+ok 47 - catalog mutations preserve history, department references and audit atomicity
+  ---
+  duration_ms: 3420.205827
+  type: 'test'
+  ...
+# (node:341) ExperimentalWarning: Module mocking is an experimental feature and might change at any time
+# (Use `node --trace-warnings ...` to show where the warning was created)
+# (node:341) DeprecationWarning: mock.module(): options.defaultExport is deprecated. Use options.exports.default instead.
+# Subtest: marks matrix bounds both dimensions, ignores malformed semesters and scopes grades
+ok 48 - marks matrix bounds both dimensions, ignores malformed semesters and scopes grades
+  ---
+  duration_ms: 3316.611076
+  type: 'test'
+  ...
+# (node:353) ExperimentalWarning: Module mocking is an experimental feature and might change at any time
+# (Use `node --trace-warnings ...` to show where the warning was created)
+# (node:353) DeprecationWarning: mock.module(): options.namedExports is deprecated. Use options.exports instead.
+# Subtest: native transaction awaits its definitive result instead of timing out before a late commit
+ok 49 - native transaction awaits its definitive result instead of timing out before a late commit
+  ---
+  duration_ms: 44.568419
+  type: 'test'
+  ...
+# Subtest: database operations restore and rehearse before any source migration, preserving private evidence
+ok 50 - database operations restore and rehearse before any source migration, preserving private evidence
+  ---
+  duration_ms: 42.690477
+  type: 'test'
+  ...
+# Subtest: verify mode never migrates the source and restore mismatches prevent all migrations
+ok 51 - verify mode never migrates the source and restore mismatches prevent all migrations
+  ---
+  duration_ms: 37.717619
+  type: 'test'
+  ...
+# Subtest: restore or rehearsal failures clean disposable databases and block source writes
+ok 52 - restore or rehearsal failures clean disposable databases and block source writes
+  ---
+  duration_ms: 21.965071
+  type: 'test'
+  ...
+# Subtest: explicit target, maintenance gate, direct connection, and isolated restore target are mandatory
+ok 53 - explicit target, maintenance gate, direct connection, and isolated restore target are mandatory
+  ---
+  duration_ms: 1.547659
+  type: 'test'
+  ...
+# Subtest: libpq command environment has decoded credentials without leaking URLs into argv
+ok 54 - libpq command environment has decoded credentials without leaking URLs into argv
+  ---
+  duration_ms: 0.772645
+  type: 'test'
+  ...
+# Subtest: deployment gate rejects degraded workers, stale health, caches and redirects over real HTTP
+ok 55 - deployment gate rejects degraded workers, stale health, caches and redirects over real HTTP
+  ---
+  duration_ms: 105.496566
+  type: 'test'
+  ...
+# (node:381) ExperimentalWarning: Module mocking is an experimental feature and might change at any time
+# (Use `node --trace-warnings ...` to show where the warning was created)
+# (node:381) DeprecationWarning: mock.module(): options.namedExports is deprecated. Use options.exports instead.
+# (node:381) DeprecationWarning: mock.module(): options.defaultExport is deprecated. Use options.exports.default instead.
+# Subtest: all five language routes deny anonymous practical execution and accept assigned students
+ok 56 - all five language routes deny anonymous practical execution and accept assigned students
+  ---
+  duration_ms: 47.472817
+  type: 'test'
+  ...
+# Subtest: both submission entry points enforce role and shared validation/rate limits
+ok 57 - both submission entry points enforce role and shared validation/rate limits
+  ---
+  duration_ms: 6.047319
+  type: 'test'
+  ...
+# Subtest: job endpoint denies cross-user reads and redacts hidden tests for the owner
+ok 58 - job endpoint denies cross-user reads and redacts hidden tests for the owner
+  ---
+  duration_ms: 5.462049
+  type: 'test'
+  ...
+# Subtest: anonymous playground polling requires its HttpOnly browser session
+ok 59 - anonymous playground polling requires its HttpOnly browser session
+  ---
+  duration_ms: 6.097548
+  type: 'test'
+  ...
+# Subtest: direct-Docker legacy practice path now queues and validates payloads
+ok 60 - direct-Docker legacy practice path now queues and validates payloads
+  ---
+  duration_ms: 4.103654
+  type: 'test'
+  ...
+# Subtest: login rate limiter runs before password/database work
+ok 61 - login rate limiter runs before password/database work
+  ---
+  duration_ms: 9.524429
+  type: 'test'
+  ...
+# Subtest: prototype-property problem identifiers cannot enqueue an empty test suite
+ok 62 - prototype-property problem identifiers cannot enqueue an empty test suite
+  ---
+  duration_ms: 1.547399
+  type: 'test'
+  ...
+# Subtest: workspace routes enforce practical membership and bounded source input
+ok 63 - workspace routes enforce practical membership and bounded source input
+  ---
+  duration_ms: 8.847053
+  type: 'test'
+  ...
+# Subtest: guest sessions are opaque, reusable, and reject malformed cookies
+ok 64 - guest sessions are opaque, reusable, and reject malformed cookies
+  ---
+  duration_ms: 2.686606
+  type: 'test'
+  ...
+# Subtest: job ownership denies anonymous and other-user reads, including legacy ownerless jobs
+ok 65 - job ownership denies anonymous and other-user reads, including legacy ownerless jobs
+  ---
+  duration_ms: 0.485013
+  type: 'test'
+  ...
+# Subtest: hidden test allowlist removes inputs, expected results, outputs and future secret fields
+ok 66 - hidden test allowlist removes inputs, expected results, outputs and future secret fields
+  ---
+  duration_ms: 0.367141
+  type: 'test'
+  ...
+# Subtest: all practical entry points can share batch, semester, session and role policy
+ok 67 - all practical entry points can share batch, semester, session and role policy
+  ---
+  duration_ms: 0.670321
+  type: 'test'
+  ...
+# Subtest: execution rejects oversized, invalid language and non-string input payloads
+ok 68 - execution rejects oversized, invalid language and non-string input payloads
+  ---
+  duration_ms: 0.873799
+  type: 'test'
+  ...
+# (node:397) ExperimentalWarning: Module mocking is an experimental feature and might change at any time
+# (Use `node --trace-warnings ...` to show where the warning was created)
+# (node:397) DeprecationWarning: mock.module(): options.defaultExport is deprecated. Use options.exports.default instead.
+# Subtest: original practical ownership cannot bypass a revoked current faculty mapping
+ok 69 - original practical ownership cannot bypass a revoked current faculty mapping
+  ---
+  duration_ms: 1.782285
+  type: 'test'
+  ...
+# Subtest: selector follows bounded pages, encodes cursor and preserves credentials
+ok 70 - selector follows bounded pages, encodes cursor and preserves credentials
+  ---
+  duration_ms: 7.370953
+  type: 'test'
+  ...
+# Subtest: selector stops on repeated cursors and rejects failed responses
+ok 71 - selector stops on repeated cursors and rejects failed responses
+  ---
+  duration_ms: 2.471168
+  type: 'test'
+  ...
+# Subtest: javascript real harness: two-sum
+ok 72 - javascript real harness: two-sum
+  ---
+  duration_ms: 550.931274
+  type: 'test'
+  ...
+# Subtest: c real harness: two-sum
+ok 73 - c real harness: two-sum
+  ---
+  duration_ms: 206.120521
+  type: 'test'
+  ...
+# Subtest: javascript real harness: reverse-string
+ok 74 - javascript real harness: reverse-string
+  ---
+  duration_ms: 943.931049
+  type: 'test'
+  ...
+# Subtest: c real harness: reverse-string
+ok 75 - c real harness: reverse-string
+  ---
+  duration_ms: 105.654431
+  type: 'test'
+  ...
+# Subtest: javascript real harness: palindrome-number
+ok 76 - javascript real harness: palindrome-number
+  ---
+  duration_ms: 696.463128
+  type: 'test'
+  ...
+# Subtest: c real harness: palindrome-number
+ok 77 - c real harness: palindrome-number
+  ---
+  duration_ms: 94.514313
+  type: 'test'
+  ...
+# Subtest: javascript real harness: fizz-buzz
+ok 78 - javascript real harness: fizz-buzz
+  ---
+  duration_ms: 629.35756
+  type: 'test'
+  ...
+# Subtest: c real harness: fizz-buzz
+ok 79 - c real harness: fizz-buzz
+  ---
+  duration_ms: 95.558556
+  type: 'test'
+  ...
+# Subtest: javascript real harness: single-number
+ok 80 - javascript real harness: single-number
+  ---
+  duration_ms: 600.661681
+  type: 'test'
+  ...
+# Subtest: c real harness: single-number
+ok 81 - c real harness: single-number
+  ---
+  duration_ms: 93.041252
+  type: 'test'
+  ...
+# Subtest: javascript real harness: contains-duplicate
+ok 82 - javascript real harness: contains-duplicate
+  ---
+  duration_ms: 527.597409
+  type: 'test'
+  ...
+# Subtest: c real harness: contains-duplicate
+ok 83 - c real harness: contains-duplicate
+  ---
+  duration_ms: 67.298995
+  type: 'test'
+  ...
+# Subtest: javascript real harness: fibonacci-number
+ok 84 - javascript real harness: fibonacci-number
+  ---
+  duration_ms: 606.201209
+  type: 'test'
+  ...
+# Subtest: c real harness: fibonacci-number
+ok 85 - c real harness: fibonacci-number
+  ---
+  duration_ms: 74.16506
+  type: 'test'
+  ...
+# Subtest: javascript real harness: valid-anagram
+ok 86 - javascript real harness: valid-anagram
+  ---
+  duration_ms: 545.434905
+  type: 'test'
+  ...
+# Subtest: c real harness: valid-anagram
+ok 87 - c real harness: valid-anagram
+  ---
+  duration_ms: 95.990664
+  type: 'test'
+  ...
+# Subtest: javascript real harness: length-of-last-word
+ok 88 - javascript real harness: length-of-last-word
+  ---
+  duration_ms: 545.376892
+  type: 'test'
+  ...
+# Subtest: c real harness: length-of-last-word
+ok 89 - c real harness: length-of-last-word
+  ---
+  duration_ms: 115.960497
+  type: 'test'
+  ...
+# Subtest: javascript real harness: add-digits
+ok 90 - javascript real harness: add-digits
+  ---
+  duration_ms: 589.542949
+  type: 'test'
+  ...
+# Subtest: c real harness: add-digits
+ok 91 - c real harness: add-digits
+  ---
+  duration_ms: 60.057465
+  type: 'test'
+  ...
+# Subtest: function comparison rejects invalid output and incorrect values
+ok 92 - function comparison rejects invalid output and incorrect values
+  ---
+  duration_ms: 0.687248
+  type: 'test'
+  ...
+# (node:423) ExperimentalWarning: Module mocking is an experimental feature and might change at any time
+# (Use `node --trace-warnings ...` to show where the warning was created)
+# (node:423) DeprecationWarning: mock.module(): options.defaultExport is deprecated. Use options.exports.default instead.
+# (node:423) DeprecationWarning: mock.module(): options.namedExports is deprecated. Use options.exports instead.
+# Subtest: zero-mark failed cases cannot pass; queue time determines lateness and hidden cases stay redacted
+ok 93 - zero-mark failed cases cannot pass; queue time determines lateness and hidden cases stay redacted
+  ---
+  duration_ms: 1.751748
+  type: 'test'
+  ...
+# Subtest: database failure rejects the job instead of reporting completed grading
+ok 94 - database failure rejects the job instead of reporting completed grading
+  ---
+  duration_ms: 0.836432
+  type: 'test'
+  ...
+# Subtest: replayed completed attempt does not execute code again
+ok 95 - replayed completed attempt does not execute code again
+  ---
+  duration_ms: 0.828354
+  type: 'test'
+  ...
+# (node:433) ExperimentalWarning: Module mocking is an experimental feature and might change at any time
+# (Use `node --trace-warnings ...` to show where the warning was created)
+# (node:433) DeprecationWarning: mock.module(): options.defaultExport is deprecated. Use options.exports.default instead.
+# (node:433) DeprecationWarning: mock.module(): options.namedExports is deprecated. Use options.exports instead.
+# Subtest: readiness becomes 503 after dependency failure and does not retain stale healthy state
+ok 96 - readiness becomes 503 after dependency failure and does not retain stale healthy state
+  ---
+  duration_ms: 45.494492
+  type: 'test'
+  ...
+# Subtest: polling preserves authorization and returns completed result
+ok 97 - polling preserves authorization and returns completed result
+  ---
+  duration_ms: 2.693622
+  type: 'test'
+  ...
+# Subtest: access denied stops polling immediately
+ok 98 - access denied stops polling immediately
+  ---
+  duration_ms: 0.926938
+  type: 'test'
+  ...
+# Subtest: a hung request is bounded and aborted by the deadline
+ok 99 - a hung request is bounded and aborted by the deadline
+  ---
+  duration_ms: 10.161218
+  type: 'test'
+  ...
+# Subtest: socket completion only resolves its matching job and cleans subscriptions
+ok 100 - socket completion only resolves its matching job and cleans subscriptions
+  ---
+  duration_ms: 0.690504
+  type: 'test'
+  ...
+# Subtest: capacity measurement requires successful execution and the expected output
+ok 101 - capacity measurement requires successful execution and the expected output
+  ---
+  duration_ms: 1.12439
+  type: 'test'
+  ...
+# Subtest: migration SQL errors survive a database outage during reconciliation
+ok 102 - migration SQL errors survive a database outage during reconciliation
+  ---
+  duration_ms: 15.878889
+  type: 'test'
+  ...
+# Subtest: migrations and grading are transactional, idempotent and preserve best grades
+ok 103 - migrations and grading are transactional, idempotent and preserve best grades
+  ---
+  duration_ms: 4819.702538
+  type: 'test'
+  ...
+# Subtest: duplicate historic grades stop migration without partial schema changes
+ok 104 - duplicate historic grades stop migration without partial schema changes
+  ---
+  duration_ms: 2708.905006
+  type: 'test'
+  ...
+# (node:983) ExperimentalWarning: Module mocking is an experimental feature and might change at any time
+# (Use `node --trace-warnings ...` to show where the warning was created)
+# (node:983) DeprecationWarning: mock.module(): options.defaultExport is deprecated. Use options.exports.default instead.
+# Subtest: self-service password changes rotate sessions atomically and reject concurrent session changes
+ok 105 - self-service password changes rotate sessions atomically and reject concurrent session changes
+  ---
+  duration_ms: 5145.264204
+  type: 'test'
+  ...
+# Subtest: PostgreSQL transport parameterizes tags and rolls back failed transactions
+ok 106 - PostgreSQL transport parameterizes tags and rolls back failed transactions
+  ---
+  duration_ms: 3921.010097
+  type: 'test'
+  ...
+# Subtest: PostgreSQL transport rejects invalid pool/timeout configuration
+ok 107 - PostgreSQL transport rejects invalid pool/timeout configuration
+  ---
+  duration_ms: 3.530657
+  type: 'test'
+  ...
+# Subtest: failed rollback discards its connection and preserves the original failure
+ok 108 - failed rollback discards its connection and preserves the original failure
+  ---
+  duration_ms: 1.135684
+  type: 'test'
+  ...
+# (node:1007) ExperimentalWarning: Module mocking is an experimental feature and might change at any time
+# (Use `node --trace-warnings ...` to show where the warning was created)
+# (node:1007) DeprecationWarning: mock.module(): options.defaultExport is deprecated. Use options.exports.default instead.
+# Subtest: profile history is bounded and excludes source/secret grading fields; handles are literal
+ok 109 - profile history is bounded and excludes source/secret grading fields; handles are literal
+  ---
+  duration_ms: 3195.976032
+  type: 'test'
+  ...
+# [RateLimit] Unavailable: Redis client unavailable
+# [RateLimit] Unavailable: Redis client unavailable
+# [RateLimit] Unavailable: Redis client unavailable
+# (node:1015) ExperimentalWarning: Module mocking is an experimental feature and might change at any time
+# (Use `node --trace-warnings ...` to show where the warning was created)
+# (node:1015) DeprecationWarning: mock.module(): options.namedExports is deprecated. Use options.exports instead.
+# Subtest: authentication and execution limits fail closed during Redis outage
+ok 110 - authentication and execution limits fail closed during Redis outage
+  ---
+  duration_ms: 5.297191
+  type: 'test'
+  ...
+# Subtest: periodic room checks remove revoked course and practical mappings and expired jobs
+ok 111 - periodic room checks remove revoked course and practical mappings and expired jobs
+  ---
+  duration_ms: 2.504175
+  type: 'test'
+  ...
+# Subtest: concurrent subscriptions cannot exceed 64 and leaving releases capacity
+ok 112 - concurrent subscriptions cannot exceed 64 and leaving releases capacity
+  ---
+  duration_ms: 4.035271
+  type: 'test'
+  ...
+# Subtest: periodic authorization errors fail closed and clear affected room membership
+ok 113 - periodic authorization errors fail closed and clear affected room membership
+  ---
+  duration_ms: 0.321705
+  type: 'test'
+  ...
+# Subtest: socket subscriptions recheck current identity and disconnect revoked sessions
+ok 114 - socket subscriptions recheck current identity and disconnect revoked sessions
+  ---
+  duration_ms: 2.432624
+  type: 'test'
+  ...
+# Subtest: expired service sessions cannot publish and service credentials cannot subscribe
+ok 115 - expired service sessions cannot publish and service credentials cannot subscribe
+  ---
+  duration_ms: 0.403128
+  type: 'test'
+  ...
+# Subtest: subscriptions authorize the freshly loaded actor rather than the handshake snapshot
+ok 116 - subscriptions authorize the freshly loaded actor rather than the handshake snapshot
+  ---
+  duration_ms: 0.451994
+  type: 'test'
+  ...
+# Subtest: idle revoked browser disconnects and clears its session timers
+ok 117 - idle revoked browser disconnects and clears its session timers
+  ---
+  duration_ms: 1.930896
+  type: 'test'
+  ...
+# Subtest: service and guest sockets expire without database revalidation timers
+ok 118 - service and guest sockets expire without database revalidation timers
+  ---
+  duration_ms: 0.28114
+  type: 'test'
+  ...
+# Subtest: periodic checks never overlap or resurrect a disconnected socket
+ok 119 - periodic checks never overlap or resurrect a disconnected socket
+  ---
+  duration_ms: 0.332996
+  type: 'test'
+  ...
+# Subtest: valid idle sessions schedule only the next bounded unrefed check
+ok 120 - valid idle sessions schedule only the next bounded unrefed check
+  ---
+  duration_ms: 0.509565
+  type: 'test'
+  ...
+# Subtest: browser cannot forge job completion or faculty broadcasts
+ok 121 - browser cannot forge job completion or faculty broadcasts
+  ---
+  duration_ms: 3.472249
+  type: 'test'
+  ...
+# Subtest: unauthorized subscriptions fail and authorized subscriptions join only their rooms
+ok 122 - unauthorized subscriptions fail and authorized subscriptions join only their rooms
+  ---
+  duration_ms: 0.656486
+  type: 'test'
+  ...
+# Subtest: trusted completion is scoped and redacted
+ok 123 - trusted completion is scoped and redacted
+  ---
+  duration_ms: 0.924786
+  type: 'test'
+  ...
+# Subtest: service tokens are scoped and reject tampering
+ok 124 - service tokens are scoped and reject tampering
+  ---
+  duration_ms: 5.835893
+  type: 'test'
+  ...
+# Subtest: service credentials cannot be reused as browser/user JWTs
+ok 125 - service credentials cannot be reused as browser/user JWTs
+  ---
+  duration_ms: 6.353314
+  type: 'test'
+  ...
+# (node:1059) ExperimentalWarning: Module mocking is an experimental feature and might change at any time
+# (Use `node --trace-warnings ...` to show where the warning was created)
+# (node:1059) DeprecationWarning: mock.module(): options.defaultExport is deprecated. Use options.exports.default instead.
+# (node:1059) DeprecationWarning: mock.module(): options.namedExports is deprecated. Use options.exports instead.
+# Subtest: protected polling checks current status/session and cannot downgrade a revoked bearer to guest
+ok 126 - protected polling checks current status/session and cannot downgrade a revoked bearer to guest
+  ---
+  duration_ms: 16.235549
+  type: 'test'
+  ...
+# Subtest: revoked faculty tokens are rejected before a mutation reaches the domain layer
+ok 127 - revoked faculty tokens are rejected before a mutation reaches the domain layer
+  ---
+  duration_ms: 2.815082
+  type: 'test'
+  ...
+# Sandbox removal failed; container lifetime remains bounded { sandbox: 'coderank-job-e79a32dd-cd4f-4fa9-9dbb-8e7d179b03c9' }
+# Subtest: identical code gets private workspaces and compilation never trusts directory existence
+ok 128 - identical code gets private workspaces and compilation never trusts directory existence
+  ---
+  duration_ms: 2.089802
+  type: 'test'
+  ...
+# Subtest: runtime failure never passes even when output matches; timings are measured
+ok 129 - runtime failure never passes even when output matches; timings are measured
+  ---
+  duration_ms: 1.705226
+  type: 'test'
+  ...
+# Subtest: per-case deadlines run inside the container and timeout cannot pass an empty-output test
+ok 130 - per-case deadlines run inside the container and timeout cannot pass an empty-output test
+  ---
+  duration_ms: 0.726247
+  type: 'test'
+  ...
+# Subtest: successful output with diagnostic stderr remains a successful process
+ok 131 - successful output with diagnostic stderr remains a successful process
+  ---
+  duration_ms: 0.532371
+  type: 'test'
+  ...
+# Subtest: function-style practice cases are rejected instead of silently misgraded as stdin/stdout
+ok 132 - function-style practice cases are rejected instead of silently misgraded as stdin/stdout
+  ---
+  duration_ms: 0.934931
+  type: 'test'
+  ...
+# Subtest: playground cleanup runs after failures
+ok 133 - playground cleanup runs after failures
+  ---
+  duration_ms: 4.182858
+  type: 'test'
+  ...
+# Subtest: actual sandbox launch labels satisfy recovery ownership and bounded expiry checks
+ok 134 - actual sandbox launch labels satisfy recovery ownership and bounded expiry checks
+  ---
+  duration_ms: 9.583361
+  type: 'test'
+  ...
+# Subtest: only exact managed scope and complete metadata establish sandbox ownership
+ok 135 - only exact managed scope and complete metadata establish sandbox ownership
+  ---
+  duration_ms: 0.899035
+  type: 'test'
+  ...
+# Subtest: dead owner does not shorten a valid lifetime and Docker start delay is respected
+ok 136 - dead owner does not shorten a valid lifetime and Docker start delay is respected
+  ---
+  duration_ms: 1.718546
+  type: 'test'
+  ...
+# Subtest: reaper inspects exact immutable IDs and removes only verified stale owned containers
+ok 137 - reaper inspects exact immutable IDs and removes only verified stale owned containers
+  ---
+  duration_ms: 2.944135
+  type: 'test'
+  ...
+# Subtest: dry run cannot remove a sandbox and inspected identity mismatch fails closed
+ok 138 - dry run cannot remove a sandbox and inspected identity mismatch fails closed
+  ---
+  duration_ms: 1.048417
+  type: 'test'
+  ...
+# Subtest: Docker disappearance is safe, other inspect failures are reported without removing anything
+ok 139 - Docker disappearance is safe, other inspect failures are reported without removing anything
+  ---
+  duration_ms: 1.097733
+  type: 'test'
+  ...
+# Subtest: bounded batches advance a cursor beyond active sandboxes
+ok 140 - bounded batches advance a cursor beyond active sandboxes
+  ---
+  duration_ms: 1.784404
+  type: 'test'
+  ...
+# Subtest: recovery loop coalesces scans and stops before a later interval can run
+ok 141 - recovery loop coalesces scans and stops before a later interval can run
+  ---
+  duration_ms: 1.956619
+  type: 'test'
+  ...
+# Subtest: recovery CLI requires explicit deployment scope and defaults to dry-run
+ok 142 - recovery CLI requires explicit deployment scope and defaults to dry-run
+  ---
+  duration_ms: 2.023356
+  type: 'test'
+  ...
+# Subtest: invalid lifetimes retain a finite deadline and all values stay bounded
+ok 143 - invalid lifetimes retain a finite deadline and all values stay bounded
+  ---
+  duration_ms: 1.385597
+  type: 'test'
+  ...
+# Subtest: each job has a separate, bounded container without network or host mounts
+ok 144 - each job has a separate, bounded container without network or host mounts
+  ---
+  duration_ms: 1.288453
+  type: 'test'
+  ...
+# Subtest: timeout destroys the container and detached children
+ok 145 - timeout destroys the container and detached children
+  ---
+  duration_ms: 1.270963
+  type: 'test'
+  ...
+# Subtest: output overflow destroys the container rather than leaving runaway children
+ok 146 - output overflow destroys the container rather than leaving runaway children
+  ---
+  duration_ms: 0.346527
+  type: 'test'
+  ...
+# Subtest: bundled readiness manifest matches every versioned migration checksum
+ok 147 - bundled readiness manifest matches every versioned migration checksum
+  ---
+  duration_ms: 10.321455
+  type: 'test'
+  ...
+# Subtest: readiness fails closed for absent, pending and modified schemas without writing to the database
+ok 148 - readiness fails closed for absent, pending and modified schemas without writing to the database
+  ---
+  duration_ms: 2983.356535
+  type: 'test'
+  ...
+# (node:1103) ExperimentalWarning: Module mocking is an experimental feature and might change at any time
+# (Use `node --trace-warnings ...` to show where the warning was created)
+# (node:1103) DeprecationWarning: mock.module(): options.defaultExport is deprecated. Use options.exports.default instead.
+# (node:1103) DeprecationWarning: mock.module(): options.namedExports is deprecated. Use options.exports instead.
+# Subtest: selector pagination rejects invalid bounds and cursors
+ok 149 - selector pagination rejects invalid bounds and cursors
+  ---
+  duration_ms: 3.20545
+  type: 'test'
+  ...
+# Subtest: course, department, faculty and batch selectors traverse complete nonoverlapping SQL pages
+ok 150 - course, department, faculty and batch selectors traverse complete nonoverlapping SQL pages
+  ---
+  duration_ms: 2394.025613
+  type: 'test'
+  ...
+# (node:1115) ExperimentalWarning: Module mocking is an experimental feature and might change at any time
+# (Use `node --trace-warnings ...` to show where the warning was created)
+# (node:1115) DeprecationWarning: mock.module(): options.namedExports is deprecated. Use options.exports instead.
+# Subtest: python function runner enforces in-container deadline and cleans its private directory
+ok 151 - python function runner enforces in-container deadline and cleans its private directory
+  ---
+  duration_ms: 6.472873
+  type: 'test'
+  ...
+# Subtest: python timeout returns a failure and still cleans its workspace
+ok 152 - python timeout returns a failure and still cleans its workspace
+  ---
+  duration_ms: 1.118589
+  type: 'test'
+  ...
+# Subtest: cpp function runner enforces in-container deadline and cleans its private directory
+ok 153 - cpp function runner enforces in-container deadline and cleans its private directory
+  ---
+  duration_ms: 1.021242
+  type: 'test'
+  ...
+# Subtest: cpp timeout returns a failure and still cleans its workspace
+ok 154 - cpp timeout returns a failure and still cleans its workspace
+  ---
+  duration_ms: 0.637124
+  type: 'test'
+  ...
+# Subtest: java function runner enforces in-container deadline and cleans its private directory
+ok 155 - java function runner enforces in-container deadline and cleans its private directory
+  ---
+  duration_ms: 1.258353
+  type: 'test'
+  ...
+# Subtest: java timeout returns a failure and still cleans its workspace
+ok 156 - java timeout returns a failure and still cleans its workspace
+  ---
+  duration_ms: 0.277569
+  type: 'test'
+  ...
+# (node:1123) ExperimentalWarning: Module mocking is an experimental feature and might change at any time
+# (Use `node --trace-warnings ...` to show where the warning was created)
+# (node:1123) DeprecationWarning: mock.module(): options.defaultExport is deprecated. Use options.exports.default instead.
+# Subtest: submission keysets preserve ties and timestamp precision in every sort direction
+ok 157 - submission keysets preserve ties and timestamp precision in every sort direction
+  ---
+  duration_ms: 3297.121569
+  type: 'test'
+  ...
+# Subtest: reset authorizes current mapping atomically and rolls back deletion when audit fails
+ok 158 - reset authorizes current mapping atomically and rolls back deletion when audit fails
+  ---
+  duration_ms: 3291.437979
+  type: 'test'
+  ...
+# (node:1147) ExperimentalWarning: Module mocking is an experimental feature and might change at any time
+# (Use `node --trace-warnings ...` to show where the warning was created)
+# (node:1147) DeprecationWarning: mock.module(): options.defaultExport is deprecated. Use options.exports.default instead.
+# Subtest: user management validates roles, passwords, IDs and normalizes bounded payloads
+ok 159 - user management validates roles, passwords, IDs and normalizes bounded payloads
+  ---
+  duration_ms: 112.371257
+  type: 'test'
+  ...
+# Subtest: user transactions preserve coordinator consistency, audit atomicity and protected accounts
+ok 160 - user transactions preserve coordinator consistency, audit atomicity and protected accounts
+  ---
+  duration_ms: 3214.768807
+  type: 'test'
+  ...
+# (node:1167) ExperimentalWarning: Module mocking is an experimental feature and might change at any time
+# (Use `node --trace-warnings ...` to show where the warning was created)
+# (node:1167) DeprecationWarning: mock.module(): options.defaultExport is deprecated. Use options.exports.default instead.
+# Subtest: user queries use bounded keyset pages and validate pagination
+ok 161 - user queries use bounded keyset pages and validate pagination
+  ---
+  duration_ms: 1.463607
+  type: 'test'
+  ...
+# (node:1175) ExperimentalWarning: Module mocking is an experimental feature and might change at any time
+# (Use `node --trace-warnings ...` to show where the warning was created)
+# (node:1175) DeprecationWarning: mock.module(): options.namedExports is deprecated. Use options.exports instead.
+# Subtest: submission worker rejects invalid concurrency before allocating a queue worker
+ok 162 - submission worker rejects invalid concurrency before allocating a queue worker
+  ---
+  duration_ms: 1.888945
+  type: 'test'
+  ...
+# Subtest: service token expiration reconnects with fresh auth while explicit shutdown prevents reconnect
+ok 163 - service token expiration reconnects with fresh auth while explicit shutdown prevents reconnect
+  ---
+  duration_ms: 0.757726
+  type: 'test'
+  ...
+# Subtest: worker lock duration remains finite with invalid environment and errors have listeners
+ok 164 - worker lock duration remains finite with invalid environment and errors have listeners
+  ---
+  duration_ms: 0.669671
+  type: 'test'
+  ...
+# Subtest: capability heartbeat publishes an expiring per-worker record after checking the image
+ok 165 - capability heartbeat publishes an expiring per-worker record after checking the image
+  ---
+  duration_ms: 6.206999
+  type: 'test'
+  ...
+# Subtest: missing image or paused worker is never advertised as healthy
+ok 166 - missing image or paused worker is never advertised as healthy
+  ---
+  duration_ms: 25.189835
+  type: 'test'
+  ...
+# Subtest: concurrent capability refreshes coalesce and shutdown prevents a late healthy publish
+ok 167 - concurrent capability refreshes coalesce and shutdown prevents a late healthy publish
+  ---
+  duration_ms: 2.541316
+  type: 'test'
+  ...
+# Subtest: Docker or Redis failures do not refresh a healthy lease or reject background refresh
+ok 168 - Docker or Redis failures do not refresh a healthy lease or reject background refresh
+  ---
+  duration_ms: 7.193441
+  type: 'test'
+  ...
+# Subtest: shutdown stops intake before draining and disconnects once across repeated signals
+ok 169 - shutdown stops intake before draining and disconnects once across repeated signals
+  ---
+  duration_ms: 2.070152
+  type: 'test'
+  ...
+# Subtest: shutdown deadline includes a Redis pause that never resolves
+ok 170 - shutdown deadline includes a Redis pause that never resolves
+  ---
+  duration_ms: 17.033937
+  type: 'test'
+  ...
+# Subtest: shutdown deadline includes active work that never drains
+ok 171 - shutdown deadline includes active work that never drains
+  ---
+  duration_ms: 16.164813
+  type: 'test'
+  ...
+# Subtest: shutdown handles Redis errors and disconnects the realtime client
+ok 172 - shutdown handles Redis errors and disconnects the realtime client
+  ---
+  duration_ms: 0.497602
+  type: 'test'
+  ...
+1..172
+# tests 172
+# suites 0
+# pass 172
+# fail 0
+# cancelled 0
+# skipped 0
+# todo 0
+# duration_ms 36211.744103
+Strict unit test gate passed: 172 tests; artifact test-results/unit.tap
+npm notice
+npm notice New major version of npm available! 11.9.0 -> 12.2.1
+npm notice Changelog: https://github.com/npm/cli/releases/tag/v12.2.1
+npm notice To update run: npm install -g npm@12.2.1
+npm notice
