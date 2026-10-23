@@ -59,7 +59,7 @@ jobs:
       - run: npm run build --workspace=apps/web
         working-directory: subject
       - run: node scripts/ci/install-browser.mjs
-        timeout-minutes: 13
+        timeout-minutes: 14
         working-directory: subject
       - run: node scripts/auth-performance-stack.mjs
         working-directory: subject

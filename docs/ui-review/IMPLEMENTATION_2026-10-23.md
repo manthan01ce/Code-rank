@@ -4,7 +4,7 @@ Baseline: master 681077a53cd142cb33e2512d0a886340643ac23f, pulled with fast-forw
 
 ## CI failure
 
-Architecture run 39909948916 passed unit, integration, Docker, production build and execution round trip, then hit the 5-minute Chromium installation deadline. Provisioning now separates OS dependencies from browser download. Each has at most two attempts with 180-second subprocess limits; failure still exits nonzero. The enclosing step permits 13 minutes. No product test or readiness gate is disabled.
+Architecture run 39909948916 passed unit, integration, Docker, production build and execution round trip, then hit the 5-minute Chromium installation deadline. Provisioning now downloads matching Chromium (two attempts, 180 seconds each), verifies a real launch/render, and installs OS packages only if that probe fails. OS provisioning is single-attempt with a six-minute bound: a timed-out apt operation is never replayed while it may hold a lock. The enclosing step permits 14 minutes. No product test or readiness gate is disabled.
 
 ## Implemented
 
@@ -31,3 +31,5 @@ TypeScript and critical lint pass. Architecture parsing/import tests pass. Local
 Commit 98420ee passed Architecture checks (39921983200) and Authentication performance comparison (39921983192). This includes real role flows, mobile menu navigation, public page overflow checks at 360/768/1280px, capacity and recovery. CI produced ten screenshots. Review found and fixed portal tab wrapping, tablet navigation width and dashboard table overflow. Sign-in uses the real coding photograph, and public/admin layouts retain the existing palette. Screenshots now disable transient CSS animations to capture their final state.
 
 A fresh isolated local profiler successfully reached its own dev server and performed HTTP checks. Rendering still fails with uv_resident_set_memory and local readiness remains degraded; HTTP 200 HTML with embedded error markers is not usable rendering. Diagnostic processes were cleaned up. This updates the earlier separate-loopback connection failure; neither result establishes a working local review environment.
+
+The final screenshot rerun exposed a slow Ubuntu mirror and a surviving apt lock. Provisioning was corrected to probe matching Chromium first; hosted runners with sufficient OS libraries avoid unnecessary package upgrades. Real browser tests and probe failures still fail CI.

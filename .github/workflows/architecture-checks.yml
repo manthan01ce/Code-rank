@@ -55,7 +55,7 @@ jobs:
         run: npm run test:stack
       - name: Install real browser
         run: node scripts/ci/install-browser.mjs
-        timeout-minutes: 13
+        timeout-minutes: 14
       - name: Install matching database recovery tools
         run: |
           sudo apt-get update
