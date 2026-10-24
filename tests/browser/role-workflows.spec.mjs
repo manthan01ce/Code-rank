@@ -60,6 +60,10 @@ test('faculty course selection renders the assigned practical and survives refre
   const { headers } = await login(page, 'faculty');
   await expect(page.getByRole('heading', { name: 'Select Allocated Subject', exact: true })).toBeVisible();
   const practical = await getJson(context.request, `/api/faculty/practicals/${practicalId()}`, headers);
+  const shell = await context.request.get(`/student/code/practical_${practicalId()}`);
+  expect(await shell.text()).not.toContain(practical.title);
+  const anonymousDetail = await context.request.get(`/api/student/practicals/${practicalId()}`);
+  expect(anonymousDetail.status()).toBe(401);
   const courses = await getJson(context.request, '/api/faculty/courses', headers);
   const course = courses.find(item => Number(item.id) === Number(practical.course_id));
   expect(course, 'Seeded faculty is assigned to practical course').toBeTruthy();

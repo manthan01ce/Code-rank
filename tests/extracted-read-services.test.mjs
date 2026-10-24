@@ -41,6 +41,15 @@ test('extracted reads preserve cohort visibility, reporting authority, ordering 
     assert.deepEqual((await StudentPracticalService.list(student)).map(row => row.id), [2,1]);
     assert.equal((await StudentPracticalService.list(student, '1junk')).length, 0);
     assert.equal((await StudentPracticalService.list(student, 'CS1')).length, 2);
+    const detail = await StudentPracticalService.detail(student,1);
+    assert.equal(detail.id,'practical_1'); assert.deepEqual(detail.testCases,[]);
+    await assert.rejects(StudentPracticalService.detail(student,3),error=>error.status===403);
+    await assert.rejects(StudentPracticalService.detail(student,4),error=>error.status===404);
+    await assert.rejects(StudentPracticalService.detail(student,'1junk'),error=>error.status===400);
+    await assert.rejects(StudentPracticalService.detail({id:2,role:'faculty'},1),error=>error.status===401);
+    await db.exec("UPDATE practicals SET start_time=now()+interval '1 day' WHERE id=1");
+    await assert.rejects(StudentPracticalService.detail(student,1),error=>error.status===403);
+    await db.exec('UPDATE practicals SET start_time=null WHERE id=1');
     await assert.rejects(StudentPracticalService.list({ ...student, session_token: 'revoked' }), error => error.status === 401);
     const before=queryCount;
     const report = await PracticalReportService.stats({ id: 2, role: 'faculty' }, 1);

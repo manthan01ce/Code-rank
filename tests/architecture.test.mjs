@@ -7,7 +7,7 @@ import ts from 'typescript';
 const root = new URL('../', import.meta.url);
 const read = p => readFileSync(new URL(p, root), 'utf8');
 
-test('all 46 API paths and 17 pages retain their HTTP methods and locations', () => {
+test('all inventoried API paths and pages retain their HTTP methods and locations', () => {
   const fixture = JSON.parse(read('tests/fixtures/routes.json'));
   const actual = walk(fileURLToPath(new URL('apps/web/src/app/api/', root)))
     .filter(file => /[\\/]route\.[cm]?[jt]sx?$/.test(file))
@@ -80,4 +80,10 @@ test('active lab launchers use the workspace and authoritative infrastructure', 
     assert.match(source, /npm run web/);
     assert.match(source, /infrastructure[\\/]docker-compose.yml/);
   }
+});
+
+test('student coding page never serializes private practical content before bearer authentication', () => {
+  const source=read('apps/web/src/app/student/code/[id]/page.js');
+  assert.doesNotMatch(source,/lib\/db|@coderank\/core\/db|\bsql\b|SELECT|generateMetadata/);
+  assert.match(source,/practicalId=/);
 });

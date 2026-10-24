@@ -2,6 +2,11 @@
 
 ## Implemented
 
+- Practical content is no longer read or serialized by the unauthenticated coding
+  page. The client loads it through a new protected detail endpoint, applying
+  active session, student role, cohort and start-time checks. Page metadata is
+  generic. The inventory now contains 47 API paths and 64 HTTP handlers.
+
 - Student practical discovery uses descending ID keyset pages: default 25, maximum
   100, optional `cursor`, array response and `X-Next-Cursor`. Dashboard, dedicated
   practical list and coding-workspace selector expose First/Next navigation.
@@ -76,7 +81,7 @@ not automatically deleted.
 
 ## Certification scope
 
-Local strict unit tests and lint are run before pushing. The production build
+Local strict verification passes 190 tests with no failures or skips, and critical lint passes before pushing. The production build
 cannot complete on this workspace because Node reports
 `uv_resident_set_memory: ENOENT`; Docker and standalone Redis/Postgres executables
 are unavailable. These restrictions are not bypassed or marked as passing.

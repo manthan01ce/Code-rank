@@ -1,7 +1,20 @@
 import sql from '../../db/client.js';
 import { listPage } from '../courses/list-pagination.js';
+import { PracticalService } from './PracticalService.js';
 
 export class StudentPracticalService {
+  static async detail(user, id) {
+    if (!user || user.role !== 'student') throw { status: 401, message: 'Student authentication required' };
+    const p = await PracticalService.authorize(user,id);
+    return { id: `practical_${p.id}`, dbId: p.id, isPractical: true,
+      clipboardRestricted: p.starter_code?.exam_policy?.restrict_clipboard === true,
+      title: p.title, description: p.description, difficulty: p.difficulty || 'Medium',
+      inputFormat: p.input_format, outputFormat: p.output_format, sampleInput: p.sample_input,
+      sampleOutput: p.sample_output, constraints: p.constraints, instructions: p.instructions,
+      starter_code: p.starter_code, allowedLanguages: p.starter_code?.allowed_languages || ['python','cpp','java','c','javascript'],
+      startTime: p.start_time, endTime: p.end_time, testCases: [],
+    };
+  }
   static async list(user, courseId = null, options = {}) {
     if (!user || user.role !== 'student') throw { status: 401, message: 'Unauthorized' };
     if (courseId !== null && (typeof courseId !== 'string' || courseId.length > 100)) throw { status: 400, message: 'Invalid course filter' };
