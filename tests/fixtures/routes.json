@@ -144,6 +144,9 @@
   "apps/web/src/app/api/stats/route.js": [
     "GET"
   ],
+  "apps/web/src/app/api/student/practicals/[id]/route.js": [
+    "GET"
+  ],
   "apps/web/src/app/api/student/practicals/[id]/submissions/route.js": [
     "GET"
   ],

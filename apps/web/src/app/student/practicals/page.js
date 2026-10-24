@@ -1,4 +1,5 @@
 'use client';
+import { usePracticalPage } from '@/hooks/usePracticalPage';
 import { fetchCollection } from '@/lib/fetch-collection';
 
 import { useState, useEffect } from 'react';
@@ -14,8 +15,8 @@ export default function StudentPracticals() {
   const [user, setUser] = useState(null);
   const [courses, setCourses] = useState([]);
   const [selectedCourse, setSelectedCourse] = useState('');
-  const [practicals, setPracticals] = useState([]);
-  const [loading, setLoading] = useState(true);
+  const practicalPage = usePracticalPage(selectedCourse, Boolean(selectedCourse));
+  const { rows: practicals, loading, refresh: fetchPracticals } = practicalPage;
   const [isChangePasswordOpen, setIsChangePasswordOpen] = useState(false);
 
   // Solving mode states
@@ -95,9 +96,7 @@ export default function StudentPracticals() {
       if (socket) {
         socket.emit('join_course_room', selectedCourse);
         
-        const handlePracticalAdded = (newPractical) => {
-          setPracticals(prev => [newPractical, ...prev]);
-        };
+        const handlePracticalAdded = () => fetchPracticals();
 
         socket.on('practical_added', handlePracticalAdded);
 
@@ -108,23 +107,6 @@ export default function StudentPracticals() {
       }
     }
   }, [selectedCourse, socket]);
-
-  const fetchPracticals = async () => {
-    if (!selectedCourse) return;
-    setLoading(true);
-    try {
-      const res = await fetch(`/api/student/practicals?course_id=${selectedCourse}`, {
-        headers: { Authorization: `Bearer ${token()}` }
-      });
-      if (res.ok) {
-        setPracticals(await res.json());
-      }
-    } catch (e) {
-      console.error('Error fetching practicals:', e);
-    } finally {
-      setLoading(false);
-    }
-  };
 
   // Auto-refresh practicals list every 15 seconds
   usePolling(fetchPracticals, 15_000, Boolean(selectedCourse && !activePractical));
@@ -629,6 +611,11 @@ int main() {
         </div>
       </div>
 
+      <nav aria-label="Practical pages">
+        <button disabled={loading || !practicalPage.cursor} onClick={practicalPage.first}>First practical page</button>{' '}
+        <button disabled={loading || !practicalPage.next} onClick={practicalPage.nextPage}>Next practical page</button>
+        {practicalPage.error && <p role="alert">{practicalPage.error}</p>}
+      </nav>
       <div className="table-container">
         {loading ? (
           <p>Loading assigned practicals...</p>

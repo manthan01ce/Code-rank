@@ -1,4 +1,5 @@
 'use client';
+import PracticalGradeReport from '@/components/PracticalGradeReport';
 import Editor from '@monaco-editor/react';
 
 import { fetchCollection } from '@/lib/fetch-collection';
@@ -15,6 +16,7 @@ export default function FacultyDashboard() {
   const { token: authToken, isReady } = useFacultyAuth();
   const token = () => authToken || (typeof window !== 'undefined' ? localStorage.getItem('token') : '') || '';
 
+  const [gradePractical, setGradePractical] = useState(null);
   const [courses, setCourses] = useState([]);
   const [batches, setBatches] = useState([]);
   
@@ -1036,6 +1038,7 @@ export default function FacultyDashboard() {
                       <td>{p.submissions_count} attempts</td>
                       <td>
                         <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
+                          <button onClick={() => setGradePractical(p)}>Grades</button>
                           <button
                             onClick={() => setExtraTimePractical(p)}
                             style={{
@@ -1095,6 +1098,7 @@ export default function FacultyDashboard() {
       )}
 
       {/* TAB 2: STUDENT SUBMISSIONS */}
+      {gradePractical && <PracticalGradeReport key={gradePractical.id} practical={gradePractical} token={token()} onClose={() => setGradePractical(null)} />}
       {activeTab === 'submissions' && (
         <div>
           <div style={{ display: 'flex', justifyContent: 'space-between', gap: '15px', marginBottom: '20px', alignItems: 'center', flexWrap: 'wrap' }}>

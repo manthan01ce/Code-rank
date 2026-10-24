@@ -1,5 +1,13 @@
 # CodeRank architecture
 
+CodeRank uses a **layered modular monolith with an asynchronous execution worker**,
+stored in an npm-workspaces/Turborepo monorepo. The Next.js application owns the UI
+and HTTP API; feature modules share one PostgreSQL schema. A separately deployed
+BullMQ worker consumes Redis jobs and invokes disposable Docker sandboxes. This is
+a web/worker architecture with shared domain packages, rather than independently
+owned microservices. `apps/` contains entry points; `packages/` contains reusable
+domain and infrastructure code. Domain modules are organized by feature.
+
 ## Runtime and package boundaries
 
 ```mermaid
@@ -28,6 +36,8 @@ flowchart TD
 | `packages/core/src/modules/courses` | Course and department domain service |
 | `packages/core/src/modules/practicals` | Practical-access policy and transactional management |
 | `packages/core/src/modules/mapping` | Course/faculty mapping management |
+| `packages/core/src/modules/reports` | Authorized course/practical reports and administrative counts/logs |
+| `packages/core/src/modules/practicals/StudentPracticalService.js` | Student practical discovery and cohort filtering |
 | `packages/core/src/modules/submissions` | Submission/workspace service, grading and persistence repository |
 | `packages/core/src/services` | Compatibility exports preserving existing imports |
 | `packages/database` | Neon client, migration loader and version ledger |
@@ -40,7 +50,11 @@ Core has no dependency on the runner package. Grading receives an executor facto
 from the worker. The runner has no database, queue, JWT or web dependency.
 Practical CRUD, deadline changes, mapping and submission-history routes are thin
 adapters. User-management mutations and course marks reporting also use domain services;
-some older course/department and selector routes still retain their original implementation.
+Student practical discovery, practical reports and administrative counts/logs also
+delegate SQL to domain services. The health route is the explicit infrastructure
+exception: it passes the database client to the read-only schema readiness probe.
+Architecture tests reject direct SQL and runner imports in other route adapters,
+reverse dependencies from packages into apps, and core dependencies on the runner.
 
 ## Execution and grading
 
@@ -73,7 +87,7 @@ queued submissions after deletion. Infrastructure/database failures fail the job
 
 ## Compatibility and scaling limits
 
-All 46 existing API paths and 17 page locations remain. Execution uses asynchronous
+All inventoried API paths and page locations remain. Execution uses asynchronous
 202 responses plus protected job polling. User lists return arrays with a bounded
 `limit` (default 100, maximum 200), optional `cursor`, and `X-Next-Cursor` response
 header. Student/faculty management pages consume those cursors. The faculty mapping
@@ -124,7 +138,34 @@ only a responsive SQL connection. A read-only check reports missing/pending/chan
 schemas as degraded. `db:manifest` regenerates metadata for new migrations, and
 CI verifies it against the SQL files. No schema writes happen on a health request.
 
+API regression gates compare discovered routes against the complete path/method
+inventory and exercise missing credentials, invalid/revoked bearers, and identity
+storage failures across every authenticated method. Public health, login, queue
+status and optional playground execution are explicit exceptions; optional-auth
+execution still rejects an invalid supplied bearer. Existing specialized suites
+cover role restrictions, course membership, job ownership, hidden-test redaction,
+session rotation and transactional mutations. JSON object mutations share a parser
+that returns 400 for malformed JSON and non-object payloads. Infrastructure error
+messages are redacted, and execution connectivity reports cached fallback as 503.
+
 Real Redis recovery tests now kill worker child processes during processing and
 verify stalled redelivery, quota retention until terminal state, exhausted-stall
 failure and graceful intake pause/drain. These tests do not replace Docker crash
 and orphan-container validation.
+
+## Bounded discovery, snapshot reports and operational certification
+
+Student practical discovery defaults to 25 rows with a maximum of 100 and ID
+keyset cursors; all three student consumers expose explicit page navigation.
+Practical grade reports default to 50 students with a maximum of 100. Their
+authorization, totals and bounded grades use one SQL statement snapshot, including
+current actor session/status and course assignment. The faculty Grades dialog
+consumes `pagination.nextCursor`. Admin counts no longer use a process-local
+response cache.
+
+Migration 007 adds supporting indexes. `npm run retention -- --target <database>`
+previews a bounded operational cleanup; apply is explicit and audited. Academic
+records and replay protection are excluded. See
+[release and certification details](reports/deployment-certification-2026-10-24.md)
+for defaults, commands, runtime isolation and the distinction between strict CI
+evidence and production certification.

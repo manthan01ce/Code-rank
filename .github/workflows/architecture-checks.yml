@@ -2,7 +2,7 @@ name: Architecture checks
 on:
   pull_request:
   push:
-    branches: [master, main, fix/architecture-hardening]
+    branches: [master, main, 'fix/architecture-*']
 permissions:
   contents: read
 concurrency:
@@ -11,7 +11,7 @@ concurrency:
 jobs:
   verify:
     runs-on: ubuntu-latest
-    timeout-minutes: 30
+    timeout-minutes: 45
     services:
       redis:
         image: redis:7-alpine
@@ -51,6 +51,8 @@ jobs:
       - name: Build worker deployment image
         run: docker build -t coderank-worker:ci -f apps/worker/Dockerfile .
       - run: npm run build --workspace=apps/web
+      - name: Build isolated web deployment image
+        run: docker build -t coderank-web:ci -f apps/web/Dockerfile .
       - name: Full web-to-worker execution round trip
         run: npm run test:stack
       - name: Install real browser
@@ -66,6 +68,8 @@ jobs:
       - name: Verify authenticated cluster, capacity and database/process recovery
         run: npm run test:authenticated
         timeout-minutes: 10
+      - name: Certify this exact commit against complete strict CI evidence
+        run: node scripts/ci/write-certification.mjs
       - name: Preserve strict test reports and stack diagnostics
         if: always()
         uses: actions/upload-artifact@v4

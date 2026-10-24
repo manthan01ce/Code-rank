@@ -26,7 +26,10 @@
     "./services/CourseReportService": "./src/modules/reports/CourseReportService.js",
     "./security/active-actor": "./src/security/active-actor.js",
     "./db-readiness": "./src/db/readiness.js",
-    "./utils/request-timing": "./src/utils/request-timing.js"
+    "./utils/request-timing": "./src/utils/request-timing.js",
+    "./services/PracticalReportService": "./src/modules/reports/PracticalReportService.js",
+    "./services/StudentPracticalService": "./src/modules/practicals/StudentPracticalService.js",
+    "./services/OperationsService": "./src/modules/reports/OperationsService.js"
   },
   "dependencies": {
     "@neondatabase/serverless": "^1.0.2",
