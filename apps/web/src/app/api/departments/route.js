@@ -1,3 +1,4 @@
+import { jsonBody } from '@/lib/route-response';
 import { NextResponse } from 'next/server';
 import { CourseService } from '@coderank/core/services/CourseService';
 import { authenticateRequest } from '@coderank/core/security/active-actor';
@@ -22,7 +23,7 @@ export async function GET(request) {
 export async function POST(request) {
   try {
     const user = await authenticateRequest(request);
-    const body = await request.json();
+    const body = await jsonBody(request);
     const department = await CourseService.createDepartment(user, body);
     return NextResponse.json(department);
   } catch (error) {

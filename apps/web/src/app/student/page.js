@@ -1,8 +1,9 @@
 'use client';
+import { usePracticalPage } from '@/hooks/usePracticalPage';
 import { fetchCollection } from '@/lib/fetch-collection';
 
 import { useRouter } from 'next/navigation';
-import { useEffect, useState, useCallback } from 'react';
+import { useEffect, useState } from 'react';
 import LoadingOverlay from '@/components/LoadingOverlay';
 import LogoutConfirmModal from '@/components/LogoutConfirmModal';
 import { useSocket } from '@/hooks/useSocket';
@@ -17,25 +18,8 @@ export default function StudentDashboard() {
   const [loadError, setLoadError] = useState('');
   const [isHydrated, setIsHydrated] = useState(false);
   const [courses, setCourses] = useState([]);
-  const [practicals, setPracticals] = useState([]);
-
-  const fetchStudentPracticals = useCallback(async () => {
-    const token = localStorage.getItem('token');
-    if (!token) return;
-    try {
-      const res = await fetch('/api/student/practicals', {
-        headers: { 'Authorization': `Bearer ${token}` }
-      });
-      if (res.ok) {
-        const data = await res.json();
-        if (Array.isArray(data)) {
-          setPracticals(data);
-        }
-      }
-    } catch (err) {
-      console.error('Error fetching practicals for dashboard:', err);
-    }
-  }, []);
+  const practicalPage = usePracticalPage(null, Boolean(user));
+  const { rows: practicals, refresh: fetchStudentPracticals } = practicalPage;
 
   useEffect(() => {
     // Wait for client-side hydration before accessing localStorage
@@ -89,11 +73,6 @@ export default function StudentDashboard() {
               const rows = await fetchCollection(`/api/courses?semester=${encodeURIComponent(sem)}`, options);
               if (active) setCourses(rows);
             }
-          })(),
-          (async () => {
-            const rows = await read('/api/student/practicals');
-            if (!Array.isArray(rows)) throw Error('Invalid practicals response');
-            if (active) setPracticals(rows);
           })(),
         ]);
         if (active && results.some(result => result.status === 'rejected')) {
@@ -237,6 +216,12 @@ export default function StudentDashboard() {
           </p>
         </div>
 
+        <nav aria-label="Dashboard practical pages">
+          <button disabled={practicalPage.loading || !practicalPage.cursor} onClick={practicalPage.first}>First practical page</button>{' '}
+          <button disabled={practicalPage.loading || !practicalPage.next} onClick={practicalPage.nextPage}>Next practical page</button>
+          <p>Showing up to 25 practicals across your subjects on this page.</p>
+          {practicalPage.error && <p role="alert">{practicalPage.error}</p>}
+        </nav>
         {courses.length > 0 ? (
           <div style={{ display: 'flex', flexDirection: 'column', gap: '30px' }}>
             {courses.map(course => {

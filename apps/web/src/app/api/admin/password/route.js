@@ -1,3 +1,4 @@
+import { jsonBody } from '@/lib/route-response';
 import { NextResponse } from 'next/server';
 import { authenticateRequest } from '@coderank/core/security/active-actor';
 import { UserService } from '@coderank/core/services/UserService';
@@ -9,7 +10,7 @@ export async function POST(request) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
-    const { currentPassword, newPassword } = await request.json();
+    const { currentPassword, newPassword } = await jsonBody(request);
     const result = await UserService.changePassword(admin, { currentPassword, newPassword });
     return NextResponse.json(result);
   } catch (error) {

@@ -57,7 +57,7 @@ async function refreshHealthCache() {
         report.services.queue.error = 'Redis queue is unavailable; cached queue statistics are being returned';
       } else {
         report.services.queue.status = 'degraded';
-        report.services.queue.error = queueResult.status === 'rejected' ? queueResult.reason?.message : 'Queue check failed';
+        report.services.queue.error = 'Queue check failed';
       }
 
       report.services.execution = workerResult.status === 'fulfilled' && workerResult.value.healthy
@@ -71,12 +71,12 @@ async function refreshHealthCache() {
       healthCache = report;
       healthCacheTime = Date.now();
       return report;
-    } catch (err) {
+    } catch {
       healthCache = {
         status: 'degraded',
         timestamp: new Date().toISOString(),
         services: {
-          database: { status: 'degraded', error: err.message },
+          database: { status: 'degraded', error: 'Health check failed' },
           queue: { status: 'degraded' },
           execution: { status: 'degraded' }
         }

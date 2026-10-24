@@ -31,7 +31,7 @@
     "db:manifest": "node database/update-readiness-manifest.js",
     "test:integration": "node scripts/ci/run-tests.mjs integration",
     "test:authenticated": "node scripts/authenticated-stack.mjs",
-    "lint:critical": "eslint --config apps/web/eslint.config.mjs packages/core packages/database packages/queue packages/runner apps/worker scripts apps/web/src/app/api apps/web/src/lib apps/web/server.js apps/web/cluster.js --max-warnings=0 load-tests/capacity.mjs",
+    "lint:critical": "eslint --config apps/web/eslint.config.mjs packages/core packages/database packages/queue packages/runner apps/worker scripts apps/web/src/app/api apps/web/src/lib apps/web/server.js apps/web/cluster.js --max-warnings=0 load-tests/capacity.mjs apps/web/src/hooks/usePracticalPage.js apps/web/src/components/PracticalGradeReport.js",
     "db:operations": "node scripts/database-ops.mjs",
     "test:capacity": "node load-tests/capacity.mjs",
     "runner:reap": "node scripts/reap-sandboxes.mjs",
@@ -39,7 +39,8 @@
     "k6:qualify:api": "k6 run -e MODE=api load-tests/qualification.js",
     "k6:qualify:run": "k6 run -e MODE=run load-tests/qualification.js",
     "k6:qualify:submission": "k6 run -e MODE=submission load-tests/qualification.js",
-    "k6:qualify:concurrency": "k6 run -e MODE=concurrency load-tests/qualification.js"
+    "k6:qualify:concurrency": "k6 run -e MODE=concurrency load-tests/qualification.js",
+    "retention": "node scripts/retention.mjs"
   },
   "devDependencies": {
     "@electric-sql/pglite": "0.5.10",

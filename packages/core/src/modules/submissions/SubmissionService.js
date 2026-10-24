@@ -117,6 +117,8 @@ export class SubmissionService {
       throw { status: 401, message: 'Unauthorized' };
     }
 
+    const submissionId = Number(id);
+    if (!Number.isSafeInteger(submissionId) || submissionId <= 0) throw { status: 400, message: 'Invalid submission ID' };
     const submissions = await sql`
       SELECT s.*, u.name as student_name, u.email as student_email,
              u.extra_info->>'roll_number' as roll_number,
@@ -124,7 +126,7 @@ export class SubmissionService {
       FROM practical_submissions s
       JOIN users u ON s.student_id = u.id
       JOIN practicals p ON s.practical_id = p.id
-      WHERE s.id = ${parseInt(id)}
+      WHERE s.id = ${submissionId}
     `;
 
     if (submissions.length === 0) {
@@ -152,7 +154,7 @@ export class SubmissionService {
       SELECT sc.*, tc.input, tc.expected, tc.is_hidden, tc.label
       FROM practical_submission_cases sc
       JOIN practical_test_cases tc ON sc.test_case_id = tc.id
-      WHERE sc.submission_id = ${parseInt(id)}
+      WHERE sc.submission_id = ${submissionId}
       ORDER BY tc.order_index ASC
     `;
 

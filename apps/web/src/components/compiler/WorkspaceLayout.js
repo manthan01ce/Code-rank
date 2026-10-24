@@ -10,6 +10,7 @@
  * - Settings & Account menu: A User profile dropdown managing profile updates, password changes, preferences, and logout.
  */
 
+import { usePracticalPage } from '@/hooks/usePracticalPage';
 import { fetchCollection } from '@/lib/fetch-collection';
 import { useState, useEffect, useRef } from 'react';
 import { useRouter } from 'next/navigation';
@@ -131,7 +132,8 @@ export default function WorkspaceLayout({ problem }) {
   const [consoleOpen, setConsoleOpen] = useState(true);
   const [selectedLang, setSelectedLang] = useState(DEFAULT_LANGUAGE);
   const [isListOpen, setIsListOpen] = useState(false);
-  const [practicals, setPracticals] = useState([]);
+  const practicalPage = usePracticalPage();
+  const { rows: practicals, refresh: fetchPracticals } = practicalPage;
   const [selectedCourse, setSelectedCourse] = useState('All');
   const socket = useSocket();
   const hasAutoNavigated = useRef(false);
@@ -278,25 +280,6 @@ export default function WorkspaceLayout({ problem }) {
       setProfileMsg({ type: 'error', text: friendlyError(err) });
     }
   };
-
-  const fetchPracticals = () => {
-    const token = localStorage.getItem('token');
-    if (!token) return;
-    fetch('/api/student/practicals', {
-      headers: { 'Authorization': `Bearer ${token}` }
-    })
-      .then(res => res.json())
-      .then(data => {
-        if (Array.isArray(data)) {
-          setPracticals(data);
-        }
-      })
-      .catch(err => console.error('Error fetching student practicals:', err));
-  };
-
-  useEffect(() => {
-    fetchPracticals();
-  }, []);
 
   useEffect(() => {
     if (!socket) return;
@@ -793,6 +776,12 @@ export default function WorkspaceLayout({ problem }) {
                 zIndex: 1000,
                 padding: '8px 0'
               }}>
+                <nav aria-label="Workspace practical pages" style={{ padding: 12 }}>
+                  <button disabled={practicalPage.loading || !practicalPage.cursor} onClick={practicalPage.first}>First page</button>{' '}
+                  <button disabled={practicalPage.loading || !practicalPage.next} onClick={practicalPage.nextPage}>Next page</button>
+                  <p style={{ fontSize: 11 }}>Subject filters apply to this page.</p>
+                  {practicalPage.error && <p role="alert">{practicalPage.error}</p>}
+                </nav>
                 {practicals.length > 0 && (() => {
                   const courseMap = new Map();
                   practicals.forEach(p => {

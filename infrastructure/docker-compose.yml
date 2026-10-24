@@ -35,7 +35,6 @@ services:
     build:
       context: ..
       dockerfile: apps/worker/Dockerfile
-    container_name: coderank-worker
     depends_on:
       redis:
         condition: service_healthy
@@ -60,6 +59,38 @@ services:
     - container-worker
     extra_hosts:
     - host.docker.internal:host-gateway
+  # Optional container web tier has no Docker socket, runner package or CLI.
+  web:
+    build:
+      context: ..
+      dockerfile: apps/web/Dockerfile
+    depends_on:
+      redis:
+        condition: service_healthy
+    environment:
+    - REDIS_HOST=redis
+    - REDIS_PORT=6379
+    - DATABASE_URL=${DATABASE_URL}
+    - DATABASE_DRIVER=${DATABASE_DRIVER:-neon}
+    - JWT_SECRET=${JWT_SECRET}
+    - REALTIME_REDIS_ENABLED=true
+    - CLUSTER_ENABLED=true
+    - WEB_CONCURRENCY=${WEB_CONCURRENCY:-2}
+    - ALLOWED_ORIGIN=${ALLOWED_ORIGIN:-http://localhost:3000}
+    ports:
+    - 127.0.0.1:3000:3000
+    read_only: true
+    tmpfs:
+    - /tmp
+    - /app/apps/web/.next/cache:uid=1000,gid=1000
+    cap_drop:
+    - ALL
+    security_opt:
+    - no-new-privileges:true
+    stop_grace_period: 150s
+    restart: unless-stopped
+    profiles:
+    - container-web
   runner-image:
     build:
       context: ..

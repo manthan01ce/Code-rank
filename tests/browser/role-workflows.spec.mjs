@@ -66,6 +66,16 @@ test('faculty course selection renders the assigned practical and survives refre
   await page.getByRole('heading', { name: course.name, exact: true }).click();
   await expect(page.getByRole('heading', { name: 'Available Practicals', exact: true })).toBeVisible();
   await expect(page.getByRole('cell', { name: practical.title, exact: true })).toBeVisible();
+  await page.getByRole('row').filter({ has: page.getByRole('cell', { name: practical.title, exact: true }) }).getByRole('button', { name: 'Grades', exact: true }).click();
+  const report = page.getByRole('dialog', { name: 'Practical grade report' });
+  await expect(report).toBeVisible();
+  await expect(report.getByRole('button', { name: 'First grade page' })).toBeVisible();
+  const gradePage = await getJson(context.request, `/api/faculty/practicals/${practicalId()}/stats?limit=1`, headers);
+  expect(gradePage.students).toHaveLength(1);
+  expect(gradePage.pagination.nextCursor).toBeTruthy();
+  const secondPage = await getJson(context.request, `/api/faculty/practicals/${practicalId()}/stats?limit=1&cursor=${gradePage.pagination.nextCursor}`, headers);
+  expect(secondPage.students[0].id).not.toBe(gradePage.students[0].id);
+  await report.getByRole('button', { name: 'Close grades' }).click();
   await page.reload();
   await expect(page).toHaveURL(/\/faculty(?:\?.*)?$/);
   await expect(page.getByRole('heading', { name: 'Available Practicals', exact: true })).toBeVisible();
@@ -81,6 +91,7 @@ test('student dashboard shows the assigned practical and retains current authent
   expect(practical, 'Active practical matches the student batch and semester').toBeTruthy();
   await expect(page.getByRole('heading', { name: 'My Assigned Subjects & Practicals', exact: true })).toBeVisible();
   await expect(page.getByText(practical.title, { exact: true })).toBeVisible();
+  await expect(page.getByRole('navigation', { name: 'Dashboard practical pages' })).toBeVisible();
   await page.reload();
   await expect(page).toHaveURL(/\/student\/?$/);
   await expect(page.getByText(practical.title, { exact: true })).toBeVisible();

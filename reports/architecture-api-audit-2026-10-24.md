@@ -1,0 +1,79 @@
+# CodeRank architecture and API audit
+
+Reviewed baseline: `e22e348` on `master`, 24 October 2026.
+
+## Architecture in use
+
+CodeRank is a layered modular monolith with a separate asynchronous execution
+worker, stored in an npm-workspaces/Turborepo monorepo. Feature modules share one
+PostgreSQL schema. The web and worker applications reuse core services rather
+than owning independent databases or separately versioned domain APIs.
+
+| Layer | Code and responsibility |
+| --- | --- |
+| UI and HTTP adapters | `apps/web`: Next.js App Router, request authentication, HTTP contracts |
+| Domain/application services | `packages/core/src/modules`: users, courses, practicals, mapping, submissions, reports |
+| Persistence | `packages/database`; schema and transactional functions in `database/migrations` |
+| Asynchronous transport | `packages/queue`: Redis/BullMQ admission and readiness |
+| Background processing | `apps/worker`: queue consumption, grading orchestration, notifications |
+| Untrusted execution | `packages/runner`: isolated disposable Docker containers |
+| Deployment and operations | `infrastructure`, `scripts`, `load-tests` |
+
+Execution flows from browser to API, through authorization/validation/admission,
+into Redis/BullMQ, then to a worker and Docker sandbox. Grading persists results
+to PostgreSQL; the browser reads protected job status and receives realtime
+notifications. Ordinary CRUD requests call domain services and PostgreSQL.
+
+The top-level folder split is appropriate. Moving the entire application or
+introducing microservices is unnecessary for the verified issues. Compatibility
+re-exports under `packages/core/src/services` are intentional and remain intact.
+
+## Verified findings and fixes
+
+| Finding | Resolution |
+| --- | --- |
+| Four business endpoints queried SQL directly from HTTP adapters | Moved administrative counts/logs, student practical discovery, and practical reporting into core services; added one-way package and route boundary checks |
+| Malformed JSON returned 500 on several mutations; the shared parser accepted arrays/null/primitives | Shared object-body validation returns 400; applied to profile/password, course/department, workspace and existing management mutations |
+| Submission detail and practical report accepted partially parsed numeric IDs | Validate positive safe integers before database access |
+| Student discovery interpreted cohort strings as SQL patterns and partially parsed course filters | Exact normalized cohort comparisons; course ID detection requires the complete numeric string, with course-code lookup preserved |
+| Practical report cohort selection differed from practical assignment policy | Normalize blank/All cohorts, include division matches, and require the course semester; avoid unsafe integer casts on unrelated malformed student metadata |
+| Report matched every student by scanning the entire submission list | Build a student-to-best-submission map once |
+| Route inventory checked saved routes but could silently miss new endpoints | Compare all discovered route files against the inventory, then verify methods |
+| Revocation/outage checks covered selected endpoints only | Exercise all authenticated handlers for missing/invalid/revoked credentials and authentication-storage outages; optional-auth execution cannot downgrade invalid bearers to guests |
+| Unexpected errors exposed implementation details on some responses | Redact unexpected profile/upload and public queue/health errors |
+| Multipart parsing failures returned 500; legacy upload accepted non-files and advertised unsupported XLS | Both upload adapters return 400 for malformed multipart; legacy upload validates file shape/size before reading and accepts CSV/XLSX |
+| Execution connectivity reported healthy while returning cached queue fallback | Return degraded/503 and no-store for fallback data |
+| Log limit used partial parsing/clamping and equal-time rows had unstable ordering | Strict bounded integer limit and deterministic timestamp/ID ordering |
+
+## Verification and scope
+
+The inventory contains **46 API paths and 63 explicitly exported HTTP handlers**.
+All paths and methods are preserved. Route contract tests dynamically import the
+inventoried handlers and call them with real Request objects and mocked storage;
+they are handler-level tests, not live HTTP or infrastructure tests.
+
+The strict unit gate includes existing authorization, session revocation,
+transaction, hidden-test redaction, queue admission, sandbox-policy and SQL tests,
+plus the new route/input/package-boundary checks. The extracted services are also
+exercised against embedded PostgreSQL (PGlite) for visibility, faculty assignment,
+role restrictions, reporting, deterministic logs and malformed identifiers.
+
+Critical lint and whitespace checks pass. The full strict unit test gate passes
+with **186 passing tests**, no failures, skips, cancellations or todos. Exact test output is generated by
+`npm test` in `test-results/unit.tap`; it is not substituted with a filtered run.
+
+Production build was attempted and failed with the host error
+`ENOENT: no such file or directory, uv_resident_set_memory` during Next.js build.
+No application-build success is claimed. Docker, standalone Redis and PostgreSQL
+executables are unavailable in this workspace, so live integration, sandbox,
+browser and full-stack gates were not run. The existing architecture CI workflow
+provides those services and remains required before merge/deployment.
+
+## Follow-up implementation
+
+The pagination, snapshot, statistics-cache and operational gaps listed in this
+initial audit are addressed by the follow-up changes. See
+[deployment-certification-2026-10-24.md](deployment-certification-2026-10-24.md)
+for the final behavior, retention controls, release compatibility and exact
+verification limits. Shared-schema modular architecture is intentional, and
+production certification still requires evidence from the real deployment.

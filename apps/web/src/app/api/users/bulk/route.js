@@ -34,7 +34,10 @@ export async function POST(request) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
-    const formData = await request.formData();
+    let formData;
+    try { formData = await request.formData(); } catch {
+      return NextResponse.json({ error: 'Invalid multipart payload' }, { status: 400 });
+    }
     const file = formData.get("file");
     const role = formData.get("role"); // 'student' or 'faculty'
 
@@ -292,7 +295,7 @@ export async function POST(request) {
     if (error.status) return NextResponse.json({ error: error.message }, { status: error.status });
     console.error("Bulk user error:", error);
     return NextResponse.json(
-      { error: "Internal server error: " + error.message },
+      { error: "Internal server error" },
       { status: 500 },
     );
   }
