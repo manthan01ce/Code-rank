@@ -187,7 +187,14 @@ export default function HomePage() {
         </section>
         <section className={styles.finalCta}><p className={styles.eyebrow}>YOUR NEXT CHAPTER STARTS WITH A LINE OF CODE.</p><h2>Ready to find your<br /><em>next breakthrough?</em></h2><div className={styles.actions}><Link className={styles.primary} href={user ? dashboard : '/login'}>Let’s get coding <span aria-hidden="true">↗</span></Link></div><span className={styles.ctaBracket} aria-hidden="true">{'{ }'}</span></section>
       </main>
-      <footer className={styles.footer}><Link href="/" className={styles.footerBrand}>Code<span>Rank</span></Link><p>Practice with purpose. Progress with confidence.</p><span>© {new Date().getFullYear()} CodeRank</span><a href="#main">Back to top ↑</a></footer>
+      <footer className={`${styles.footer} ${styles.refinedFooter}`}>
+        <div className={styles.footerColumns}>
+          <div className={styles.footerAbout}><Link href="/" className={styles.footerLogo}><Image src="/coderank-logo.jpg" alt="" width={36} height={36}/><span>Code<strong>Rank</strong></span></Link><p>Practice with purpose.<br/>Progress with confidence.</p><small>A connected space for university<br/>coding labs and practical learning.</small></div>
+          <nav aria-label="Footer platform navigation"><h3>Explore CodeRank</h3><a href="#experience">The learning experience</a><a href="#roles">Student & faculty workspaces</a><Link href="/login">Sign in to your workspace ↗</Link></nav>
+          <div className={styles.footerPurpose}><span aria-hidden="true">{'</>'}</span><h3>Learn by doing.<br/>Grow by building.</h3><p>C · C++ · Java · Python</p></div>
+        </div>
+        <div className={styles.footerLegal}><span>© {new Date().getFullYear()} CodeRank</span><span>Built for the university coding lab.</span><a href="#main">Back to top ↑</a></div>
+      </footer>
     </div>
   );
 }

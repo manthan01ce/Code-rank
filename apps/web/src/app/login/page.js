@@ -57,6 +57,5 @@ export default function Login() {
       const form = new FormData(event.currentTarget);
       handleLogin(event, {email: String(form.get('email') || '').trim(), password: String(form.get('password') || '')});
     }}
-    heroImageSrc="https://images.unsplash.com/photo-1461749280684-dccba630e2f6?auto=format&fit=crop&w=1200&q=80"
   />;
 }

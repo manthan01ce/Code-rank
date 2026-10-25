@@ -196,3 +196,21 @@ to{opacity:1;transform:translateY(0)}
 
 .originalHero{min-width:0}
 .originalHero>div:last-child{flex-wrap:wrap}
+.refinedFooter { display: block; padding: 48px 48px 24px; }
+.footerColumns { display: grid; grid-template-columns: 1.3fr 1fr 1fr; gap: 50px; padding-bottom: 38px; }
+.footerLogo { display: flex; align-items: center; gap: 10px; font-size: 23px; color: #0f172a !important; font-weight: 700; letter-spacing: -.8px; }
+.footerLogo img { border-radius: 50%; }
+.footerLogo strong { color: #4f46e5; }
+.footerAbout p { font-size: 13px; color: #475569; line-height: 1.8; margin: 18px 0 10px; }
+.footerAbout small { color: #64748b; font-size: 11px; line-height: 1.8; }
+.footerColumns nav { display: flex; flex-direction: column; gap: 16px; padding-top: 9px; }
+.footerColumns h3 { color: #0f172a; font-size: 12px; font-weight: 600; }
+.footerColumns nav h3 { margin-bottom: 8px; }
+.footerColumns nav a { font-size: 11px; color: #64748b; line-height: 1.7; }
+.footerColumns nav a:hover { color: #4338ca; }
+.footerPurpose { padding: 24px; border: 1px solid #e0e7ff; background: #eff1ff; border-radius: 12px; }
+.footerPurpose > span { color: #4f46e5; font-size: 23px; }
+.footerPurpose h3 { font-size: 20px; font-weight: 500; line-height: 1.5; letter-spacing: -.5px; margin-top: 13px; }
+.footerPurpose p { font-size: 10px; color: #64748b; margin-top: 16px; }
+.footerLegal { display: flex; justify-content: space-between; flex-wrap: wrap; gap: 16px; border-top: 1px solid #e2e8f0; padding-top: 22px; font-size: 10px; color: #64748b; }
+@media(max-width:760px) { .refinedFooter { padding: 38px 24px 24px; } .footerColumns { grid-template-columns: 1fr; gap: 30px; } .footerLegal { font-size: 9px; } .footerLegal > span:nth-child(2) { display: none; } }
