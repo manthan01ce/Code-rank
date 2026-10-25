@@ -10,6 +10,7 @@
  * - Settings & Account menu: A User profile dropdown managing profile updates, password changes, preferences, and logout.
  */
 
+import { StudentThemeToggle, useStudentTheme } from '@/components/student/StudentTheme';
 import { usePracticalPage } from '@/hooks/usePracticalPage';
 import { fetchCollection } from '@/lib/fetch-collection';
 import { useState, useEffect, useRef } from 'react';
@@ -121,6 +122,7 @@ function friendlyError(err, fallback = 'Something went wrong. Please try again.'
 }
 
 export default function WorkspaceLayout({ problem }) {
+  const studentTheme = useStudentTheme();
   const router = useRouter();
   const [showLogoutModal, setShowLogoutModal] = useState(false);
   const handleLogout = () => setShowLogoutModal(true);
@@ -705,7 +707,7 @@ export default function WorkspaceLayout({ problem }) {
                     onSubmit={handleSubmit}
                     fontSize={editorFontSize}
                     tabSize={editorTabSize}
-                    theme={editorTheme}
+                    theme={studentTheme ? (studentTheme.theme === 'light' ? 'light' : editorTheme === 'hc-black' ? 'hc-black' : 'vs-dark') : editorTheme}
                     wordWrap={editorWordWrap}
                     minimap={editorMinimap}
                     saveStatus={saveStatus}
@@ -722,7 +724,7 @@ export default function WorkspaceLayout({ problem }) {
                       />);
 
   return (
-    <div className="coding-workspace" style={{ display: 'flex', flexDirection: 'column', height: '100dvh', width: '100%', overflow: 'hidden', background: '#000000', color: '#ffffff', fontFamily: 'Inter, sans-serif', userSelect: 'none' }}>
+    <div className="coding-workspace" style={{ display: 'flex', flexDirection: 'column', height: '100dvh', width: '100%', overflow: 'hidden', background: 'var(--student-code-bg-000000, #000000)', color: 'var(--student-code-text-ffffff, #ffffff)', fontFamily: 'Inter, sans-serif', userSelect: 'none' }}>
 
       {/* Floating Non-Blocking Toast Notification */}
       {workspaceNotice && (
@@ -739,7 +741,7 @@ export default function WorkspaceLayout({ problem }) {
           borderRadius: '8px',
           background: workspaceNotice.type === 'warning' ? '#291800' : workspaceNotice.type === 'error' ? '#290505' : '#052912',
           border: `1px solid ${workspaceNotice.type === 'warning' ? '#f59e0b' : workspaceNotice.type === 'error' ? '#ef4444' : '#10b981'}`,
-          color: '#ffffff',
+          color: 'var(--student-code-text-ffffff, #ffffff)',
           fontSize: '13px',
           fontWeight: 600,
           boxShadow: '0 10px 30px rgba(0,0,0,0.8)',
@@ -748,7 +750,7 @@ export default function WorkspaceLayout({ problem }) {
           <span>{workspaceNotice.text}</span>
           <button 
             onClick={() => setWorkspaceNotice(null)}
-            style={{ background: 'none', border: 'none', color: '#999', cursor: 'pointer', fontSize: '14px', padding: '0 4px', marginLeft: '6px' }}
+            style={{ background: 'none', border: 'none', color: 'var(--student-code-text-999999, #999)', cursor: 'pointer', fontSize: '14px', padding: '0 4px', marginLeft: '6px' }}
           >
             ✕
           </button>
@@ -756,7 +758,8 @@ export default function WorkspaceLayout({ problem }) {
       )}
 
       {/* ── Top Navigation Bar — 64px, true black ── */}
-      <div style={{ height: '64px', background: '#000000', borderBottom: '1px solid #262626', display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '0 24px', flexShrink: 0 }}>
+      <div style={{ height: '64px', background: 'var(--student-code-bg-000000, #000000)', borderBottom: '1px solid var(--student-code-border-262626, #262626)', display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '0 24px', flexShrink: 0 }}>
+        <StudentThemeToggle />
         {/* Left: Brand + Problem List Dropdown */}
         <div style={{ display: 'flex', alignItems: 'center', gap: '24px' }}>
           {/* Logo and Wordmark */}
@@ -765,10 +768,10 @@ export default function WorkspaceLayout({ problem }) {
             style={{ display: 'flex', alignItems: 'center', gap: '12px', cursor: 'pointer' }}
             title="Go to Student Dashboard"
           >
-            <div style={{ width: '28px', height: '28px', borderRadius: '50%', background: '#ffffff', overflow: 'hidden', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+            <div style={{ width: '28px', height: '28px', borderRadius: '50%', background: 'var(--student-code-bg-ffffff, #ffffff)', overflow: 'hidden', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
               <img src="/coderank-logo.jpg" alt="CodeRank Logo" onError={(e) => { e.target.style.display = 'none'; }} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
             </div>
-            <span style={{ color: '#ffffff', fontWeight: 700, fontSize: '16px', letterSpacing: '1px', textTransform: 'uppercase' }}>CodeRank</span>
+            <span style={{ color: 'var(--student-code-text-ffffff, #ffffff)', fontWeight: 700, fontSize: '16px', letterSpacing: '1px', textTransform: 'uppercase' }}>CodeRank</span>
           </div>
           
           {/* Switch course dropdown has been removed here */}
@@ -777,9 +780,9 @@ export default function WorkspaceLayout({ problem }) {
           <div style={{ position: 'relative' }}>
             <button suppressHydrationWarning
               onClick={() => setIsListOpen(!isListOpen)}
-              style={{ background: '#1a1a1a', border: '1px solid #3c3c3c', color: '#bbbbbb', fontSize: '11px', fontWeight: 700, letterSpacing: '1.5px', textTransform: 'uppercase', padding: '8px 16px', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '6px', outline: 'none' }}
-              onMouseEnter={e => { e.currentTarget.style.background = '#262626'; e.currentTarget.style.color = '#ffffff'; }}
-              onMouseLeave={e => { e.currentTarget.style.background = '#1a1a1a'; e.currentTarget.style.color = '#bbbbbb'; }}
+              style={{ background: 'var(--student-code-bg-1a1a1a, #1a1a1a)', border: '1px solid var(--student-code-border-3c3c3c, #3c3c3c)', color: 'var(--student-code-text-bbbbbb, #bbbbbb)', fontSize: '11px', fontWeight: 700, letterSpacing: '1.5px', textTransform: 'uppercase', padding: '8px 16px', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '6px', outline: 'none' }}
+              onMouseEnter={e => { e.currentTarget.style.background = 'var(--student-code-bg-262626, #262626)'; e.currentTarget.style.color = 'var(--student-code-text-ffffff, #ffffff)'; }}
+              onMouseLeave={e => { e.currentTarget.style.background = 'var(--student-code-bg-1a1a1a, #1a1a1a)'; e.currentTarget.style.color = 'var(--student-code-text-bbbbbb, #bbbbbb)'; }}
             >
               <List size={12} />
               Problem List
@@ -790,8 +793,8 @@ export default function WorkspaceLayout({ problem }) {
                 position: 'absolute',
                 top: '46px',
                 left: 0,
-                background: '#141414',
-                border: '1px solid #262626',
+                background: 'var(--student-code-bg-141414, #141414)',
+                border: '1px solid var(--student-code-border-262626, #262626)',
                 borderRadius: '4px',
                 boxShadow: '0 10px 30px rgba(0,0,0,0.7)',
                 width: '300px',
@@ -826,7 +829,7 @@ export default function WorkspaceLayout({ problem }) {
 
                   return (
                   <>
-                    <div style={{ padding: '8px 16px', borderBottom: '1px solid #262626', marginBottom: '6px' }}>
+                    <div style={{ padding: '8px 16px', borderBottom: '1px solid var(--student-code-border-262626, #262626)', marginBottom: '6px' }}>
                       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '8px' }}>
                         <div style={{ fontSize: '9px', color: '#00b8a3', fontWeight: 700, letterSpacing: '1px', textTransform: 'uppercase' }}>
                           {selectedCourse !== 'All' ? selectedCourse : 'Assigned Coding Practicals'} ({filteredPracticals.length})
@@ -834,11 +837,11 @@ export default function WorkspaceLayout({ problem }) {
                         <button suppressHydrationWarning 
                           onClick={() => router.push('/student')}
                           style={{
-                            background: 'transparent', color: '#7e7e7e', border: '1px solid #3c3c3c', borderRadius: '4px',
+                            background: 'transparent', color: 'var(--student-code-text-7e7e7e, #7e7e7e)', border: '1px solid var(--student-code-border-3c3c3c, #3c3c3c)', borderRadius: '4px',
                             padding: '4px 8px', fontSize: '10px', cursor: 'pointer', transition: 'all 0.2s'
                           }}
-                          onMouseEnter={e => { e.currentTarget.style.color = '#fff'; e.currentTarget.style.borderColor = '#555'; }}
-                          onMouseLeave={e => { e.currentTarget.style.color = '#7e7e7e'; e.currentTarget.style.borderColor = '#3c3c3c'; }}
+                          onMouseEnter={e => { e.currentTarget.style.color = 'var(--student-code-text-ffffff, #fff)'; e.currentTarget.style.borderColor = 'var(--student-code-border-555555, #555)'; }}
+                          onMouseLeave={e => { e.currentTarget.style.color = 'var(--student-code-text-7e7e7e, #7e7e7e)'; e.currentTarget.style.borderColor = 'var(--student-code-border-3c3c3c, #3c3c3c)'; }}
                         >
                           ← Back
                         </button>
@@ -851,9 +854,9 @@ export default function WorkspaceLayout({ problem }) {
                           onChange={(e) => setSelectedCourse(e.target.value)}
                           style={{
                             width: '100%',
-                            background: '#1a1a1a',
-                            color: '#ffffff',
-                            border: '1px solid #3c3c3c',
+                            background: 'var(--student-code-bg-1a1a1a, #1a1a1a)',
+                            color: 'var(--student-code-text-ffffff, #ffffff)',
+                            border: '1px solid var(--student-code-border-3c3c3c, #3c3c3c)',
                             borderRadius: '4px',
                             padding: '4px 8px',
                             fontSize: '11px',
@@ -879,7 +882,7 @@ export default function WorkspaceLayout({ problem }) {
                       )}
                     </div>
                     {filteredPracticals.length === 0 && (
-                      <div style={{ padding: '16px', fontSize: '11px', color: '#7e7e7e', textAlign: 'center' }}>
+                      <div style={{ padding: '16px', fontSize: '11px', color: 'var(--student-code-text-7e7e7e, #7e7e7e)', textAlign: 'center' }}>
                         No practicals found for {selectedCourse}.
                       </div>
                     )}
@@ -903,24 +906,24 @@ export default function WorkspaceLayout({ problem }) {
                             alignItems: 'center',
                             justifyContent: 'space-between',
                             cursor: 'pointer',
-                            background: isActive ? '#1e1e1e' : 'transparent',
-                            color: isActive ? '#ffffff' : '#bbbbbb',
+                            background: isActive ? 'var(--student-code-bg-1e1e1e, #1e1e1e)' : 'transparent',
+                            color: isActive ? 'var(--student-code-text-ffffff, #ffffff)' : 'var(--student-code-text-bbbbbb, #bbbbbb)',
                             transition: 'background 0.2s'
                           }}
                           onMouseEnter={e => {
-                            e.currentTarget.style.background = isActive ? '#1e1e1e' : '#262626';
-                            e.currentTarget.style.color = '#ffffff';
+                            e.currentTarget.style.background = isActive ? 'var(--student-code-bg-1e1e1e, #1e1e1e)' : 'var(--student-code-bg-262626, #262626)';
+                            e.currentTarget.style.color = 'var(--student-code-text-ffffff, #ffffff)';
                           }}
                           onMouseLeave={e => {
-                            e.currentTarget.style.background = isActive ? '#1e1e1e' : 'transparent';
-                            e.currentTarget.style.color = isActive ? '#ffffff' : '#bbbbbb';
+                            e.currentTarget.style.background = isActive ? 'var(--student-code-bg-1e1e1e, #1e1e1e)' : 'transparent';
+                            e.currentTarget.style.color = isActive ? 'var(--student-code-text-ffffff, #ffffff)' : 'var(--student-code-text-bbbbbb, #bbbbbb)';
                           }}
                         >
                           <div style={{ display: 'flex', flexDirection: 'column' }}>
                             <span style={{ fontSize: '12px', fontWeight: isActive ? 700 : 500 }}>
                               {p.title}
                             </span>
-                            <span style={{ fontSize: '9px', color: '#7e7e7e', marginTop: '2px' }}>
+                            <span style={{ fontSize: '9px', color: 'var(--student-code-text-7e7e7e, #7e7e7e)', marginTop: '2px' }}>
                               {p.course_code} • {p.my_status ? `Grade: ${p.my_marks || 0}/10 (${p.my_status})` : 'Unsolved'}
                             </span>
                           </div>
@@ -930,12 +933,12 @@ export default function WorkspaceLayout({ problem }) {
                         </div>
                       );
                     })}
-                    <div style={{ height: '1px', background: '#262626', margin: '8px 0' }} />
+                    <div style={{ height: '1px', background: 'var(--student-code-bg-262626, #262626)', margin: '8px 0' }} />
                   </>
                   );
                 })()}
                 {practicals.length === 0 && (
-                  <div style={{ padding: '16px', fontSize: '11px', color: '#7e7e7e', textAlign: 'center' }}>
+                  <div style={{ padding: '16px', fontSize: '11px', color: 'var(--student-code-text-7e7e7e, #7e7e7e)', textAlign: 'center' }}>
                     No practicals assigned currently.
                   </div>
                 )}
@@ -952,9 +955,9 @@ export default function WorkspaceLayout({ problem }) {
             disabled={!canRun}
             title={!isExecutable ? 'Language not executable' : isRunning ? 'Executing…' : 'Run code'}
             style={{
-              background: '#000000',
+              background: 'var(--student-code-bg-000000, #000000)',
               border: canRun ? '1px solid #ffffff' : '1px solid #3c3c3c',
-              color: canRun ? '#ffffff' : '#3c3c3c',
+              color: canRun ? 'var(--student-code-text-ffffff, #ffffff)' : 'var(--student-code-text-3c3c3c, #3c3c3c)',
               fontSize: '11px',
               fontWeight: 700,
               letterSpacing: '1.5px',
@@ -968,7 +971,7 @@ export default function WorkspaceLayout({ problem }) {
             }}
           >
             {isRunning ? (
-              <span style={{ width: '12px', height: '12px', border: '2px solid #ffffff', borderTopColor: 'transparent', borderRadius: '50%', display: 'inline-block', animation: 'spin 0.8s linear infinite' }} />
+              <span style={{ width: '12px', height: '12px', border: '2px solid var(--student-code-border-ffffff, #ffffff)', borderTopColor: 'transparent', borderRadius: '50%', display: 'inline-block', animation: 'spin 0.8s linear infinite' }} />
             ) : (
               <Play size={13} />
             )}
@@ -985,7 +988,7 @@ export default function WorkspaceLayout({ problem }) {
               style={{
                 background: '#0fa336',
                 border: 'none',
-                color: '#ffffff',
+                color: 'var(--student-code-text-ffffff, #ffffff)',
                 fontSize: '11px',
                 fontWeight: 700,
                 letterSpacing: '1.5px',
@@ -1000,7 +1003,7 @@ export default function WorkspaceLayout({ problem }) {
               }}
             >
               {isSubmitting ? (
-                <span style={{ width: '12px', height: '12px', border: '2px solid #ffffff', borderTopColor: 'transparent', borderRadius: '50%', display: 'inline-block', animation: 'spin 0.8s linear infinite' }} />
+                <span style={{ width: '12px', height: '12px', border: '2px solid var(--student-code-border-ffffff, #ffffff)', borderTopColor: 'transparent', borderRadius: '50%', display: 'inline-block', animation: 'spin 0.8s linear infinite' }} />
               ) : null}
               {isSubmitting ? 'Submitting…' : 'Submit'}
               {!isSubmitting && <span style={{ opacity: 0.7, marginLeft: '4px', fontSize: '10px', textTransform: 'none', fontWeight: 500 }}>Ctrl+⇧+↵</span>}
@@ -1014,7 +1017,7 @@ export default function WorkspaceLayout({ problem }) {
                 maxWidth: '220px',
                 lineHeight: 1.3,
                 fontFamily: 'Inter, sans-serif',
-                borderLeft: '2px solid #262626',
+                borderLeft: '2px solid var(--student-code-border-262626, #262626)',
                 paddingLeft: '10px',
                 display: 'inline-block'
               }}>
@@ -1029,18 +1032,18 @@ export default function WorkspaceLayout({ problem }) {
           <button suppressHydrationWarning
             onClick={() => setShowSettingsModal(true)}
             title="Settings"
-            style={{ width: '40px', height: '40px', background: '#1a1a1a', border: '1px solid #262626', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#7e7e7e', cursor: 'pointer' }}
-            onMouseEnter={e => { e.currentTarget.style.color = '#ffffff'; }}
-            onMouseLeave={e => { e.currentTarget.style.color = '#7e7e7e'; }}
+            style={{ width: '40px', height: '40px', background: 'var(--student-code-bg-1a1a1a, #1a1a1a)', border: '1px solid var(--student-code-border-262626, #262626)', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'var(--student-code-text-7e7e7e, #7e7e7e)', cursor: 'pointer' }}
+            onMouseEnter={e => { e.currentTarget.style.color = 'var(--student-code-text-ffffff, #ffffff)'; }}
+            onMouseLeave={e => { e.currentTarget.style.color = 'var(--student-code-text-7e7e7e, #7e7e7e)'; }}
           >
             <Settings size={16} />
           </button>
           <button suppressHydrationWarning
             onClick={() => setIsUserDropdownOpen(!isUserDropdownOpen)}
             title="Profile Menu"
-            style={{ width: '40px', height: '40px', background: '#1a1a1a', border: '1px solid #262626', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#7e7e7e', cursor: 'pointer' }}
-            onMouseEnter={e => { e.currentTarget.style.color = '#ffffff'; }}
-            onMouseLeave={e => { e.currentTarget.style.color = '#7e7e7e'; }}
+            style={{ width: '40px', height: '40px', background: 'var(--student-code-bg-1a1a1a, #1a1a1a)', border: '1px solid var(--student-code-border-262626, #262626)', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'var(--student-code-text-7e7e7e, #7e7e7e)', cursor: 'pointer' }}
+            onMouseEnter={e => { e.currentTarget.style.color = 'var(--student-code-text-ffffff, #ffffff)'; }}
+            onMouseLeave={e => { e.currentTarget.style.color = 'var(--student-code-text-7e7e7e, #7e7e7e)'; }}
           >
             <User size={16} />
           </button>
@@ -1050,8 +1053,8 @@ export default function WorkspaceLayout({ problem }) {
               position: 'absolute',
               top: '50px',
               right: '0px',
-              backgroundColor: '#1f1f1f',
-              border: '1px solid #333333',
+              backgroundColor: 'var(--student-code-bg-1f1f1f, #1f1f1f)',
+              border: '1px solid var(--student-code-border-333333, #333333)',
               borderRadius: '8px',
               boxShadow: '0 4px 12px rgba(0, 0, 0, 0.5)',
               minWidth: '180px',
@@ -1060,9 +1063,9 @@ export default function WorkspaceLayout({ problem }) {
               flexDirection: 'column',
               padding: '6px 0'
             }}>
-              <div style={{ padding: '8px 16px', borderBottom: '1px solid #333333', fontSize: '12px', color: '#888' }}>
+              <div style={{ padding: '8px 16px', borderBottom: '1px solid var(--student-code-border-333333, #333333)', fontSize: '12px', color: 'var(--student-code-text-888888, #888)' }}>
                 Signed in as <br />
-                <strong style={{ color: '#ffffff' }}>{profileForm.name || 'Student'}</strong>
+                <strong style={{ color: 'var(--student-code-text-ffffff, #ffffff)' }}>{profileForm.name || 'Student'}</strong>
               </div>
               <button suppressHydrationWarning
                 onClick={() => {
@@ -1070,25 +1073,25 @@ export default function WorkspaceLayout({ problem }) {
                   router.push(`/profile/${handle}`);
                   setIsUserDropdownOpen(false);
                 }}
-                style={{ background: 'transparent', border: 'none', color: '#cccccc', textAlign: 'left', padding: '10px 16px', fontSize: '13px', cursor: 'pointer' }}
-                onMouseEnter={e => e.currentTarget.style.backgroundColor = '#2a2a2a'}
+                style={{ background: 'transparent', border: 'none', color: 'var(--student-code-text-cccccc, #cccccc)', textAlign: 'left', padding: '10px 16px', fontSize: '13px', cursor: 'pointer' }}
+                onMouseEnter={e => e.currentTarget.style.backgroundColor = 'var(--student-code-bg-2a2a2a, #2a2a2a)'}
                 onMouseLeave={e => e.currentTarget.style.backgroundColor = 'transparent'}
               >
                 👤 Edit Profile
               </button>
               <button suppressHydrationWarning
                 onClick={() => { setShowSettingsModal(true); setIsUserDropdownOpen(false); }}
-                style={{ background: 'transparent', border: 'none', color: '#cccccc', textAlign: 'left', padding: '10px 16px', fontSize: '13px', cursor: 'pointer' }}
-                onMouseEnter={e => e.currentTarget.style.backgroundColor = '#2a2a2a'}
+                style={{ background: 'transparent', border: 'none', color: 'var(--student-code-text-cccccc, #cccccc)', textAlign: 'left', padding: '10px 16px', fontSize: '13px', cursor: 'pointer' }}
+                onMouseEnter={e => e.currentTarget.style.backgroundColor = 'var(--student-code-bg-2a2a2a, #2a2a2a)'}
                 onMouseLeave={e => e.currentTarget.style.backgroundColor = 'transparent'}
               >
                  Workspace Settings
               </button>
-              <div style={{ height: '1px', backgroundColor: '#333333', margin: '4px 0' }} />
+              <div style={{ height: '1px', backgroundColor: 'var(--student-code-bg-333333, #333333)', margin: '4px 0' }} />
               <button suppressHydrationWarning
                 onClick={() => { setShowLogoutModal(true); setIsUserDropdownOpen(false); }}
                 style={{ background: 'transparent', border: 'none', color: '#ef4444', textAlign: 'left', padding: '10px 16px', fontSize: '13px', cursor: 'pointer', fontWeight: '600' }}
-                onMouseEnter={e => e.currentTarget.style.backgroundColor = '#2a2a2a'}
+                onMouseEnter={e => e.currentTarget.style.backgroundColor = 'var(--student-code-bg-2a2a2a, #2a2a2a)'}
                 onMouseLeave={e => e.currentTarget.style.backgroundColor = 'transparent'}
               >
                  Sign Out
@@ -1098,7 +1101,7 @@ export default function WorkspaceLayout({ problem }) {
         </div>
       </div>
 
-      <div role="status" aria-live="polite" style={{ padding: '8px 16px', color: '#cbd5e1', fontSize: '12px' }}>
+      <div role="status" aria-live="polite" style={{ padding: '8px 16px', color: 'var(--student-code-text-cbd5e1, #cbd5e1)', fontSize: '12px' }}>
         {draftStatus} · {lifecycle.phase}{!lifecycle.busy && output?.summary ? ` · ${output.summary}` : ''}
         {undoDraft && !lifecycle.busy && <button onClick={() => {
           setSelectedLang(undoDraft.language); setCodeByLang(prev => ({ ...prev, [undoDraft.language]: undoDraft.code }));
@@ -1110,7 +1113,7 @@ export default function WorkspaceLayout({ problem }) {
       <div style={{ height: '3px', background: 'linear-gradient(to right, #0066b1, #1c69d4, #e22718)', flexShrink: 0 }} />
 
       {/* ── Main Workspace ── */}
-      <div style={{ flex: 1, overflow: 'hidden', background: '#000000', width: '100%', height: '100%' }}>
+      <div style={{ flex: 1, overflow: 'hidden', background: 'var(--student-code-bg-000000, #000000)', width: '100%', height: '100%' }}>
         {narrow ? <div style={{ height: '100%', display: 'flex', flexDirection: 'column' }}>
           <div role="group" aria-label="Workspace view" style={{ display: 'flex', gap: 8, padding: 8 }}>
             {['problem', 'editor', 'results'].map(tab => <button key={tab} aria-pressed={workspaceTab === tab} onClick={() => setWorkspaceTab(tab)}>{tab}</button>)}
@@ -1125,13 +1128,13 @@ export default function WorkspaceLayout({ problem }) {
 
           {/* LEFT: Problem Panel */}
           <Panel defaultSize={40} minSize={20}>
-            <div style={{ height: '100%', background: '#0d0d0d', overflow: 'hidden', display: 'flex', flexDirection: 'column' }}>
+            <div style={{ height: '100%', background: 'var(--student-code-bg-0d0d0d, #0d0d0d)', overflow: 'hidden', display: 'flex', flexDirection: 'column' }}>
               <ProblemPanel problem={resolvedProblem} onLoadSubmissionCode={handleLoadSubmissionCode} />
             </div>
           </Panel>
 
           {/* Vertical resize handle */}
-          <PanelResizeHandle style={{ width: '2px', background: '#262626', cursor: 'col-resize', flexShrink: 0 }} />
+          <PanelResizeHandle style={{ width: '2px', background: 'var(--student-code-bg-262626, #262626)', cursor: 'col-resize', flexShrink: 0 }} />
 
           {/* RIGHT: Editor (60%) + Console (40%) */}
           <Panel defaultSize={60} minSize={30}>
@@ -1139,17 +1142,17 @@ export default function WorkspaceLayout({ problem }) {
 
               {/* Monaco Editor (upper right side covering 60% area by default) */}
               <Panel defaultSize={consoleOpen ? 60 : 100} minSize={25}>
-                <div style={{ height: '100%', background: '#000000', borderLeft: '1px solid #262626', overflow: 'hidden', display: 'flex', flexDirection: 'column' }}>
+                <div style={{ height: '100%', background: 'var(--student-code-bg-000000, #000000)', borderLeft: '1px solid var(--student-code-border-262626, #262626)', overflow: 'hidden', display: 'flex', flexDirection: 'column' }}>
                   {editorPanel}
                 </div>
               </Panel>
 
               {consoleOpen && (
                 <>
-                  <PanelResizeHandle style={{ height: '2px', background: '#262626', cursor: 'row-resize', flexShrink: 0 }} />
+                  <PanelResizeHandle style={{ height: '2px', background: 'var(--student-code-bg-262626, #262626)', cursor: 'row-resize', flexShrink: 0 }} />
                   {/* Console Output Screen (lower right side covering 40% area by default) */}
                   <Panel defaultSize={40} minSize={15}>
-                    <div style={{ height: '100%', background: '#000000', borderLeft: '1px solid #262626', overflow: 'hidden', display: 'flex', flexDirection: 'column' }}>
+                    <div style={{ height: '100%', background: 'var(--student-code-bg-000000, #000000)', borderLeft: '1px solid var(--student-code-border-262626, #262626)', overflow: 'hidden', display: 'flex', flexDirection: 'column' }}>
                       {consolePanel}
                     </div>
                   </Panel>
@@ -1166,15 +1169,15 @@ export default function WorkspaceLayout({ problem }) {
       {/* ── SETTINGS MODAL ── */}
       {showSettingsModal && (
         <dialog ref={settingsRef} aria-labelledby="settings-title" onCancel={() => setShowSettingsModal(false)} style={{ padding: 0, border: 0, background: 'transparent' }}>
-          <div style={{ backgroundColor: '#161616', border: '1px solid #333', borderRadius: '12px', padding: '30px', width: 'min(450px, calc(100vw - 24px))', maxHeight: '90dvh', overflowY: 'auto', display: 'flex', flexDirection: 'column', gap: '20px' }}>
+          <div style={{ backgroundColor: 'var(--student-code-bg-161616, #161616)', border: '1px solid var(--student-code-border-333333, #333)', borderRadius: '12px', padding: '30px', width: 'min(450px, calc(100vw - 24px))', maxHeight: '90dvh', overflowY: 'auto', display: 'flex', flexDirection: 'column', gap: '20px' }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-              <h3 id="settings-title" style={{ fontSize: '18px', fontWeight: 700, color: '#ffffff', margin: 0 }}> Workspace Customization</h3>
-              <button suppressHydrationWarning aria-label="Close settings" onClick={() => setShowSettingsModal(false)} style={{ border: 'none', background: 'transparent', color: '#888', cursor: 'pointer', fontSize: '18px' }}>×</button>
+              <h3 id="settings-title" style={{ fontSize: '18px', fontWeight: 700, color: 'var(--student-code-text-ffffff, #ffffff)', margin: 0 }}> Workspace Customization</h3>
+              <button suppressHydrationWarning aria-label="Close settings" onClick={() => setShowSettingsModal(false)} style={{ border: 'none', background: 'transparent', color: 'var(--student-code-text-888888, #888)', cursor: 'pointer', fontSize: '18px' }}>×</button>
             </div>
 
             <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
               <div>
-                <label style={{ display: 'block', fontSize: '11px', color: '#888', fontWeight: 600, textTransform: 'uppercase', marginBottom: '8px' }}>Editor Font Size</label>
+                <label style={{ display: 'block', fontSize: '11px', color: 'var(--student-code-text-888888, #888)', fontWeight: 600, textTransform: 'uppercase', marginBottom: '8px' }}>Editor Font Size</label>
                 <select
                   value={editorFontSize}
                   onChange={e => {
@@ -1182,7 +1185,7 @@ export default function WorkspaceLayout({ problem }) {
                     setEditorFontSize(size);
                     localStorage.setItem('pref_font_size', size.toString());
                   }}
-                  style={{ width: '100%', padding: '10px 14px', borderRadius: '6px', border: '1px solid #333', backgroundColor: '#0d0d0d', color: '#fff', fontSize: '14px', outline: 'none', cursor: 'pointer' }}
+                  style={{ width: '100%', padding: '10px 14px', borderRadius: '6px', border: '1px solid var(--student-code-border-333333, #333)', backgroundColor: 'var(--student-code-bg-0d0d0d, #0d0d0d)', color: 'var(--student-code-text-ffffff, #fff)', fontSize: '14px', outline: 'none', cursor: 'pointer' }}
                 >
                   <option value="12">12px (Small)</option>
                   <option value="13">13px</option>
@@ -1195,7 +1198,7 @@ export default function WorkspaceLayout({ problem }) {
               </div>
 
               <div>
-                <label style={{ display: 'block', fontSize: '11px', color: '#888', fontWeight: 600, textTransform: 'uppercase', marginBottom: '8px' }}>Tab Spaces (Indentation)</label>
+                <label style={{ display: 'block', fontSize: '11px', color: 'var(--student-code-text-888888, #888)', fontWeight: 600, textTransform: 'uppercase', marginBottom: '8px' }}>Tab Spaces (Indentation)</label>
                 <select
                   value={editorTabSize}
                   onChange={e => {
@@ -1203,7 +1206,7 @@ export default function WorkspaceLayout({ problem }) {
                     setEditorTabSize(size);
                     localStorage.setItem('pref_tab_size', size.toString());
                   }}
-                  style={{ width: '100%', padding: '10px 14px', borderRadius: '6px', border: '1px solid #333', backgroundColor: '#0d0d0d', color: '#fff', fontSize: '14px', outline: 'none', cursor: 'pointer' }}
+                  style={{ width: '100%', padding: '10px 14px', borderRadius: '6px', border: '1px solid var(--student-code-border-333333, #333)', backgroundColor: 'var(--student-code-bg-0d0d0d, #0d0d0d)', color: 'var(--student-code-text-ffffff, #fff)', fontSize: '14px', outline: 'none', cursor: 'pointer' }}
                 >
                   <option value="2">2 Spaces</option>
                   <option value="4">4 Spaces</option>
@@ -1211,15 +1214,16 @@ export default function WorkspaceLayout({ problem }) {
               </div>
 
               <div>
-                <label style={{ display: 'block', fontSize: '11px', color: '#888', fontWeight: 600, textTransform: 'uppercase', marginBottom: '8px' }}>Editor Theme</label>
+                <label style={{ display: 'block', fontSize: '11px', color: 'var(--student-code-text-888888, #888)', fontWeight: 600, textTransform: 'uppercase', marginBottom: '8px' }}>Editor Theme</label>
                 <select
-                  value={editorTheme}
+                  value={studentTheme?.theme === 'light' ? 'light' : editorTheme === 'hc-black' ? 'hc-black' : 'vs-dark'}
                   onChange={e => {
                     const theme = e.target.value;
                     setEditorTheme(theme);
+                    studentTheme?.setTheme(theme === 'light' ? 'light' : 'dark');
                     localStorage.setItem('pref_theme', theme);
                   }}
-                  style={{ width: '100%', padding: '10px 14px', borderRadius: '6px', border: '1px solid #333', backgroundColor: '#0d0d0d', color: '#fff', fontSize: '14px', outline: 'none', cursor: 'pointer' }}
+                  style={{ width: '100%', padding: '10px 14px', borderRadius: '6px', border: '1px solid var(--student-code-border-333333, #333)', backgroundColor: 'var(--student-code-bg-0d0d0d, #0d0d0d)', color: 'var(--student-code-text-ffffff, #fff)', fontSize: '14px', outline: 'none', cursor: 'pointer' }}
                 >
                   <option value="vs-dark">Dark Theme (Default)</option>
                   <option value="light">Light Theme</option>
@@ -1228,7 +1232,7 @@ export default function WorkspaceLayout({ problem }) {
               </div>
 
               <div>
-                <label style={{ display: 'block', fontSize: '11px', color: '#888', fontWeight: 600, textTransform: 'uppercase', marginBottom: '8px' }}>Word Wrap</label>
+                <label style={{ display: 'block', fontSize: '11px', color: 'var(--student-code-text-888888, #888)', fontWeight: 600, textTransform: 'uppercase', marginBottom: '8px' }}>Word Wrap</label>
                 <select
                   value={editorWordWrap}
                   onChange={e => {
@@ -1236,7 +1240,7 @@ export default function WorkspaceLayout({ problem }) {
                     setEditorWordWrap(wrap);
                     localStorage.setItem('pref_word_wrap', wrap);
                   }}
-                  style={{ width: '100%', padding: '10px 14px', borderRadius: '6px', border: '1px solid #333', backgroundColor: '#0d0d0d', color: '#fff', fontSize: '14px', outline: 'none', cursor: 'pointer' }}
+                  style={{ width: '100%', padding: '10px 14px', borderRadius: '6px', border: '1px solid var(--student-code-border-333333, #333)', backgroundColor: 'var(--student-code-bg-0d0d0d, #0d0d0d)', color: 'var(--student-code-text-ffffff, #fff)', fontSize: '14px', outline: 'none', cursor: 'pointer' }}
                 >
                   <option value="on">On (Wrap to view)</option>
                   <option value="off">Off (Scroll horizontally)</option>
@@ -1244,7 +1248,7 @@ export default function WorkspaceLayout({ problem }) {
               </div>
 
               <div>
-                <label style={{ display: 'block', fontSize: '11px', color: '#888', fontWeight: 600, textTransform: 'uppercase', marginBottom: '8px' }}>Code Minimap</label>
+                <label style={{ display: 'block', fontSize: '11px', color: 'var(--student-code-text-888888, #888)', fontWeight: 600, textTransform: 'uppercase', marginBottom: '8px' }}>Code Minimap</label>
                 <select
                   value={editorMinimap.toString()}
                   onChange={e => {
@@ -1252,30 +1256,30 @@ export default function WorkspaceLayout({ problem }) {
                     setEditorMinimap(isMinimap);
                     localStorage.setItem('pref_minimap', isMinimap.toString());
                   }}
-                  style={{ width: '100%', padding: '10px 14px', borderRadius: '6px', border: '1px solid #333', backgroundColor: '#0d0d0d', color: '#fff', fontSize: '14px', outline: 'none', cursor: 'pointer' }}
+                  style={{ width: '100%', padding: '10px 14px', borderRadius: '6px', border: '1px solid var(--student-code-border-333333, #333)', backgroundColor: 'var(--student-code-bg-0d0d0d, #0d0d0d)', color: 'var(--student-code-text-ffffff, #fff)', fontSize: '14px', outline: 'none', cursor: 'pointer' }}
                 >
                   <option value="false">Hidden (Cleaner view)</option>
                   <option value="true">Visible</option>
                 </select>
               </div>
 
-              <div style={{ border: '1px solid #333', borderRadius: '8px', padding: '15px', backgroundColor: '#0d0d0d' }}>
-                <h4 style={{ fontSize: '12px', fontWeight: 700, color: '#fff', margin: '0 0 10px 0', textTransform: 'uppercase' }}>⌨️ Keyboard Shortcuts</h4>
-                <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', fontSize: '12px', color: '#ccc' }}>
+              <div style={{ border: '1px solid var(--student-code-border-333333, #333)', borderRadius: '8px', padding: '15px', backgroundColor: 'var(--student-code-bg-0d0d0d, #0d0d0d)' }}>
+                <h4 style={{ fontSize: '12px', fontWeight: 700, color: 'var(--student-code-text-ffffff, #fff)', margin: '0 0 10px 0', textTransform: 'uppercase' }}>⌨️ Keyboard Shortcuts</h4>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', fontSize: '12px', color: 'var(--student-code-text-cccccc, #ccc)' }}>
                   <div style={{ display: 'flex', justifyContent: 'space-between' }}>
                     <span>Run current code:</span>
-                    <kbd style={{ backgroundColor: '#222', border: '1px solid #444', padding: '2px 6px', borderRadius: '4px', fontSize: '10px' }}>Ctrl + '</kbd>
+                    <kbd style={{ backgroundColor: 'var(--student-code-bg-222222, #222)', border: '1px solid var(--student-code-border-444444, #444)', padding: '2px 6px', borderRadius: '4px', fontSize: '10px' }}>Ctrl + '</kbd>
                   </div>
                   <div style={{ display: 'flex', justifyContent: 'space-between' }}>
                     <span>Submit solution:</span>
-                    <kbd style={{ backgroundColor: '#222', border: '1px solid #444', padding: '2px 6px', borderRadius: '4px', fontSize: '10px' }}>Ctrl + Enter</kbd>
+                    <kbd style={{ backgroundColor: 'var(--student-code-bg-222222, #222)', border: '1px solid var(--student-code-border-444444, #444)', padding: '2px 6px', borderRadius: '4px', fontSize: '10px' }}>Ctrl + Enter</kbd>
                   </div>
                 </div>
               </div>
             </div>
 
             <div style={{ display: 'flex', justifyContent: 'flex-end', marginTop: '10px' }}>
-              <button suppressHydrationWarning onClick={() => setShowSettingsModal(false)} style={{ padding: '10px 24px', borderRadius: '6px', border: 'none', backgroundColor: '#4f46e5', color: '#fff', fontSize: '14px', fontWeight: 600, cursor: 'pointer' }}>
+              <button suppressHydrationWarning onClick={() => setShowSettingsModal(false)} style={{ padding: '10px 24px', borderRadius: '6px', border: 'none', backgroundColor: '#4f46e5', color: 'var(--student-code-text-ffffff, #fff)', fontSize: '14px', fontWeight: 600, cursor: 'pointer' }}>
                 Apply Preferences
               </button>
             </div>
@@ -1286,23 +1290,23 @@ export default function WorkspaceLayout({ problem }) {
       {/* ── Logout Confirmation Modal ── */}
       {showLogoutModal && (
         <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.75)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 99999, backdropFilter: 'blur(4px)' }}>
-          <div style={{ background: '#161616', border: '1px solid #333', borderRadius: '12px', padding: '28px 32px', width: '360px', display: 'flex', flexDirection: 'column', gap: '16px' }}>
-            <h3 style={{ margin: 0, fontSize: '16px', fontWeight: 700, color: '#ffffff' }}>Sign out?</h3>
-            <p style={{ margin: 0, fontSize: '13px', color: '#aaa', lineHeight: 1.6 }}>
+          <div style={{ background: 'var(--student-code-bg-161616, #161616)', border: '1px solid var(--student-code-border-333333, #333)', borderRadius: '12px', padding: '28px 32px', width: '360px', display: 'flex', flexDirection: 'column', gap: '16px' }}>
+            <h3 style={{ margin: 0, fontSize: '16px', fontWeight: 700, color: 'var(--student-code-text-ffffff, #ffffff)' }}>Sign out?</h3>
+            <p style={{ margin: 0, fontSize: '13px', color: 'var(--student-code-text-aaaaaa, #aaa)', lineHeight: 1.6 }}>
               You will be signed out of your workspace. Any unsaved code changes have already been auto-saved.
             </p>
             <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '10px', marginTop: '4px' }}>
               <button
                 onClick={() => setShowLogoutModal(false)}
-                style={{ padding: '8px 20px', borderRadius: '6px', border: '1px solid #3c3c3c', background: 'transparent', color: '#aaa', fontSize: '13px', cursor: 'pointer', fontWeight: 600 }}
-                onMouseEnter={e => e.currentTarget.style.color = '#fff'}
-                onMouseLeave={e => e.currentTarget.style.color = '#aaa'}
+                style={{ padding: '8px 20px', borderRadius: '6px', border: '1px solid var(--student-code-border-3c3c3c, #3c3c3c)', background: 'transparent', color: 'var(--student-code-text-aaaaaa, #aaa)', fontSize: '13px', cursor: 'pointer', fontWeight: 600 }}
+                onMouseEnter={e => e.currentTarget.style.color = 'var(--student-code-text-ffffff, #fff)'}
+                onMouseLeave={e => e.currentTarget.style.color = 'var(--student-code-text-aaaaaa, #aaa)'}
               >
                 Cancel
               </button>
               <button
                 onClick={confirmLogout}
-                style={{ padding: '8px 20px', borderRadius: '6px', border: 'none', background: '#ef4444', color: '#ffffff', fontSize: '13px', cursor: 'pointer', fontWeight: 700 }}
+                style={{ padding: '8px 20px', borderRadius: '6px', border: 'none', background: '#ef4444', color: 'var(--student-code-text-ffffff, #ffffff)', fontSize: '13px', cursor: 'pointer', fontWeight: 700 }}
                 onMouseEnter={e => e.currentTarget.style.background = '#dc2626'}
                 onMouseLeave={e => e.currentTarget.style.background = '#ef4444'}
               >

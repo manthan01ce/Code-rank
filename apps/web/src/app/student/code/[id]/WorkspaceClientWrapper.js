@@ -27,5 +27,5 @@ export default function WorkspaceClientWrapper({ problem = null, practicalId = n
   }, [practicalId,problem,router]);
   if (!result || result.practicalId !== practicalId) return <p role="status">Verifying authorization…</p>;
   if (result.error) return <main><h1>Access unavailable</h1><p role="alert">{result.error}</p><button onClick={() => router.push('/student')}>Return to Student Portal</button></main>;
-  return <main style={{ height: '100vh', width: '100vw', backgroundColor: '#0a0a0a', overflow: 'hidden' }}><WorkspaceLayout problem={result.problem} /></main>;
+  return <main style={{ height: '100vh', width: '100vw', backgroundColor: 'var(--student-code-bg-0a0a0a, #0a0a0a)', overflow: 'hidden' }}><WorkspaceLayout problem={result.problem} /></main>;
 }

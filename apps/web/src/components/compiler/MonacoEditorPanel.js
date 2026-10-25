@@ -110,15 +110,15 @@ export default function MonacoEditorPanel({
     justifyContent: 'space-between',
     height: '44px',
     padding: '0 16px',
-    background: '#0d0d0d',
-    borderBottom: '1px solid #262626',
+    background: 'var(--student-code-bg-0d0d0d, #0d0d0d)',
+    borderBottom: '1px solid var(--student-code-border-262626, #262626)',
     flexShrink: 0,
   };
 
   const selectStyle = {
-    background: '#1a1a1a',
-    color: '#ffffff',
-    border: '1px solid #3c3c3c',
+    background: 'var(--student-code-bg-1a1a1a, #1a1a1a)',
+    color: 'var(--student-code-text-ffffff, #ffffff)',
+    border: '1px solid var(--student-code-border-3c3c3c, #3c3c3c)',
     fontSize: '11px',
     fontWeight: 700,
     letterSpacing: '1px',
@@ -132,7 +132,7 @@ export default function MonacoEditorPanel({
   const iconBtnStyle = {
     background: 'transparent',
     border: 'none',
-    color: '#7e7e7e',
+    color: 'var(--student-code-text-7e7e7e, #7e7e7e)',
     cursor: 'pointer',
     padding: '6px',
     display: 'flex',
@@ -141,7 +141,7 @@ export default function MonacoEditorPanel({
   };
 
   return (
-    <div ref={editorContainerRef} style={{ height: '100%', display: 'flex', flexDirection: 'column', background: '#1e1e1e' }}>
+    <div ref={editorContainerRef} style={{ height: '100%', display: 'flex', flexDirection: 'column', background: 'var(--student-code-bg-1e1e1e, #1e1e1e)' }}>
 
       {/* Header */}
       <div style={headerStyle}>
@@ -181,10 +181,10 @@ export default function MonacoEditorPanel({
               gap: '4px',
               fontSize: '11px',
               fontWeight: 500,
-              color: isSaving ? '#38bdf8' : saveStatus === 'saved' ? '#10b981' : saveStatus === 'error' ? '#ef4444' : '#64748b',
+              color: isSaving ? '#38bdf8' : saveStatus === 'saved' ? '#10b981' : saveStatus === 'error' ? '#ef4444' : 'var(--student-code-text-64748b, #64748b)',
               userSelect: 'none',
               paddingRight: '6px',
-              borderRight: '1px solid #262626',
+              borderRight: '1px solid var(--student-code-border-262626, #262626)',
               letterSpacing: '0.2px',
               transition: 'color 0.2s ease',
             }}
@@ -193,7 +193,7 @@ export default function MonacoEditorPanel({
             {isSaving ? (
               <>
                 <span style={{ width: '8px', height: '8px', border: '1.5px solid #38bdf8', borderTopColor: 'transparent', borderRadius: '50%', display: 'inline-block', animation: 'spin 0.8s linear infinite' }} />
-                <span style={{ color: '#94a3b8' }}>Saving…</span>
+                <span style={{ color: 'var(--student-code-text-94a3b8, #94a3b8)' }}>Saving…</span>
               </>
             ) : saveStatus === 'saved' ? (
               <>
@@ -207,21 +207,21 @@ export default function MonacoEditorPanel({
               </>
             ) : (
               <>
-                <span style={{ color: '#64748b', fontSize: '11px' }}>✓</span>
+                <span style={{ color: 'var(--student-code-text-64748b, #64748b)', fontSize: '11px' }}>✓</span>
                 <span>Saved</span>
               </>
             )}
           </div>
 
           <button style={iconBtnStyle} aria-label="Reset to boilerplate" title="Reset to Boilerplate" onClick={handleReset} disabled={isRunning}
-            onMouseEnter={e => e.currentTarget.style.color = '#ffffff'}
-            onMouseLeave={e => e.currentTarget.style.color = '#7e7e7e'}
+            onMouseEnter={e => e.currentTarget.style.color = 'var(--student-code-text-ffffff, #ffffff)'}
+            onMouseLeave={e => e.currentTarget.style.color = 'var(--student-code-text-7e7e7e, #7e7e7e)'}
           >
             <RotateCcw size={13} />
           </button>
           <button style={iconBtnStyle} aria-label="Toggle editor fullscreen" title="Fullscreen" onClick={() => { const node = editorContainerRef.current; if (document.fullscreenElement) document.exitFullscreen(); else node?.requestFullscreen(); }}
-            onMouseEnter={e => e.currentTarget.style.color = '#ffffff'}
-            onMouseLeave={e => e.currentTarget.style.color = '#7e7e7e'}
+            onMouseEnter={e => e.currentTarget.style.color = 'var(--student-code-text-ffffff, #ffffff)'}
+            onMouseLeave={e => e.currentTarget.style.color = 'var(--student-code-text-7e7e7e, #7e7e7e)'}
           >
             <Maximize2 size={13} />
           </button>
@@ -239,7 +239,7 @@ export default function MonacoEditorPanel({
           onChange={(value) => onCodeChange(value ?? '')}
           onMount={handleEditorDidMount}
           loading={
-            <div style={{ height: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', background: '#1e1e1e', color: '#7e7e7e', fontSize: '13px', fontFamily: 'Inter, sans-serif' }}>
+            <div style={{ height: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', background: 'var(--student-code-bg-1e1e1e, #1e1e1e)', color: 'var(--student-code-text-7e7e7e, #7e7e7e)', fontSize: '13px', fontFamily: 'Inter, sans-serif' }}>
               Loading editor...
             </div>
           }

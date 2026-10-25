@@ -1,4 +1,5 @@
 'use client';
+import { StudentThemeToggle, useStudentTheme } from '@/components/student/StudentTheme';
 import { usePracticalPage } from '@/hooks/usePracticalPage';
 import { fetchCollection } from '@/lib/fetch-collection';
 
@@ -11,6 +12,7 @@ import { usePolling } from '@/hooks/usePolling';
 
 export default function StudentPracticals() {
   const router = useRouter();
+  const studentTheme = useStudentTheme();
   const socket = useSocket();
   const [user, setUser] = useState(null);
   const [courses, setCourses] = useState([]);
@@ -301,19 +303,20 @@ int main() {
   // Render coding playground if a practical is selected
   if (activePractical) {
     return (
-      <div style={{ display: 'flex', flexDirection: 'column', height: '90vh', background: '#0f172a', color: '#f8fafc', margin: '-20px', padding: '15px', fontFamily: 'Inter, sans-serif' }}>
+      <div style={{ display: 'flex', flexDirection: 'column', height: '90vh', background: 'var(--student-ui-bg-0f172a, #0f172a)', color: 'var(--student-ui-text-f8fafc, #f8fafc)', margin: '-20px', padding: '15px', fontFamily: 'Inter, sans-serif' }}>
+      <div className="student-theme-toolbar"><StudentThemeToggle /></div>
         {/* Playground header bar */}
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', borderBottom: '1px solid #334155', pb: '12px', mb: '12px' }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: '15px' }}>
             <button
               onClick={() => setActivePractical(null)}
-              style={{ padding: '8px 16px', borderRadius: '6px', border: '1px solid #475569', background: '#1e293b', color: 'white', cursor: 'pointer', fontWeight: 600, fontSize: '13px' }}
+              style={{ padding: '8px 16px', borderRadius: '6px', border: '1px solid #475569', background: 'var(--student-ui-bg-1e293b, #1e293b)', color: 'white', cursor: 'pointer', fontWeight: 600, fontSize: '13px' }}
             >
               ← Back to List
             </button>
             <div>
               <h3 style={{ fontSize: '16px', fontWeight: 700, margin: 0 }}>{activePractical.title}</h3>
-              <span style={{ fontSize: '11px', color: '#94a3b8' }}>{activePractical.course_code} • Batch {activePractical.batch_id}</span>
+              <span style={{ fontSize: '11px', color: 'var(--student-ui-text-94a3b8, #94a3b8)' }}>{activePractical.course_code} • Batch {activePractical.batch_id}</span>
             </div>
           </div>
 
@@ -321,7 +324,7 @@ int main() {
             <select
               value={language}
               onChange={e => handleLanguageChange(e.target.value)}
-              style={{ padding: '6px 12px', borderRadius: '4px', border: '1px solid #475569', backgroundColor: '#1e293b', color: 'white', fontSize: '13px' }}
+              style={{ padding: '6px 12px', borderRadius: '4px', border: '1px solid #475569', backgroundColor: 'var(--student-ui-bg-1e293b, #1e293b)', color: 'white', fontSize: '13px' }}
             >
               <option value="python">Python</option>
               <option value="cpp">C++</option>
@@ -329,7 +332,7 @@ int main() {
 
             <button
               onClick={handleCodeReset}
-              style={{ padding: '6px 12px', borderRadius: '4px', border: '1px solid #475569', background: 'none', color: '#94a3b8', cursor: 'pointer', fontSize: '13px' }}
+              style={{ padding: '6px 12px', borderRadius: '4px', border: '1px solid #475569', background: 'none', color: 'var(--student-ui-text-94a3b8, #94a3b8)', cursor: 'pointer', fontSize: '13px' }}
             >
               Reset Draft
             </button>
@@ -356,31 +359,31 @@ int main() {
         <div style={{ display: 'flex', flex: 1, gap: '15px', overflow: 'hidden' }}>
           
           {/* Left panel: Problem statement + history */}
-          <div style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: '15px', overflowY: 'auto', background: '#1e293b', padding: '20px', borderRadius: '8px', border: '1px solid #334155' }}>
+          <div style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: '15px', overflowY: 'auto', background: 'var(--student-ui-bg-1e293b, #1e293b)', padding: '20px', borderRadius: '8px', border: '1px solid #334155' }}>
             
             {/* Toggle tabs for description vs submission history */}
             <div style={{ borderBottom: '1px solid #334155', pb: '10px', mb: '10px' }}>
               <h4 style={{ fontSize: '15px', fontWeight: 700, color: '#38bdf8' }}>Problem Description</h4>
             </div>
 
-            <div style={{ fontSize: '14px', lineHeight: '1.6', color: '#cbd5e1' }} dangerouslySetInnerHTML={{ __html: activePractical.description }} />
+            <div style={{ fontSize: '14px', lineHeight: '1.6', color: 'var(--student-ui-text-cbd5e1, #cbd5e1)' }} dangerouslySetInnerHTML={{ __html: activePractical.description }} />
 
             {activePractical.constraints && (
               <div style={{ mt: '15px' }}>
-                <h5 style={{ fontWeight: 600, color: '#f1f5f9', mb: '4px' }}>Constraints:</h5>
-                <pre style={{ background: '#0f172a', padding: '10px', borderRadius: '6px', fontSize: '13px', fontFamily: 'monospace' }}>{activePractical.constraints}</pre>
+                <h5 style={{ fontWeight: 600, color: 'var(--student-ui-text-f1f5f9, #f1f5f9)', mb: '4px' }}>Constraints:</h5>
+                <pre style={{ background: 'var(--student-ui-bg-0f172a, #0f172a)', padding: '10px', borderRadius: '6px', fontSize: '13px', fontFamily: 'monospace' }}>{activePractical.constraints}</pre>
               </div>
             )}
 
             {activePractical.sample_input && (
               <div style={{ mt: '15px', display: 'flex', gap: '10px' }}>
                 <div style={{ flex: 1 }}>
-                  <h5 style={{ fontWeight: 600, color: '#f1f5f9', mb: '4px' }}>Sample Input:</h5>
-                  <pre style={{ background: '#0f172a', padding: '10px', borderRadius: '6px', fontSize: '13px', fontFamily: 'monospace' }}>{activePractical.sample_input}</pre>
+                  <h5 style={{ fontWeight: 600, color: 'var(--student-ui-text-f1f5f9, #f1f5f9)', mb: '4px' }}>Sample Input:</h5>
+                  <pre style={{ background: 'var(--student-ui-bg-0f172a, #0f172a)', padding: '10px', borderRadius: '6px', fontSize: '13px', fontFamily: 'monospace' }}>{activePractical.sample_input}</pre>
                 </div>
                 <div style={{ flex: 1 }}>
-                  <h5 style={{ fontWeight: 600, color: '#f1f5f9', mb: '4px' }}>Sample Output:</h5>
-                  <pre style={{ background: '#0f172a', padding: '10px', borderRadius: '6px', fontSize: '13px', fontFamily: 'monospace' }}>{activePractical.sample_output}</pre>
+                  <h5 style={{ fontWeight: 600, color: 'var(--student-ui-text-f1f5f9, #f1f5f9)', mb: '4px' }}>Sample Output:</h5>
+                  <pre style={{ background: 'var(--student-ui-bg-0f172a, #0f172a)', padding: '10px', borderRadius: '6px', fontSize: '13px', fontFamily: 'monospace' }}>{activePractical.sample_output}</pre>
                 </div>
               </div>
             )}
@@ -389,44 +392,44 @@ int main() {
             <div style={{ marginTop: '30px', borderTop: '1px solid #334155', paddingTop: '20px' }}>
               <h4 style={{ fontSize: '14px', fontWeight: 700, color: '#38bdf8', marginBottom: '12px' }}>Your Submission History</h4>
               
-              {loadingHistory ? <p style={{ fontSize: '12px', color: '#94a3b8' }}>Loading history...</p> : (
+              {loadingHistory ? <p style={{ fontSize: '12px', color: 'var(--student-ui-text-94a3b8, #94a3b8)' }}>Loading history...</p> : (
                 <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
                   {submissionHistory.map(sub => (
                     <div
                       key={sub.id}
                       onClick={() => handleViewHistoryDetail(sub.id)}
                       style={{
-                        padding: '10px 12px', borderRadius: '6px', border: '1px solid #475569', background: '#0f172a',
+                        padding: '10px 12px', borderRadius: '6px', border: '1px solid #475569', background: 'var(--student-ui-bg-0f172a, #0f172a)',
                         cursor: 'pointer', display: 'flex', justifyContent: 'space-between', alignItems: 'center',
                         transition: 'background 0.2s'
                       }}
-                      onMouseEnter={e => e.currentTarget.style.background = '#1e293b'}
-                      onMouseLeave={e => e.currentTarget.style.background = '#0f172a'}
+                      onMouseEnter={e => e.currentTarget.style.background = 'var(--student-ui-bg-1e293b, #1e293b)'}
+                      onMouseLeave={e => e.currentTarget.style.background = 'var(--student-ui-bg-0f172a, #0f172a)'}
                     >
                       <div style={{ fontSize: '12px' }}>
                         <span style={{ fontWeight: 700, color: sub.status === 'Accepted' ? '#10b981' : '#ef4444' }}>{sub.status}</span>
                         {sub.is_late && <span style={{ color: '#ef4444', fontWeight: 'bold', marginLeft: '8px', fontSize: '10px' }}>(LATE)</span>}
-                        <span style={{ color: '#94a3b8', marginLeft: '10px' }}>{new Date(sub.submitted_at).toLocaleString()}</span>
+                        <span style={{ color: 'var(--student-ui-text-94a3b8, #94a3b8)', marginLeft: '10px' }}>{new Date(sub.submitted_at).toLocaleString()}</span>
                       </div>
                       <div style={{ fontSize: '12px', fontWeight: 700 }}>
                         {sub.normalized_marks} / 10
                       </div>
                     </div>
                   ))}
-                  {submissionHistory.length === 0 && <p style={{ fontSize: '12px', color: '#64748b', fontStyle: 'italic' }}>No submissions yet.</p>}
+                  {submissionHistory.length === 0 && <p style={{ fontSize: '12px', color: 'var(--student-ui-text-64748b, #64748b)', fontStyle: 'italic' }}>No submissions yet.</p>}
                 </div>
               )}
             </div>
 
             {/* Historical Details View */}
             {viewingHistorySub && (
-              <div style={{ marginTop: '20px', border: '1px solid #4f46e5', borderRadius: '8px', padding: '15px', background: '#0f172a' }}>
+              <div style={{ marginTop: '20px', border: '1px solid #4f46e5', borderRadius: '8px', padding: '15px', background: 'var(--student-ui-bg-0f172a, #0f172a)' }}>
                 <div style={{ display: 'flex', justifyContent: 'space-between', mb: '10px' }}>
                   <h5 style={{ fontWeight: 700 }}>Submission Details</h5>
                   <button onClick={() => setViewingHistorySub(null)} style={{ border: 'none', background: 'none', color: '#ef4444', fontWeight: 'bold', cursor: 'pointer' }}>Close Details</button>
                 </div>
-                <p style={{ fontSize: '12px', color: '#94a3b8' }}>Status: <strong style={{ color: viewingHistorySub.status === 'Accepted' ? '#10b981' : '#ef4444' }}>{viewingHistorySub.status}</strong></p>
-                <p style={{ fontSize: '12px', color: '#94a3b8', mt: '3px' }}>Normalized Grade: <strong>{viewingHistorySub.normalized_marks} / 10</strong></p>
+                <p style={{ fontSize: '12px', color: 'var(--student-ui-text-94a3b8, #94a3b8)' }}>Status: <strong style={{ color: viewingHistorySub.status === 'Accepted' ? '#10b981' : '#ef4444' }}>{viewingHistorySub.status}</strong></p>
+                <p style={{ fontSize: '12px', color: 'var(--student-ui-text-94a3b8, #94a3b8)', mt: '3px' }}>Normalized Grade: <strong>{viewingHistorySub.normalized_marks} / 10</strong></p>
                 
                 <h6 style={{ fontSize: '11px', fontWeight: 600, mt: '10px', mb: '4px' }}>Submission cases breakdown:</h6>
                 <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
@@ -450,7 +453,7 @@ int main() {
               <Editor
                 height="100%"
                 language={language === 'cpp' ? 'cpp' : 'python'}
-                theme="vs-dark"
+                theme={studentTheme?.theme === 'light' ? 'light' : 'vs-dark'}
                 value={code}
                 onChange={val => setCode(val || '')}
                 options={{
@@ -462,10 +465,10 @@ int main() {
             </div>
 
             {/* Test Case Outputs Tray */}
-            <div style={{ flex: 1, minHeight: 0, display: 'flex', flexDirection: 'column', background: '#1e293b', padding: '15px', borderRadius: '8px', border: '1px solid #334155', overflowY: 'auto' }}>
+            <div style={{ flex: 1, minHeight: 0, display: 'flex', flexDirection: 'column', background: 'var(--student-ui-bg-1e293b, #1e293b)', padding: '15px', borderRadius: '8px', border: '1px solid #334155', overflowY: 'auto' }}>
               <h4 style={{ fontSize: '13px', fontWeight: 700, borderBottom: '1px solid #334155', pb: '8px', mb: '10px', color: '#38bdf8' }}>Console / Test Case Results</h4>
               
-              {executing && <p style={{ fontSize: '13px', color: '#e2e8f0' }}>Evaluating code against test cases, please wait...</p>}
+              {executing && <p style={{ fontSize: '13px', color: 'var(--student-ui-text-e2e8f0, #e2e8f0)' }}>Evaluating code against test cases, please wait...</p>}
               
               {execError && <div style={{ color: '#ef4444', fontSize: '13px', fontFamily: 'monospace' }}>Error: {execError}</div>}
 
@@ -481,17 +484,17 @@ int main() {
                   </div>
 
                   {execResult.status === 'compile_error' ? (
-                    <pre style={{ backgroundColor: '#0f172a', color: '#ef4444', padding: '10px', borderRadius: '6px', fontSize: '12px', fontFamily: 'monospace', overflowX: 'auto' }}>
+                    <pre style={{ backgroundColor: 'var(--student-ui-bg-0f172a, #0f172a)', color: '#ef4444', padding: '10px', borderRadius: '6px', fontSize: '12px', fontFamily: 'monospace', overflowX: 'auto' }}>
                       {execResult.compileError}
                     </pre>
                   ) : (
-                    <p style={{ fontSize: '13px', color: '#94a3b8' }}>Submission evaluated successfully. Review past attempts in the left pane history tray.</p>
+                    <p style={{ fontSize: '13px', color: 'var(--student-ui-text-94a3b8, #94a3b8)' }}>Submission evaluated successfully. Review past attempts in the left pane history tray.</p>
                   )}
                 </div>
               )}
 
               {!executing && !execResult && !execError && (
-                <p style={{ fontSize: '12px', color: '#64748b', fontStyle: 'italic' }}>Submit your code to see evaluation results here.</p>
+                <p style={{ fontSize: '12px', color: 'var(--student-ui-text-64748b, #64748b)', fontStyle: 'italic' }}>Submit your code to see evaluation results here.</p>
               )}
             </div>
 
@@ -504,20 +507,21 @@ int main() {
 
   const renderStudentHeader = () => {
     return (
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', backgroundColor: 'white', padding: '12px 24px', borderBottom: '1px solid var(--border-color)', marginBottom: '20px', borderRadius: '10px', boxShadow: '0 4px 6px -1px rgba(0,0,0,0.05)', color: '#1e293b' }}>
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', backgroundColor: 'var(--student-ui-bg-ffffff, white)', padding: '12px 24px', borderBottom: '1px solid var(--border-color)', marginBottom: '20px', borderRadius: '10px', boxShadow: '0 4px 6px -1px rgba(0,0,0,0.05)', color: 'var(--student-ui-text-1e293b, #1e293b)' }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: '15px' }}>
-          <div style={{ width: '40px', height: '40px', borderRadius: '50%', backgroundColor: '#4F46E5', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'white', fontWeight: 'bold' }}>
+          <div style={{ width: '40px', height: '40px', borderRadius: '50%', backgroundColor: '#4f46e5', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'white', fontWeight: 'bold' }}>
             {user?.name?.charAt(0).toUpperCase() || 'S'}
           </div>
           <div>
             <h3 style={{ margin: 0, fontSize: '15px', fontWeight: 600 }}>{user?.name}</h3>
-            <span style={{ fontSize: '12px', color: '#64748b' }}>Semester {user?.extra_info?.semester || 'N/A'} • Student Workspace</span>
+            <span style={{ fontSize: '12px', color: 'var(--student-ui-text-64748b, #64748b)' }}>Semester {user?.extra_info?.semester || 'N/A'} • Student Workspace</span>
           </div>
         </div>
         <div style={{ display: 'flex', gap: '12px' }}>
+          <StudentThemeToggle />
           <button 
             onClick={() => setIsChangePasswordOpen(true)} 
-            style={{ padding: '8px 16px', borderRadius: '8px', border: '1px solid var(--border-color)', backgroundColor: 'white', cursor: 'pointer', fontWeight: 600, fontSize: '13px', color: '#475569' }}
+            style={{ padding: '8px 16px', borderRadius: '8px', border: '1px solid var(--border-color)', backgroundColor: 'var(--student-ui-bg-ffffff, white)', cursor: 'pointer', fontWeight: 600, fontSize: '13px', color: 'var(--student-ui-text-475569, #475569)' }}
           >
             🔑 Change Password
           </button>
@@ -548,7 +552,7 @@ int main() {
               key={c.id} 
               onClick={() => setSelectedCourse(c.id.toString())}
               style={{
-                background: 'white', border: '1px solid var(--border-color)', borderRadius: '12px', padding: '24px',
+                background: 'var(--student-ui-bg-ffffff, white)', border: '1px solid var(--border-color)', borderRadius: '12px', padding: '24px',
                 cursor: 'pointer', transition: 'transform 0.2s, box-shadow 0.2s',
                 boxShadow: '0 4px 6px -1px rgba(0,0,0,0.05)',
                 display: 'flex', flexDirection: 'column', justifyContent: 'space-between', height: '160px'
@@ -566,9 +570,9 @@ int main() {
             >
               <div>
                 <span style={{ fontSize: '11px', fontWeight: 700, color: 'var(--primary)', textTransform: 'uppercase', tracking: 'wide' }}>{c.course_code}</span>
-                <h3 style={{ fontSize: '17px', fontWeight: 600, marginTop: '8px', color: '#1e293b' }}>{c.name}</h3>
+                <h3 style={{ fontSize: '17px', fontWeight: 600, marginTop: '8px', color: 'var(--student-ui-text-1e293b, #1e293b)' }}>{c.name}</h3>
               </div>
-              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', fontSize: '12.5px', color: '#64748b' }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', fontSize: '12.5px', color: 'var(--student-ui-text-64748b, #64748b)' }}>
                 <span>Semester {c.semester}</span>
                 <span style={{ fontWeight: 600, color: 'var(--primary)' }}>Open Workspace &rarr;</span>
               </div>
@@ -603,7 +607,7 @@ int main() {
             onClick={() => setSelectedCourse('')}
             style={{
               padding: '8px 16px', borderRadius: '8px', border: '1px solid var(--border-color)',
-              backgroundColor: 'white', cursor: 'pointer', fontWeight: 600, fontSize: '13px'
+              backgroundColor: 'var(--student-ui-bg-ffffff, white)', cursor: 'pointer', fontWeight: 600, fontSize: '13px'
             }}
           >
             🔄 Switch Subject
@@ -645,7 +649,7 @@ int main() {
                   <tr key={p.id}>
                     <td style={{ fontWeight: 600, color: 'var(--primary)' }}>{p.title}</td>
                     <td>
-                      <div style={{ fontSize: '12px', color: '#475569' }}>
+                      <div style={{ fontSize: '12px', color: 'var(--student-ui-text-475569, #475569)' }}>
                         <div><strong>Start:</strong> {startTime ? startTime.toLocaleString() : 'Open'}</div>
                         <div style={{ marginTop: '2px' }}><strong>End:</strong> {endTime ? endTime.toLocaleString() : 'Open'}</div>
                       </div>
@@ -653,7 +657,7 @@ int main() {
                     <td>
                       <span style={{
                         padding: '4px 10px', borderRadius: '12px', fontSize: '11px', fontWeight: 600,
-                        backgroundColor: p.difficulty === 'Easy' ? '#ecfdf5' : p.difficulty === 'Medium' ? '#fef3c7' : '#fef2f2',
+                        backgroundColor: p.difficulty === 'Easy' ? 'var(--student-ui-bg-ecfdf5, #ecfdf5)' : p.difficulty === 'Medium' ? '#fef3c7' : 'var(--student-ui-bg-fef2f2, #fef2f2)',
                         color: p.difficulty === 'Easy' ? '#10b981' : p.difficulty === 'Medium' ? '#f59e0b' : '#ef4444'
                       }}>
                         {p.difficulty}
@@ -667,8 +671,8 @@ int main() {
                       <div style={{ display: 'flex', flexDirection: 'column', gap: '4px', alignItems: 'flex-start' }}>
                         <span style={{
                           padding: '4px 10px', borderRadius: '12px', fontSize: '11px', fontWeight: 600,
-                          backgroundColor: p.my_status === 'Accepted' ? '#ecfdf5' : p.my_status ? '#fef2f2' : '#f1f5f9',
-                          color: p.my_status === 'Accepted' ? '#10b981' : p.my_status ? '#ef4444' : '#64748b'
+                          backgroundColor: p.my_status === 'Accepted' ? 'var(--student-ui-bg-ecfdf5, #ecfdf5)' : p.my_status ? 'var(--student-ui-bg-fef2f2, #fef2f2)' : 'var(--student-ui-bg-f1f5f9, #f1f5f9)',
+                          color: p.my_status === 'Accepted' ? '#10b981' : p.my_status ? '#ef4444' : 'var(--student-ui-text-64748b, #64748b)'
                         }}>
                           {p.my_status || 'Unattempted'}
                         </span>
@@ -681,7 +685,7 @@ int main() {
                     </td>
                     <td>
                       {notStartedYet ? (
-                        <span style={{ fontSize: '12px', color: '#94a3b8', fontStyle: 'italic', fontWeight: 600 }}>
+                        <span style={{ fontSize: '12px', color: 'var(--student-ui-text-94a3b8, #94a3b8)', fontStyle: 'italic', fontWeight: 600 }}>
                            Not Started Yet
                         </span>
                       ) : (
@@ -702,7 +706,7 @@ int main() {
                 );
               })}
               {practicals.length === 0 && (
-                <tr><td colSpan="7" style={{ textAlign: 'center', color: '#888', padding: '40px' }}>No coding practicals assigned to your batch currently.</td></tr>
+                <tr><td colSpan="7" style={{ textAlign: 'center', color: 'var(--student-ui-text-888888, #888)', padding: '40px' }}>No coding practicals assigned to your batch currently.</td></tr>
               )}
             </tbody>
           </table>
