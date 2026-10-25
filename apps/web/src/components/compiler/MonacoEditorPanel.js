@@ -165,11 +165,7 @@ export default function MonacoEditorPanel({
                 <option key={key} value={key}>{cfg.label}</option>
               ))}
           </select>
-          {!langConfig.executableInPhase1 && (
-            <span style={{ fontSize: '10px', fontWeight: 700, color: '#f4b400', background: 'rgba(244,180,0,0.1)', border: '1px solid rgba(244,180,0,0.25)', padding: '2px 8px', letterSpacing: '0.5px', textTransform: 'uppercase' }}>
-              Phase 2
-            </span>
-          )}
+
         </div>
         <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
           {/* Small subtle autosave indicator beside reload button */}
@@ -228,7 +224,6 @@ export default function MonacoEditorPanel({
         </div>
       </div>
 
-      {clipboardRestricted && <p role="note" style={{ margin: 8 }}>Exam policy: clipboard operations are disabled.</p>}
       {/* Monaco Editor */}
       <div style={{ flex: 1, minHeight: 0, position: 'relative' }}>
         <Editor key={`${activeProblem?.id}:${clipboardRestricted}`}

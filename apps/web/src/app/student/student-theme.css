@@ -147,3 +147,20 @@
 .student-theme input, .student-theme select, .student-theme textarea { color-scheme: inherit; }
 .student-theme .coding-workspace { min-width: 0; }
 @media(max-width:767px) { .student-theme-toolbar { padding: 10px 16px; } .coding-workspace > div:has(> .student-theme-toggle) { padding-inline: 10px !important; gap: 8px; overflow-x: auto; } .coding-workspace .student-theme-toggle { padding: 8px; } .coding-workspace .student-theme-toggle > span:last-child { display: none; } }
+/* A quieter student overview, with the same theme choice in both appearances. */
+.student-dashboard { color: var(--text-main); }
+.student-dashboard .student-dashboard-header { gap: 18px; flex-wrap: wrap; min-height: 76px; height: auto !important; padding: 16px 32px !important; }
+.student-dashboard-header > div { flex-wrap: wrap; }
+.student-dashboard h1 { letter-spacing: -.8px; font-weight: 600 !important; }
+.student-dashboard h3 { letter-spacing: -.4px; }
+.student-dashboard button { min-height: 38px; font-family: inherit; font-size: 12px !important; border-radius: 8px !important; }
+.student-course-card { border-radius: 13px !important; padding: 26px !important; box-shadow: 0 2px 5px #0f172a04 !important; }
+.student-course-card > div { flex-wrap: wrap; gap: 14px; }
+.student-theme[data-student-theme=light] { --student-ui-text-94a3b8: #64748b; --student-ui-text-cbd5e1: #475569; --student-ui-text-e2e8f0: #475569; --student-ui-border-f1f5f9: #e2e8f0; }
+.student-theme[data-student-theme=light] .student-dashboard-header { border-bottom-color: #e2e8f0 !important; }
+.student-theme[data-student-theme=light] .student-course-card { background: #fff !important; border-color: #e2e8f0 !important; }
+.student-theme[data-student-theme=light] .student-dashboard nav button { color: #475569; background: #fff; border: 1px solid #e2e8f0; padding: 9px 14px; }
+.student-theme[data-student-theme=light] .student-dashboard nav button[aria-pressed=true] { color: #4338ca; border-color: #c7d2fe; background: #eff1ff; }
+.student-save-status:empty { display: none; }
+.student-dashboard :focus-visible { outline: 3px solid #818cf8; outline-offset: 3px; }
+@media(max-width:767px) { .student-dashboard .student-dashboard-header { padding: 16px !important; align-items: flex-start !important; } .student-dashboard-header > div:last-child { gap: 12px !important; justify-content: flex-start; } .student-dashboard h1 { font-size: 24px !important; } .student-course-card { padding: 20px !important; } }

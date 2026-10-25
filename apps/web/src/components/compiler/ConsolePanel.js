@@ -252,25 +252,11 @@ export default function ConsolePanel({
             <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '6px', textAlign: 'center' }}>
               <span style={{ fontSize: '14px', fontWeight: 700, letterSpacing: '0.5px', color: 'var(--student-code-text-ffffff, #ffffff)' }}>Execution failed</span>
               <span style={{ color: 'var(--student-code-text-7e7e7e, #7e7e7e)', fontSize: '12px', maxWidth: '340px', lineHeight: 1.5 }}>
-                Could not execute solution. Verify your authorization session, connection, or check if the local server is running.
+                We couldn’t run your code right now. Check your connection and try again. If the problem continues, contact your faculty.
               </span>
-              {output?.runtimeError && (
-                <pre style={{
-                  color: '#e22718',
-                  background: 'var(--student-code-bg-0d0d0d, #0d0d0d)',
-                  border: '1px solid var(--student-code-border-262626, #262626)',
-                  padding: '10px 12px',
-                  fontSize: '11px',
-                  fontFamily: 'JetBrains Mono, monospace',
-                  textAlign: 'left',
-                  maxHeight: '100px',
-                  overflowY: 'auto',
-                  marginTop: '10px',
-                  width: '100%'
-                }}>{output.runtimeError}</pre>
-              )}
+
               <span style={{ color: 'var(--student-code-text-bbbbbb, #bbbbbb)', fontSize: '11px', marginTop: '10px', fontWeight: 700, letterSpacing: '1px', textTransform: 'uppercase' }}>
-                Retry Guidance: Check network & click Run/Submit again
+                Try Run or Submit again when your connection is ready.
               </span>
             </div>
           </div>

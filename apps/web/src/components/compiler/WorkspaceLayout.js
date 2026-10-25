@@ -116,6 +116,7 @@ function friendlyError(err, fallback = 'Something went wrong. Please try again.'
   if (msg.includes('500') || msg.includes('internal server')) {
     return 'A server error occurred. Please try again shortly.';
   }
+  if (/sql|postgres|redis|docker|stack trace|econn|localhost|connection refused|relation .*does not exist|\bat .*\.(?:js|ts):/i.test(msg)) return fallback;
   // If short and human-looking, surface it; otherwise use fallback
   const raw = typeof err === 'string' ? err : err.message || '';
   return raw && raw.length < 120 ? raw : fallback;
@@ -341,7 +342,7 @@ export default function WorkspaceLayout({ problem }) {
   const [codeByLang, setCodeByLang] = useState({});
 
   const lifecycle = useExecutionLifecycle(resolvedProblem.id);
-  const [draftStatus, setDraftStatus] = useState('Not synced');
+  const [draftStatus, setDraftStatus] = useState('');
   const draftVersion = useRef(0);
   const [narrow, setNarrow] = useState(false);
   const [workspaceTab, setWorkspaceTab] = useState('editor');
@@ -354,7 +355,7 @@ export default function WorkspaceLayout({ problem }) {
       setUndoDraft({ code: codeByLang[selectedLang], language: selectedLang });
       setSelectedLang(language || selectedLang);
       setCodeByLang(prev => ({ ...prev, [language || selectedLang]: code }));
-      draftVersion.current++; setHasUnsavedChanges(true); setDraftStatus('Unsynced changes');
+      draftVersion.current++; setHasUnsavedChanges(true); setDraftStatus('Changes not saved');
     } });
   };
 
@@ -445,7 +446,7 @@ export default function WorkspaceLayout({ problem }) {
       if (localStorage.getItem(`${pendingKey}_pending`) === 'true') {
         const pending = localStorage.getItem(pendingKey);
         if (pending !== null) initialMap[currentLang] = pending;
-        setDraftStatus('Restored device draft · use Save to sync');
+        setDraftStatus('Draft restored from this device. Save to keep it online.');
       }
       setCodeByLang(initialMap);
       setHasUnsavedChanges(false);
@@ -463,7 +464,7 @@ export default function WorkspaceLayout({ problem }) {
   function handleCodeChange(newCode) {
     setCodeByLang((prev) => ({ ...prev, [selectedLang]: newCode }));
     draftVersion.current++;
-    setDraftStatus('Unsynced changes');
+    setDraftStatus('Changes not saved');
     setHasUnsavedChanges(true);
     setSaveStatus('idle');
   }
@@ -507,7 +508,7 @@ export default function WorkspaceLayout({ problem }) {
     setConfirmation({ title: 'Reset this draft?', message: 'Your current code will be available with Undo.', confirm: () => {
       setUndoDraft({ code: codeByLang[selectedLang], language: selectedLang });
       setCodeByLang(prev => ({ ...prev, [selectedLang]: getBoilerplate(resolvedProblem.id, selectedLang) }));
-      draftVersion.current++; setHasUnsavedChanges(true); setDraftStatus('Unsynced changes');
+      draftVersion.current++; setHasUnsavedChanges(true); setDraftStatus('Changes not saved');
     } });
   }
 
@@ -570,8 +571,8 @@ export default function WorkspaceLayout({ problem }) {
       localStorage.setItem(`${cacheKey}_timestamp`, new Date().toISOString());
       localStorage.setItem(`${cacheKey}_pending`, 'true');
       localSaved = true;
-      setDraftStatus('Saved on this device · syncing…');
-    } catch { setDraftStatus('Device storage unavailable · syncing…'); }
+      setDraftStatus('Saved on this device · saving online…');
+    } catch { setDraftStatus('Saving online…'); }
     try {
       const token = localStorage.getItem('token');
       if (!token) throw new Error('Sign in to sync your draft');
@@ -586,14 +587,14 @@ export default function WorkspaceLayout({ problem }) {
         localStorage.removeItem(`${cacheKey}_pending`);
         setHasUnsavedChanges(false);
         setSaveStatus('saved');
-        setDraftStatus(`Synced at ${new Date().toLocaleTimeString()}`);
+        setDraftStatus(`Saved at ${new Date().toLocaleTimeString()}`);
         if (saveStatusTimerRef.current) clearTimeout(saveStatusTimerRef.current);
         saveStatusTimerRef.current = setTimeout(() => setSaveStatus('idle'), 3000);
       }
     } catch (error) {
       if (signal?.aborted) return;
       setSaveStatus('error');
-      setDraftStatus(localSaved ? 'Saved on this device · sync failed' : `Save failed: ${error.message}`);
+      setDraftStatus(localSaved ? 'Saved on this device. Online save failed; please try Save again.' : 'Your changes could not be saved. Please try Save again.');
       if (!localSaved && !snapshot) throw error;
     } finally { if (!signal?.aborted) setIsSavingCode(false); }
   }
@@ -642,7 +643,7 @@ export default function WorkspaceLayout({ problem }) {
       lifecycle.finish(action, 'Done');
     } catch (error) {
       if (signal.aborted) return;
-      setOutput({ status: 'internal_error', summary: 'Action could not finish', runtimeError: error.message, cases: [] });
+      setOutput({ status: 'internal_error', summary: 'Action could not finish', runtimeError: 'Unable to finish this action. Please try again.', cases: [] });
       setJudgeState('error'); lifecycle.finish(action, 'Needs attention');
     } finally {
       if (!signal.aborted) { setIsRunning(false); setIsSubmitting(false); setSubmitPhase(null); }
@@ -1101,11 +1102,11 @@ export default function WorkspaceLayout({ problem }) {
         </div>
       </div>
 
-      <div role="status" aria-live="polite" style={{ padding: '8px 16px', color: 'var(--student-code-text-cbd5e1, #cbd5e1)', fontSize: '12px' }}>
-        {draftStatus} · {lifecycle.phase}{!lifecycle.busy && output?.summary ? ` · ${output.summary}` : ''}
+      <div className="student-save-status" role="status" aria-live="polite" style={{ padding: '8px 16px', color: 'var(--student-code-text-cbd5e1, #cbd5e1)', fontSize: '12px' }}>
+        {draftStatus}{lifecycle.busy ? `${draftStatus ? ' · ' : ''}Working…` : ''}
         {undoDraft && !lifecycle.busy && <button onClick={() => {
           setSelectedLang(undoDraft.language); setCodeByLang(prev => ({ ...prev, [undoDraft.language]: undoDraft.code }));
-          draftVersion.current++; setHasUnsavedChanges(true); setDraftStatus('Draft restored · unsynced'); setUndoDraft(null);
+          draftVersion.current++; setHasUnsavedChanges(true); setDraftStatus('Draft restored. Save to keep your changes.'); setUndoDraft(null);
         }}>Undo draft replacement</button>}
       </div>
       {lifecycle.busy && <span role="timer" aria-live="off" style={{ padding: '0 16px' }}>{lifecycle.elapsed}s elapsed</span>}

@@ -135,11 +135,11 @@ export default function StudentDashboard() {
 
   if (!user) return null;
 
-  const semester = profile?.user?.extra_info?.semester || '';
-  const batch = profile?.user?.extra_info?.batch || '';
+  const semester = profile?.user?.extra_info?.semester || user?.extra_info?.semester || '';
+  const batch = profile?.user?.extra_info?.batch || user?.extra_info?.batch || '';
 
   return (
-    <div style={{ minHeight: '100vh', backgroundColor: 'var(--student-ui-bg-f8fafc, #f8fafc)', fontFamily: 'Inter, sans-serif' }}>
+    <div className="student-dashboard" style={{ minHeight: '100vh', backgroundColor: 'var(--student-ui-bg-f8fafc, #f8fafc)', fontFamily: 'Inter, sans-serif' }}>
       <div className="student-theme-toolbar"><StudentThemeToggle /></div>
       {loading && <LoadingOverlay />}
       {loadError && <div role="alert" style={{padding: '12px 20px', background: 'var(--student-ui-bg-fff3cd, #fff3cd)', color: '#664d03', display: 'flex', flexWrap: 'wrap', gap: '12px', alignItems: 'center'}}>
@@ -148,7 +148,7 @@ export default function StudentDashboard() {
       </div>}
       
       {/* Top Navbar */}
-      <div style={{
+      <div className="student-dashboard-header" style={{
         height: '70px', backgroundColor: 'var(--student-ui-bg-ffffff, white)', borderBottom: '1px solid var(--border-color)',
         display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '0 40px',
         position: 'sticky', top: 0, zIndex: 100
@@ -186,7 +186,7 @@ export default function StudentDashboard() {
         <div style={{ display: 'flex', alignItems: 'center', gap: '20px' }}>
           <div style={{ textAlign: 'right' }}>
             <div style={{ fontSize: '14px', fontWeight: 600, color: 'var(--student-ui-text-1e293b, #1e293b)' }}>{user.name}</div>
-            <div style={{ fontSize: '12px', color: 'var(--student-ui-text-64748b, #64748b)' }}>Semester {semester} &bull; Batch {batch}</div>
+            <div style={{ fontSize: '12px', color: 'var(--student-ui-text-64748b, #64748b)' }}>{[semester && `Semester ${semester}`, batch && `Batch ${batch}`].filter(Boolean).join(' · ') || 'Student workspace'}</div>
           </div>
           <button
             onClick={() => {
@@ -212,9 +212,9 @@ export default function StudentDashboard() {
 
       <div style={{ maxWidth: '1200px', margin: '0 auto', padding: '40px 20px' }}>
         <div style={{ marginBottom: '35px' }}>
-          <h1 style={{ fontSize: '28px', fontWeight: 700, color: 'var(--student-ui-text-1e293b, #1e293b)', marginBottom: '8px' }}>My Assigned Subjects & Practicals</h1>
+          <h1 style={{ fontSize: '28px', fontWeight: 700, color: 'var(--student-ui-text-1e293b, #1e293b)', marginBottom: '8px' }}>My learning workspace</h1>
           <p style={{ color: 'var(--student-ui-text-64748b, #64748b)', fontSize: '15px' }}>
-            View questions assigned by your faculty for Semester {semester}. Click any practical question to open your coding workspace.
+            View practicals assigned by your faculty{semester ? ` for Semester ${semester}` : ''}. Choose a practical to continue learning.
           </p>
         </div>
 
@@ -238,7 +238,7 @@ export default function StudentDashboard() {
                 : `/student/code/1?subject=${encodeURIComponent(course.course_code)}`;
 
               return (
-                <div 
+                <div className="student-course-card"
                   key={course.id}
                   style={{
                     background: 'var(--student-ui-bg-ffffff, white)', border: '1px solid var(--student-ui-border-e2e8f0, #e2e8f0)', borderRadius: '16px', padding: '24px',
@@ -249,7 +249,7 @@ export default function StudentDashboard() {
                   <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', borderBottom: '1px solid var(--student-ui-border-f1f5f9, #f1f5f9)', paddingBottom: '16px' }}>
                     <div>
                       <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-                        <span style={{ fontSize: '12px', fontWeight: 700, color: '#0066b1', backgroundColor: 'var(--student-ui-bg-e0f2fe, #e0f2fe)', padding: '3px 8px', borderRadius: '6px', textTransform: 'uppercase', letterSpacing: '0.5px' }}>
+                        <span style={{ fontSize: '12px', fontWeight: 700, color: '#4f46e5', backgroundColor: 'var(--student-ui-bg-e0f2fe, #e0f2fe)', padding: '3px 8px', borderRadius: '6px', textTransform: 'uppercase', letterSpacing: '0.5px' }}>
                           {course.course_code}
                         </span>
                         <span style={{ fontSize: '12px', color: 'var(--student-ui-text-64748b, #64748b)', fontWeight: 500 }}>
@@ -268,7 +268,7 @@ export default function StudentDashboard() {
                       onClick={() => router.push(openWorkspaceUrl)}
                       style={{
                         padding: '10px 20px',
-                        background: '#0066b1',
+                        background: '#4f46e5',
                         color: 'white',
                         border: 'none',
                         borderRadius: '8px',
@@ -281,8 +281,8 @@ export default function StudentDashboard() {
                         boxShadow: '0 2px 4px rgba(0,102,177,0.2)',
                         transition: 'background 0.2s'
                       }}
-                      onMouseEnter={e => e.currentTarget.style.background = '#004c85'}
-                      onMouseLeave={e => e.currentTarget.style.background = '#0066b1'}
+                      onMouseEnter={e => e.currentTarget.style.background = '#4338ca'}
+                      onMouseLeave={e => e.currentTarget.style.background = '#4f46e5'}
                     >
                       Open Workspace &rarr;
                     </button>
@@ -349,7 +349,7 @@ export default function StudentDashboard() {
                                 if (isUpcoming) return;
                                 e.currentTarget.style.transform = 'translateY(-2px)';
                                 e.currentTarget.style.boxShadow = '0 6px 12px -2px rgba(0, 0, 0, 0.08)';
-                                e.currentTarget.style.borderColor = '#0066b1';
+                                e.currentTarget.style.borderColor = '#4f46e5';
                                 e.currentTarget.style.background = 'var(--student-ui-bg-ffffff, #ffffff)';
                               }}
                               onMouseLeave={(e) => {
@@ -386,7 +386,7 @@ export default function StudentDashboard() {
                                 }}>
                                   {isSolved ? `✓ Solved (Highest: ${p.my_marks || 0}/10)` : isAttempted ? `● Attempted (Highest: ${p.my_marks || 0}/10)` : '○ Unsolved'}
                                 </span>
-                                <span style={{ fontSize: '12px', fontWeight: 600, color: isUpcoming ? 'var(--student-ui-text-94a3b8, #94a3b8)' : '#0066b1' }}>
+                                <span style={{ fontSize: '12px', fontWeight: 600, color: isUpcoming ? 'var(--student-ui-text-94a3b8, #94a3b8)' : '#4f46e5' }}>
                                   {isUpcoming ? 'Not Started' : 'Solve \u2192'}
                                 </span>
                               </div>
