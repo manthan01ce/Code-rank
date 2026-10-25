@@ -3,14 +3,19 @@ import PracticalGradeReport from '@/components/PracticalGradeReport';
 import Editor from '@monaco-editor/react';
 
 import { fetchCollection } from '@/lib/fetch-collection';
-import { useState, useEffect, useRef } from 'react';
-import { useRouter } from 'next/navigation';
+import { useState, useEffect, useRef, Suspense } from 'react';
+import { useRouter, useSearchParams } from 'next/navigation';
 import LoadingOverlay from '@/components/LoadingOverlay';
 import { useSocket } from '@/hooks/useSocket';
 import { usePolling } from '@/hooks/usePolling';
 import { useFacultyAuth } from '@/hooks/useFacultyAuth';
 
 export default function FacultyDashboard() {
+  return <Suspense fallback={<p>Loading faculty workspace…</p>}><FacultyWorkspace /></Suspense>;
+}
+
+function FacultyWorkspace() {
+  const searchParams = useSearchParams();
   const router = useRouter();
   const socket = useSocket();
   const { token: authToken, isReady } = useFacultyAuth();
@@ -19,7 +24,7 @@ export default function FacultyDashboard() {
   const [gradePractical, setGradePractical] = useState(null);
   const [courses, setCourses] = useState([]);
   const [batches, setBatches] = useState([]);
-  
+
   // Read browser preferences after the first render so server and client
   // render the same initial dashboard. Do not overwrite storage before restore.
   const [preferencesReady, setPreferencesReady] = useState(false);
@@ -28,13 +33,13 @@ export default function FacultyDashboard() {
   const [activeTab, setActiveTab] = useState('practicals');
 
   useEffect(() => {
-    const params = new URLSearchParams(window.location.search);
+    const params = searchParams;
     const course = params.get('course') || localStorage.getItem('facultySelectedCourse') || '';
     const tab = params.get('tab') || localStorage.getItem('facultyActiveTab');
     setSelectedCourse(/^[1-9]\d*$/.test(course) ? course : '');
     setActiveTab(['practicals', 'submissions', 'marks'].includes(tab) ? tab : 'practicals');
     setPreferencesReady(true);
-  }, []);
+  }, [searchParams]);
 
   useEffect(() => {
     if (preferencesReady) localStorage.setItem('facultySelectedCourse', selectedCourse);
@@ -52,7 +57,7 @@ export default function FacultyDashboard() {
   const [viewingPractical, setViewingPractical] = useState(null);
   const [showViewPracticalModal, setShowViewPracticalModal] = useState(false);
   const [viewPracticalCodeLang, setViewPracticalCodeLang] = useState('python');
-  
+
   // Practical Form
   const [pracTitle, setPracTitle] = useState('');
   const [pracDesc, setPracDesc] = useState('');
@@ -67,11 +72,11 @@ export default function FacultyDashboard() {
   const [pracConstraints, setPracConstraints] = useState('');
   const [sampleTestCases, setSampleTestCases] = useState([{ input: '', expected: '' }]);
   const [allowedLanguages, setAllowedLanguages] = useState(['python', 'cpp']);
-  
+
   // Starter code templates
   const [pyTemplate, setPyTemplate] = useState('# Write your Python code here\n# Read inputs using input() or sys.stdin\n');
   const [cppTemplate, setCppTemplate] = useState('#include <iostream>\nusing namespace std;\n\nint main() {\n    // Write your C++ code here\n    // Read from cin and write to cout\n    return 0;\n}');
-  
+
   // Test cases state
   const [testCases, setTestCases] = useState([{ input: '', expected: '', marks: '5', is_hidden: false, label: '' }]);
   const [hasSubmissions, setHasSubmissions] = useState(false);
@@ -283,14 +288,14 @@ export default function FacultyDashboard() {
   // Socket: Submissions room for active practical
   useEffect(() => {
     if (!socket || !selectedPracticalId) return;
-    
+
     socket.emit('join_practical_room', selectedPracticalId);
-    
+
     // A new row can change sorting, filters and cursor boundaries.
     const handleNewSubmission = () => { fetchSubmissions(false); };
 
     socket.on('new_submission', handleNewSubmission);
-    
+
     return () => {
       socket.off('new_submission', handleNewSubmission);
       socket.emit('leave_practical_room', selectedPracticalId);
@@ -302,15 +307,15 @@ export default function FacultyDashboard() {
     if (selectedCourse && activeTab === 'marks') {
       fetchStats(true, null, null);
     }
-    
+
     if (!socket || !selectedCourse || activeTab !== 'marks') return;
-    
+
     const handleNewSubmissionMarks = () => {
       statsRefresh.current?.();
     };
-    
+
     socket.on('new_submission_marks', handleNewSubmissionMarks);
-    
+
     return () => {
       socket.off('new_submission_marks', handleNewSubmissionMarks);
     };
@@ -399,7 +404,7 @@ export default function FacultyDashboard() {
         } catch {
           setSampleTestCases([{ input: data.sample_input || '', expected: data.sample_output || '' }]);
         }
-        
+
         // Helper to format ISO string to datetime-local value (YYYY-MM-DDTHH:MM)
         const formatLocalTime = (iso) => {
           if (!iso) return '';
@@ -563,10 +568,10 @@ export default function FacultyDashboard() {
   };
 
   const handleDeletePractical = async (p) => {
-    const promptMsg = p.submissions_count > 0 
+    const promptMsg = p.submissions_count > 0
       ? `Practical "${p.title}" already has student submissions. Deleting it will mark it as INACTIVE so students can no longer access it, but submissions history will be preserved. Proceed?`
       : `Are you sure you want to permanently delete "${p.title}"?`;
-      
+
     if (!confirm(promptMsg)) return;
 
     setProcessing(true);
@@ -599,8 +604,8 @@ export default function FacultyDashboard() {
     if (!extraTimePractical) return;
     setProcessing(true);
     try {
-      const payload = customDate 
-        ? { newEndTime: customDate } 
+      const payload = customDate
+        ? { newEndTime: customDate }
         : { extraMinutes: minutes !== undefined ? minutes : extraMinutesInput };
 
       const res = await fetch(`/api/faculty/practicals/${extraTimePractical.id}/extra-time`, {
@@ -658,7 +663,7 @@ export default function FacultyDashboard() {
         <span style={{
           display: 'inline-flex', alignItems: 'center', gap: '4px',
           padding: '3px 8px', borderRadius: '12px', fontSize: '11px', fontWeight: 600,
-          backgroundColor: '#eff6ff', color: '#2563eb', border: '1px solid #bfdbfe'
+          backgroundColor: '#eff1ff', color: '#4338ca', border: '1px solid #bfdbfe'
         }}>
            Starts in {startsInStr} ({new Date(start).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })})
         </span>
@@ -671,7 +676,7 @@ export default function FacultyDashboard() {
           <span style={{
             display: 'inline-flex', alignItems: 'center', gap: '4px',
             padding: '3px 8px', borderRadius: '12px', fontSize: '11px', fontWeight: 600,
-            backgroundColor: '#fef2f2', color: '#ef4444', border: '1px solid #fecaca'
+            backgroundColor: '#fef2f2', color: '#b91c1c', border: '1px solid #fecaca'
           }}>
             ⛔ Expired ({new Date(end).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })})
           </span>
@@ -691,7 +696,7 @@ export default function FacultyDashboard() {
           <span style={{
             display: 'inline-flex', alignItems: 'center', gap: '4px',
             padding: '3px 8px', borderRadius: '12px', fontSize: '11px', fontWeight: 600,
-            backgroundColor: '#ecfdf5', color: '#059669', border: '1px solid #a7f3d0'
+            backgroundColor: '#eff1ff', color: '#059669', border: '1px solid #a7f3d0'
           }}>
              Active ({remainingStr})
           </span>
@@ -822,9 +827,9 @@ export default function FacultyDashboard() {
           <div style={{
             position: 'fixed', top: '20px', right: '20px', zIndex: 9999,
             padding: '14px 20px', borderRadius: '10px', fontWeight: 600, fontSize: '14px',
-            backgroundColor: toast.type === 'success' ? '#ecfdf5' : '#fef2f2',
-            color: toast.type === 'success' ? '#065f46' : '#991b1b',
-            border: `1px solid ${toast.type === 'success' ? '#6ee7b7' : '#fca5a5'}`,
+            backgroundColor: toast.type === 'success' ? '#eff1ff' : '#fef2f2',
+            color: toast.type === 'success' ? '#4338ca' : '#991b1b',
+            border: `1px solid ${toast.type === 'success' ? '#c7d2fe' : '#fca5a5'}`,
             boxShadow: '0 4px 20px rgba(0,0,0,0.12)'
           }}>
             {toast.msg}
@@ -836,10 +841,12 @@ export default function FacultyDashboard() {
           <p style={{ color: 'var(--text-muted)', fontSize: '14.5px', marginBottom: '30px' }}>Choose a course below to manage its assignments, view student grades, and download spreadsheets.</p>
         </div>
 
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(280px, 1fr))', gap: '20px' }}>
+        <div className="faculty-course-grid">
           {courses.map(c => (
-            <div 
-              key={c.id} 
+            <div
+              className="faculty-course-card" role="button" tabIndex={0}
+              onKeyDown={event => { if (event.key === 'Enter' || event.key === ' ') { event.preventDefault(); setSelectedCourse(c.id.toString()); } }}
+              key={c.id}
               onClick={() => setSelectedCourse(c.id.toString())}
               style={{
                 background: 'white', border: '1px solid var(--border-color)', borderRadius: '12px', padding: '24px',
@@ -862,7 +869,7 @@ export default function FacultyDashboard() {
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                   <span style={{ fontSize: '12px', fontWeight: 700, color: 'var(--primary)', textTransform: 'uppercase', letterSpacing: '0.5px' }}>{c.course_code}</span>
                   {c.is_co_coordinator ? (
-                    <span style={{ fontSize: '11px', fontWeight: 700, backgroundColor: '#fefce8', color: '#92400e', border: '1px solid #fde68a', padding: '2px 8px', borderRadius: '12px', display: 'inline-flex', alignItems: 'center', gap: '4px' }}>
+                    <span style={{ fontSize: '11px', fontWeight: 700, backgroundColor: '#eff1ff', color: '#475569', border: '1px solid #c7d2fe', padding: '2px 8px', borderRadius: '12px', display: 'inline-flex', alignItems: 'center', gap: '4px' }}>
                       👑 Co-coordinator
                     </span>
                   ) : (
@@ -900,9 +907,9 @@ export default function FacultyDashboard() {
         <div style={{
           position: 'fixed', top: '20px', right: '20px', zIndex: 9999,
           padding: '14px 20px', borderRadius: '10px', fontWeight: 600, fontSize: '14px',
-          backgroundColor: toast.type === 'success' ? '#ecfdf5' : '#fef2f2',
-          color: toast.type === 'success' ? '#065f46' : '#991b1b',
-          border: `1px solid ${toast.type === 'success' ? '#6ee7b7' : '#fca5a5'}`,
+          backgroundColor: toast.type === 'success' ? '#eff1ff' : '#fef2f2',
+          color: toast.type === 'success' ? '#4338ca' : '#991b1b',
+          border: `1px solid ${toast.type === 'success' ? '#c7d2fe' : '#fca5a5'}`,
           boxShadow: '0 4px 20px rgba(0,0,0,0.12)'
         }}>
           {toast.msg}
@@ -922,8 +929,8 @@ export default function FacultyDashboard() {
             {activeCourse?.is_co_coordinator ? (
               <span style={{
                 display: 'inline-flex', alignItems: 'center', gap: '5px',
-                backgroundColor: '#fefce8', border: '1px solid #fde68a',
-                color: '#92400e', fontSize: '12px', fontWeight: 700,
+                backgroundColor: '#eff1ff', border: '1px solid #c7d2fe',
+                color: '#475569', fontSize: '12px', fontWeight: 700,
                 padding: '4px 10px', borderRadius: '20px'
               }}>
                 👑 Co-coordinator &nbsp;·&nbsp; Can add / edit / delete practicals
@@ -940,9 +947,9 @@ export default function FacultyDashboard() {
             )}
           </div>
         </div>
-        
+
         <div>
-          <button 
+          <button
             onClick={() => setSelectedCourse('')}
             style={{
               padding: '8px 16px', borderRadius: '8px', border: '1px solid var(--border-color)',
@@ -955,8 +962,9 @@ export default function FacultyDashboard() {
       </div>
 
       {/* Tab Navigation */}
-      <div style={{ display: 'flex', borderBottom: '1px solid var(--border-color)', marginBottom: '25px' }}>
+      <div className="faculty-tabs" role="group" aria-label="Course workspace views">
         <button
+          aria-pressed={activeTab === 'practicals'}
           onClick={() => setActiveTab('practicals')}
           style={{
             padding: '12px 24px', background: 'none', border: 'none', borderBottom: activeTab === 'practicals' ? '3px solid var(--primary)' : '3px solid transparent',
@@ -966,6 +974,7 @@ export default function FacultyDashboard() {
            Practicals List
         </button>
         <button
+          aria-pressed={activeTab === 'submissions'}
           onClick={() => setActiveTab('submissions')}
           style={{
             padding: '12px 24px', background: 'none', border: 'none', borderBottom: activeTab === 'submissions' ? '3px solid var(--primary)' : '3px solid transparent',
@@ -975,6 +984,7 @@ export default function FacultyDashboard() {
           📥 Student Submissions
         </button>
         <button
+          aria-pressed={activeTab === 'marks'}
           onClick={() => setActiveTab('marks')}
           style={{
             padding: '12px 24px', background: 'none', border: 'none', borderBottom: activeTab === 'marks' ? '3px solid var(--primary)' : '3px solid transparent',
@@ -1002,20 +1012,20 @@ export default function FacultyDashboard() {
               <table>
                 <thead>
                   <tr>
-                    <th>Title</th>
-                    <th>Difficulty</th>
-                    <th>Type</th>
-                    <th>Timeline</th>
-                    <th>Total Marks (Internal)</th>
-                    <th>Test Cases</th>
-                    <th>Submissions</th>
-                    <th>Actions</th>
+                    <th scope="col">Title</th>
+                    <th scope="col">Difficulty</th>
+                    <th scope="col">Type</th>
+                    <th scope="col">Timeline</th>
+                    <th scope="col">Total Marks (Internal)</th>
+                    <th scope="col">Test Cases</th>
+                    <th scope="col">Submissions</th>
+                    <th scope="col">Actions</th>
                   </tr>
                 </thead>
                 <tbody>
                   {practicals.map(p => (
                     <tr key={p.id}>
-                      <td 
+                      <td
                         style={{ fontWeight: 600, color: 'var(--primary)', cursor: 'pointer' }}
                         onClick={() => handleOpenViewPractical(p)}
                         title="Click to view practical details"
@@ -1025,8 +1035,8 @@ export default function FacultyDashboard() {
                       <td>
                         <span style={{
                           padding: '4px 10px', borderRadius: '12px', fontSize: '11px', fontWeight: 600,
-                          backgroundColor: p.difficulty === 'Easy' ? '#ecfdf5' : p.difficulty === 'Medium' ? '#fef3c7' : '#fef2f2',
-                          color: p.difficulty === 'Easy' ? '#10b981' : p.difficulty === 'Medium' ? '#f59e0b' : '#ef4444'
+                          backgroundColor: p.difficulty === 'Easy' ? '#eff1ff' : p.difficulty === 'Medium' ? '#f1f5f9' : '#fef2f2',
+                          color: p.difficulty === 'Easy' ? '#4f46e5' : p.difficulty === 'Medium' ? '#475569' : '#b91c1c'
                         }}>
                           {p.difficulty}
                         </span>
@@ -1073,7 +1083,7 @@ export default function FacultyDashboard() {
                               </button>
                               <button
                                 onClick={() => handleDeletePractical(p)}
-                                style={{ padding: '6px 12px', borderRadius: '6px', border: 'none', backgroundColor: '#ef4444', color: 'white', cursor: 'pointer', fontWeight: 600, fontSize: '12px' }}
+                                style={{ padding: '6px 12px', borderRadius: '6px', border: 'none', backgroundColor: '#b91c1c', color: 'white', cursor: 'pointer', fontWeight: 600, fontSize: '12px' }}
                               >
                                  Delete
                               </button>
@@ -1123,7 +1133,7 @@ export default function FacultyDashboard() {
                   }}
                   style={{
                     padding: '8px 14px', borderRadius: '6px', border: '1px solid #bfdbfe',
-                    backgroundColor: '#eff6ff', color: '#1d4ed8', cursor: 'pointer',
+                    backgroundColor: '#eff1ff', color: '#1d4ed8', cursor: 'pointer',
                     fontWeight: 600, fontSize: '12px', display: 'flex', alignItems: 'center', gap: '5px', whiteSpace: 'nowrap'
                   }}
                   title="Add extra time for this practical"
@@ -1189,15 +1199,15 @@ export default function FacultyDashboard() {
               <table>
                 <thead>
                   <tr>
-                    <th>Roll Number</th>
-                    <th>Student Name</th>
-                    <th>Division</th>
-                    <th>Submission Time</th>
-                    <th>Language</th>
-                    <th>Status</th>
-                    <th>Raw Score</th>
-                    <th>Normalized Score (Out of 10)</th>
-                    <th>Action</th>
+                    <th scope="col">Roll Number</th>
+                    <th scope="col">Student Name</th>
+                    <th scope="col">Division</th>
+                    <th scope="col">Submission Time</th>
+                    <th scope="col">Language</th>
+                    <th scope="col">Status</th>
+                    <th scope="col">Raw Score</th>
+                    <th scope="col">Normalized Score (Out of 10)</th>
+                    <th scope="col">Action</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -1206,7 +1216,7 @@ export default function FacultyDashboard() {
                       <td style={{ fontWeight: 600, color: 'var(--primary)' }}>{s.roll_number || '—'}</td>
                       <td style={{ fontWeight: 500 }}>{s.student_name}</td>
                       <td>
-                        <span style={{ fontSize: '12px', fontWeight: 600, backgroundColor: '#eff6ff', color: '#1d4ed8', padding: '2px 8px', borderRadius: '4px' }}>
+                        <span style={{ fontSize: '12px', fontWeight: 600, backgroundColor: '#eff1ff', color: '#1d4ed8', padding: '2px 8px', borderRadius: '4px' }}>
                           {s.division || '—'}
                         </span>
                       </td>
@@ -1215,8 +1225,8 @@ export default function FacultyDashboard() {
                       <td>
                         <span style={{
                           padding: '4px 10px', borderRadius: '12px', fontSize: '11px', fontWeight: 600,
-                          backgroundColor: s.is_late ? '#fef2f2' : '#ecfdf5',
-                          color: s.is_late ? '#ef4444' : '#10b981'
+                          backgroundColor: s.is_late ? '#fef2f2' : '#eff1ff',
+                          color: s.is_late ? '#b91c1c' : '#4f46e5'
                         }}>
                           {s.is_late ? 'Late' : 'In-Time'}
                         </span>
@@ -1234,7 +1244,7 @@ export default function FacultyDashboard() {
                           {activeCourse?.is_co_coordinator && (
                             <button
                               onClick={() => handleDeleteSubmission(s)}
-                              style={{ padding: '6px 10px', borderRadius: '6px', border: 'none', backgroundColor: '#ef4444', color: 'white', cursor: 'pointer', fontWeight: 600, fontSize: '12px' }}
+                              style={{ padding: '6px 10px', borderRadius: '6px', border: 'none', backgroundColor: '#b91c1c', color: 'white', cursor: 'pointer', fontWeight: 600, fontSize: '12px' }}
                               title="Delete this student submission"
                             >
                                Delete
@@ -1286,7 +1296,7 @@ export default function FacultyDashboard() {
 
                 <button
                   className="btn-primary"
-                  style={{ width: 'auto', padding: '10px 18px', backgroundColor: '#10b981', margin: 0, display: 'flex', alignItems: 'center', gap: '6px' }}
+                  style={{ width: 'auto', padding: '10px 18px', backgroundColor: '#4f46e5', margin: 0, display: 'flex', alignItems: 'center', gap: '6px' }}
                   onClick={handleExportCSV}
                 >
                   ⬆ Export Current Page (CSV)
@@ -1340,7 +1350,7 @@ export default function FacultyDashboard() {
                             </span>
                           </td>
                           <td>
-                            <span style={{ fontSize: '12px', fontWeight: 600, backgroundColor: '#eff6ff', color: '#1d4ed8', padding: '2px 8px', borderRadius: '4px' }}>
+                            <span style={{ fontSize: '12px', fontWeight: 600, backgroundColor: '#eff1ff', color: '#1d4ed8', padding: '2px 8px', borderRadius: '4px' }}>
                               {s.division || '—'}
                             </span>
                           </td>
@@ -1353,7 +1363,7 @@ export default function FacultyDashboard() {
                                     <span style={{ fontWeight: 700, color: 'var(--primary)' }}>{sub.normalized_marks} / 10</span>
                                     {sub.is_late && (
                                       <span style={{
-                                        display: 'block', fontSize: '9px', fontWeight: 'bold', color: '#ef4444', marginTop: '2px'
+                                        display: 'block', fontSize: '9px', fontWeight: 'bold', color: '#b91c1c', marginTop: '2px'
                                       }}>
                                         LATE
                                       </span>
@@ -1399,7 +1409,7 @@ export default function FacultyDashboard() {
               {editingPractical ? `Edit Practical: ${editingPractical.title}` : 'Add New Coding Practical'}
             </h3>
 
-            
+
 
             <form onSubmit={handleSubmitPractical} style={{ display: 'flex', flexDirection: 'column', gap: '15px' }}>
               <div style={{ display: 'flex', gap: '15px' }}>
@@ -1484,8 +1494,8 @@ export default function FacultyDashboard() {
                           gap: '6px',
                           padding: '4px 10px',
                           borderRadius: '16px',
-                          backgroundColor: '#eff6ff',
-                          color: '#2563eb',
+                          backgroundColor: '#eff1ff',
+                          color: '#4338ca',
                           fontSize: '12px',
                           fontWeight: '600',
                           border: '1px solid #bfdbfe'
@@ -1504,7 +1514,7 @@ export default function FacultyDashboard() {
                           style={{
                             border: 'none',
                             background: 'transparent',
-                            color: '#ef4444',
+                            color: '#b91c1c',
                             cursor: 'pointer',
                             fontSize: '14px',
                             fontWeight: 'bold',
@@ -1587,7 +1597,7 @@ export default function FacultyDashboard() {
                           style={{ padding: '6px', fontFamily: 'monospace', resize: 'vertical' }}
                         />
                       </div>
-                      <button type="button" style={{ border: 'none', background: 'none', color: '#ef4444', fontWeight: 'bold', cursor: 'pointer', fontSize: '18px', padding: '0 5px' }} onClick={() => {
+                      <button type="button" style={{ border: 'none', background: 'none', color: '#b91c1c', fontWeight: 'bold', cursor: 'pointer', fontSize: '18px', padding: '0 5px' }} onClick={() => {
                         if (sampleTestCases.length <= 1) {
                           alert('At least 1 sample test case must remain.');
                           return;
@@ -1626,7 +1636,7 @@ export default function FacultyDashboard() {
                           value={tc.input}
                           onChange={e => handleTestCaseChange(idx, 'input', e.target.value)}
                           required
-                          
+
                           style={{ padding: '6px', fontFamily: 'monospace', resize: 'vertical' }}
                         />
                       </div>
@@ -1638,7 +1648,7 @@ export default function FacultyDashboard() {
                           value={tc.expected}
                           onChange={e => handleTestCaseChange(idx, 'expected', e.target.value)}
                           required
-                          
+
                           style={{ padding: '6px', fontFamily: 'monospace', resize: 'vertical' }}
                         />
                       </div>
@@ -1648,7 +1658,7 @@ export default function FacultyDashboard() {
                           value={tc.marks}
                           onChange={e => handleTestCaseChange(idx, 'marks', e.target.value)}
                           required
-                          
+
                           style={{ padding: '6px' }}
                         >
                           {[...Array(11).keys()].map(n => (
@@ -1657,7 +1667,7 @@ export default function FacultyDashboard() {
                         </select>
                       </div>
                       {true && (
-                        <button type="button" style={{ border: 'none', background: 'none', color: '#ef4444', fontWeight: 'bold', cursor: 'pointer', fontSize: '18px', padding: '0 5px' }} onClick={() => handleRemoveTestCaseRow(idx)}>
+                        <button type="button" style={{ border: 'none', background: 'none', color: '#b91c1c', fontWeight: 'bold', cursor: 'pointer', fontSize: '18px', padding: '0 5px' }} onClick={() => handleRemoveTestCaseRow(idx)}>
                           ×
                         </button>
                       )}
@@ -1705,8 +1715,8 @@ export default function FacultyDashboard() {
                   </span>
                   <span style={{
                     padding: '3px 8px', borderRadius: '12px', fontSize: '11px', fontWeight: 700,
-                    backgroundColor: viewingPractical.difficulty === 'Easy' ? '#ecfdf5' : viewingPractical.difficulty === 'Medium' ? '#fef3c7' : '#fef2f2',
-                    color: viewingPractical.difficulty === 'Easy' ? '#10b981' : viewingPractical.difficulty === 'Medium' ? '#f59e0b' : '#ef4444'
+                    backgroundColor: viewingPractical.difficulty === 'Easy' ? '#eff1ff' : viewingPractical.difficulty === 'Medium' ? '#f1f5f9' : '#fef2f2',
+                    color: viewingPractical.difficulty === 'Easy' ? '#4f46e5' : viewingPractical.difficulty === 'Medium' ? '#475569' : '#b91c1c'
                   }}>
                     {viewingPractical.difficulty || 'Easy'}
                   </span>
@@ -1715,7 +1725,7 @@ export default function FacultyDashboard() {
                   </span>
                   {renderTimelineBadge(viewingPractical.start_time, viewingPractical.end_time)}
                   {!activeCourse?.is_co_coordinator && (
-                    <span style={{ fontSize: '11px', fontWeight: 600, backgroundColor: '#eff6ff', color: '#1d4ed8', border: '1px solid #bfdbfe', padding: '3px 8px', borderRadius: '12px' }}>
+                    <span style={{ fontSize: '11px', fontWeight: 600, backgroundColor: '#eff1ff', color: '#1d4ed8', border: '1px solid #bfdbfe', padding: '3px 8px', borderRadius: '12px' }}>
                       👁 View-only Access
                     </span>
                   )}
@@ -1766,7 +1776,7 @@ export default function FacultyDashboard() {
                 <span style={{ fontSize: '12px', fontWeight: 600, color: '#64748b', display: 'block', marginBottom: '6px' }}>Topics Covered:</span>
                 <div style={{ display: 'flex', gap: '6px', flexWrap: 'wrap' }}>
                   {viewingPractical.topics.split(',').map((t, idx) => (
-                    <span key={idx} style={{ fontSize: '12px', backgroundColor: '#eff6ff', color: '#1d4ed8', border: '1px solid #dbeafe', padding: '3px 10px', borderRadius: '12px', fontWeight: 500 }}>
+                    <span key={idx} style={{ fontSize: '12px', backgroundColor: '#eff1ff', color: '#1d4ed8', border: '1px solid #dbeafe', padding: '3px 10px', borderRadius: '12px', fontWeight: 500 }}>
                       #{t.trim()}
                     </span>
                   ))}
@@ -1775,8 +1785,8 @@ export default function FacultyDashboard() {
             )}
 
             {viewingPractical.instructions && (
-              <div style={{ marginBottom: '20px', padding: '12px 16px', backgroundColor: '#fefce8', border: '1px solid #fde68a', borderRadius: '8px' }}>
-                <span style={{ fontSize: '12px', fontWeight: 700, color: '#92400e', display: 'block', marginBottom: '4px' }}>Special Instructions for Students:</span>
+              <div style={{ marginBottom: '20px', padding: '12px 16px', backgroundColor: '#eff1ff', border: '1px solid #c7d2fe', borderRadius: '8px' }}>
+                <span style={{ fontSize: '12px', fontWeight: 700, color: '#475569', display: 'block', marginBottom: '4px' }}>Special Instructions for Students:</span>
                 <p style={{ fontSize: '13px', color: '#78350f', margin: 0, whiteSpace: 'pre-wrap' }}>{viewingPractical.instructions}</p>
               </div>
             )}
@@ -1859,8 +1869,8 @@ export default function FacultyDashboard() {
                         <span style={{ fontWeight: 600, fontSize: '13px' }}>{tc.label || `Test Case ${idx + 1}`}</span>
                         <span style={{
                           fontSize: '11px', fontWeight: 700,
-                          backgroundColor: tc.is_hidden ? '#fef2f2' : '#ecfdf5',
-                          color: tc.is_hidden ? '#ef4444' : '#10b981',
+                          backgroundColor: tc.is_hidden ? '#fef2f2' : '#eff1ff',
+                          color: tc.is_hidden ? '#b91c1c' : '#4f46e5',
                           padding: '2px 8px', borderRadius: '12px', border: `1px solid ${tc.is_hidden ? '#fecaca' : '#a7f3d0'}`
                         }}>
                           {tc.is_hidden ? '🔒 Hidden Case' : ' Public Case'}
@@ -1917,7 +1927,7 @@ export default function FacultyDashboard() {
                 <Editor
                   height="100%"
                   language={viewPracticalCodeLang === 'c' || viewPracticalCodeLang === 'cpp' ? 'cpp' : viewPracticalCodeLang}
-                  theme="vs-dark"
+                  theme="light"
                   value={viewingPractical.starter_code?.[viewPracticalCodeLang] || (viewPracticalCodeLang === 'cpp' ? viewingPractical.starter_code?.cpp : viewingPractical.starter_code?.python) || '# No template available'}
                   options={{ readOnly: true, minimap: { enabled: false }, scrollBeyondLastLine: false, fontSize: 13, fontFamily: 'JetBrains Mono, Fira Code, Consolas, monospace' }}
                 />
@@ -1980,7 +1990,7 @@ export default function FacultyDashboard() {
                 <p style={{ fontSize: '13px', color: 'var(--text-muted)', mt: '5px' }}>Language: <strong>{(viewingSubmission.language || 'txt').toUpperCase()}</strong></p>
               </div>
               <div style={{ flex: 1 }}>
-                <p style={{ fontSize: '13px', color: 'var(--text-muted)' }}>Status: <strong style={{ color: viewingSubmission.status === 'Accepted' ? '#10b981' : '#ef4444' }}>{viewingSubmission.status}</strong></p>
+                <p style={{ fontSize: '13px', color: 'var(--text-muted)' }}>Status: <strong style={{ color: viewingSubmission.status === 'Accepted' ? '#4f46e5' : '#b91c1c' }}>{viewingSubmission.status}</strong></p>
                 <p style={{ fontSize: '13px', color: 'var(--text-muted)', mt: '5px' }}>Submitted: <strong>{new Date(viewingSubmission.submitted_at).toLocaleString()}</strong></p>
               </div>
               <div style={{ flex: 1, textAlign: 'right' }}>
@@ -2014,7 +2024,7 @@ export default function FacultyDashboard() {
                     }}
                     style={{
                       padding: '5px 12px', borderRadius: '6px', border: '1px solid #cbd5e1',
-                      backgroundColor: copyCodeSuccess ? '#ecfdf5' : '#ffffff',
+                      backgroundColor: copyCodeSuccess ? '#eff1ff' : '#ffffff',
                       color: copyCodeSuccess ? '#059669' : '#1e293b',
                       fontSize: '12px', fontWeight: 600, cursor: 'pointer',
                       display: 'flex', alignItems: 'center', gap: '5px'
@@ -2024,7 +2034,7 @@ export default function FacultyDashboard() {
                   </button>
                 </div>
               </div>
-              <div style={{ height: '380px', borderRadius: '8px', overflow: 'hidden', border: '1px solid #1e293b' }}><Editor height="100%" language={(viewingSubmission.language || 'txt') === 'c' || (viewingSubmission.language || 'txt') === 'cpp' ? 'cpp' : viewingSubmission.language} theme="vs-dark" value={viewingSubmission.code} options={{ readOnly: true, minimap: { enabled: false }, scrollBeyondLastLine: false, fontSize: 13, fontFamily: 'JetBrains Mono, Fira Code, Consolas, monospace' }} /></div>
+              <div style={{ height: '380px', borderRadius: '8px', overflow: 'hidden', border: '1px solid #1e293b' }}><Editor height="100%" language={(viewingSubmission.language || 'txt') === 'c' || (viewingSubmission.language || 'txt') === 'cpp' ? 'cpp' : viewingSubmission.language} theme="light" value={viewingSubmission.code} options={{ readOnly: true, minimap: { enabled: false }, scrollBeyondLastLine: false, fontSize: 13, fontFamily: 'JetBrains Mono, Fira Code, Consolas, monospace' }} /></div>
             </div>
 
             {/* Test case analysis */}
@@ -2037,8 +2047,8 @@ export default function FacultyDashboard() {
                       <span style={{ fontWeight: 600, fontSize: '13px' }}>{c.label || `Test Case ${i + 1}`} {c.is_hidden ? ' (Hidden)' : ''}</span>
                       <span style={{
                         padding: '3px 8px', borderRadius: '20px', fontSize: '11px', fontWeight: 700,
-                        backgroundColor: c.passed ? '#ecfdf5' : '#fef2f2',
-                        color: c.passed ? '#10b981' : '#ef4444'
+                        backgroundColor: c.passed ? '#eff1ff' : '#fef2f2',
+                        color: c.passed ? '#4f46e5' : '#b91c1c'
                       }}>
                         {c.passed ? 'PASSED' : 'FAILED'} (+{c.marks_awarded} marks)
                       </span>
@@ -2057,13 +2067,13 @@ export default function FacultyDashboard() {
                         <span style={{ color: 'var(--text-muted)' }}>Actual Output:</span>
                         <pre style={{
                           margin: '3px 0 0 0', fontFamily: 'monospace', background: 'white', padding: '4px', borderRadius: '4px',
-                          border: '1px solid var(--border-color)', color: c.passed ? '#10b981' : '#ef4444'
+                          border: '1px solid var(--border-color)', color: c.passed ? '#4f46e5' : '#b91c1c'
                         }}>{c.actual_output || '—'}</pre>
                       </div>
                     </div>
 
                     {c.error_message && (
-                      <div style={{ marginTop: '8px', fontSize: '12px', color: '#ef4444', backgroundColor: '#fef2f2', padding: '8px', borderRadius: '6px', fontFamily: 'monospace' }}>
+                      <div style={{ marginTop: '8px', fontSize: '12px', color: '#b91c1c', backgroundColor: '#fef2f2', padding: '8px', borderRadius: '6px', fontFamily: 'monospace' }}>
                         <strong>Error output:</strong><br/>
                         {c.error_message}
                       </div>
@@ -2084,7 +2094,7 @@ export default function FacultyDashboard() {
                 <button
                   type="button"
                   onClick={() => handleDeleteSubmission(viewingSubmission)}
-                  style={{ padding: '10px 18px', backgroundColor: '#ef4444', color: 'white', border: 'none', borderRadius: '6px', cursor: 'pointer', fontWeight: 600, fontSize: '13px' }}
+                  style={{ padding: '10px 18px', backgroundColor: '#b91c1c', color: 'white', border: 'none', borderRadius: '6px', cursor: 'pointer', fontWeight: 600, fontSize: '13px' }}
                 >
                    Delete Submission
                 </button>
