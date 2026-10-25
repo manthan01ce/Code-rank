@@ -1,5 +1,4 @@
-// Full production cluster + real PostgreSQL/Docker + browser workflows.
-// Only a disposable database on the explicitly supplied loopback test server is used.
+import "../packages/core/src/config/env.js";
 import assert from "node:assert/strict";
 import { spawn, spawnSync, execFileSync } from "node:child_process";
 import { randomBytes } from "node:crypto";
@@ -85,7 +84,7 @@ function start(name, script) {
   const child = spawn(process.execPath, [script], {
     cwd: root,
     env,
-    detached: true,
+    detached: process.platform !== "win32",
     stdio: ["ignore", fd, fd],
   });
   child.on("error", (error) => {
@@ -158,7 +157,15 @@ async function waitJob(id, token) {
 async function stop(child) {
   if (child.exitCode !== null || child.signalCode !== null) return;
   const exited = once(child, "exit");
-  process.kill(-child.pid, "SIGTERM");
+  if (process.platform === "win32") {
+    child.kill("SIGTERM");
+  } else {
+    try {
+      process.kill(-child.pid, "SIGTERM");
+    } catch {
+      child.kill("SIGTERM");
+    }
+  }
   let timer;
   try {
     await Promise.race([
@@ -166,7 +173,8 @@ async function stop(child) {
       new Promise((_, reject) => {
         timer = setTimeout(() => {
           try {
-            process.kill(-child.pid, "SIGKILL");
+            if (process.platform === "win32") child.kill("SIGKILL");
+            else process.kill(-child.pid, "SIGKILL");
           } catch {}
           reject(Error("Stack shutdown deadline exceeded"));
         }, 15000);

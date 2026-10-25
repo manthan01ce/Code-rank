@@ -12,10 +12,10 @@ function practicalId() {
 }
 async function login(page, role) {
   await page.goto('/login');
-  await page.getByLabel('Username or Email', { exact: true }).fill(required(`E2E_${role.toUpperCase()}_EMAIL`));
+  await page.getByLabel('Username or email', { exact: true }).fill(required(`E2E_${role.toUpperCase()}_EMAIL`));
   await page.getByLabel('Password', { exact: true }).fill(required(`E2E_${role.toUpperCase()}_PASSWORD`));
   const loginResponse = page.waitForResponse(response => response.url().endsWith('/api/auth/login') && response.request().method() === 'POST');
-  await page.getByRole('button', { name: 'Sign In →', exact: true }).click();
+  await page.getByRole('button', { name: /sign in/i }).click();
   expect((await loginResponse).status()).toBe(200);
   await expect(page).toHaveURL(new RegExp(`/${role}/?$`));
   const identity = await page.evaluate(() => ({ token: localStorage.getItem('token'), user: JSON.parse(localStorage.getItem('user') || 'null') }));
@@ -157,8 +157,8 @@ test('public pages preserve theme and remain usable at phone, tablet and desktop
     expect(await page.locator('footer input, footer a[href^="mailto:"]').count()).toBe(0);
    }
    if(route==='/login') {
-    await page.getByLabel('Password',{exact:true}).fill('');
-    await expect(page.getByRole('button',{name:'Sign In →',exact:true})).toBeVisible();
+    await page.getByLabel('Password', { exact: true }).fill('');
+    await expect(page.getByRole('button',{name:/sign in/i})).toBeVisible();
    }
    await page.screenshot({path:`test-results/ui-review/${route==='/'?'home':route.slice(1)}-${width}.png`,fullPage:true,animations:'disabled'});
   }
