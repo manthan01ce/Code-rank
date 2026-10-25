@@ -217,3 +217,21 @@ to{opacity:1;transform:translateY(0)}
 
 .heroBrand { margin: 0 0 20px; color: #0f172a; font-size: clamp(28px,3vw,38px); font-weight: 700; letter-spacing: -1.2px; line-height: 1.2; }
 .heroBrand span { color: #4f46e5; }
+.learningPath { display: grid; grid-template-columns: minmax(230px,.8fr) minmax(0,1.6fr); border: 1px solid #e2e8f0; border-radius: 18px; overflow: hidden; background: #fff; }
+.pathNavigation { display: flex; flex-direction: column; background: #f8fafc; padding: 24px; gap: 10px; border-right: 1px solid #e2e8f0; }
+.pathNavigation button { display: flex; align-items: center; gap: 16px; flex: 1; text-align: left; border: 1px solid transparent; background: transparent; color: #64748b; border-radius: 10px; padding: 24px 18px; transition: background .2s,border-color .2s; }
+.pathNavigation button[aria-pressed=true] { background: #fff; border-color: #c7d2fe; color: #4338ca; box-shadow: 0 4px 12px #0f172a04; }
+.pathNavigation button:hover { background: #eff1ff; }
+.pathNumber { font: 11px monospace; color: #94a3b8; }
+.pathNavigation strong { font-size: 21px; font-weight: 500; letter-spacing: -.5px; display: block; }
+.pathNavigation small { display: block; font-size: 10px; margin-top: 8px; color: #64748b; }
+.pathNavigation button > span:last-child { margin-left: auto; }
+.pathDetail { padding: 38px 44px; background: radial-gradient(ellipse at top right,#eff1ff,transparent 65%); }
+.pathDetailContent { animation: appear .3s ease; }
+.pathKicker { display: flex; justify-content: space-between; gap: 15px; color: #64748b; font-size: 8px; letter-spacing: 1.4px; }
+.pathSymbol { font: 48px monospace; color: #4f46e5; margin: 35px 0 24px; }
+.pathDetail h3 { font-size: clamp(26px,3vw,37px); font-weight: 500; letter-spacing: -1px; line-height: 1.2; max-width: 400px; }
+.pathDetail p { max-width: 430px; font-size: 13px; line-height: 1.9; color: #64748b; margin-top: 18px; }
+.pathFlow { padding: 18px 0; margin-top: 20px; border-top: 1px solid #e2e8f0; border-bottom: 1px solid #e2e8f0; color: #475569; font-size: 11px; line-height: 1.9; }
+.pathDetail a { display: flex; justify-content: space-between; margin-top: 24px; font-size: 12px; font-weight: 600; color: #4338ca; }
+@media(max-width:760px) { .learningPath { grid-template-columns: 1fr; } .pathNavigation { flex-direction: row; padding: 12px; border-right: 0; border-bottom: 1px solid #e2e8f0; gap: 6px; } .pathNavigation button { padding: 14px 8px; justify-content: center; gap: 6px; } .pathNavigation strong { font-size: 13px; letter-spacing: 0; } .pathNavigation small,.pathNumber,.pathNavigation button > span:last-child { display: none; } .pathDetail { padding: 28px 24px; } }

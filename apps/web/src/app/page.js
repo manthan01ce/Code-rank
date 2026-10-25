@@ -12,6 +12,12 @@ const samples = {
   Java: 'class CodeRank {\n    public static void main(String[] args) {\n        String goal = "Learn by doing";\n        System.out.println(goal);\n    }\n}',
   C: '#include <stdio.h>\n\nint main(void) {\n    printf("One challenge at a time.\\n");\n    return 0;\n}',
 };
+const featureJourney = [
+  { name: 'Practice', title: 'Give your ideas somewhere to go.', description: 'Explore C, C++, Java, and Python in a browser-based coding workspace. Work through a problem, try your approach, and refine it.', label: 'A place to experiment', detail: 'Understand the problem → Write your approach → Run your code', action: 'Enter your workspace', icon: '{ }' },
+  { name: 'Assess', title: 'Make feedback part of the process.', description: 'Complete faculty-assigned practicals with test-based grading and submission tracking. Use the results to understand what to try next.', label: 'A clearer next step', detail: 'Assigned practical → Your solution → Test feedback', action: 'View your practicals', icon: '✓' },
+  { name: 'Connect', title: 'One lab. A shared direction.', description: 'Student, faculty, and administrator workspaces keep courses, assessments, and progress connected across your institution.', label: 'Everyone has a place', detail: 'Students practice · Faculty guide · Administrators organize', action: 'Find your workspace', icon: '↗' },
+];
+
 const roles = {
   student: { label: 'For students', title: 'Less setup. More breakthroughs.', text: 'Your next practical, your editor, and your progress. Find everything you need to turn what you know into what you can build.', items: ['Practice in C, C++, Java, and Python', 'Run code and learn from test results', 'Track submissions and practical grades'], action: 'Open student workspace', number: '01', word: 'Practice', detail: 'Write. Run. Understand. Repeat.' },
   faculty: { label: 'For faculty', title: 'Teach the concept. See the progress.', text: 'Bring your practicals together in one place. Set challenges, follow submissions, and spend more time helping students understand their code.', items: ['Create and organize coding practicals', 'Follow student submissions and scores', 'Review grades and generate reports'], action: 'Open faculty workspace', number: '02', word: 'Guide', detail: 'Better visibility. Meaningful feedback.' },
@@ -37,6 +43,7 @@ export default function HomePage() {
   const [language, setLanguage] = useState('Python');
   const [role, setRole] = useState('student');
   const [menuOpen, setMenuOpen] = useState(false);
+  const [feature, setFeature] = useState(0);
   const tabs = useRef([]);
   const dashboard = user?.role === 'admin' ? '/admin' : user?.role === 'faculty' ? '/faculty' : '/student';
   const current = roles[role];
@@ -127,10 +134,9 @@ export default function HomePage() {
         <div className={styles.languageStrip}><span>FOUR LANGUAGES. ENDLESS POSSIBILITIES.</span><div>{['C', 'C++', 'Java', 'Python'].map((item, i) => <span key={item}><small aria-hidden="true">0{i + 1}</small>{item}</span>)}</div></div>
         <section id="experience" className={styles.experience}>
           <div className={styles.sectionHeading}><div><p className={styles.eyebrow}>FROM FIRST LINE TO FINISHED PRACTICAL</p><h2>A little less friction.<br />A lot more <em>forward.</em></h2></div><p>Everything a coding lab needs to keep learning moving. All in one thoughtful workspace.</p></div>
-          <div className={styles.featureGrid}>
-            <article className={styles.feature}><div className={styles.featureTop}><span aria-hidden="true">{'</>'}</span><small>01 / EXPLORE</small></div><h3>Think it. Code it.<br />Try it again.</h3><p>A browser-based coding sandbox for exploring ideas in four core programming languages.</p><Link href="/practice">Find your flow <span aria-hidden="true">↗</span></Link><div className={styles.codeDecoration} aria-hidden="true"><span>idea</span><b>→</b><span>code</span><b>→</b><span>discovery</span></div></article>
-            <article className={`${styles.feature} ${styles.featureTint}`}><div className={styles.featureTop}><span aria-hidden="true">✓</span><small>02 / ASSESS</small></div><h3>Less waiting.<br />More understanding.</h3><p>Run practicals with test-based grading and submission tracking, so feedback becomes part of learning.</p><div className={styles.testPreview} aria-label="Illustrative assessment workflow"><div><span>Write a solution</span><b>01</b></div><div><span>Run your test cases</span><b>02</b></div><div><span>Learn from the result</span><b>03</b></div></div></article>
-            <article className={styles.feature}><div className={styles.featureTop}><span aria-hidden="true">↗</span><small>03 / GROW</small></div><h3>See the bigger<br />learning picture.</h3><p>Connected student, faculty, and administrator portals bring courses, assessments, and progress together.</p><a href="#roles">Meet your workspace <span aria-hidden="true">↗</span></a><div className={styles.growth} aria-hidden="true">{[25, 42, 38, 65, 76, 100].map((height, i) => <i key={i} style={{ height: `${height}%` }} />)}<span>PROGRESS IS A PRACTICE.</span></div></article>
+          <div className={styles.learningPath}>
+            <div className={styles.pathNavigation} role="group" aria-label="Explore platform features">{featureJourney.map((item, index) => <button key={item.name} aria-pressed={feature === index} aria-controls="feature-detail" onClick={() => setFeature(index)}><span className={styles.pathNumber}>0{index + 1}</span><span><strong>{item.name}</strong><small>{item.label}</small></span><span aria-hidden="true">↗</span></button>)}</div>
+            <div id="feature-detail" className={styles.pathDetail} aria-live="polite"><div key={feature} className={styles.pathDetailContent}><div className={styles.pathKicker}><span>THE CODERANK EXPERIENCE</span><span>0{feature + 1} / 03</span></div><div className={styles.pathSymbol} aria-hidden="true">{featureJourney[feature].icon}</div><h3>{featureJourney[feature].title}</h3><p>{featureJourney[feature].description}</p><div className={styles.pathFlow}>{featureJourney[feature].detail}</div><Link href={user ? dashboard : '/login'}>{featureJourney[feature].action} <span aria-hidden="true">↗</span></Link></div></div>
           </div>
         </section>
         <section id="roles" className={styles.roles}>
