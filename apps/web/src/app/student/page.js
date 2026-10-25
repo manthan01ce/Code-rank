@@ -222,11 +222,11 @@ export default function StudentDashboard() {
           </p>
         </div>
 
-        <nav aria-label="Dashboard practical pages">
+        {(practicalPage.cursor || practicalPage.next) && <nav aria-label="Dashboard practical pages">
           <button disabled={practicalPage.loading || !practicalPage.cursor} onClick={practicalPage.first}>First page</button>{' '}
           <button disabled={practicalPage.loading || !practicalPage.next} onClick={practicalPage.nextPage}>Next page</button>
-          {practicalPage.error && <p role="alert">{practicalPage.error}</p>}
-        </nav>
+        </nav>}
+        {practicalPage.error && <p role="alert">{practicalPage.error}</p>}
         {courses.length > 0 ? (
           <div style={{ display: 'flex', flexDirection: 'column', gap: '30px' }}>
             {courses.map(course => {
