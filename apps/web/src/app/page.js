@@ -3,6 +3,7 @@
 import { useRef, useState, useSyncExternalStore } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
+import TextType from '@/components/ui/TextType';
 import styles from './home.module.css';
 
 const samples = {
@@ -29,7 +30,10 @@ function readSession() {
 export default function HomePage() {
   const savedSession = useSyncExternalStore(subscribeToSession, readSession, () => null);
   let user = null;
-  try { user = JSON.parse(savedSession); } catch { /* Invalid sessions fall back to sign in. */ }
+  try {
+    const parsed = JSON.parse(savedSession);
+    if (parsed && Object.hasOwn(roles, parsed.role)) user = parsed;
+  } catch { /* Invalid sessions fall back to sign in. */ }
   const [language, setLanguage] = useState('Python');
   const [role, setRole] = useState('student');
   const [menuOpen, setMenuOpen] = useState(false);
@@ -58,13 +62,104 @@ export default function HomePage() {
       </header>
       <main id="main">
         <section className={styles.hero}>
-          <div className={styles.heroCopy}>
-            <p className={styles.eyebrow}><span className={styles.dot} /> A BETTER WAY TO LEARN BY DOING</p>
-            <h1>Small challenges.<br />Big <span>breakthroughs.</span></h1>
-            <p className={styles.intro}>Rank up your coding. Bring practice, practical assessments, and progress into one connected learning experience.</p>
-            <div className={styles.actions}><Link className={styles.primary} href={user ? dashboard : '/login'}>{user ? 'Continue learning' : 'Enter your workspace'} <span aria-hidden="true">↗</span></Link><Link className={styles.secondary} href="/practice"><span aria-hidden="true">▷</span> Try the sandbox</Link></div>
-            <div className={styles.heroNote}><span className={styles.noteIcon} aria-hidden="true">⌘</span><span>Built for curious minds.<br /><strong>Designed for the university coding lab.</strong></span></div>
+        <div className={styles.originalHero}>
+          <div style={{
+            display: 'inline-flex',
+            alignItems: 'center',
+            gap: '8px',
+            backgroundColor: '#eff6ff',
+            border: '1px solid #bfdbfe',
+            padding: '5px 14px',
+            borderRadius: '20px',
+            fontSize: '13px',
+            fontWeight: 600,
+            color: '#1d4ed8',
+            marginBottom: '20px'
+          }}>
+            <span style={{ width: '8px', height: '8px', borderRadius: '50%', backgroundColor: '#2563eb', display: 'inline-block' }}></span>
+            Real-Time Automated Practical Assessment Platform
           </div>
+
+          <h1 style={{
+            fontSize: 'clamp(2rem, 5vw, 44px)',
+            fontWeight: 800,
+            lineHeight: 1.15,
+            color: '#0f172a',
+            letterSpacing: '-1px',
+            marginBottom: '18px'
+          }}>
+            <TextType text={["RANK UP CODING"]} typingSpeed={75} pauseDuration={1500} deletingSpeed={50} cursorColor="currentColor" prefixColor="currentColor" />
+          </h1>
+
+          <p style={{
+            fontSize: '17px',
+            lineHeight: 1.6,
+            color: '#475569',
+            marginBottom: '32px',
+            maxWidth: '560px'
+          }}>
+            Streamlined for university computer science departments. Conduct automated practicals in C, C++, Java, and Python with live socket streaming, instant batch grading, anti-plagiarism guards, and faculty controls.
+          </p>
+
+          <div style={{ display: 'flex', gap: '14px', flexWrap: 'wrap' }}>
+            <Link
+              href="/login"
+              style={{
+                display: 'inline-flex',
+                alignItems: 'center',
+                gap: '8px',
+                padding: '13px 26px',
+                backgroundColor: '#4F46E5',
+                color: '#ffffff',
+                borderRadius: '10px',
+                fontSize: '15px',
+                fontWeight: 600,
+                textDecoration: 'none',
+                boxShadow: '0 4px 12px rgba(79, 70, 229, 0.3)',
+                transition: 'transform 0.15s, background 0.2s'
+              }}
+            >
+              Get Started with CodeRank &rarr;
+            </Link>
+
+            <Link
+              href="/practice"
+              style={{
+                display: 'inline-flex',
+                alignItems: 'center',
+                gap: '8px',
+                padding: '13px 22px',
+                backgroundColor: '#ffffff',
+                color: '#334155',
+                border: '1px solid #cbd5e1',
+                borderRadius: '10px',
+                fontSize: '15px',
+                fontWeight: 600,
+                textDecoration: 'none',
+                boxShadow: '0 2px 4px rgba(0,0,0,0.03)'
+              }}
+            >
+              Try Practice Sandbox
+            </Link>
+          </div>
+
+          {/* Quick Metrics */}
+          <div style={{ display: 'flex', gap: '28px', marginTop: '40px', paddingTop: '28px', borderTop: '1px solid #e2e8f0' }}>
+            <div>
+              <div style={{ fontSize: '24px', fontWeight: 800, color: '#0f172a' }}>4+</div>
+              <div style={{ fontSize: '13px', color: '#64748b', fontWeight: 500 }}>Languages Supported</div>
+            </div>
+            <div>
+              <div style={{ fontSize: '24px', fontWeight: 800, color: '#0f172a' }}>&lt; 35ms</div>
+              <div style={{ fontSize: '13px', color: '#64748b', fontWeight: 500 }}>Execution Latency</div>
+            </div>
+            <div>
+              <div style={{ fontSize: '24px', fontWeight: 800, color: '#0f172a' }}>100%</div>
+              <div style={{ fontSize: '13px', color: '#64748b', fontWeight: 500 }}>Automated Verification</div>
+            </div>
+          </div>
+        </div>
+
           <div className={styles.studio}>
             <div className={styles.orbit} aria-hidden="true" />
             <div className={styles.floatingLabel}><span aria-hidden="true">✧</span> Your next “I got it!” starts here.</div>
