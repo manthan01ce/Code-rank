@@ -37,13 +37,13 @@ test('measure 20 successful sign-ins per fresh and reused browser condition',asy
     if(condition==='fresh-context'){context=await browser.newContext();await observer(context);}
     const page=await context.newPage();const errors=[];page.on('pageerror',e=>errors.push(e.name));
     const pageStart=performance.now();await page.goto('/login');
-    await page.getByRole('button',{name:'Sign In →',exact:true}).waitFor();
+    await page.getByRole('button', { name: /sign in/i }).waitFor();
     const loginPageReadyMs=elapsed(pageStart),loginNavigation=await navigation(page);
-    await page.getByLabel('Username or Email',{exact:true}).fill(email);
-    await page.getByLabel('Password',{exact:true}).fill(account.rawPassword);
+    await page.getByLabel(/username or email/i).fill(email);
+    await page.getByLabel('Password', { exact: true }).fill(account.rawPassword);
     const responsePromise=page.waitForResponse(r=>r.url().endsWith('/api/auth/login')&&r.request().method()==='POST');
     const dashboardData=Promise.all(['/api/faculty/courses','/api/faculty/batches'].map(path=>page.waitForResponse(r=>new URL(r.url()).pathname===path)));
-    const start=performance.now();await page.getByRole('button',{name:'Sign In →',exact:true}).click();
+    const start=performance.now();await page.getByRole('button', { name: /sign in/i }).click();
     const response=await responsePromise;expect(response.status()).toBe(200);
     const sessionResponseMs=elapsed(start);
     await expect(page).toHaveURL(/\/faculty\/?$/);
