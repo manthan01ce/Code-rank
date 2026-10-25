@@ -114,7 +114,7 @@ export default function ConsolePanel({
   };
 
   return (
-    <div style={{ height: '100%', display: 'flex', flexDirection: 'column', background: 'var(--student-code-bg-000000, #000000)', fontFamily: 'Inter, sans-serif' }}>
+    <div className="execution-console" style={{ height: '100%', minHeight: 0, minWidth: 0, display: 'flex', flexDirection: 'column', background: 'var(--student-code-bg-000000, #000000)', fontFamily: 'Inter, sans-serif' }}>
 
       {/* ── Console Header ── */}
       <div style={headerStyle}>
@@ -272,7 +272,7 @@ export default function ConsolePanel({
 
         {/* 4. Success State Panels */}
         {judgeState === 'success' && hasOutput && (
-          <div style={{ flex: 1, display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
+          <div style={{ flex: 1, minHeight: 0, minWidth: 0, display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
 
             {/* ── Prominent Verdict Banner for Submissions (Shown for ALL statuses) ── */}
             {actionMode === 'submit' && (
@@ -322,7 +322,7 @@ export default function ConsolePanel({
 
             {/* A. Compilation Errors */}
             {status === 'compile_error' && (
-              <div style={{ flex: 1, overflowY: 'auto', padding: '20px', background: 'var(--student-code-bg-000000, #000000)', fontFamily: 'JetBrains Mono, Fira Code, Consolas, monospace' }}>
+              <div style={{ flex: 1, minHeight: 0, overflowY: 'auto', padding: '20px', background: 'var(--student-code-bg-000000, #000000)', fontFamily: 'JetBrains Mono, Fira Code, Consolas, monospace' }}>
                 <div style={{ fontSize: '11px', fontWeight: 700, color: 'var(--student-code-text-7e7e7e, #7e7e7e)', letterSpacing: '1.5px', textTransform: 'uppercase', marginBottom: '8px', fontFamily: 'Inter, sans-serif' }}>Compiler Error Message</div>
                 <pre style={{ color: '#e22718', lineHeight: 1.6, whiteSpace: 'pre-wrap', wordBreak: 'break-word', background: 'var(--student-code-bg-0d0d0d, #0d0d0d)', border: '1px solid var(--student-code-border-262626, #262626)', padding: '16px', fontSize: '12px' }}>
                   {output?.compileError || 'Syntax / Compilation error occurred.'}
@@ -332,7 +332,7 @@ export default function ConsolePanel({
 
             {/* B. Global Runtime Errors (Startup crashes) */}
             {status === 'runtime_error' && cases.length === 0 && (
-              <div style={{ flex: 1, overflowY: 'auto', padding: '20px', background: 'var(--student-code-bg-000000, #000000)', fontFamily: 'JetBrains Mono, Fira Code, Consolas, monospace' }}>
+              <div style={{ flex: 1, minHeight: 0, overflowY: 'auto', padding: '20px', background: 'var(--student-code-bg-000000, #000000)', fontFamily: 'JetBrains Mono, Fira Code, Consolas, monospace' }}>
                 <div style={{ fontSize: '11px', fontWeight: 700, color: 'var(--student-code-text-7e7e7e, #7e7e7e)', letterSpacing: '1.5px', textTransform: 'uppercase', marginBottom: '8px', fontFamily: 'Inter, sans-serif' }}>Initialization / Runtime Error</div>
                 <pre style={{ color: '#e22718', lineHeight: 1.6, whiteSpace: 'pre-wrap', wordBreak: 'break-word', background: 'var(--student-code-bg-0d0d0d, #0d0d0d)', border: '1px solid var(--student-code-border-262626, #262626)', padding: '16px', fontSize: '12px' }}>
                   {output?.runtimeError || 'An error occurred during program startup.'}
@@ -412,11 +412,11 @@ export default function ConsolePanel({
 
             {/* D. Successful Execution with case runs (HackerRank-style list for SUBMIT, LeetCode tabs for RUN) */}
             {cases.length > 0 && (
-              <div style={{ flex: 1, display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
+              <div style={{ flex: 1, minHeight: 0, minWidth: 0, display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
                 
                 {actionMode === 'submit' ? (
                   /* ── HackerRank-Style List View (Expandable Cards) ── */
-                  <div style={{ flex: 1, overflowY: 'auto', padding: '20px', display: 'flex', flexDirection: 'column', gap: '12px' }}>
+                  <div style={{ flex: 1, minHeight: 0, overflowY: 'auto', padding: '20px', display: 'flex', flexDirection: 'column', gap: '12px' }}>
                     {cases.map((c, idx) => {
                       const casePassed = c.status === 'passed';
                       const isExpanded = !!expandedCases[idx];
@@ -459,7 +459,8 @@ export default function ConsolePanel({
                       return (
                         <div
                           key={idx}
-                          style={{
+                          className="test-result-card"
+                          style={{ flexShrink: 0, minWidth: 0,
                             background: 'var(--student-code-bg-0a0a0a, #0a0a0a)',
                             border: `1px solid ${isExpanded ? 'var(--student-code-border-333333, #333333)' : 'var(--student-code-border-1a1a1a, #1a1a1a)'}`,
                             borderRadius: '4px',
@@ -470,6 +471,8 @@ export default function ConsolePanel({
                         >
                           {/* Row Header */}
                           <div
+                            role="button" tabIndex={0} aria-expanded={isExpanded}
+                            onKeyDown={event => { if (event.key === 'Enter' || event.key === ' ') { event.preventDefault(); toggleExpand(idx); } }}
                             onClick={() => toggleExpand(idx)}
                             style={{
                               padding: '12px 16px',
@@ -598,7 +601,7 @@ export default function ConsolePanel({
                   </div>
                 ) : (
                   /* ── LeetCode-Style Tabs View (Perfect for RUN mode) ── */
-                  <div style={{ flex: 1, display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
+                  <div style={{ flex: 1, minHeight: 0, minWidth: 0, display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
                     
                     {/* Case Selector Tabs */}
                     <div style={{ display: 'flex', background: 'var(--student-code-bg-000000, #000000)', borderBottom: '1px solid var(--student-code-border-262626, #262626)', padding: '0 16px', gap: '4px', flexShrink: 0 }}>
@@ -638,7 +641,7 @@ export default function ConsolePanel({
                     </div>
 
                     {/* Selected Case Details */}
-                    <div style={{ flex: 1, overflowY: 'auto', padding: '20px', display: 'flex', flexDirection: 'column', gap: '16px' }}>
+                    <div style={{ flex: 1, minHeight: 0, overflowY: 'auto', padding: '20px', display: 'flex', flexDirection: 'column', gap: '16px' }}>
                       {(() => {
                         const c = cases[activeCaseIdx];
                         if (!c) return null;

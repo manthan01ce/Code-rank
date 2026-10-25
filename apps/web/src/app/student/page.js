@@ -140,7 +140,6 @@ export default function StudentDashboard() {
 
   return (
     <div className="student-dashboard" style={{ minHeight: '100vh', backgroundColor: 'var(--student-ui-bg-f8fafc, #f8fafc)', fontFamily: 'Inter, sans-serif' }}>
-      <div className="student-theme-toolbar"><StudentThemeToggle /></div>
       {loading && <LoadingOverlay />}
       {loadError && <div role="alert" style={{padding: '12px 20px', background: 'var(--student-ui-bg-fff3cd, #fff3cd)', color: '#664d03', display: 'flex', flexWrap: 'wrap', gap: '12px', alignItems: 'center'}}>
         <span>{loadError}</span>
@@ -188,6 +187,7 @@ export default function StudentDashboard() {
             <div style={{ fontSize: '14px', fontWeight: 600, color: 'var(--student-ui-text-1e293b, #1e293b)' }}>{user.name}</div>
             <div style={{ fontSize: '12px', color: 'var(--student-ui-text-64748b, #64748b)' }}>{[semester && `Semester ${semester}`, batch && `Batch ${batch}`].filter(Boolean).join(' · ') || 'Student workspace'}</div>
           </div>
+          <StudentThemeToggle />
           <button
             onClick={() => {
               const handle = user?.email ? user.email.split('@')[0] : '';

@@ -760,7 +760,6 @@ export default function WorkspaceLayout({ problem }) {
 
       {/* ── Top Navigation Bar — 64px, true black ── */}
       <div style={{ height: '64px', background: 'var(--student-code-bg-000000, #000000)', borderBottom: '1px solid var(--student-code-border-262626, #262626)', display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '0 24px', flexShrink: 0 }}>
-        <StudentThemeToggle />
         {/* Left: Brand + Problem List Dropdown */}
         <div style={{ display: 'flex', alignItems: 'center', gap: '24px' }}>
           {/* Logo and Wordmark */}
@@ -1030,6 +1029,7 @@ export default function WorkspaceLayout({ problem }) {
 
         {/* Right: Settings + User */}
         <div ref={userDropdownRef} style={{ display: 'flex', alignItems: 'center', gap: '8px', position: 'relative' }}>
+          <StudentThemeToggle />
           <button suppressHydrationWarning
             onClick={() => setShowSettingsModal(true)}
             title="Settings"

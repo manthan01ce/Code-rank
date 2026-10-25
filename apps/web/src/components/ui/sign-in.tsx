@@ -23,7 +23,7 @@ export function SignInPage({ title = "Welcome back", description = "Sign in to c
     </section>
 
     <section className="auth-campus" aria-labelledby="practical-motivation">
-      <Image src="/images/coderank-practical-lab.webp" alt="University students collaborating on a programming practical in a bright computer lab" fill sizes="(max-width: 767px) 100vw, 52vw" priority />
+      <Image src="/images/coderank-workspace.webp" alt="A light-theme coding workstation with an algorithm notebook in a bright university lab" fill sizes="(max-width: 767px) 100vw, 52vw" priority />
       <div className="auth-campus-caption"><p className="auth-eyebrow">YOUR NEXT BREAKTHROUGH STARTS HERE</p><h2 id="practical-motivation">Turn what you learn<br/>into what you can build.</h2><p>Practice with purpose. Take on your next coding practical with CodeRank.</p><span>C · C++ · Java · Python</span></div>
     </section>
   </main>;
