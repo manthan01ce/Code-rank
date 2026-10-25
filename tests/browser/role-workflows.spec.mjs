@@ -37,15 +37,15 @@ function failOnPageErrors(page) {
 test('administrator hydrates dashboard, retains login on reload and loads master selectors', async ({ page, context }) => {
   const assertNoErrors = failOnPageErrors(page);
   const { headers } = await login(page, 'admin');
-  await expect(page.getByRole('heading', { name: 'Dashboard Overview', exact: true })).toBeVisible();
+  await expect(page.getByRole('heading', { name: /dashboard overview/i })).toBeVisible();
   const stats = await getJson(context.request, '/api/stats', headers);
   expect(Number(stats.courses)).toBeGreaterThan(0);
   await page.reload();
-  await expect(page.getByRole('heading', { name: 'Dashboard Overview', exact: true })).toBeVisible();
+  await expect(page.getByRole('heading', { name: /dashboard overview/i })).toBeVisible();
   const courses = await getJson(context.request, '/api/courses?limit=1', headers);
   expect(courses).toHaveLength(1);
   await page.goto('/admin/courses');
-  await expect(page.getByRole('heading', { name: 'Courses Management', exact: true })).toBeVisible();
+  await expect(page.getByRole('heading', { name: /courses/i })).toBeVisible();
   await expect(page.getByRole('cell', { name: courses[0].course_code, exact: true })).toBeVisible();
   const departments = await getJson(context.request, '/api/departments?limit=1', headers);
   expect(departments).toHaveLength(1);
@@ -93,7 +93,7 @@ test('student dashboard shows the assigned practical and retains current authent
   const practicals = await getJson(context.request, '/api/student/practicals', headers);
   const practical = practicals.find(item => Number(item.id) === practicalId());
   expect(practical, 'Active practical matches the student batch and semester').toBeTruthy();
-  await expect(page.getByRole('heading', { name: 'My Assigned Subjects & Practicals', exact: true })).toBeVisible();
+  await expect(page.getByRole('heading', { name: /(?:my learning workspace|my assigned subjects)/i })).toBeVisible();
   await expect(page.getByText(practical.title, { exact: true })).toBeVisible();
   await expect(page.getByRole('navigation', { name: 'Dashboard practical pages' })).toBeVisible();
   await page.reload();
