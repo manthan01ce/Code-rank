@@ -214,3 +214,6 @@ to{opacity:1;transform:translateY(0)}
 .footerPurpose p { font-size: 10px; color: #64748b; margin-top: 16px; }
 .footerLegal { display: flex; justify-content: space-between; flex-wrap: wrap; gap: 16px; border-top: 1px solid #e2e8f0; padding-top: 22px; font-size: 10px; color: #64748b; }
 @media(max-width:760px) { .refinedFooter { padding: 38px 24px 24px; } .footerColumns { grid-template-columns: 1fr; gap: 30px; } .footerLegal { font-size: 9px; } .footerLegal > span:nth-child(2) { display: none; } }
+
+.heroBrand { margin: 0 0 20px; color: #0f172a; font-size: clamp(28px,3vw,38px); font-weight: 700; letter-spacing: -1.2px; line-height: 1.2; }
+.heroBrand span { color: #4f46e5; }

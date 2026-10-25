@@ -53,32 +53,17 @@ export default function HomePage() {
     <div className={styles.home}>
       <a className={styles.skip} href="#main">Skip to content</a>
       <header className={styles.header}>
-        <Link href="/" className={styles.brand} aria-label="CodeRank home"><Image src="/coderank-logo.jpg" alt="" width={36} height={36} /><span>Code<span>Rank</span><small>THE CODING LAB, REIMAGINED</small></span></Link>
+        <Link href="/" className={styles.brand} aria-label="CodeRank home"><Image src="/coderank-logo.jpg" alt="" width={36} height={36} /><span>Code<span>Rank</span></span></Link>
         <button className={styles.menuButton} aria-expanded={menuOpen} aria-controls="home-navigation" onClick={() => setMenuOpen(!menuOpen)}>{menuOpen ? 'Close' : 'Menu'} <span aria-hidden="true">☰</span></button>
         <nav id="home-navigation" aria-label="Main navigation" className={`${styles.nav} ${menuOpen ? styles.navOpen : ''}`} onClick={() => setMenuOpen(false)}>
-          <a href="#experience">The experience</a><a href="#roles">Built for you</a><Link href="/practice">Practice sandbox ↗</Link>
+          <a href="#experience">The experience</a><a href="#roles">Built for you</a>
         </nav>
         <Link className={styles.headerAction} href={user ? dashboard : '/login'}>{user ? 'My workspace' : 'Sign in'} <span aria-hidden="true">↗</span></Link>
       </header>
       <main id="main">
         <section className={styles.hero}>
         <div className={styles.originalHero}>
-          <div style={{
-            display: 'inline-flex',
-            alignItems: 'center',
-            gap: '8px',
-            backgroundColor: '#eff6ff',
-            border: '1px solid #bfdbfe',
-            padding: '5px 14px',
-            borderRadius: '20px',
-            fontSize: '13px',
-            fontWeight: 600,
-            color: '#1d4ed8',
-            marginBottom: '20px'
-          }}>
-            <span style={{ width: '8px', height: '8px', borderRadius: '50%', backgroundColor: '#2563eb', display: 'inline-block' }}></span>
-            Real-Time Automated Practical Assessment Platform
-          </div>
+          <p className={styles.heroBrand}>Code<span>Rank</span></p>
 
           <h1 style={{
             fontSize: 'clamp(2rem, 5vw, 44px)',
@@ -122,52 +107,19 @@ export default function HomePage() {
               Get Started with CodeRank &rarr;
             </Link>
 
-            <Link
-              href="/practice"
-              style={{
-                display: 'inline-flex',
-                alignItems: 'center',
-                gap: '8px',
-                padding: '13px 22px',
-                backgroundColor: '#ffffff',
-                color: '#334155',
-                border: '1px solid #cbd5e1',
-                borderRadius: '10px',
-                fontSize: '15px',
-                fontWeight: 600,
-                textDecoration: 'none',
-                boxShadow: '0 2px 4px rgba(0,0,0,0.03)'
-              }}
-            >
-              Try Practice Sandbox
-            </Link>
+
           </div>
 
-          {/* Quick Metrics */}
-          <div style={{ display: 'flex', gap: '28px', marginTop: '40px', paddingTop: '28px', borderTop: '1px solid #e2e8f0' }}>
-            <div>
-              <div style={{ fontSize: '24px', fontWeight: 800, color: '#0f172a' }}>4+</div>
-              <div style={{ fontSize: '13px', color: '#64748b', fontWeight: 500 }}>Languages Supported</div>
-            </div>
-            <div>
-              <div style={{ fontSize: '24px', fontWeight: 800, color: '#0f172a' }}>&lt; 35ms</div>
-              <div style={{ fontSize: '13px', color: '#64748b', fontWeight: 500 }}>Execution Latency</div>
-            </div>
-            <div>
-              <div style={{ fontSize: '24px', fontWeight: 800, color: '#0f172a' }}>100%</div>
-              <div style={{ fontSize: '13px', color: '#64748b', fontWeight: 500 }}>Automated Verification</div>
-            </div>
-          </div>
+
         </div>
 
           <div className={styles.studio}>
             <div className={styles.orbit} aria-hidden="true" />
-            <div className={styles.floatingLabel}><span aria-hidden="true">✧</span> Your next “I got it!” starts here.</div>
             <div className={styles.editor}>
-              <div className={styles.editorTop}><span className={styles.editorMark} aria-hidden="true">{'{ }'}</span><span>THE PRACTICE STUDIO</span><span className={styles.previewBadge}>PREVIEW</span></div>
+              <div className={styles.editorTop}><span className={styles.editorMark} aria-hidden="true">{'{ }'}</span><span className={styles.previewBadge}>PREVIEW</span></div>
               <div className={styles.languageTabs} aria-label="Preview language">{Object.keys(samples).map(item => <button key={item} aria-pressed={language === item} onClick={() => setLanguage(item)} className={language === item ? styles.selectedLanguage : ''}>{item}</button>)}</div>
               <div className={styles.code} key={language}>{samples[language].split('\n').map((line, i) => <div key={i}><span aria-hidden="true">{String(i + 1).padStart(2, '0')}</span><code>{line || ' '}</code></div>)}</div>
-              <div className={styles.editorBottom}><span><span className={styles.dot} /> Make room for a little progress.</span><Link href="/practice" aria-label={`Open practice sandbox to write ${language} code`}>Start coding ↗</Link></div>
+
             </div>
             <div className={styles.progressCard}><span className={styles.progressIcon} aria-hidden="true">↗</span><div><strong>Every attempt counts.</strong><p>Build confidence, one solution at a time.</p></div><span className={styles.miniBars} aria-hidden="true"><i /><i /><i /><i /><i /></span></div>
           </div>
