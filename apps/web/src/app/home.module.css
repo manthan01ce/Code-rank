@@ -235,3 +235,8 @@ to{opacity:1;transform:translateY(0)}
 .pathFlow { padding: 18px 0; margin-top: 20px; border-top: 1px solid #e2e8f0; border-bottom: 1px solid #e2e8f0; color: #475569; font-size: 11px; line-height: 1.9; }
 .pathDetail a { display: flex; justify-content: space-between; margin-top: 24px; font-size: 12px; font-weight: 600; color: #4338ca; }
 @media(max-width:760px) { .learningPath { grid-template-columns: 1fr; } .pathNavigation { flex-direction: row; padding: 12px; border-right: 0; border-bottom: 1px solid #e2e8f0; gap: 6px; } .pathNavigation button { padding: 14px 8px; justify-content: center; gap: 6px; } .pathNavigation strong { font-size: 13px; letter-spacing: 0; } .pathNavigation small,.pathNumber,.pathNavigation button > span:last-child { display: none; } .pathDetail { padding: 28px 24px; } }
+
+.heroBrand { font-size: clamp(48px,5.8vw,80px); letter-spacing: -3px; font-weight: 800; line-height: 1.05; margin-bottom: 24px; }
+.home .headerAction { background: #3730a3; color: #fff; border-color: #3730a3; transition: background .2s; }
+.home .headerAction:hover { background: #312e81; }
+@media(max-width:760px) { .heroBrand { font-size: clamp(44px,12vw,65px); letter-spacing: -2px; } }

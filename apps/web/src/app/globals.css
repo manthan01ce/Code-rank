@@ -366,3 +366,16 @@ th {
 .auth-focused .auth-brand { margin-bottom: 8px; }
 .auth-focused .auth-form h1 { font-size: 34px; }
 @media(max-width:480px) { .auth-focused { padding: 24px 14px; } .auth-focused .auth-form { padding: 28px 22px; border-radius: 13px; } .auth-focused .auth-form h1 { font-size: 30px; } }
+.auth-split { display: grid; grid-template-columns: minmax(0, .95fr) minmax(0, 1.05fr); padding: 24px; gap: 30px; min-height: 100dvh; background: #f8fafc; }
+.auth-split .auth-form { width: min(100%, 490px); margin: auto; padding: 38px; }
+.auth-split .auth-submit { background: #3730a3; box-shadow: 0 4px 12px #3730a315; }
+.auth-split .auth-submit:hover:not(:disabled) { background: #312e81; }
+.auth-campus { position: relative; min-height: 650px; border: 1px solid #e2e8f0; border-radius: 18px; overflow: hidden; background: #eff1ff; }
+.auth-campus > img { object-fit: cover; object-position: 52% 45%; }
+.auth-campus::after { content: ''; position: absolute; inset: 0; background: linear-gradient(180deg,transparent 40%,#0f172a55 100%); pointer-events: none; }
+.auth-campus-caption { position: absolute; z-index: 1; bottom: 24px; left: 24px; right: 24px; background: #fffffff5; border: 1px solid #e2e8f0; border-radius: 13px; padding: 26px; backdrop-filter: blur(8px); }
+.auth-campus-caption h2 { font-size: clamp(25px,2.7vw,38px); letter-spacing: -1px; line-height: 1.2; font-weight: 600; color: #0f172a; margin: 12px 0; }
+.auth-campus-caption > p:not(.auth-eyebrow) { font-size: 12px; line-height: 1.8; color: #475569; max-width: 350px; }
+.auth-campus-caption > span { display: block; color: #64748b; font-size: 10px; margin-top: 18px; }
+@media(max-width:900px) { .auth-split { padding: 16px; gap: 12px; } .auth-split .auth-form { padding: 26px; } .auth-campus-caption { left: 16px; right: 16px; bottom: 16px; padding: 20px; } }
+@media(max-width:767px) { .auth-split { grid-template-columns: 1fr; padding: 20px 14px; } .auth-split .auth-form { padding: 24px 14px; } .auth-campus { min-height: 370px; width: min(100%,490px); margin-inline: auto; } .auth-campus-caption h2 { font-size: 25px; } }
