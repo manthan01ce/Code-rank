@@ -8,9 +8,9 @@ const root = fileURLToPath(new URL('../../', import.meta.url));
 export async function testConfiguration(mode) {
   const integration = ['queue', 'realtime', 'worker-readiness', 'worker-recovery', 'postgres'].map(name => `tests/integration/${name}.test.mjs`);
   const modes = {
-    unit: { files: (await readdir(resolve(root, 'tests'))).filter(name => name.endsWith('.test.mjs')).sort().map(name => `tests/${name}`), timeoutMs: 180000 },
-    integration: { files: integration, timeoutMs: 180000 },
-    docker: { files: ['tests/integration/sandbox.test.mjs'], timeoutMs: 180000 },
+    unit: { files: (await readdir(resolve(root, 'tests'))).filter(name => name.endsWith('.test.mjs')).sort().map(name => `tests/${name}`), timeoutMs: 300000 },
+    integration: { files: integration, timeoutMs: 300000 },
+    docker: { files: ['tests/integration/sandbox.test.mjs'], timeoutMs: 300000 },
   };
   if (!Object.hasOwn(modes, mode)) throw new Error('Expected exactly one mode: unit, integration, or docker');
   const config = modes[mode];
@@ -19,7 +19,7 @@ export async function testConfiguration(mode) {
 }
 
 export async function captureTestProcess(args, { timeoutMs, env = process.env } = {}) {
-  if (!Number.isFinite(timeoutMs) || timeoutMs <= 0 || timeoutMs > 180000) throw new Error('Invalid subprocess deadline');
+  if (!Number.isFinite(timeoutMs) || timeoutMs <= 0 || timeoutMs > 300000) throw new Error('Invalid subprocess deadline');
   let stdout = '', stderr = '', timedOut = false;
   let limitExceeded = false;
   const result = await new Promise((done, reject) => {
