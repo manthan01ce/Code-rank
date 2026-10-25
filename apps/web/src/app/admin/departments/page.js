@@ -11,7 +11,7 @@ export default function DepartmentMaster() {
   const [loading, setLoading] = useState(true);
   const [processing, setProcessing] = useState(false);
   const [search, setSearch] = useState('');
-  
+
   const [showModal, setShowModal] = useState(false);
   const [editTarget, setEditTarget] = useState(null);
   const [toast, setToast] = useState(null);
@@ -74,7 +74,7 @@ export default function DepartmentMaster() {
         });
         const data = await res.json();
         if (!res.ok) { showToast('error', data.error || 'Update failed'); return; }
-        
+
         setDepartments(prev => prev.map(d => d.id === editTarget.id ? data.department : d));
         showToast('success', `${form.name} updated successfully`);
         setShowModal(false);
@@ -110,7 +110,7 @@ export default function DepartmentMaster() {
       });
       const data = await res.json();
       if (!res.ok) { showToast('error', data.error || 'Deletion failed'); return; }
-      
+
       setDepartments(prev => prev.filter(dept => dept.id !== d.id));
       showToast('success', `${d.name} deleted successfully`);
     } catch (e) {
@@ -126,9 +126,9 @@ export default function DepartmentMaster() {
         <div style={{
           position: 'fixed', top: '20px', right: '20px', zIndex: 9999,
           padding: '14px 20px', borderRadius: '10px', fontWeight: 600, fontSize: '14px',
-          backgroundColor: toast.type === 'success' ? '#ecfdf5' : '#fef2f2',
-          color: toast.type === 'success' ? '#065f46' : '#991b1b',
-          border: `1px solid ${toast.type === 'success' ? '#6ee7b7' : '#fca5a5'}`,
+          backgroundColor: toast.type === 'success' ? '#eff1ff' : '#fef2f2',
+          color: toast.type === 'success' ? '#4338ca' : '#991b1b',
+          border: `1px solid ${toast.type === 'success' ? '#c7d2fe' : '#fca5a5'}`,
           boxShadow: '0 4px 20px rgba(0,0,0,0.12)'
         }}>
           {toast.msg}
@@ -146,7 +146,7 @@ export default function DepartmentMaster() {
           <input
             type="text"
             className="search-bar"
-            placeholder="Search departments..."
+            aria-label="Search departments..." placeholder="Search departments..."
             value={search}
             onChange={e => setSearch(e.target.value)}
           />
@@ -183,14 +183,14 @@ export default function DepartmentMaster() {
             <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
               <input
                 className="input-field"
-                placeholder="Department Name (e.g. CSE) *"
+                aria-label="Department Name (e.g. CSE) *" placeholder="Department Name (e.g. CSE) *"
                 value={form.name}
                 onChange={e => setForm(f => ({ ...f, name: e.target.value.replace(/[^A-Za-z\s]/g, '') }))}
                 required
               />
               <input
                 className="input-field"
-                placeholder="Institute Name (e.g. CSPIT) *"
+                aria-label="Institute Name (e.g. CSPIT) *" placeholder="Institute Name (e.g. CSPIT) *"
                 value={form.institute_name}
                 onChange={e => setForm(f => ({ ...f, institute_name: e.target.value.replace(/[^A-Za-z\s]/g, '') }))}
                 required
@@ -220,10 +220,10 @@ export default function DepartmentMaster() {
           <table>
             <thead>
               <tr>
-                <th>Department Name</th>
-                <th>Institute Name</th>
-                <th>Created At</th>
-                <th>Actions</th>
+                <th scope="col">Department Name</th>
+                <th scope="col">Institute Name</th>
+                <th scope="col">Created At</th>
+                <th scope="col">Actions</th>
               </tr>
             </thead>
             <tbody>
@@ -242,7 +242,7 @@ export default function DepartmentMaster() {
                       </button>
                       <button
                         onClick={() => handleDelete(d)}
-                        style={{ padding: '6px 14px', borderRadius: '6px', border: 'none', backgroundColor: '#ef4444', color: 'white', cursor: 'pointer', fontWeight: 600, fontSize: '12px' }}
+                        style={{ padding: '6px 14px', borderRadius: '6px', border: 'none', backgroundColor: '#b91c1c', color: 'white', cursor: 'pointer', fontWeight: 600, fontSize: '12px' }}
                       >
                         🚫 Delete
                       </button>

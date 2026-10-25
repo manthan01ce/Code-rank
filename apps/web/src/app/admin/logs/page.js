@@ -46,7 +46,7 @@ export default function ActivityLogsPage() {
       {loading && <LoadingOverlay />}
       <div className="header">
         <div>
-          <h2 style={{ fontSize: '24px', fontWeight: 700 }}>Activity Logs</h2>
+          <h2 style={{ fontSize: '24px', fontWeight: 700 }}>Activity logs</h2>
           <p style={{ color: 'var(--text-muted)', fontSize: '14px' }}>The latest administrative and user actions.</p>
         </div>
         <button className="btn-primary" style={{ width: 'auto', padding: '10px 20px', margin: 0 }} onClick={fetchLogs}>
@@ -54,16 +54,16 @@ export default function ActivityLogsPage() {
         </button>
       </div>
 
-      {error && <p style={{ color: '#dc2626', marginBottom: '16px' }}>{error}</p>}
+      {error && <p role="alert" style={{ color: '#dc2626', marginBottom: '16px' }}>{error}</p>}
 
       <div className="table-container">
         <table>
           <thead>
             <tr>
-              <th>User</th>
-              <th>Action</th>
-              <th>Details</th>
-              <th>Time</th>
+              <th scope="col">User</th>
+              <th scope="col">Action</th>
+              <th scope="col">Details</th>
+              <th scope="col">Time</th>
             </tr>
           </thead>
           <tbody>
@@ -72,7 +72,7 @@ export default function ActivityLogsPage() {
                 <td style={{ fontWeight: 500 }}>{log.user_name || 'System'}</td>
                 <td>{log.action}</td>
                 <td style={{ color: '#4b5563' }}>{log.details}</td>
-                <td style={{ color: '#94a3b8', fontSize: '12px' }}>{new Date(log.created_at).toLocaleString()}</td>
+                <td style={{ color: '#64748b', fontSize: '12px' }}>{new Date(log.created_at).toLocaleString()}</td>
               </tr>
             ))}
             {!loading && logs.length === 0 && (

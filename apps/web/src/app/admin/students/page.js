@@ -127,8 +127,8 @@ export default function StudentManagement() {
         console.error('Failed to fetch students:', res.status);
         setStudents([]);
       }
-    } catch (e) { 
-      console.error('Fetch students error:', e); 
+    } catch (e) {
+      console.error('Fetch students error:', e);
       setStudents([]);
     }
     finally { setLoading(false); }
@@ -254,9 +254,9 @@ export default function StudentManagement() {
       });
       const data = await res.json();
       if (!res.ok) { showToast('error', data.error || 'Deactivation failed'); return; }
-      
+
       // Update the student status in the list (keep in same list, just change status)
-      setStudents(prev => prev.map(student => 
+      setStudents(prev => prev.map(student =>
         student.id === s.id ? { ...student, status: 'inactive' } : student
       ));
       showToast('success', `${s.name} deactivated and moved to inactive status`);
@@ -277,9 +277,9 @@ export default function StudentManagement() {
       });
       const data = await res.json();
       if (!res.ok) { showToast('error', data.error || 'Reactivation failed'); return; }
-      
+
       // Update the student status in the list (keep in same list, just change status)
-      setStudents(prev => prev.map(student => 
+      setStudents(prev => prev.map(student =>
         student.id === s.id ? data.user : student
       ));
       showToast('success', `${s.name} reactivated and moved to active status`);
@@ -353,10 +353,10 @@ export default function StudentManagement() {
         console.groupEnd();
 
         // Show detailed modal with skipped users
-        const skippedDetails = skipped.map((s, i) => 
+        const skippedDetails = skipped.map((s, i) =>
           `${i + 1}. ${s.name} (${s.email})\n   → ${s.reason}`
         ).join('\n\n');
-        
+
         alert(` ${skippedCount} user(s) were skipped:\n\n${skippedDetails}\n\nCheck console for full details.`);
       }
 
@@ -388,9 +388,9 @@ export default function StudentManagement() {
         <div style={{
           position: 'fixed', top: '20px', right: '20px', zIndex: 9999,
           padding: '14px 20px', borderRadius: '10px', fontWeight: 600, fontSize: '14px',
-          backgroundColor: toast.type === 'success' ? '#ecfdf5' : '#fef2f2',
-          color: toast.type === 'success' ? '#065f46' : '#991b1b',
-          border: `1px solid ${toast.type === 'success' ? '#6ee7b7' : '#fca5a5'}`,
+          backgroundColor: toast.type === 'success' ? '#eff1ff' : '#fef2f2',
+          color: toast.type === 'success' ? '#4338ca' : '#991b1b',
+          border: `1px solid ${toast.type === 'success' ? '#c7d2fe' : '#fca5a5'}`,
           boxShadow: '0 4px 20px rgba(0,0,0,0.12)',
           maxWidth: '360px',
         }}>
@@ -435,7 +435,7 @@ export default function StudentManagement() {
           <input
             type="text"
             className="search-bar"
-            placeholder="Search name, email, roll, division..."
+            aria-label="Search name, email, roll, division..." placeholder="Search name, email, roll, division..."
             value={search}
             onChange={e => setSearch(e.target.value)}
           />
@@ -448,13 +448,13 @@ export default function StudentManagement() {
           + Add Student
         </button>
 
-        <label style={{
+        <label className="admin-upload" style={{
           display: 'inline-flex', alignItems: 'center', gap: '8px',
           padding: '10px 22px', borderRadius: '8px', cursor: 'pointer',
-          backgroundColor: '#10b981', color: 'white', fontWeight: 600, fontSize: '14px',
+          backgroundColor: '#4f46e5', color: 'white', fontWeight: 600, fontSize: '14px',
         }}>
           ⬆ Bulk Upload (Excel/CSV)
-          <input ref={fileRef} type="file" accept=".xlsx,.xls,.csv" style={{ display: 'none' }} onChange={handleBulkUpload} />
+          <input ref={fileRef} type="file" accept=".xlsx,.xls,.csv" className="admin-file-input" aria-label="Upload enrollment spreadsheet" onChange={handleBulkUpload} />
         </label>
 
         <button
@@ -491,7 +491,7 @@ export default function StudentManagement() {
               <div style={{ display: 'flex', gap: '10px' }}>
                 <input
                   className="input-field"
-                  placeholder="First Name *"
+                  aria-label="First Name *" placeholder="First Name *"
                   value={form.firstName}
                   onChange={e => setForm(f => ({ ...f, firstName: e.target.value.replace(/[^A-Za-z\s]/g, '') }))}
                   required
@@ -499,7 +499,7 @@ export default function StudentManagement() {
                 />
                 <input
                   className="input-field"
-                  placeholder="Last Name *"
+                  aria-label="Last Name *" placeholder="Last Name *"
                   value={form.lastName}
                   onChange={e => setForm(f => ({ ...f, lastName: e.target.value.replace(/[^A-Za-z\s]/g, '') }))}
                   required
@@ -509,7 +509,7 @@ export default function StudentManagement() {
               <div style={{ display: 'flex', gap: '10px' }}>
                 <input
                   className="input-field"
-                  placeholder="Roll Number (e.g. 25ce097 or D25ce097) *"
+                  aria-label="Roll Number (e.g. 25ce097 or D25ce097) *" placeholder="Roll Number (e.g. 25ce097 or D25ce097) *"
                   value={form.roll}
                   onChange={e => setForm(f => ({ ...f, roll: e.target.value }))}
                   pattern="^[dD]?\d+[a-zA-Z]{2,3}\d+$"
@@ -519,7 +519,7 @@ export default function StudentManagement() {
                 />
                 <input
                   className="input-field"
-                  placeholder="Division (e.g. CE1, IT2) *"
+                  aria-label="Division (e.g. CE1, IT2) *" placeholder="Division (e.g. CE1, IT2) *"
                   value={form.division}
                   onChange={e => setForm(f => ({ ...f, division: e.target.value.toUpperCase() }))}
                   title="Division must contain at least 2 letters and at least 1 digit (e.g., CE1, IT2)"
@@ -552,11 +552,11 @@ export default function StudentManagement() {
               <p style={{ fontSize: '11.5px', color: '#64748b', margin: '-4px 0 4px 2px' }}>
                 ℹ️ <strong>Division is compulsory:</strong> must contain at least 2 alphabets and at least 1 digit (e.g., <strong>CE1</strong>, <strong>IT2</strong>, <strong>CSE1</strong>).
               </p>
-              
+
               <div style={{ display: 'flex', alignItems: 'center', border: '1px solid var(--border-color)', borderRadius: '6px', overflow: 'hidden' }}>
                 <input
                   className="input-field"
-                  placeholder="Email"
+                  aria-label="Email" placeholder="Email"
                   value={form.roll ? form.roll.toLowerCase() : ''}
                   disabled
                   style={{ flex: 1, border: 'none', borderRadius: 0, opacity: 0.7, cursor: 'not-allowed', backgroundColor: '#f8fafc' }}
@@ -570,7 +570,7 @@ export default function StudentManagement() {
                 <input
                   type="password"
                   className="input-field"
-                  placeholder="New Password (leave blank to keep unchanged)"
+                  aria-label="New Password (leave blank to keep unchanged)" placeholder="New Password (leave blank to keep unchanged)"
                   value={form.password}
                   onChange={e => setForm(f => ({ ...f, password: e.target.value }))}
                 />
@@ -608,14 +608,14 @@ export default function StudentManagement() {
           <table>
             <thead>
               <tr>
-                <th>Roll No</th>
-                <th>Name</th>
-                <th>Email</th>
-                <th>Branch</th>
-                <th>Division</th>
-                <th>Semester</th>
-                <th>Status</th>
-                <th>Actions</th>
+                <th scope="col">Roll No</th>
+                <th scope="col">Name</th>
+                <th scope="col">Email</th>
+                <th scope="col">Branch</th>
+                <th scope="col">Division</th>
+                <th scope="col">Semester</th>
+                <th scope="col">Status</th>
+                <th scope="col">Actions</th>
               </tr>
             </thead>
             <tbody>
@@ -628,7 +628,7 @@ export default function StudentManagement() {
                     <td style={{ color: '#64748b' }}>{s.email}</td>
                     <td>{info.department || '—'}</td>
                     <td>
-                      <span style={{ fontSize: '12px', fontWeight: 600, backgroundColor: '#eff6ff', color: '#1d4ed8', padding: '2px 8px', borderRadius: '4px' }}>
+                      <span style={{ fontSize: '12px', fontWeight: 600, backgroundColor: '#eff1ff', color: '#1d4ed8', padding: '2px 8px', borderRadius: '4px' }}>
                         {info.division || '—'}
                       </span>
                     </td>
@@ -636,8 +636,8 @@ export default function StudentManagement() {
                     <td>
                       <span style={{
                         padding: '4px 12px', borderRadius: '20px', fontSize: '12px', fontWeight: 600,
-                        backgroundColor: s.status === 'active' ? '#ecfdf5' : '#fef2f2',
-                        color: s.status === 'active' ? '#065f46' : '#991b1b',
+                        backgroundColor: s.status === 'active' ? '#eff1ff' : '#fef2f2',
+                        color: s.status === 'active' ? '#4338ca' : '#991b1b',
                       }}>
                         {s.status.toUpperCase()}
                       </span>
@@ -660,7 +660,7 @@ export default function StudentManagement() {
                         ) : (
                           <button
                             onClick={() => handleReactivate(s)}
-                            style={{ padding: '6px 14px', borderRadius: '6px', border: 'none', backgroundColor: '#06B6D4', color: 'white', cursor: 'pointer', fontWeight: 600, fontSize: '12px' }}
+                            style={{ padding: '6px 14px', borderRadius: '6px', border: 'none', backgroundColor: '#4f46e5', color: 'white', cursor: 'pointer', fontWeight: 600, fontSize: '12px' }}
                           >
                              Reactivate
                           </button>

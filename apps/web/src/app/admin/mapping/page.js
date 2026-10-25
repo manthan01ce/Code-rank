@@ -70,21 +70,21 @@ export default function CourseMapping() {
   const handleSelectFaculty = (courseId, facultyId) => {
     if (!facultyId) return; // Empty selection
     isDirtyRef.current = true;
-    
+
     setMappings(prev => {
       const current = prev[courseId] || { faculty_ids: [], co_coordinator_id: null };
       // If already added, don't add again
       if (current.faculty_ids.includes(facultyId)) return prev;
-      
+
       // Limit to 4
       if (current.faculty_ids.length >= 4) {
         showToast('error', 'You can assign a maximum of 4 faculties per course.');
         return prev;
       }
-      
+
       const newFids = [...current.faculty_ids, facultyId];
-      return { 
-        ...prev, 
+      return {
+        ...prev,
         [courseId]: {
           faculty_ids: newFids,
           co_coordinator_id: current.co_coordinator_id || facultyId
@@ -102,8 +102,8 @@ export default function CourseMapping() {
       if (newCo === facultyId) {
         newCo = newFids[0] || null;
       }
-      return { 
-        ...prev, 
+      return {
+        ...prev,
         [courseId]: {
           faculty_ids: newFids,
           co_coordinator_id: newCo
@@ -168,14 +168,14 @@ export default function CourseMapping() {
   return (
     <div style={{ position: 'relative' }}>
       {processing && <LoadingOverlay />}
-      
+
       {toast && (
         <div style={{
           position: 'fixed', top: '20px', right: '20px', zIndex: 9999,
           padding: '14px 20px', borderRadius: '10px', fontWeight: 600, fontSize: '14px',
-          backgroundColor: toast.type === 'success' ? '#ecfdf5' : '#fef2f2',
-          color: toast.type === 'success' ? '#065f46' : '#991b1b',
-          border: `1px solid ${toast.type === 'success' ? '#6ee7b7' : '#fca5a5'}`,
+          backgroundColor: toast.type === 'success' ? '#eff1ff' : '#fef2f2',
+          color: toast.type === 'success' ? '#4338ca' : '#991b1b',
+          border: `1px solid ${toast.type === 'success' ? '#c7d2fe' : '#fca5a5'}`,
           boxShadow: '0 4px 20px rgba(0,0,0,0.12)'
         }}>
           {toast.msg}
@@ -223,12 +223,12 @@ export default function CourseMapping() {
                         {assigned.map(fid => {
                           const isCo = current.co_coordinator_id === fid;
                           return (
-                            <div key={fid} style={{ 
-                              display: 'flex', alignItems: 'center', gap: '8px', 
-                              padding: '6px 12px', borderRadius: '6px', 
-                              backgroundColor: isCo ? '#fef3c7' : '#eff6ff', 
-                              border: `1px solid ${isCo ? '#fde68a' : '#bfdbfe'}`, 
-                              fontSize: '13px', color: isCo ? '#92400e' : '#1e40af' 
+                            <div key={fid} style={{
+                              display: 'flex', alignItems: 'center', gap: '8px',
+                              padding: '6px 12px', borderRadius: '6px',
+                              backgroundColor: isCo ? '#f1f5f9' : '#eff1ff',
+                              border: `1px solid ${isCo ? '#fde68a' : '#bfdbfe'}`,
+                              fontSize: '13px', color: isCo ? '#475569' : '#4338ca'
                             }}>
                               <span style={{ fontWeight: isCo ? 'bold' : 'normal' }}>
                                 {isCo ? '👑 ' : ''}{getFacultyName(fid)}
@@ -237,24 +237,24 @@ export default function CourseMapping() {
                                 <button
                                   onClick={() => handleSetCoCoordinator(c.id, fid)}
                                   title="Make Co-coordinator"
-                                  style={{ background: 'none', border: 'none', color: '#b45309', cursor: 'pointer', fontSize: '11px', textDecoration: 'underline', padding: 0 }}
+                                  style={{ background: 'none', border: 'none', color: '#475569', cursor: 'pointer', fontSize: '11px', textDecoration: 'underline', padding: 0 }}
                                 >
                                   Make Co
                                 </button>
                               )}
-                              <button 
+                              <button
                                 onClick={() => handleRemoveFaculty(c.id, fid)}
-                                style={{ background: 'none', border: 'none', color: '#ef4444', cursor: 'pointer', fontWeight: 'bold', marginLeft: '4px' }}
+                                style={{ background: 'none', border: 'none', color: '#b91c1c', cursor: 'pointer', fontWeight: 'bold', marginLeft: '4px' }}
                               >×</button>
                             </div>
                           );
                         })}
                         {assigned.length === 0 && <span style={{ color: '#94a3b8', fontSize: '13px', fontStyle: 'italic' }}>Unassigned</span>}
                       </div>
-                      
+
                       {assigned.length < 4 && (
-                        <select 
-                          className="input-field" 
+                        <select
+                          className="input-field"
                           style={{ padding: '6px', fontSize: '13px' }}
                           onChange={(e) => {
                             handleSelectFaculty(c.id, parseInt(e.target.value));
@@ -270,8 +270,8 @@ export default function CourseMapping() {
                       )}
                     </td>
                     <td>
-                      <button 
-                        className="btn-primary" 
+                      <button
+                        className="btn-primary"
                         style={{ margin: 0, padding: '8px 16px', fontSize: '13px', width: 'auto' }}
                         onClick={() => handleSaveMapping(c.id)}
                       >

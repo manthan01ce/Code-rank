@@ -105,8 +105,8 @@ export default function FacultyManagement() {
         console.error('Failed to fetch faculty:', res.status);
         setFaculty([]);
       }
-    } catch (e) { 
-      console.error('Fetch faculty error:', e); 
+    } catch (e) {
+      console.error('Fetch faculty error:', e);
       setFaculty([]);
     }
     finally { setLoading(false); }
@@ -221,9 +221,9 @@ export default function FacultyManagement() {
       });
       const data = await res.json();
       if (!res.ok) { showToast('error', data.error || 'Deactivation failed'); return; }
-      
+
       // Update the faculty status in the list (keep in same list, just change status)
-      setFaculty(prev => prev.map(faculty => 
+      setFaculty(prev => prev.map(faculty =>
         faculty.id === f.id ? { ...faculty, status: 'inactive' } : faculty
       ));
       showToast('success', `${f.name} deactivated and moved to inactive status`);
@@ -244,9 +244,9 @@ export default function FacultyManagement() {
       });
       const data = await res.json();
       if (!res.ok) { showToast('error', data.error || 'Reactivation failed'); return; }
-      
+
       // Update the faculty status in the list (keep in same list, just change status)
-      setFaculty(prev => prev.map(faculty => 
+      setFaculty(prev => prev.map(faculty =>
         faculty.id === f.id ? data.user : faculty
       ));
       showToast('success', `${f.name} reactivated and moved to active status`);
@@ -315,10 +315,10 @@ export default function FacultyManagement() {
         console.groupEnd();
 
         // Show detailed modal with skipped users
-        const skippedDetails = skipped.map((s, i) => 
+        const skippedDetails = skipped.map((s, i) =>
           `${i + 1}. ${s.name} (${s.email})\n   → ${s.reason}`
         ).join('\n\n');
-        
+
         alert(` ${skippedCount} user(s) were skipped:\n\n${skippedDetails}\n\nCheck console for full details.`);
       }
 
@@ -347,9 +347,9 @@ export default function FacultyManagement() {
         <div style={{
           position: 'fixed', top: '20px', right: '20px', zIndex: 9999,
           padding: '14px 20px', borderRadius: '10px', fontWeight: 600, fontSize: '14px',
-          backgroundColor: toast.type === 'success' ? '#ecfdf5' : '#fef2f2',
-          color: toast.type === 'success' ? '#065f46' : '#991b1b',
-          border: `1px solid ${toast.type === 'success' ? '#6ee7b7' : '#fca5a5'}`,
+          backgroundColor: toast.type === 'success' ? '#eff1ff' : '#fef2f2',
+          color: toast.type === 'success' ? '#4338ca' : '#991b1b',
+          border: `1px solid ${toast.type === 'success' ? '#c7d2fe' : '#fca5a5'}`,
           boxShadow: '0 4px 20px rgba(0,0,0,0.12)',
           maxWidth: '360px',
         }}>
@@ -381,7 +381,7 @@ export default function FacultyManagement() {
           <input
             type="text"
             className="search-bar"
-            placeholder="Search name or email..."
+            aria-label="Search name or email..." placeholder="Search name or email..."
             value={search}
             onChange={e => setSearch(e.target.value)}
           />
@@ -394,13 +394,13 @@ export default function FacultyManagement() {
           + Add Faculty Member
         </button>
 
-        <label style={{
+        <label className="admin-upload" style={{
           display: 'inline-flex', alignItems: 'center', gap: '8px',
           padding: '10px 22px', borderRadius: '8px', cursor: 'pointer',
-          backgroundColor: '#10b981', color: 'white', fontWeight: 600, fontSize: '14px',
+          backgroundColor: '#4f46e5', color: 'white', fontWeight: 600, fontSize: '14px',
         }}>
           ⬆ Bulk Upload (Excel/CSV)
-          <input ref={fileRef} type="file" accept=".xlsx,.xls,.csv" style={{ display: 'none' }} onChange={handleBulkUpload} />
+          <input ref={fileRef} type="file" accept=".xlsx,.xls,.csv" className="admin-file-input" aria-label="Upload enrollment spreadsheet" onChange={handleBulkUpload} />
         </label>
 
         <button
@@ -435,7 +435,7 @@ export default function FacultyManagement() {
               <input
                 className="input-field"
                 type="number"
-                placeholder="Faculty ID (Max 5 digits) *"
+                aria-label="Faculty ID (Max 5 digits) *" placeholder="Faculty ID (Max 5 digits) *"
                 value={form.facultyId}
                 onChange={e => e.target.value.length <= 5 && setForm(f => ({ ...f, facultyId: e.target.value }))}
                 required
@@ -443,7 +443,7 @@ export default function FacultyManagement() {
               <div style={{ display: 'flex', gap: '10px' }}>
                 <input
                   className="input-field"
-                  placeholder="First Name *"
+                  aria-label="First Name *" placeholder="First Name *"
                   value={form.firstName}
                   onChange={e => setForm(f => ({ ...f, firstName: e.target.value.replace(/[^A-Za-z\s]/g, '') }))}
                   required
@@ -451,7 +451,7 @@ export default function FacultyManagement() {
                 />
                 <input
                   className="input-field"
-                  placeholder="Last Name *"
+                  aria-label="Last Name *" placeholder="Last Name *"
                   value={form.lastName}
                   onChange={e => setForm(f => ({ ...f, lastName: e.target.value.replace(/[^A-Za-z\s]/g, '') }))}
                   required
@@ -461,7 +461,7 @@ export default function FacultyManagement() {
               <div style={{ display: 'flex', alignItems: 'center', border: '1px solid var(--border-color)', borderRadius: '6px', overflow: 'hidden' }}>
                 <input
                   className="input-field"
-                  placeholder="Email Prefix *"
+                  aria-label="Email Prefix *" placeholder="Email Prefix *"
                   value={form.emailPrefix}
                   onChange={e => setForm(f => ({ ...f, emailPrefix: e.target.value.replace(/[^a-zA-Z0-9.\-_]/g, '') }))}
                   required
@@ -487,7 +487,7 @@ export default function FacultyManagement() {
                 </select>
                 <input
                   className="input-field"
-                  placeholder="Designation (Optional)"
+                  aria-label="Designation (Optional)" placeholder="Designation (Optional)"
                   value={form.designation}
                   onChange={e => setForm(f => ({ ...f, designation: e.target.value }))}
                   style={{ flex: 1 }}
@@ -498,7 +498,7 @@ export default function FacultyManagement() {
                 <input
                   type="password"
                   className="input-field"
-                  placeholder="New Password (leave blank to keep unchanged)"
+                  aria-label="New Password (leave blank to keep unchanged)" placeholder="New Password (leave blank to keep unchanged)"
                   value={form.password}
                   onChange={e => setForm(f => ({ ...f, password: e.target.value }))}
                 />
@@ -536,13 +536,13 @@ export default function FacultyManagement() {
           <table>
             <thead>
               <tr>
-                <th>Faculty ID</th>
-                <th>Name</th>
-                <th>Email</th>
-                <th>Department</th>
-                <th>Designation</th>
-                <th>Status</th>
-                <th>Actions</th>
+                <th scope="col">Faculty ID</th>
+                <th scope="col">Name</th>
+                <th scope="col">Email</th>
+                <th scope="col">Department</th>
+                <th scope="col">Designation</th>
+                <th scope="col">Status</th>
+                <th scope="col">Actions</th>
               </tr>
             </thead>
             <tbody>
@@ -557,7 +557,7 @@ export default function FacultyManagement() {
                     <td>
                       <span style={{
                         padding: '3px 10px', borderRadius: '20px', fontSize: '12px', fontWeight: 600,
-                        backgroundColor: '#eff6ff', color: '#2563eb',
+                        backgroundColor: '#eff1ff', color: '#4338ca',
                       }}>
                         {info.designation || '—'}
                       </span>
@@ -565,8 +565,8 @@ export default function FacultyManagement() {
                     <td>
                       <span style={{
                         padding: '4px 12px', borderRadius: '20px', fontSize: '12px', fontWeight: 600,
-                        backgroundColor: f.status === 'active' ? '#ecfdf5' : '#fef2f2',
-                        color: f.status === 'active' ? '#065f46' : '#991b1b',
+                        backgroundColor: f.status === 'active' ? '#eff1ff' : '#fef2f2',
+                        color: f.status === 'active' ? '#4338ca' : '#991b1b',
                       }}>
                         {f.status.toUpperCase()}
                       </span>
@@ -589,7 +589,7 @@ export default function FacultyManagement() {
                         ) : (
                           <button
                             onClick={() => handleReactivate(f)}
-                            style={{ padding: '6px 14px', borderRadius: '6px', border: 'none', backgroundColor: '#06B6D4', color: 'white', cursor: 'pointer', fontWeight: 600, fontSize: '12px' }}
+                            style={{ padding: '6px 14px', borderRadius: '6px', border: 'none', backgroundColor: '#4f46e5', color: 'white', cursor: 'pointer', fontWeight: 600, fontSize: '12px' }}
                           >
                              Reactivate
                           </button>
