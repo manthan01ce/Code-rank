@@ -24,7 +24,7 @@ export function useExecutionLifecycle(problemId) {
     if (current.current) return null;
     const action = { controller: new AbortController(), startedAt: Date.now() };
     current.current = action;
-    setBusy(true); setElapsed(0); setPhase('Saving');
+    setBusy(true); setElapsed(0); setPhase('Running');
     return action;
   }
   function update(action, next) { if (current.current === action) setPhase(next); }

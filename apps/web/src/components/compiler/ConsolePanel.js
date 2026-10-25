@@ -161,47 +161,86 @@ export default function ConsolePanel({
       {/* ── Console Body ── */}
       <div style={{ flex: 1, display: 'flex', flexDirection: 'column', background: '#000000', overflow: 'hidden' }}>
 
-        {/* 1. Loading State Panel with Phased Stepper */}
+        {/* 1. Loading State Panel with Circular Processing Animation */}
         {judgeState === 'loading' && (
-          <div style={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: '20px', color: '#ffffff', padding: '24px' }}>
-            <div style={{ position: 'relative', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-              <Loader2 size={36} style={{ color: '#0066b1', animation: 'spin 0.8s linear infinite' }} />
-              <div style={{ position: 'absolute', width: '48px', height: '48px', borderRadius: '50%', border: '1px solid rgba(0,102,177,0.2)', animation: 'ping 2s cubic-bezier(0, 0, 0.2, 1) infinite' }} />
+          <div style={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: '22px', color: '#ffffff', padding: '32px' }}>
+            {/* Animated Processing Circle */}
+            <div style={{ position: 'relative', width: '64px', height: '64px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+              {/* Outer soft ambient glow */}
+              <div style={{
+                position: 'absolute',
+                inset: '-8px',
+                borderRadius: '50%',
+                background: 'radial-gradient(circle, rgba(59, 130, 246, 0.22) 0%, rgba(59, 130, 246, 0) 70%)',
+                animation: 'pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite',
+              }} />
+
+              {/* Background circular track */}
+              <svg width="64" height="64" viewBox="0 0 64 64" style={{ transform: 'rotate(-90deg)' }}>
+                <circle
+                  cx="32"
+                  cy="32"
+                  r="26"
+                  stroke="#1e293b"
+                  strokeWidth="3.5"
+                  fill="none"
+                />
+                {/* Foreground spinning ring */}
+                <circle
+                  cx="32"
+                  cy="32"
+                  r="26"
+                  stroke="#38bdf8"
+                  strokeWidth="3.5"
+                  strokeLinecap="round"
+                  strokeDasharray="163"
+                  strokeDashoffset="110"
+                  fill="none"
+                  style={{
+                    transformOrigin: 'center',
+                    animation: 'spin 1s cubic-bezier(0.4, 0, 0.2, 1) infinite',
+                  }}
+                />
+              </svg>
+
+              {/* Center pulsing core dot */}
+              <div style={{
+                position: 'absolute',
+                width: '10px',
+                height: '10px',
+                borderRadius: '50%',
+                backgroundColor: '#38bdf8',
+                boxShadow: '0 0 10px rgba(56, 189, 248, 0.8)',
+                animation: 'pulse 1.4s ease-in-out infinite',
+              }} />
             </div>
 
-            <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '6px', textAlign: 'center' }}>
-              <span style={{ fontSize: '15px', fontWeight: 700, letterSpacing: '0.5px' }}>
-                {actionMode === 'submit'
-                  ? (submitPhase === 'submitting' ? 'Submitting solution...' : 'Evaluating against test cases...')
-                  : 'Executing code in sandbox...'
-                }
+            {/* Clean Student-Facing Status Text */}
+            <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '8px', textAlign: 'center' }}>
+              <span style={{ fontSize: '15px', fontWeight: 600, letterSpacing: '0.3px', color: '#f1f5f9' }}>
+                {actionMode === 'submit' ? 'Evaluating submission…' : 'Running code…'}
               </span>
-              <span style={{ color: '#888888', fontSize: '12px', maxWidth: '380px', lineHeight: 1.5 }}>
-                {actionMode === 'submit'
-                  ? (submitPhase === 'submitting'
-                      ? 'Dispatching code to secure execution worker queue...'
-                      : 'Running all configured evaluation test cases...')
-                  : 'Compiling & evaluating input in isolated environment...'
-                }
+              <span style={{
+                color: '#94a3b8',
+                fontSize: '12px',
+                display: 'inline-flex',
+                alignItems: 'center',
+                gap: '6px',
+                background: 'rgba(255, 255, 255, 0.04)',
+                border: '1px solid rgba(255, 255, 255, 0.08)',
+                padding: '4px 14px',
+                borderRadius: '16px',
+                letterSpacing: '0.2px'
+              }}>
+                <span style={{
+                  width: '6px',
+                  height: '6px',
+                  borderRadius: '50%',
+                  backgroundColor: '#38bdf8',
+                  animation: 'pulse 1s infinite',
+                }} />
+                Processing…
               </span>
-            </div>
-
-            {/* Visual execution phase milestones */}
-            <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginTop: '4px', background: '#0d0d0d', border: '1px solid #262626', borderRadius: '24px', padding: '6px 16px' }}>
-              <div style={{ display: 'flex', alignItems: 'center', gap: '6px', fontSize: '11px', color: '#10b981', fontWeight: 600 }}>
-                <span style={{ width: '6px', height: '6px', borderRadius: '50%', background: '#10b981' }} />
-                Queue Dispatched
-              </div>
-              <span style={{ color: '#444' }}>→</span>
-              <div style={{ display: 'flex', alignItems: 'center', gap: '6px', fontSize: '11px', color: '#38bdf8', fontWeight: 600 }}>
-                <span style={{ width: '6px', height: '6px', borderRadius: '50%', background: '#38bdf8', animation: 'pulse 1.2s infinite' }} />
-                Sandbox Active
-              </div>
-              <span style={{ color: '#444' }}>→</span>
-              <div style={{ display: 'flex', alignItems: 'center', gap: '6px', fontSize: '11px', color: '#777', fontWeight: 500 }}>
-                <span style={{ width: '6px', height: '6px', borderRadius: '50%', background: '#555' }} />
-                Verifying Results
-              </div>
             </div>
           </div>
         )}

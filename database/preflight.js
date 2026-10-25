@@ -1,5 +1,5 @@
 import "../packages/core/src/config/env.js";
-import sql from "../packages/database/src/client.js";
+import sql, { closeDatabase } from "../packages/database/src/client.js";
 import { loadMigrations } from "../packages/database/src/migrations.js";
 const required = {
   users: ["id", "role", "status", "session_token", "extra_info"],
@@ -79,4 +79,6 @@ try {
     }),
   );
   process.exitCode = 1;
+} finally {
+  await closeDatabase();
 }

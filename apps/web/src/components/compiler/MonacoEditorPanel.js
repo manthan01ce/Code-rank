@@ -20,9 +20,11 @@ export default function MonacoEditorPanel({
   theme,
   minimap,
   wordWrap,
+  saveStatus,
+  isSaving,
 }) {
   const langConfig = LANGUAGES[selectedLang];
-  const clipboardRestricted = activeProblem?.clipboardRestricted === true;
+  const clipboardRestricted = activeProblem?.clipboardRestricted === true || activeProblem?.isPractical === true;
   const onRunRef = useRef(onRun);
   const onSubmitRef = useRef(onSubmit);
   const editorContainerRef = useRef(null);
@@ -79,6 +81,14 @@ export default function MonacoEditorPanel({
         e.stopPropagation();
       }, true);
       domNode.addEventListener('cut', (e) => {
+        e.preventDefault();
+        e.stopPropagation();
+      }, true);
+      domNode.addEventListener('drop', (e) => {
+        e.preventDefault();
+        e.stopPropagation();
+      }, true);
+      domNode.addEventListener('dragover', (e) => {
         e.preventDefault();
         e.stopPropagation();
       }, true);
@@ -161,7 +171,48 @@ export default function MonacoEditorPanel({
             </span>
           )}
         </div>
-        <div style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+          {/* Small subtle autosave indicator beside reload button */}
+          <div
+            id="autosave-status"
+            style={{
+              display: 'flex',
+              alignItems: 'center',
+              gap: '4px',
+              fontSize: '11px',
+              fontWeight: 500,
+              color: isSaving ? '#38bdf8' : saveStatus === 'saved' ? '#10b981' : saveStatus === 'error' ? '#ef4444' : '#64748b',
+              userSelect: 'none',
+              paddingRight: '6px',
+              borderRight: '1px solid #262626',
+              letterSpacing: '0.2px',
+              transition: 'color 0.2s ease',
+            }}
+            title="Autosave is active. Changes are automatically saved as you code."
+          >
+            {isSaving ? (
+              <>
+                <span style={{ width: '8px', height: '8px', border: '1.5px solid #38bdf8', borderTopColor: 'transparent', borderRadius: '50%', display: 'inline-block', animation: 'spin 0.8s linear infinite' }} />
+                <span style={{ color: '#94a3b8' }}>Saving…</span>
+              </>
+            ) : saveStatus === 'saved' ? (
+              <>
+                <span style={{ color: '#10b981', fontSize: '11px', fontWeight: 700 }}>✓</span>
+                <span>Saved</span>
+              </>
+            ) : saveStatus === 'error' ? (
+              <>
+                <span style={{ color: '#ef4444', fontSize: '11px', fontWeight: 700 }}>✕</span>
+                <span style={{ color: '#ef4444' }}>Save failed</span>
+              </>
+            ) : (
+              <>
+                <span style={{ color: '#64748b', fontSize: '11px' }}>✓</span>
+                <span>Saved</span>
+              </>
+            )}
+          </div>
+
           <button style={iconBtnStyle} aria-label="Reset to boilerplate" title="Reset to Boilerplate" onClick={handleReset} disabled={isRunning}
             onMouseEnter={e => e.currentTarget.style.color = '#ffffff'}
             onMouseLeave={e => e.currentTarget.style.color = '#7e7e7e'}

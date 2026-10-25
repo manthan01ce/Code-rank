@@ -19,7 +19,7 @@ import ProblemPanel from './ProblemPanel';
 import MonacoEditorPanel from './MonacoEditorPanel';
 import ConsolePanel from './ConsolePanel';
 import ConfirmAction from './ConfirmAction';
-import { Play, ChevronRight, Settings, User, List, Save } from 'lucide-react';
+import { Play, ChevronRight, Settings, User, List } from 'lucide-react';
 import { DEFAULT_LANGUAGE, LANGUAGES } from './LanguageConfig';
 import { STATIC_PROBLEMS } from '@/lib/problems';
 import { useSocket } from '@/hooks/useSocket';
@@ -539,6 +539,19 @@ export default function WorkspaceLayout({ problem }) {
     return () => { window.removeEventListener('pagehide', save); };
   }, [codeByLang, selectedLang, resolvedProblem.id, hasUnsavedChanges]);
 
+  // Autosave after user pauses typing (debounced by 2000ms - non-intrusive)
+  const autoSaveTimerRef = useRef(null);
+  useEffect(() => {
+    if (!hasUnsavedChanges || isSavingCode) return;
+    if (autoSaveTimerRef.current) clearTimeout(autoSaveTimerRef.current);
+    autoSaveTimerRef.current = setTimeout(() => {
+      handleSaveCodeToDB();
+    }, 2000);
+    return () => {
+      if (autoSaveTimerRef.current) clearTimeout(autoSaveTimerRef.current);
+    };
+  }, [codeByLang, selectedLang, hasUnsavedChanges, isSavingCode]);
+
   async function handleSaveCodeToDB(snapshot, signal) {
     // Button events are not snapshots.
     const draft = snapshot?.code !== undefined ? snapshot : {
@@ -547,6 +560,7 @@ export default function WorkspaceLayout({ problem }) {
     };
     if (!draft.code?.trim()) return;
     setIsSavingCode(true);
+    setSaveStatus('saving');
     const cacheKey = `workspace_${draft.problemId}_${draft.language}`;
     let localSaved = false;
     try {
@@ -569,12 +583,16 @@ export default function WorkspaceLayout({ problem }) {
       if (draft.version === draftVersion.current) {
         localStorage.removeItem(`${cacheKey}_pending`);
         setHasUnsavedChanges(false);
+        setSaveStatus('saved');
         setDraftStatus(`Synced at ${new Date().toLocaleTimeString()}`);
+        if (saveStatusTimerRef.current) clearTimeout(saveStatusTimerRef.current);
+        saveStatusTimerRef.current = setTimeout(() => setSaveStatus('idle'), 3000);
       }
     } catch (error) {
       if (signal?.aborted) return;
-      setDraftStatus(localSaved ? 'Saved on this device · sync failed; use Save to retry' : `Save failed: ${error.message}`);
-      if (!localSaved) throw error;
+      setSaveStatus('error');
+      setDraftStatus(localSaved ? 'Saved on this device · sync failed' : `Save failed: ${error.message}`);
+      if (!localSaved && !snapshot) throw error;
     } finally { if (!signal?.aborted) setIsSavingCode(false); }
   }
 
@@ -594,9 +612,14 @@ export default function WorkspaceLayout({ problem }) {
     setActionMode(mode); setWorkspaceTab('results'); setJudgeState('loading'); setConsoleOpen(true); setOutput(null);
     setIsRunning(mode === 'run'); setIsSubmitting(mode === 'submit');
     try {
-      await handleSaveCodeToDB(snapshot, signal);
-      if (signal.aborted) return;
-      lifecycle.update(action, 'Sending');
+      // Immediately cache locally and trigger background DB save without blocking or flashing "Saving"
+      try {
+        const cacheKey = `workspace_${snapshot.problemId}_${snapshot.language}`;
+        localStorage.setItem(cacheKey, snapshot.code);
+        localStorage.setItem(`${cacheKey}_timestamp`, new Date().toISOString());
+      } catch {}
+      handleSaveCodeToDB(snapshot).catch(() => {});
+
       const token = localStorage.getItem('token');
       const res = await boundedFetch(mode === 'run' ? `/api/${snapshot.language}-run` : '/api/submit', {
         method: 'POST', signal,
@@ -607,7 +630,6 @@ export default function WorkspaceLayout({ problem }) {
       try { data = await res.json(); } catch { throw new Error(`Invalid server response (${res.status}). Your draft is preserved.`); }
       if (!res.ok) throw new Error(responseError(res, data));
       if (data.jobId) {
-        lifecycle.update(action, 'Queued');
         setSubmitPhase(mode === 'submit' ? 'judging' : null);
         data = await waitForJob(data.jobId, { token, signal,
           onPhase: phase => lifecycle.update(action, phase) });
@@ -677,7 +699,7 @@ export default function WorkspaceLayout({ problem }) {
                     code={codeByLang[selectedLang] || ''}
                     onCodeChange={handleCodeChange}
                     onReset={handleResetCode}
-                    isRunning={isRunning || isSubmitting || isSavingCode}
+                    isRunning={isRunning || isSubmitting}
                     activeProblem={resolvedProblem}
                     onRun={handleRun}
                     onSubmit={handleSubmit}
@@ -686,6 +708,8 @@ export default function WorkspaceLayout({ problem }) {
                     theme={editorTheme}
                     wordWrap={editorWordWrap}
                     minimap={editorMinimap}
+                    saveStatus={saveStatus}
+                    isSaving={isSavingCode}
                   />);
   const consolePanel = (<ConsolePanel
                         output={output}
@@ -944,76 +968,13 @@ export default function WorkspaceLayout({ problem }) {
             }}
           >
             {isRunning ? (
-              <span style={{ width: '12px', height: '12px', border: '2px solid #0066b1', borderTopColor: 'transparent', borderRadius: '50%', display: 'inline-block', animation: 'spin 0.8s linear infinite' }} />
+              <span style={{ width: '12px', height: '12px', border: '2px solid #ffffff', borderTopColor: 'transparent', borderRadius: '50%', display: 'inline-block', animation: 'spin 0.8s linear infinite' }} />
             ) : (
               <Play size={13} />
             )}
-            {isRunning ? `${lifecycle.phase}…` : 'Run'}
+            {isRunning ? 'Running…' : 'Run'}
             {!isRunning && <span style={{ opacity: 0.6, marginLeft: '4px', fontSize: '10px', textTransform: 'none', fontWeight: 500 }}>Ctrl+↵</span>}
           </button>
-
-          <button suppressHydrationWarning
-            id="btn-save-code"
-            onClick={() => handleSaveCodeToDB().catch(error => setDraftStatus(error.message))}
-            disabled={isSavingCode || isRunning || isSubmitting}
-            title="Save code to database (Ctrl+S)"
-            style={{
-              background: 'transparent',
-              border: `1px solid ${saveStatus === 'error' ? '#ef4444' : saveStatus === 'saved' ? '#22c55e' : '#3c3c3c'}`,
-              color: saveStatus === 'error' ? '#ef4444' : saveStatus === 'saved' ? '#22c55e' : '#ffffff',
-              fontSize: '11px',
-              fontWeight: 700,
-              letterSpacing: '1.5px',
-              textTransform: 'uppercase',
-              padding: '0 24px',
-              height: '40px',
-              cursor: (isSavingCode || isRunning || isSubmitting) ? 'not-allowed' : 'pointer',
-              display: 'flex',
-              alignItems: 'center',
-              gap: '8px',
-              transition: 'border-color 0.3s, color 0.3s',
-            }}
-            onMouseEnter={e => { if(!isSavingCode && !isRunning && !isSubmitting) e.currentTarget.style.background = '#1a1a1a' }}
-            onMouseLeave={e => { e.currentTarget.style.background = 'transparent' }}
-          >
-            {isSavingCode ? (
-              <span style={{ width: '12px', height: '12px', border: '2px solid #7e7e7e', borderTopColor: 'transparent', borderRadius: '50%', display: 'inline-block', animation: 'spin 0.8s linear infinite' }} />
-            ) : (
-              <Save size={13} />
-            )}
-            {isSavingCode ? 'Saving…' : 'Save'}
-          </button>
-          {/* Save status pill */}
-          {saveStatus !== 'idle' && !isSavingCode && (
-            <span style={{
-              fontSize: '10px',
-              fontWeight: 600,
-              padding: '3px 10px',
-              borderRadius: '12px',
-              background: saveStatus === 'saved' ? 'rgba(34,197,94,0.12)' : saveStatus === 'error' ? 'rgba(239,68,68,0.12)' : 'rgba(255,255,255,0.06)',
-              color: saveStatus === 'saved' ? '#22c55e' : saveStatus === 'error' ? '#ef4444' : '#aaa',
-              border: `1px solid ${saveStatus === 'saved' ? 'rgba(34,197,94,0.3)' : saveStatus === 'error' ? 'rgba(239,68,68,0.3)' : 'rgba(255,255,255,0.1)'}`,
-              whiteSpace: 'nowrap',
-              letterSpacing: '0.3px',
-              transition: 'opacity 0.3s',
-            }}>
-              {saveStatus === 'saved' ? '✓ All changes saved' : saveStatus === 'error' ? '✕ Save failed' : 'Saving…'}
-            </span>
-          )}
-          {hasUnsavedChanges && saveStatus === 'idle' && (
-            <span style={{
-              fontSize: '10px',
-              fontWeight: 600,
-              padding: '3px 10px',
-              borderRadius: '12px',
-              background: 'rgba(251,191,36,0.1)',
-              color: '#fbbf24',
-              border: '1px solid rgba(251,191,36,0.25)',
-              whiteSpace: 'nowrap',
-            }}>
-              ● Unsaved
-            </span>
-          )}
 
           <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
             <button suppressHydrationWarning
@@ -1041,7 +1002,7 @@ export default function WorkspaceLayout({ problem }) {
               {isSubmitting ? (
                 <span style={{ width: '12px', height: '12px', border: '2px solid #ffffff', borderTopColor: 'transparent', borderRadius: '50%', display: 'inline-block', animation: 'spin 0.8s linear infinite' }} />
               ) : null}
-              {isSubmitting ? `${lifecycle.phase}…` : 'Submit'}
+              {isSubmitting ? 'Submitting…' : 'Submit'}
               {!isSubmitting && <span style={{ opacity: 0.7, marginLeft: '4px', fontSize: '10px', textTransform: 'none', fontWeight: 500 }}>Ctrl+⇧+↵</span>}
             </button>
 
