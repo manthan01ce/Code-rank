@@ -1,9 +1,11 @@
 'use client';
 
-import { useEffect, useState, useCallback } from 'react';
+import { useEffect, useState, useCallback, useRef } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import Link from 'next/link';
+import Image from 'next/image';
 import styles from './profile.module.css';
+import AdminProfileOverview from './AdminProfileOverview';
 
 /* ── helpers ───────────────────────────────── */
 function getInitials(name) {
@@ -39,10 +41,6 @@ function sortTasks(tasks) {
 /* ── Edit Modal ─────────────────────────────── */
 function EditModal({ user, onClose, onSave }) {
   const [name, setName] = useState(user.name || '');
-  // Faculty/Admin fields
-  const [empId, setEmpId] = useState(user.extra_info?.employee_id || '');
-  const [dept, setDept] = useState(user.extra_info?.department || '');
-  
   // Password fields
   const [currentPassword, setCurrentPassword] = useState('');
   const [newPassword, setNewPassword] = useState('');
@@ -51,7 +49,12 @@ function EditModal({ user, onClose, onSave }) {
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState('');
 
+  const dialog = useRef(null);
+  useEffect(() => { dialog.current?.showModal(); }, []);
+
   const handleSave = async () => {
+    if (saving) return;
+    if (!name.trim() || name.length > 300) { setError('Enter a name of 1–300 characters.'); return; }
     if (newPassword && newPassword !== confirmPassword) {
       setError('New passwords do not match');
       return;
@@ -61,14 +64,7 @@ function EditModal({ user, onClose, onSave }) {
     setError('');
     try {
       const token = localStorage.getItem('token');
-      const handle = user.email.split('@')[0];
-      
-      let extraInfoUpdate = { ...user.extra_info };
-      if (user.role === 'faculty' || user.role === 'admin') {
-        extraInfoUpdate.employee_id = empId;
-        extraInfoUpdate.department = dept;
-      }
-      
+
       const res = await fetch('/api/auth/profile', {
         method: 'PUT',
         headers: {
@@ -76,8 +72,7 @@ function EditModal({ user, onClose, onSave }) {
           Authorization: `Bearer ${token}`,
         },
         body: JSON.stringify({
-          name,
-          extra_info: extraInfoUpdate,
+          name: name.trim(),
           currentPassword: currentPassword || undefined,
           newPassword: newPassword || undefined
         }),
@@ -101,13 +96,12 @@ function EditModal({ user, onClose, onSave }) {
       try {
         const stored = JSON.parse(localStorage.getItem('user') || '{}');
         if (stored && typeof stored === 'object') {
-          stored.name = name;
-          stored.extra_info = extraInfoUpdate;
+          stored.name = name.trim();
           localStorage.setItem('user', JSON.stringify(stored));
         }
       } catch {}
 
-      onSave({ name, extra_info: extraInfoUpdate });
+      onSave({ name: name.trim() });
       onClose();
     } catch (e) {
       setError(e.message);
@@ -117,54 +111,41 @@ function EditModal({ user, onClose, onSave }) {
   };
 
   return (
-    <div className={styles.modalOverlay} onClick={onClose}>
+    <dialog ref={dialog} className={styles.editDialog} aria-labelledby="edit-profile-title" onCancel={event => { if (saving) event.preventDefault(); else onClose(); }}>
       <div className={styles.modal} onClick={(e) => e.stopPropagation()}>
         <div className={styles.modalHeader}>
-          <h3>Edit Profile</h3>
-          <button className={styles.modalClose} onClick={onClose}>✕</button>
+          <h3 id="edit-profile-title">Edit Profile</h3>
+          <button className={styles.modalClose} aria-label="Close edit profile" disabled={saving} onClick={onClose}>✕</button>
         </div>
 
-        {error && <div className={styles.modalError}>{error}</div>}
+        {error && <div role="alert" className={styles.modalError}>{error}</div>}
 
         <div className={styles.formGroup}>
-          <label>Full Name</label>
-          <input value={name} onChange={(e) => setName(e.target.value)} />
+          <label htmlFor="profile-name">Full Name</label>
+          <input id="profile-name" maxLength={300} autoComplete="name" value={name} onChange={(e) => setName(e.target.value)} />
         </div>
-        
-        {(user.role === 'faculty' || user.role === 'admin') && (
-          <>
-            <div className={styles.formGroup}>
-              <label>Employee ID</label>
-              <input value={empId} onChange={(e) => setEmpId(e.target.value)} />
-            </div>
-            <div className={styles.formGroup}>
-              <label>Department</label>
-              <input value={dept} onChange={(e) => setDept(e.target.value)} />
-            </div>
-          </>
-        )}
 
         <div className={styles.formGroup}>
-          <label>Current Password (Required for changes)</label>
-          <input type="password" value={currentPassword} onChange={(e) => setCurrentPassword(e.target.value)} placeholder="Enter current password..." />
+          <label htmlFor="profile-current-password">Current Password (required only to change password)</label>
+          <input id="profile-current-password" autoComplete="current-password" type="password" value={currentPassword} onChange={(e) => setCurrentPassword(e.target.value)} placeholder="Enter current password..." />
         </div>
         <div className={styles.formGroup}>
-          <label>New Password</label>
-          <input type="password" value={newPassword} onChange={(e) => setNewPassword(e.target.value)} placeholder="Enter new password..." />
+          <label htmlFor="profile-new-password">New Password</label>
+          <input id="profile-new-password" autoComplete="new-password" type="password" value={newPassword} onChange={(e) => setNewPassword(e.target.value)} placeholder="Enter new password..." />
         </div>
         <div className={styles.formGroup}>
-          <label>Confirm New Password</label>
-          <input type="password" value={confirmPassword} onChange={(e) => setConfirmPassword(e.target.value)} placeholder="Confirm new password..." />
+          <label htmlFor="profile-confirm-password">Confirm New Password</label>
+          <input id="profile-confirm-password" autoComplete="new-password" type="password" value={confirmPassword} onChange={(e) => setConfirmPassword(e.target.value)} placeholder="Confirm new password..." />
         </div>
 
         <div className={styles.modalFooter}>
-          <button className={styles.btnCancel} onClick={onClose}>Cancel</button>
+          <button className={styles.btnCancel} disabled={saving} onClick={onClose}>Cancel</button>
           <button className={styles.btnSave} onClick={handleSave} disabled={saving}>
             {saving ? 'Saving…' : 'Save Changes'}
           </button>
         </div>
       </div>
-    </div>
+    </dialog>
   );
 }
 
@@ -179,45 +160,42 @@ export default function ProfilePage() {
   const [showEdit, setShowEdit] = useState(false);
   const [error, setError] = useState('');
 
-  const fetchProfile = useCallback(async () => {
-    setLoading(true);
-    setError('');
-    try {
-      const token = localStorage.getItem('token');
-      if (!token) { router.push('/'); return; }
-
-      const res = await fetch(`/api/profile/${username}`, {
-        headers: { Authorization: `Bearer ${token}` },
-      });
-
-      if (res.status === 401) { router.push('/'); return; }
-      if (!res.ok) {
-        const d = await res.json();
-        throw new Error(d.error || 'Failed to load profile');
-      }
-
+  const fetchProfile = useCallback(async (signal) => {
+    const token = localStorage.getItem('token');
+    if (!token) { router.replace('/login'); return null; }
+    const res = await fetch(`/api/profile/${encodeURIComponent(username)}`, {
+      headers: { Authorization: `Bearer ${token}` }, cache: 'no-store', signal,
+    });
+    if (res.status === 401) { router.replace('/login'); return null; }
+    if (!res.ok) {
       const data = await res.json();
-      setProfileData(data);
-
-      // Check ownership
-      const localUser = localStorage.getItem('user');
-      if (localUser) {
-        const parsed = JSON.parse(localUser);
-        const handle = parsed.email ? parsed.email.split('@')[0] : '';
-        setIsOwnProfile(handle === username);
-      }
-    } catch (e) {
-      setError(e.message);
-    } finally {
-      setLoading(false);
+      throw new Error(data.error || 'Failed to load profile');
     }
+    const data = await res.json();
+    const ownResponse = await fetch('/api/auth/profile', {
+      headers: { Authorization: `Bearer ${token}` }, cache: 'no-store', signal,
+    });
+    if (ownResponse.status === 401) { router.replace('/login'); return null; }
+    if (!ownResponse.ok) throw new Error('Unable to verify profile ownership. Please try again.');
+    const { user: ownUser } = await ownResponse.json();
+    const ownsProfile = String(ownUser.id) === String(data.user.id);
+    return { ownsProfile, profile: { ...data, user: ownsProfile ? { ...data.user, ...ownUser } : data.user } };
   }, [username, router]);
 
   useEffect(() => {
-    const userData = localStorage.getItem('user');
-    if (!userData) { router.push('/'); return; }
-    fetchProfile();
-  }, [fetchProfile, router]);
+    const controller = new AbortController();
+    fetchProfile(controller.signal).then(result => {
+      if (controller.signal.aborted || !result) return;
+      setIsOwnProfile(result.ownsProfile);
+      setProfileData(result.profile);
+      setError('');
+    }).catch(err => {
+      if (!controller.signal.aborted) setError(err.message || 'Unable to load profile');
+    }).finally(() => {
+      if (!controller.signal.aborted) setLoading(false);
+    });
+    return () => controller.abort();
+  }, [fetchProfile]);
 
   const handleSave = (updated) => {
     setProfileData((prev) => ({
@@ -232,7 +210,7 @@ export default function ProfilePage() {
     }
   };
 
-  if (loading) {
+  if (loading || (!profileData && !error)) {
     return (
       <div className={styles.loadingWrap}>
         <div className={styles.spinner} />
@@ -261,7 +239,7 @@ export default function ProfilePage() {
   const rollNumber = user.extra_info?.roll_number || '—';
   const division = user.extra_info?.division || '—';
   const semester = user.extra_info?.semester || '—';
-  
+
   // Faculty/Admin specific data
   const empId      = user.extra_info?.employee_id || '—';
   const department = user.extra_info?.department  || '—';
@@ -287,7 +265,7 @@ export default function ProfilePage() {
           <div className={styles.identityMain}>
             <div className={styles.avatarWrap}>
               {user.avatar_url ? (
-                <img src={user.avatar_url} alt={user.name} className={styles.avatarImage} />
+                <Image src={user.avatar_url} alt={user.name || 'Profile avatar'} width={120} height={120} unoptimized className={styles.avatarImage} />
               ) : (
                 <span>{initials}</span>
               )}
@@ -303,7 +281,7 @@ export default function ProfilePage() {
                   {user.role === 'admin' ? '🛡 Admin' : user.role === 'student' ? '🧑‍🎓 Student' : '🎓 Faculty'}
                 </span>
                 <span className={`${styles.badge} ${isActive ? styles.badgeActive : styles.badgeInactive}`}>
-                  {isActive ? '✔ Active' : '✖ Inactive'}
+                  {isActive ? '✔ Active' : user.status === 'inactive' ? '✖ Inactive' : 'Status unavailable'}
                 </span>
               </div>
             </div>
@@ -339,7 +317,7 @@ export default function ProfilePage() {
                 <span className={styles.metaLabel}>EMAIL</span>
                 <span className={styles.metaValue}>
                   {user.email}
-                  <span className={styles.verifiedIcon} title="College Email">✔</span>
+
                 </span>
               </div>
             </div>
@@ -353,7 +331,8 @@ export default function ProfilePage() {
         </div>
 
         {/* ── 2. Practicals Tracker (own profile only) ── */}
-        {isOwnProfile && (
+        {isOwnProfile && user.role === 'admin' && <AdminProfileOverview onEdit={() => setShowEdit(true)} />}
+        {isOwnProfile && user.role !== 'admin' && (
           <div className={styles.trackerSection}>
             <div className={styles.trackerHeader}>
               <h2>Problems / Practicals Tracker</h2>

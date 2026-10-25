@@ -139,7 +139,7 @@ export class UserService {
     if (!record || record.status !== 'active' || record.role !== user.role || (record.session_token ?? null) !== (user.session_token ?? null)) {
       throw { status: 401, message: "Session expired" };
     }
-    const { session_token, status, ...profile } = record;
+    const { session_token, ...profile } = record;
     return profile;
   }
 
