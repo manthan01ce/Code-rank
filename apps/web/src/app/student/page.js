@@ -1,4 +1,5 @@
 'use client';
+import { useAccountIdentity } from '@/hooks/useAccountIdentity';
 import { StudentThemeToggle } from '@/components/student/StudentTheme';
 import { usePracticalPage } from '@/hooks/usePracticalPage';
 import { fetchCollection } from '@/lib/fetch-collection';
@@ -12,6 +13,7 @@ import { usePolling } from '@/hooks/usePolling';
 
 export default function StudentDashboard() {
   const router = useRouter();
+  const currentIdentity = useAccountIdentity();
   const socket = useSocket();
   const [user, setUser] = useState(null);
   const [profile, setProfile] = useState(null);
@@ -98,11 +100,13 @@ export default function StudentDashboard() {
       fetchStudentPracticals();
     };
 
+    socket.on('new_submission_marks', handleSocketUpdate);
     socket.on('practical_added', handleSocketUpdate);
     socket.on('practical_updated', handleSocketUpdate);
     socket.on('practical_deleted', handleSocketUpdate);
 
     return () => {
+      socket.off('new_submission_marks', handleSocketUpdate);
       socket.off('practical_added', handleSocketUpdate);
       socket.off('practical_updated', handleSocketUpdate);
       socket.off('practical_deleted', handleSocketUpdate);
@@ -184,7 +188,7 @@ export default function StudentDashboard() {
         </div>
         <div style={{ display: 'flex', alignItems: 'center', gap: '20px' }}>
           <div style={{ textAlign: 'right' }}>
-            <div style={{ fontSize: '14px', fontWeight: 600, color: 'var(--student-ui-text-1e293b, #1e293b)' }}>{user.name}</div>
+            <div style={{ fontSize: '14px', fontWeight: 600, color: 'var(--student-ui-text-1e293b, #1e293b)' }}>{currentIdentity?.name || user.name}</div>
             <div style={{ fontSize: '12px', color: 'var(--student-ui-text-64748b, #64748b)' }}>{[semester && `Semester ${semester}`, batch && `Batch ${batch}`].filter(Boolean).join(' · ') || 'Student workspace'}</div>
           </div>
           <StudentThemeToggle />
@@ -219,9 +223,8 @@ export default function StudentDashboard() {
         </div>
 
         <nav aria-label="Dashboard practical pages">
-          <button disabled={practicalPage.loading || !practicalPage.cursor} onClick={practicalPage.first}>First practical page</button>{' '}
-          <button disabled={practicalPage.loading || !practicalPage.next} onClick={practicalPage.nextPage}>Next practical page</button>
-          <p>Showing up to 25 practicals across your subjects on this page.</p>
+          <button disabled={practicalPage.loading || !practicalPage.cursor} onClick={practicalPage.first}>First page</button>{' '}
+          <button disabled={practicalPage.loading || !practicalPage.next} onClick={practicalPage.nextPage}>Next page</button>
           {practicalPage.error && <p role="alert">{practicalPage.error}</p>}
         </nav>
         {courses.length > 0 ? (

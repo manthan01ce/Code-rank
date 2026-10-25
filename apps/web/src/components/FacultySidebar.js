@@ -1,23 +1,20 @@
 'use client';
 
-import { useState, useSyncExternalStore } from 'react';
+import { useState } from 'react';
 import Link from 'next/link';
+import { useAccountIdentity } from '@/hooks/useAccountIdentity';
 import Image from 'next/image';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { IconLayoutDashboard, IconInbox, IconChartBar, IconUser, IconKey, IconLogout } from '@tabler/icons-react';
 import ChangePasswordModal from './ChangePasswordModal';
 import LogoutConfirmModal from './LogoutConfirmModal';
 
-function subscribe(callback) { window.addEventListener('storage', callback); return () => window.removeEventListener('storage', callback); }
-function snapshot() { try { return localStorage.getItem('user'); } catch { return null; } }
 const links = [['Dashboard', '/faculty?tab=practicals', IconLayoutDashboard], ['Student submissions', '/faculty?tab=submissions', IconInbox], ['Marks overview', '/faculty?tab=marks', IconChartBar]];
 export default function FacultySidebar() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const tab = searchParams.get('tab') || 'practicals';
-  const stored = useSyncExternalStore(subscribe, snapshot, () => null);
-  let user = null;
-  try { user = JSON.parse(stored); } catch { /* The workspace auth gate handles invalid sessions. */ }
+  const user = useAccountIdentity();
   const [passwordOpen, setPasswordOpen] = useState(false);
   const [logoutOpen, setLogoutOpen] = useState(false);
   const [menuOpen, setMenuOpen] = useState(false);

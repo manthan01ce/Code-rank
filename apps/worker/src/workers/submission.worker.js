@@ -1,5 +1,6 @@
 import { createServiceToken } from '@coderank/core/security/service-token';
 import { publicResult } from '@coderank/core/security/execution';
+import sql from '@coderank/core/db';
 import { Worker } from 'bullmq';
 import { io } from 'socket.io-client';
 import { jobLifetime } from '@coderank/runner/sandbox';
@@ -66,8 +67,15 @@ export function createSubmissionWorker() {
     lockDuration: JOB_TIMEOUT + 5000,
   });
 
-  worker.on('completed', (job, result) => {
+  worker.on('completed', async (job, result) => {
     socket.emit('worker_job_complete', { jobId: job.id, result: publicResult(result) });
+    if (result?.submissionId) {
+      try {
+        const [saved] = await sql`SELECT ps.practical_id, p.course_id FROM practical_submissions ps
+          JOIN practicals p ON p.id=ps.practical_id WHERE ps.id=${result.submissionId} AND ps.student_id=${job.data.userId}`;
+        if (saved) socket.emit('worker_submission_saved', { practicalId: saved.practical_id, courseId: saved.course_id });
+      } catch (error) { console.error('Submission refresh notification failed', error.code || 'unavailable'); }
+    }
     if (verboseLogs) console.log(`[SubmissionWorker] Job ${job.id} completed. Duration: ${job.finishedOn - job.processedOn}ms`);
   });
 

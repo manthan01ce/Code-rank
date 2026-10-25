@@ -5,6 +5,9 @@ import { useParams, useRouter } from 'next/navigation';
 import Link from 'next/link';
 import Image from 'next/image';
 import styles from './profile.module.css';
+import { profilePracticals } from '@/lib/progress-updates';
+import { useProgressRefresh } from '@/hooks/useProgressRefresh';
+import { usePolling } from '@/hooks/usePolling';
 import AdminProfileOverview from './AdminProfileOverview';
 
 /* ── helpers ───────────────────────────────── */
@@ -20,10 +23,10 @@ function getInitials(name) {
 
 function statusLabel(s) {
   switch (s) {
-    case 'done':        return 'Done';
+    case 'done':        return 'Solved';
     case 'past_due':   return 'Past Due';
     case 'upcoming':   return 'Due Soon';
-    default:           return 'Not Started';
+    default:           return 'Unsolved';
   }
 }
 
@@ -98,6 +101,7 @@ function EditModal({ user, onClose, onSave }) {
         if (stored && typeof stored === 'object') {
           stored.name = name.trim();
           localStorage.setItem('user', JSON.stringify(stored));
+          window.dispatchEvent(new Event('coderank:account'));
         }
       } catch {}
 
@@ -159,6 +163,10 @@ export default function ProfilePage() {
   const [loading, setLoading] = useState(true);
   const [showEdit, setShowEdit] = useState(false);
   const [error, setError] = useState('');
+  const [revision, setRevision] = useState(0);
+  const refresh = useCallback(() => setRevision(value => value + 1), []);
+  useProgressRefresh(refresh);
+  usePolling(refresh, 10000, true);
 
   const fetchProfile = useCallback(async (signal) => {
     const token = localStorage.getItem('token');
@@ -179,7 +187,7 @@ export default function ProfilePage() {
     if (!ownResponse.ok) throw new Error('Unable to verify profile ownership. Please try again.');
     const { user: ownUser } = await ownResponse.json();
     const ownsProfile = String(ownUser.id) === String(data.user.id);
-    return { ownsProfile, profile: { ...data, user: ownsProfile ? { ...data.user, ...ownUser } : data.user } };
+    return { ownsProfile, profile: { ...data, practicals: profilePracticals(data.submissions), user: ownsProfile ? { ...data.user, ...ownUser } : data.user } };
   }, [username, router]);
 
   useEffect(() => {
@@ -195,7 +203,7 @@ export default function ProfilePage() {
       if (!controller.signal.aborted) setLoading(false);
     });
     return () => controller.abort();
-  }, [fetchProfile]);
+  }, [fetchProfile, revision]);
 
   const handleSave = (updated) => {
     setProfileData((prev) => ({
@@ -246,8 +254,6 @@ export default function ProfilePage() {
 
   const sortedTasks   = sortTasks(practicals);
   const completedCount = practicals.filter((t) => t.status === 'done').length;
-  const pastDueCount   = practicals.filter((t) => t.status === 'past_due').length;
-  const upcomingCount  = practicals.filter((t) => t.status === 'upcoming').length;
 
   const isActive = user.status === 'active';
 
@@ -335,16 +341,16 @@ export default function ProfilePage() {
         {isOwnProfile && user.role !== 'admin' && (
           <div className={styles.trackerSection}>
             <div className={styles.trackerHeader}>
-              <h2>Problems / Practicals Tracker</h2>
+              <h2>Practical progress</h2>
               <div className={styles.summaryChips}>
                 <span className={`${styles.summaryChip} ${styles.chipCompleted}`}>
-                  {completedCount} Completed
+                  {completedCount} Solved
                 </span>
                 <span className={`${styles.summaryChip} ${styles.chipPastDue}`}>
-                  {pastDueCount} Past due
+                  {practicals.length - completedCount} Unsolved
                 </span>
                 <span className={`${styles.summaryChip} ${styles.chipUpcoming}`}>
-                  {upcomingCount} Upcoming
+                  {practicals.length} Attempted
                 </span>
               </div>
             </div>
@@ -353,11 +359,11 @@ export default function ProfilePage() {
               <div className={styles.trackerListHeader}>
                 <div className={styles.headerName}>Problem/Practical Name</div>
                 <div className={styles.headerCourse}>Course</div>
-                <div className={styles.headerDate}>Due Date</div>
+                <div className={styles.headerDate}>Submitted</div>
                 <div className={styles.headerStatus}>Status</div>
               </div>
               {sortedTasks.length === 0 ? (
-                <div className={styles.emptyState}>No practicals assigned yet.</div>
+                <div className={styles.emptyState}>No submitted practicals yet. Your progress will appear after you submit a solution.</div>
               ) : (
                 sortedTasks.map((task) => (
                   <Link
@@ -384,7 +390,7 @@ export default function ProfilePage() {
                         styles.statusNotStarted
                       }`}
                     >
-                      {statusLabel(task.status)}
+                      {statusLabel(task.status)}{task.marks !== null && task.marks !== undefined ? ` · ${task.marks}/10` : ''}
                     </div>
                   </Link>
                 ))

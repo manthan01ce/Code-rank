@@ -78,6 +78,12 @@ export function attachRealtime(io, socket, { authorizePractical, authorizeCourse
     if (!service || typeof data?.jobId !== 'string') throw new Error('Service authentication required');
     io.to(`job_${data.jobId}`).emit('job_complete', { ...publicResult(data.result), jobId: data.jobId });
   });
+  handle('worker_submission_saved', async data => {
+    if (!service) throw new Error('Service authentication required');
+    const practicalId = id(data?.practicalId), courseId = id(data?.courseId);
+    io.to(`practical_${practicalId}`).emit('new_submission', { practicalId });
+    io.to(`course_${courseId}`).emit('new_submission_marks', { practicalId, courseId });
+  });
   // Compatibility for trusted API relays. Browser writes use HTTP APIs.
   for (const [event, outbound] of [['faculty_practical_added', 'practical_added'], ['faculty_practical_updated', 'practical_updated'], ['faculty_practical_deleted', 'practical_deleted']]) {
     handle(event, async data => {

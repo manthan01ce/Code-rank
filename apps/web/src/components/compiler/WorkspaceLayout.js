@@ -10,6 +10,7 @@
  * - Settings & Account menu: A User profile dropdown managing profile updates, password changes, preferences, and logout.
  */
 
+import { notifyProgressChanged } from '@/lib/progress-updates';
 import { StudentThemeToggle, useStudentTheme } from '@/components/student/StudentTheme';
 import { usePracticalPage } from '@/hooks/usePracticalPage';
 import { fetchCollection } from '@/lib/fetch-collection';
@@ -272,6 +273,7 @@ export default function WorkspaceLayout({ problem }) {
             userData.name = profileForm.name;
             userData.email = profileForm.email;
             localStorage.setItem('user', JSON.stringify(userData));
+            window.dispatchEvent(new Event('coderank:account'));
           }
         } catch {}
         // Clear password fields
@@ -639,6 +641,7 @@ export default function WorkspaceLayout({ problem }) {
       }
       if (signal.aborted) return;
       setOutput(data); setJudgeState('success');
+      if (mode === 'submit' && data.submissionId) { notifyProgressChanged(); fetchPracticals(); }
       if (mode === 'run') { setLastRunCode(snapshot.code); setHasSuccessfulRun(true); }
       lifecycle.finish(action, 'Done');
     } catch (error) {

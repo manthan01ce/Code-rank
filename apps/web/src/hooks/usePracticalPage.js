@@ -1,4 +1,5 @@
 'use client';
+import { useProgressRefresh } from './useProgressRefresh';
 import { useCallback, useEffect, useState } from 'react';
 
 // Each page/filter change aborts its predecessor; late responses cannot replace
@@ -10,6 +11,7 @@ export function usePracticalPage(courseId = null, enabled = true) {
   const requestKey = JSON.stringify([courseId,cursor,enabled,revision]);
   const [result, setResult] = useState({ key: null, rows: [], next: null, error: '' });
   const refresh = useCallback(() => setRevision(value => value + 1), []);
+  useProgressRefresh(refresh, enabled);
   useEffect(() => {
     if (!enabled) return;
     const controller = new AbortController();

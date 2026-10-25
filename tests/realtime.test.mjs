@@ -45,3 +45,19 @@ test('service credentials cannot be reused as browser/user JWTs', async () => {
   const { verifyToken } = await import('../packages/core/src/utils/auth.js');
   assert.equal(verifyToken(createServiceToken()), null);
 });
+
+test('only trusted service can notify persisted submission changes to scoped rooms', async () => {
+  const browser = fixture();
+  let reply;
+  await browser.handlers.get('worker_submission_saved')({ practicalId: 7, courseId: 2 }, value => { reply = value; });
+  assert.equal(reply.ok, false);
+  assert.deepEqual(browser.sent, []);
+  const service = fixture(true);
+  await service.handlers.get('worker_submission_saved')({ practicalId: 7, courseId: 2 });
+  assert.deepEqual(service.sent, [
+    { room: 'practical_7', event: 'new_submission', value: { practicalId: 7 } },
+    { room: 'course_2', event: 'new_submission_marks', value: { practicalId: 7, courseId: 2 } },
+  ]);
+  await service.handlers.get('worker_submission_saved')({ practicalId: 'invalid', courseId: 2 });
+  assert.equal(service.sent.length, 2);
+});
