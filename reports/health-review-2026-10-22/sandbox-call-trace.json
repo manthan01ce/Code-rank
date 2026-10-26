@@ -1,0 +1,81 @@
+{
+  "method": "Injected Docker transport to count orchestration calls only. No containers run; no real runtime benchmark.",
+  "results": [
+    {
+      "cases": 1,
+      "commands": [
+        "run",
+        "exec",
+        "exec",
+        "exec",
+        "rm"
+      ],
+      "totalDockerCommands": 5
+    },
+    {
+      "cases": 5,
+      "commands": [
+        "run",
+        "exec",
+        "exec",
+        "exec",
+        "exec",
+        "exec",
+        "exec",
+        "exec",
+        "rm"
+      ],
+      "totalDockerCommands": 9
+    },
+    {
+      "cases": 10,
+      "commands": [
+        "run",
+        "exec",
+        "exec",
+        "exec",
+        "exec",
+        "exec",
+        "exec",
+        "exec",
+        "exec",
+        "exec",
+        "exec",
+        "exec",
+        "exec",
+        "rm"
+      ],
+      "totalDockerCommands": 14
+    },
+    {
+      "cases": 20,
+      "commands": [
+        "run",
+        "exec",
+        "exec",
+        "exec",
+        "exec",
+        "exec",
+        "exec",
+        "exec",
+        "exec",
+        "exec",
+        "exec",
+        "exec",
+        "exec",
+        "exec",
+        "exec",
+        "exec",
+        "exec",
+        "exec",
+        "exec",
+        "exec",
+        "exec",
+        "exec",
+        "exec",
+        "rm"
+      ],
+      "totalDockerCommands": 24
+    }
+  ]
+}

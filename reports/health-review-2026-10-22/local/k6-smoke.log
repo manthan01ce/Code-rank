@@ -1,0 +1,128 @@
+
+         /\      Grafana   /‾‾/  
+    /\  /  \     |\  __   /  /   
+   /  \/    \    | |/ /  /   ‾‾\ 
+  /          \   |   (  |  (‾)  |
+ / __________ \  |_|\_\  \_____/ 
+
+     execution: local
+        script: load-tests/smoke-test.js
+        output: -
+
+     scenarios: (100.00%) 1 scenario, 1 max VUs, 37s max duration (incl. graceful stop):
+              * default: Up to 1 looping VUs for 7s over 3 stages (gracefulRampDown: 30s, gracefulStop: 30s)
+
+time="2026-10-22T18:52:25+03:00" level=info msg="🔥 Warming up application caches..." source=console
+
+Run       [ 100% ] setup()
+default   [   0% ]
+
+Run       [ 100% ] setup()
+default   [   0% ]
+
+Run       [ 100% ] setup()
+default   [   0% ]
+
+Run       [ 100% ] setup()
+default   [   0% ]
+
+Run       [ 100% ] setup()
+default   [   0% ]
+
+Run       [ 100% ] setup()
+default   [   0% ]
+
+Run       [ 100% ] setup()
+default   [   0% ]
+
+Run       [ 100% ] setup()
+default   [   0% ]
+
+Run       [ 100% ] setup()
+default   [   0% ]
+time="2026-10-22T18:52:35+03:00" level=info msg="✓ Warmup complete" source=console
+
+running (10.0s), 1/1 VUs, 0 complete and 0 interrupted iterations
+default   [   3% ] 1/1 VUs  0.2s/7.0s
+
+running (11.0s), 1/1 VUs, 0 complete and 0 interrupted iterations
+default   [  17% ] 1/1 VUs  1.2s/7.0s
+
+running (12.0s), 1/1 VUs, 1 complete and 0 interrupted iterations
+default   [  31% ] 1/1 VUs  2.2s/7.0s
+
+running (13.0s), 1/1 VUs, 1 complete and 0 interrupted iterations
+default   [  45% ] 1/1 VUs  3.2s/7.0s
+
+running (14.0s), 1/1 VUs, 2 complete and 0 interrupted iterations
+default   [  60% ] 1/1 VUs  4.2s/7.0s
+
+running (15.0s), 1/1 VUs, 3 complete and 0 interrupted iterations
+default   [  74% ] 1/1 VUs  5.2s/7.0s
+
+running (16.0s), 1/1 VUs, 3 complete and 0 interrupted iterations
+default   [  88% ] 1/1 VUs  6.2s/7.0s
+
+running (17.0s), 1/1 VUs, 4 complete and 0 interrupted iterations
+default ↓ [ 100% ] 1/1 VUs  7s
+
+
+  █ THRESHOLDS 
+
+    http_req_duration
+    ✗ 'p(95)<800' p(95)=1.44s
+
+      {name:HealthCheck}
+      ✗ 'p(95)<500' p(95)=1.27s
+
+      {name:LandingPage}
+      ✓ 'p(95)<1000' p(95)=110.82ms
+
+    http_req_failed
+    ✗ 'rate<0.01' rate=26.08%
+
+
+  █ TOTAL RESULTS 
+
+    checks_total.......: 50     2.889356/s
+    checks_succeeded...: 78.00% 39 out of 50
+    checks_failed......: 22.00% 11 out of 50
+
+    ✗ health status is 200
+      ↳  0% — ✓ 0 / ✗ 5
+    ✗ health response < 500ms
+      ↳  80% — ✓ 4 / ✗ 1
+    ✗ database is healthy
+      ↳  0% — ✓ 0 / ✗ 5
+    ✓ queue service responded
+    ✓ landing page status is 200
+    ✓ landing page loads < 1s
+    ✓ login page status is 200
+    ✓ login page loads < 1s
+    ✓ queue stats status is 200 or 503
+    ✓ queue stats response < 300ms
+
+    HTTP
+    http_req_duration..............: avg=447.27ms min=14.98ms med=47.91ms max=7.58s    p(90)=174.89ms p(95)=1.44s   
+      { expected_response:true }...: avg=504.33ms min=21.79ms med=57.51ms max=7.58s    p(90)=147.93ms p(95)=1.66s   
+      { name:HealthCheck }.........: avg=335.43ms min=14.98ms med=24.65ms max=1.59s    p(90)=964.68ms p(95)=1.27s   
+      { name:LandingPage }.........: avg=68.88ms  min=47.74ms med=57.51ms max=120.97ms p(90)=100.68ms p(95)=110.82ms
+    http_req_failed................: 26.08% 6 out of 23
+    http_reqs......................: 23     1.329104/s
+
+    EXECUTION
+    iteration_duration.............: avg=1.49s    min=1.15s   med=1.2s    max=2.73s    p(90)=2.13s    p(95)=2.43s   
+    iterations.....................: 5      0.288936/s
+    vus............................: 1      min=0       max=1
+    vus_max........................: 1      min=1       max=1
+
+    NETWORK
+    data_received..................: 286 kB 17 kB/s
+    data_sent......................: 1.8 kB 103 B/s
+
+
+
+
+running (17.3s), 0/1 VUs, 5 complete and 0 interrupted iterations
+default ✓ [ 100% ] 0/1 VUs  7s
+time="2026-10-22T18:52:46+03:00" level=error msg="thresholds on metrics 'http_req_duration, http_req_duration{name:HealthCheck}, http_req_failed' have been crossed"

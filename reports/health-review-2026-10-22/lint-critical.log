@@ -1,0 +1,5 @@
+npm warn Unknown env config "http-proxy". This will stop working in the next major version of npm.
+
+> coderank-monorepo@1.1.0 lint:critical
+> eslint --config apps/web/eslint.config.mjs packages/core packages/database packages/queue packages/runner apps/worker scripts apps/web/src/app/api apps/web/src/lib apps/web/server.js apps/web/cluster.js --max-warnings=0 load-tests/capacity.mjs
+
