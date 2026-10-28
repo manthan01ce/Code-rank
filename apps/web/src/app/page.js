@@ -43,7 +43,6 @@ export default function HomePage() {
   const [language, setLanguage] = useState('Python');
   const [role, setRole] = useState('student');
   const [menuOpen, setMenuOpen] = useState(false);
-  const [feature, setFeature] = useState(0);
   const tabs = useRef([]);
   const dashboard = user?.role === 'admin' ? '/admin' : user?.role === 'faculty' ? '/faculty' : '/student';
   const current = roles[role];
@@ -93,40 +92,29 @@ export default function HomePage() {
             Streamlined for university computer science departments. Conduct automated practicals in C, C++, Java, and Python with live socket streaming, instant batch grading, anti-plagiarism guards, and faculty controls.
           </p>
 
-          <div style={{ display: 'flex', gap: '14px', flexWrap: 'wrap' }}>
-            <Link
-              href="/login"
-              style={{
-                display: 'inline-flex',
-                alignItems: 'center',
-                gap: '8px',
-                padding: '13px 26px',
-                backgroundColor: '#4F46E5',
-                color: '#ffffff',
-                borderRadius: '10px',
-                fontSize: '15px',
-                fontWeight: 600,
-                textDecoration: 'none',
-                boxShadow: '0 4px 12px rgba(79, 70, 229, 0.3)',
-                transition: 'transform 0.15s, background 0.2s'
-              }}
-            >
-              Get Started with CodeRank &rarr;
-            </Link>
-
-
+          <div className={styles.actions}>
+            <Link href={user ? dashboard : '/login'} className={styles.primary}>Get Started with CodeRank <span aria-hidden="true">↗</span></Link>
+            <a href="#experience" className={styles.secondary}>Explore the experience <span aria-hidden="true">↓</span></a>
           </div>
+          <p className={styles.heroCaption}><span aria-hidden="true" /> Your next breakthrough starts here.</p>
 
 
         </div>
 
           <div className={styles.studio}>
-            <div className={styles.orbit} aria-hidden="true" />
+            <div className={styles.studioBackdrop} aria-hidden="true"><span /><span /><span /></div>
+            <div className={styles.studioCaption}><span className={styles.dot} /> YOUR IDEAS, IN MOTION <span>01 — WORKSPACE</span></div>
             <div className={styles.editor}>
-              <div className={styles.editorTop}><span className={styles.editorMark} aria-hidden="true">{'{ }'}</span><span className={styles.previewBadge}>PREVIEW</span></div>
-              <div className={styles.languageTabs} aria-label="Preview language">{Object.keys(samples).map(item => <button key={item} aria-pressed={language === item} onClick={() => setLanguage(item)} className={language === item ? styles.selectedLanguage : ''}>{item}</button>)}</div>
-              <div className={styles.code} key={language}>{samples[language].split('\n').map((line, i) => <div key={i}><span aria-hidden="true">{String(i + 1).padStart(2, '0')}</span><code>{line || ' '}</code></div>)}</div>
-
+              <div className={styles.editorTop}><span className={styles.editorMark} aria-hidden="true">{'{ }'}</span><span>CodeRank / playground</span><span className={styles.previewBadge}>PREVIEW</span></div>
+              <div className={styles.workbench}>
+                <div className={styles.editorRail} aria-hidden="true"><b>{'</>'}</b><span>▤</span><span>⌘</span><span>↗</span></div>
+                <div className={styles.editorCanvas}>
+                  <div className={styles.languageTabs} aria-label="Preview language">{Object.keys(samples).map(item => <button key={item} aria-pressed={language === item} onClick={() => setLanguage(item)} className={language === item ? styles.selectedLanguage : ''}>{item}</button>)}</div>
+                  <div className={styles.code} key={language}>{samples[language].split('\n').map((line, i) => <div key={i}><span aria-hidden="true">{String(i + 1).padStart(2, '0')}</span><code>{line || ' '}</code></div>)}</div>
+                  <div className={styles.terminal}><div><span>CONSOLE</span><small>Illustrative preview</small></div><p><span>❯</span> Ready for your next idea.<i aria-hidden="true" /></p></div>
+                </div>
+              </div>
+              <div className={styles.workspaceStatus}><span><i /> {language} workspace</span><span>Write. Run. Repeat.</span></div>
             </div>
             <div className={styles.progressCard}><span className={styles.progressIcon} aria-hidden="true">↗</span><div><strong>Every attempt counts.</strong><p>Build confidence, one solution at a time.</p></div><span className={styles.miniBars} aria-hidden="true"><i /><i /><i /><i /><i /></span></div>
           </div>
@@ -134,9 +122,17 @@ export default function HomePage() {
         <div className={styles.languageStrip}><span>FOUR LANGUAGES. ENDLESS POSSIBILITIES.</span><div>{['C', 'C++', 'Java', 'Python'].map((item, i) => <span key={item}><small aria-hidden="true">0{i + 1}</small>{item}</span>)}</div></div>
         <section id="experience" className={styles.experience}>
           <div className={styles.sectionHeading}><div><p className={styles.eyebrow}>FROM FIRST LINE TO FINISHED PRACTICAL</p><h2>A little less friction.<br />A lot more <em>forward.</em></h2></div><p>Everything a coding lab needs to keep learning moving. All in one thoughtful workspace.</p></div>
-          <div className={styles.learningPath}>
-            <div className={styles.pathNavigation} role="group" aria-label="Explore platform features">{featureJourney.map((item, index) => <button key={item.name} aria-pressed={feature === index} aria-controls="feature-detail" onClick={() => setFeature(index)}><span className={styles.pathNumber}>0{index + 1}</span><span><strong>{item.name}</strong><small>{item.label}</small></span><span aria-hidden="true">↗</span></button>)}</div>
-            <div id="feature-detail" className={styles.pathDetail} aria-live="polite"><div key={feature} className={styles.pathDetailContent}><div className={styles.pathKicker}><span>THE CODERANK EXPERIENCE</span><span>0{feature + 1} / 03</span></div><div className={styles.pathSymbol} aria-hidden="true">{featureJourney[feature].icon}</div><h3>{featureJourney[feature].title}</h3><p>{featureJourney[feature].description}</p><div className={styles.pathFlow}>{featureJourney[feature].detail}</div><Link href={user ? dashboard : '/login'}>{featureJourney[feature].action} <span aria-hidden="true">↗</span></Link></div></div>
+          <div className={styles.bentoGrid}>
+            {featureJourney.map((item, index) => <article key={item.name} className={`${styles.bentoCard} ${index === 0 ? styles.bentoLead : ''}`}>
+              <div className={styles.bentoTop}><span>0{index + 1} / {item.name.toUpperCase()}</span><span aria-hidden="true">{item.icon}</span></div>
+              <h3>{item.title}</h3><p>{item.description}</p>
+              <div className={styles.bentoVisual} aria-hidden="true">
+                {index === 0 && <div className={styles.practiceVisual}><div><span>problem.py</span><small>YOUR NEXT IDEA</small></div><code><b>while</b> learning:<br />&nbsp; build_something()<br />&nbsp; <em>grow()</em></code><span className={styles.visualTag}>One line closer. ↗</span></div>}
+                {index === 1 && <div className={styles.assessVisual}><span>THE FEEDBACK LOOP</span>{['Write your solution', 'Run the test cases', 'Refine your approach'].map((step, i) => <div key={step}><i>{i + 1}</i><strong>{step}</strong><span>↗</span></div>)}</div>}
+                {index === 2 && <div className={styles.connectVisual}><div><span>S</span><span>F</span><span>A</span></div><strong>Different roles.<br />Shared ambition.</strong><small>STUDENT · FACULTY · ADMIN</small></div>}
+              </div>
+              <Link href={user ? dashboard : '/login'}>{item.action}<span aria-hidden="true">↗</span></Link>
+            </article>)}
           </div>
         </section>
         <section id="roles" className={styles.roles}>
