@@ -240,3 +240,62 @@ to{opacity:1;transform:translateY(0)}
 .home .headerAction { background: #3730a3; color: #fff; border-color: #3730a3; transition: background .2s; }
 .home .headerAction:hover { background: #312e81; }
 @media(max-width:760px) { .heroBrand { font-size: clamp(44px,12vw,65px); letter-spacing: -2px; } }
+
+/* Orbital homepage: the existing indigo palette, with depth and quiet motion. */
+.header{position:relative;z-index:30;height:80px;margin:16px auto 0;max-width:1280px;border:1px solid #e2e8f0;border-radius:20px;background:#ffffffcc;box-shadow:0 8px 30px #0f172a04;backdrop-filter:blur(18px);padding:0 28px}
+.nav{padding:7px;background:#f1f5f9;border:1px solid #e2e8f0;border-radius:30px;gap:4px}
+.nav a{padding:10px 18px;border-radius:24px;transition:background .2s,color .2s}
+.nav a:hover{background:white;color:#4338ca}
+.home .headerAction{border-radius:12px;padding:13px 19px}
+.hero{padding-top:75px;padding-bottom:70px;gap:60px;position:relative}
+.originalHero{position:relative;z-index:1;animation:appear .7s ease both}
+.roleIntro{min-width:0}
+.primary{position:relative;overflow:hidden;border:1px solid #6366f1;border-radius:12px;background:linear-gradient(135deg,#6366f1,#4338ca);font-size:13px;padding:17px 22px;box-shadow:0 5px 0 #3730a3,0 12px 25px #4f46e526}
+.primary span{transition:transform .25s}
+.primary:hover span{transform:translate(3px,-3px)}
+.primary:active{transform:translateY(2px);box-shadow:0 2px 0 #3730a3}
+.secondary{color:#475569!important;line-height:1.6}
+.heroCaption{display:flex;align-items:center;gap:9px;font-size:11px;color:#64748b;margin-top:28px}
+.heroCaption>span{width:6px;height:6px;background:#4f46e5;border-radius:50%;box-shadow:0 0 0 4px #e0e7ff}
+.studio{padding:0 0 20px;perspective:1100px}
+.orbit{display:none}
+.astrolabe{position:relative;height:310px;display:grid;place-items:center;isolation:isolate}
+.astroGrid{position:absolute;inset:-20px;background:radial-gradient(ellipse,#e0e7ff99,transparent 68%);z-index:-1}
+.astroGrid:after{content:'';position:absolute;inset:20px;background-image:radial-gradient(#a5b4fc 1px,transparent 1px);background-size:24px 24px;mask-image:radial-gradient(ellipse,#0008,transparent 68%)}
+.astroCore{width:105px;height:105px;border-radius:28px;display:grid;place-items:center;background:linear-gradient(140deg,#fff,#e0e7ff);border:1px solid white;box-shadow:inset 0 0 20px #fff,0 20px 50px #4f46e52b;transform:rotate(-12deg);animation:coreFloat 7s ease-in-out infinite}
+.astroCore span{font:700 40px monospace;color:#4f46e5;letter-spacing:-5px;transform:rotate(12deg)}
+.astroRing{position:absolute;width:290px;height:290px;border:1px solid #a5b4fc;border-radius:50%;transform-style:preserve-3d;pointer-events:none}
+.astroRing:after{content:'';position:absolute;inset:8px;border:1px dashed #c7d2fe;border-radius:50%}
+.astroRing i{position:absolute;width:12px;height:12px;border-radius:50%;top:15%;left:13%;background:#6366f1;box-shadow:0 0 0 5px #e0e7ff,0 0 20px #818cf8}
+.ringOne{transform:rotateX(65deg) rotate(-25deg);animation:orbitOne 22s linear infinite}
+.ringTwo{transform:rotateX(65deg) rotate(65deg);animation:orbitTwo 28s linear infinite}
+.ringThree{width:255px;height:255px;transform:rotateY(65deg) rotate(-20deg);border-color:#c7d2fe;animation:orbitThree 32s linear infinite}
+.astroLabel{position:absolute;font:9px monospace;letter-spacing:1.5px;color:#4338ca;background:#ffffffeb;border:1px solid #e0e7ff;border-radius:30px;padding:10px 14px;box-shadow:0 6px 18px #4f46e509}
+.labelOne{left:7%;top:23%}.labelTwo{right:9%;top:15%}.labelThree{right:5%;bottom:17%}
+.editor{transform:rotateX(5deg) rotateY(-7deg) rotate(-2deg);background:#ffffffed;box-shadow:0 24px 60px #33415513,0 0 0 6px #ffffff80;transition:transform .5s;border-radius:16px}
+.editor:hover,.editor:focus-within{transform:rotate(0)}
+.editorTop{padding:12px 18px;font-size:9px;color:#64748b;letter-spacing:.4px}
+.languageTabs{padding-top:10px}
+.code{min-height:190px;padding-top:8px;padding-bottom:16px;overflow-x:auto}
+.code>div{font-size:10px;line-height:2}
+.progressCard{margin-top:-3px;margin-left:50px;z-index:1;border-radius:14px}
+.learningPath{border-radius:24px;box-shadow:0 20px 70px #33415508;grid-template-columns:minmax(230px,.75fr) minmax(0,1.6fr)}
+.pathNavigation{padding:20px;background:linear-gradient(145deg,#f8fafc,#eef2ff);gap:12px}
+.pathNavigation button{position:relative;border-radius:16px;padding:26px 18px;transition:transform .25s,background .25s,box-shadow .25s}
+.pathNavigation button[aria-pressed=true]{box-shadow:0 8px 25px #4f46e50d;border-color:#c7d2fe;transform:translateX(3px)}
+.pathNavigation button[aria-pressed=true]:before{content:'';position:absolute;left:-1px;top:25%;bottom:25%;width:3px;background:#4f46e5;border-radius:4px}
+.pathDetail{padding:30px 36px}.pathDetail h3{font-size:30px;max-width:460px}.pathDetail p{max-width:520px}
+.featurePreview{margin:24px 0;background:#ffffffc9;border:1px solid #e0e7ff;border-radius:14px;box-shadow:0 8px 24px #4f46e507;overflow:hidden;min-height:164px}
+.previewHeader{display:flex;align-items:center;gap:10px;padding:12px 16px;border-bottom:1px solid #eef2ff;color:#4f46e5}
+.previewHeader>span{font:16px monospace}.previewHeader small{font-size:8px;letter-spacing:1.3px;color:#64748b}.previewHeader>i{width:6px;height:6px;background:#818cf8;border-radius:50%;margin-left:auto}
+.syntaxPreview{display:grid;gap:7px;padding:14px 18px;font:11px/1.6 monospace;color:#64748b}.syntaxPreview b{color:#4f46e5;font-weight:500}.syntaxPreview em{color:#475569;font-style:normal}.syntaxPreview>div{display:flex;align-items:center;gap:8px;border-top:1px solid #eef2ff;padding-top:9px;margin-top:4px;font:10px system-ui}.syntaxPreview>div>span{margin-left:auto;color:#4f46e5}.syntaxPreview i{width:5px;height:5px;background:#6366f1;border-radius:50%}
+.feedbackPreview{padding:4px 18px}.feedbackPreview>div{display:flex;align-items:center;gap:14px;padding:10px 0;border-bottom:1px solid #eef2ff;font-size:10px}.feedbackPreview>div:last-child{border:0}.feedbackPreview span{color:#94a3b8;font:9px monospace}.feedbackPreview strong{font-weight:500;color:#475569}.feedbackPreview b{margin-left:auto;color:#4f46e5}
+.connectionPreview{display:flex;align-items:center;justify-content:center;flex-wrap:wrap;padding:22px 16px 14px;gap:12px}.connectionPreview>span{font-size:10px;padding:10px;border-radius:9px;background:#f1f5f9;color:#475569}.connectionPreview>strong{background:#eef2ff;border:1px solid #c7d2fe;border-radius:12px;padding:12px;color:#4f46e5;font:18px monospace}.connectionPreview>i{width:25px;height:1px;background:#a5b4fc}.connectionPreview>small{flex-basis:100%;text-align:center;font-size:9px;color:#64748b;margin-top:6px}
+@keyframes coreFloat{50%{transform:translateY(-10px) rotate(-5deg)}}
+@keyframes orbitOne{to{transform:rotateX(65deg) rotate(335deg)}}
+@keyframes orbitTwo{to{transform:rotateX(65deg) rotate(425deg)}}
+@keyframes orbitThree{to{transform:rotateY(65deg) rotate(340deg)}}
+@media(max-width:1350px){.header{margin:16px 48px 0}}
+@media(max-width:1050px){.header{padding:0 20px}.nav a{padding:9px 12px}.hero{gap:30px}.astrolabe{height:280px}.astroRing{width:250px;height:250px}.ringThree{width:220px;height:220px}.code>div{font-size:9px}.pathDetail{padding:28px}}
+@media(max-width:760px){.header{margin:12px 16px 0;padding:0 15px;height:68px;border-radius:16px}.nav{top:75px;border-radius:14px;padding:12px;gap:4px}.nav a{padding:12px}.hero{padding-top:48px;gap:28px}.hero .actions{gap:20px}.hero .primary{font-size:12px;padding:16px 18px}.heroCaption{margin-top:24px}.studio{max-width:480px;padding-top:0}.astrolabe{height:270px}.astroLabel{font-size:8px}.code>div{font-size:clamp(8px,2vw,10px)}.pathNavigation{padding:10px;gap:5px}.pathNavigation button{padding:16px 8px;border-radius:12px}.pathNavigation button[aria-pressed=true]{transform:none}.pathNavigation button[aria-pressed=true]:before{display:none}.pathDetail{padding:24px 20px}.pathDetail h3{font-size:27px}.featurePreview{min-height:164px}.connectionPreview{gap:8px}.connectionPreview>i{width:15px}.pathKicker{font-size:7px;letter-spacing:1px}}
+@media(prefers-reduced-motion:reduce){.astroRing,.astroCore,.editor{animation:none!important}.editor{transform:none}}

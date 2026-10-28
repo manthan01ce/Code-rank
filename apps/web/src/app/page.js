@@ -93,37 +93,28 @@ export default function HomePage() {
             Streamlined for university computer science departments. Conduct automated practicals in C, C++, Java, and Python with live socket streaming, instant batch grading, anti-plagiarism guards, and faculty controls.
           </p>
 
-          <div style={{ display: 'flex', gap: '14px', flexWrap: 'wrap' }}>
-            <Link
-              href="/login"
-              style={{
-                display: 'inline-flex',
-                alignItems: 'center',
-                gap: '8px',
-                padding: '13px 26px',
-                backgroundColor: '#4F46E5',
-                color: '#ffffff',
-                borderRadius: '10px',
-                fontSize: '15px',
-                fontWeight: 600,
-                textDecoration: 'none',
-                boxShadow: '0 4px 12px rgba(79, 70, 229, 0.3)',
-                transition: 'transform 0.15s, background 0.2s'
-              }}
-            >
-              Get Started with CodeRank &rarr;
-            </Link>
-
-
+          <div className={styles.actions}>
+            <Link href={user ? dashboard : '/login'} className={styles.primary}>Get Started with CodeRank <span aria-hidden="true">↗</span></Link>
+            <a href="#experience" className={styles.secondary}>Explore the experience <span aria-hidden="true">↓</span></a>
           </div>
+          <p className={styles.heroCaption}><span aria-hidden="true" /> Your next breakthrough starts here.</p>
 
 
         </div>
 
           <div className={styles.studio}>
-            <div className={styles.orbit} aria-hidden="true" />
+            <div className={styles.astrolabe} aria-hidden="true">
+              <div className={styles.astroGrid} />
+              <div className={`${styles.astroRing} ${styles.ringOne}`}><i /></div>
+              <div className={`${styles.astroRing} ${styles.ringTwo}`}><i /></div>
+              <div className={`${styles.astroRing} ${styles.ringThree}`}><i /></div>
+              <div className={styles.astroCore}><span>{'</>'}</span></div>
+              <span className={`${styles.astroLabel} ${styles.labelOne}`}>WRITE</span>
+              <span className={`${styles.astroLabel} ${styles.labelTwo}`}>RUN</span>
+              <span className={`${styles.astroLabel} ${styles.labelThree}`}>RANK UP ↗</span>
+            </div>
             <div className={styles.editor}>
-              <div className={styles.editorTop}><span className={styles.editorMark} aria-hidden="true">{'{ }'}</span><span className={styles.previewBadge}>PREVIEW</span></div>
+              <div className={styles.editorTop}><span className={styles.editorMark} aria-hidden="true">{'{ }'}</span><span>your-next-breakthrough</span><span className={styles.previewBadge}>PREVIEW</span></div>
               <div className={styles.languageTabs} aria-label="Preview language">{Object.keys(samples).map(item => <button key={item} aria-pressed={language === item} onClick={() => setLanguage(item)} className={language === item ? styles.selectedLanguage : ''}>{item}</button>)}</div>
               <div className={styles.code} key={language}>{samples[language].split('\n').map((line, i) => <div key={i}><span aria-hidden="true">{String(i + 1).padStart(2, '0')}</span><code>{line || ' '}</code></div>)}</div>
 
@@ -136,7 +127,12 @@ export default function HomePage() {
           <div className={styles.sectionHeading}><div><p className={styles.eyebrow}>FROM FIRST LINE TO FINISHED PRACTICAL</p><h2>A little less friction.<br />A lot more <em>forward.</em></h2></div><p>Everything a coding lab needs to keep learning moving. All in one thoughtful workspace.</p></div>
           <div className={styles.learningPath}>
             <div className={styles.pathNavigation} role="group" aria-label="Explore platform features">{featureJourney.map((item, index) => <button key={item.name} aria-pressed={feature === index} aria-controls="feature-detail" onClick={() => setFeature(index)}><span className={styles.pathNumber}>0{index + 1}</span><span><strong>{item.name}</strong><small>{item.label}</small></span><span aria-hidden="true">↗</span></button>)}</div>
-            <div id="feature-detail" className={styles.pathDetail} aria-live="polite"><div key={feature} className={styles.pathDetailContent}><div className={styles.pathKicker}><span>THE CODERANK EXPERIENCE</span><span>0{feature + 1} / 03</span></div><div className={styles.pathSymbol} aria-hidden="true">{featureJourney[feature].icon}</div><h3>{featureJourney[feature].title}</h3><p>{featureJourney[feature].description}</p><div className={styles.pathFlow}>{featureJourney[feature].detail}</div><Link href={user ? dashboard : '/login'}>{featureJourney[feature].action} <span aria-hidden="true">↗</span></Link></div></div>
+            <div id="feature-detail" className={styles.pathDetail} aria-live="polite"><div key={feature} className={styles.pathDetailContent}><div className={styles.pathKicker}><span>THE CODERANK EXPERIENCE</span><span>0{feature + 1} / 03</span></div><div className={styles.featurePreview} aria-hidden="true">
+                <div className={styles.previewHeader}><span>{featureJourney[feature].icon}</span><small>{['WORKSPACE / PREVIEW', 'FEEDBACK / PREVIEW', 'CONNECTED LAB / PREVIEW'][feature]}</small><i /></div>
+                {feature === 0 && <div className={styles.syntaxPreview}><span>01 <b>def</b> next_breakthrough():</span><span>02 &nbsp; idea = <em>&quot;keep building&quot;</em></span><span>03 &nbsp; <b>return</b> practice(idea)</span><div><i /> A little progress, every day.<span>↗</span></div></div>}
+                {feature === 1 && <div className={styles.feedbackPreview}>{['Understand the problem', 'Build your solution', 'Learn from the results'].map((step, i) => <div key={step}><span>0{i + 1}</span><strong>{step}</strong><b>✓</b></div>)}</div>}
+                {feature === 2 && <div className={styles.connectionPreview}><span>Students</span><i /><strong>{'{ }'}</strong><i /><span>Faculty</span><small>One workspace. Shared progress.</small></div>}
+              </div><h3>{featureJourney[feature].title}</h3><p>{featureJourney[feature].description}</p><div className={styles.pathFlow}>{featureJourney[feature].detail}</div><Link href={user ? dashboard : '/login'}>{featureJourney[feature].action} <span aria-hidden="true">↗</span></Link></div></div>
           </div>
         </section>
         <section id="roles" className={styles.roles}>
