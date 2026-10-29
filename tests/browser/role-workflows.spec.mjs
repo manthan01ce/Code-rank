@@ -155,6 +155,11 @@ test('public pages preserve theme and remain usable at phone, tablet and desktop
    if(route==='/'){
     await expect(page.getByRole('heading',{name:'RANK UP CODING'})).toBeVisible();
     expect(await page.locator('footer input, footer a[href^="mailto:"]').count()).toBe(0);
+    const featureBounds = await page.locator('#experience').evaluate(el => Array.from(el.querySelectorAll('button, #feature-detail h3, #feature-detail p')).map(node => ({ text: node.textContent.slice(0, 45), left: node.getBoundingClientRect().left, right: node.getBoundingClientRect().right })));
+    for (const bounds of featureBounds) {
+      expect(bounds.left, `Feature is not clipped on the left: ${bounds.text}`).toBeGreaterThanOrEqual(0);
+      expect(bounds.right, `Feature is not clipped on the right: ${bounds.text}`).toBeLessThanOrEqual(width);
+    }
    }
    if(route==='/login') {
     await page.getByLabel('Password', { exact: true }).fill('');

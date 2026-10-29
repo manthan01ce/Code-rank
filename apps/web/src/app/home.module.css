@@ -285,7 +285,7 @@ to{opacity:1;transform:translateY(0)}
 .studioSteps > span { font-size: 8px; color: #475569; line-height: 1.7; }
 .studioSteps b { display: block; color: #6366f1; font: 10px monospace; margin-bottom: 4px; }
 .studioSteps i { font-style: normal; color: #a5b4fc; }
-.learningPath { grid-template-columns: 1fr; border: 0; background: transparent; overflow: visible; }
+.learningPath { grid-template-columns: minmax(0,1fr); border: 0; background: transparent; overflow: visible; }
 .pathNavigation { flex-direction: row; background: transparent; border: 0; padding: 0; gap: 14px; margin-bottom: 20px; }
 .pathNavigation button { padding: 23px; border: 1px solid #e2e8f0; background: #fff; border-radius: 12px; }
 .pathNavigation button[aria-pressed=true] { background: #eef2ff; border-color: #a5b4fc; box-shadow: none; }
@@ -306,6 +306,6 @@ to{opacity:1;transform:translateY(0)}
   .studioHeading strong { font-size: 10px; } .studioSteps > span { font-size: 8px; }
   .pathNavigation { gap: 8px; } .pathNavigation button { padding: 16px 8px; } .pathNavigation strong { font-size: 13px; }
   .pathDetail { padding: 25px; } .pathDetailContent { grid-template-columns: 1fr; gap: 18px; }
-  .pathDetailContent > * { grid-column: 1; grid-row: auto; } .pathSymbol { width: 52px; height: 52px; font-size: 24px; }
+  .pathDetailContent > *, .pathDetail h3, .pathDetail p, .pathDetail a { grid-column: 1; grid-row: auto; } .pathSymbol { width: 52px; height: 52px; font-size: 24px; }
   .pathDetail h3 { font-size: 28px; } .pathDetail p { font-size: 12px; }
 }
