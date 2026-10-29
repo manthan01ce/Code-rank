@@ -180,3 +180,53 @@ test('admin menu preserves existing destinations and keyboard operation on mobil
  await expect(menu).not.toBeVisible();
  await expect(page.getByRole('button',{name:'Open admin menu'})).toBeFocused();
 });
+
+test('student overview and practical selection retain readable themes, navigation and mobile layout', async ({ page, context }) => {
+  const assertNoErrors = failOnPageErrors(page);
+  await page.emulateMedia({ reducedMotion: 'reduce' });
+  const { headers, token } = await login(page, 'student');
+  const practicals = await getJson(context.request, '/api/student/practicals', headers);
+  const practical = practicals.find(item => Number(item.id) === practicalId());
+  expect(practical).toBeTruthy();
+  const profile = await getJson(context.request, '/api/auth/profile', headers);
+  const courses = await getJson(context.request, `/api/courses?semester=${profile.user.extra_info.semester}`, headers);
+  const course = courses.find(item => Number(item.id) === Number(practical.course_id));
+  expect(course).toBeTruthy();
+  for (const theme of ['light', 'dark']) {
+    for (const width of [360, 768, 1280]) {
+      await page.setViewportSize({ width, height: 900 });
+      await page.goto('/student');
+      const root = page.locator('.student-theme');
+      if (await root.getAttribute('data-student-theme') !== theme) await page.getByRole('button', { name: 'Light theme', exact: true }).click();
+      await expect(root).toHaveAttribute('data-student-theme', theme);
+      const row = page.locator('.student-question-row').filter({ hasText: practical.title });
+      await expect(row).toBeVisible();
+      await expect(row.getByRole('link')).toHaveAttribute('href', /\/student\/code\//);
+      expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth + 1), `Dashboard fits ${width}px in ${theme}`).toBe(true);
+      // Ensure the body, course and alternating row layers are visibly distinct.
+      const layers = await page.locator('.student-dashboard').evaluate(el => ({
+        page: getComputedStyle(el).backgroundColor,
+        card: getComputedStyle(el.querySelector('.student-course-card')).backgroundColor,
+        text: getComputedStyle(el.querySelector('h1')).color,
+      }));
+      expect(layers.page).not.toBe(layers.card);
+      expect(layers.text).not.toBe(layers.card);
+      await page.screenshot({ path: `test-results/ui-review/student-${theme}-${width}.png`, fullPage: true, animations: 'disabled' });
+      await page.goto('/student/practicals');
+      await expect(page.getByRole('heading', { name: 'Select Course / Subject', exact: true })).toBeVisible();
+      await expect(root).toHaveAttribute('data-student-theme', theme);
+      const courseButton = page.getByRole('button').filter({ has: page.getByRole('heading', { name: course.name, exact: true }) });
+      await expect(courseButton).toBeVisible();
+      expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth + 1), `Course selection fits ${width}px in ${theme}`).toBe(true);
+      await page.screenshot({ path: `test-results/ui-review/courses-${theme}-${width}.png`, fullPage: true, animations: 'disabled' });
+      await courseButton.focus();
+      await page.keyboard.press('Enter');
+      await expect(page.getByRole('cell', { name: practical.title, exact: true })).toBeVisible();
+      await expect(page.getByRole('button', { name: /Switch Subject/ })).toBeVisible();
+      expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth + 1), `Practical table scrolls within its container at ${width}px in ${theme}`).toBe(true);
+      await page.screenshot({ path: `test-results/ui-review/practicals-${theme}-${width}.png`, fullPage: true, animations: 'disabled' });
+    }
+  }
+  expect(await page.evaluate(() => localStorage.getItem('token'))).toBe(token);
+  assertNoErrors();
+});

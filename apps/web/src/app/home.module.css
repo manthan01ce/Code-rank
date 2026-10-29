@@ -241,70 +241,71 @@ to{opacity:1;transform:translateY(0)}
 .home .headerAction:hover { background: #312e81; }
 @media(max-width:760px) { .heroBrand { font-size: clamp(44px,12vw,65px); letter-spacing: -2px; } }
 
-/* Homepage: indigo orbit composition. All rules are scoped to this page. */
+/* Light, product-led homepage composition. */
 .header { height: 84px; }
-.nav { background: #fff; border: 1px solid #e2e8f0; border-radius: 30px; padding: 12px 22px; }
-.headerAction { border-radius: 30px; padding: 12px 21px; }
-.hero { padding-top: 68px; padding-bottom: 68px; gap: 62px; }
-.heroBrand { font-size: clamp(48px,5.3vw,74px); margin-bottom: 26px; }
-.heroEyebrow { display: flex; align-items: center; gap: 8px; color: #6366a0; font-size: 9px; font-weight: 700; letter-spacing: 1.6px; margin-bottom: 14px; }
-.heroEyebrow > span { width: 6px; height: 6px; border-radius: 50%; background: #6366f1; box-shadow: 0 0 0 4px #e0e7ff; }
-.heroTitle { font-size: clamp(27px,3.2vw,43px); font-weight: 800; line-height: 1.2; letter-spacing: -1.5px; margin-bottom: 20px; min-height: 1.2em; }
+.nav a { position: relative; padding-block: 12px; }
+.nav a::after { content: ''; position: absolute; height: 2px; background: #6366f1; left: 0; right: 100%; bottom: 3px; transition: right .2s; }
+.nav a:hover::after { right: 0; }
+.home .headerAction { background: #fff; border-color: #d8deeb; color: #4338ca; border-radius: 10px; }
+.home .headerAction:hover { background: #eef2ff; }
+.hero { padding-block: 84px; gap: 64px; }
+.heroBrand { font-size: clamp(48px,5.5vw,76px); margin-bottom: 28px; }
+.heroEyebrow { display: flex; align-items: center; gap: 9px; font-size: 9px; font-weight: 700; letter-spacing: 1.5px; color: #4f46e5; margin-bottom: 14px; }
+.heroEyebrow > span { width: 6px; height: 6px; border-radius: 50%; background: #6366f1; }
+.heroTitle { font-size: clamp(27px,3.2vw,42px); font-weight: 800; line-height: 1.2; min-height: 1.2em; letter-spacing: -1.3px; margin-bottom: 20px; }
 .heroDescription { font-size: 15px; line-height: 1.85; color: #64748b; max-width: 510px; }
-.heroActions { display: flex; align-items: center; flex-wrap: wrap; gap: 22px; margin-top: 30px; }
-.heroActions .primary { border-radius: 12px; padding: 17px 21px; font-size: 12px; gap: 18px; }
+.heroActions { display: flex; align-items: center; flex-wrap: wrap; gap: 22px; margin-top: 28px; }
+.heroActions .primary { border-radius: 10px; padding: 16px 20px; gap: 16px; }
 .heroExplore { font-size: 11px; font-weight: 600; color: #475569 !important; }
 .heroExplore span { margin-left: 9px; }
-.heroFootnote { display: flex; align-items: center; gap: 9px; margin-top: 28px; color: #64748b; font-size: 10px; }
-.heroFootnote > span { color: #6366f1; font: 17px monospace; }
-.studio { padding: 25px; border-radius: 26px; background: radial-gradient(ellipse at 50% 20%,#373064 0%,#161a35 55%,#101428 100%); box-shadow: 0 28px 65px #312e8120; isolation: isolate; }
-.studioHeading { display: flex; justify-content: space-between; gap: 12px; color: #c7d2fe; font-size: 8px; letter-spacing: 1.5px; }
-.studioHeading > span:last-child { color: #9299bc; font-size: 7px; }
-.orbit { position: relative; width: 210px; max-width: 100%; margin: 24px auto 22px; top: auto; left: auto; transform: none; background: radial-gradient(circle,#818cf833,transparent 65%); border-color: #818cf833; display: grid; place-items: center; }
-.orbit::before { content: ''; position: absolute; inset: 20px; border-radius: 50%; border: 1px solid #a5b4fc44; transform: rotate(-25deg) scaleY(.63); }
-.orbit::after { inset: 10px; border: 1px solid #818cf844; transform: rotate(35deg) scaleY(.7); animation: none; }
-.orbitCore { width: 106px; height: 106px; display: grid; place-items: center; border-radius: 50%; background: #13172e; border: 1px solid #a5b4fc77; box-shadow: 0 0 24px #818cf155,0 0 60px #6366f133,inset 0 0 22px #6366f133; animation: float 7s ease-in-out infinite; }
-.orbitCore img { border-radius: 50%; width: 72px; height: 72px; }
-.orbitSatellite { position: absolute; right: 0; top: 38px; border: 1px solid #818cf177; background: #282b50; color: #c7d2fe; border-radius: 10px; padding: 10px; font: 16px monospace; transform: rotate(12deg); }
-.editor { transform: none; border-radius: 12px; border-color: #818cf133; background: #ffffff09; box-shadow: none; overflow: hidden; }
-.editorTop { padding: 12px 15px; border-color: #ffffff12; }
-.editorMark { color: #a5b4fc; }
-.editorFilename { font: 10px monospace; color: #cbd5e1; letter-spacing: 0; }
-.previewBadge { background: #818cf11a; color: #c7d2fe; font-size: 7px; }
-.languageTabs { padding: 10px 12px 5px; }
-.languageTabs button { color: #b0b9d2; }
-.languageTabs .selectedLanguage { color: #e0e7ff; background: #818cf12b; }
-.code { min-height: 185px; padding: 12px 15px 18px; overflow-x: auto; }
-.code > div { font-size: 10px; line-height: 2; gap: 14px; }
-.code code { color: #c7d2fe; }
-.code > div > span { color: #7682a5; }
-.progressCard { margin: 16px 0 0; background: transparent; border: 0; border-radius: 0; padding: 0; box-shadow: none; animation: none; }
-.progressIcon { color: #c7d2fe; background: #818cf11c; }
-.progressCard strong { color: #e0e7ff; }
-.progressCard p { color: #a0abc6; }
-.miniBars i { background: #6366f166; }
-.miniBars i:last-child { background: #a5b4fc; }
-.languageStrip { padding-block: 24px; }
-.learningPath { border-radius: 22px; box-shadow: 0 12px 40px #312e8106; }
-.pathNavigation { background: #f1f3fc; padding: 18px; }
-.pathNavigation button { padding: 28px 20px; }
-.pathNavigation button[aria-pressed=true] { box-shadow: 0 8px 24px #4f46e510; border-color: #c7d2fe; }
-.pathNavigation button[aria-pressed=true] .pathNumber { color: #4f46e5; }
-.pathDetail { padding: 36px 44px; background: radial-gradient(ellipse at 100% 0%,#e0e7ff88,transparent 65%); }
-.pathSymbol { display: grid; place-items: center; width: 70px; height: 70px; font-size: 30px; border: 1px solid #c7d2fe; border-radius: 20px; background: #eef2ff; box-shadow: 5px 5px 0 #e0e7ff; margin: 28px 0; }
-.pathDetail a { align-items: center; }
-.pathDetail a > span { width: 29px; height: 29px; display: grid; place-items: center; border-radius: 50%; background: #eef2ff; }
-@media (max-width:1050px) and (min-width:761px) { .hero { gap: 32px; padding-inline: 32px; } .studio { padding: 20px; } .heroActions { gap: 16px; } .code > div { font-size: 8px; } }
-@media (max-width:760px) {
-  .header { height: 78px; }
-  .nav { border-radius: 14px; padding: 22px; }
-  .hero { padding: 42px 24px; gap: 36px; }
-  .heroTitle { font-size: clamp(27px,7vw,40px); letter-spacing: -1px; }
-  .heroDescription { font-size: 14px; }
-  .studio { padding: 22px; border-radius: 22px; }
-  .orbit { width: 190px; margin-block: 20px; }
-  .code > div { font-size: clamp(8px,2vw,10px); }
-  .pathNavigation { padding: 10px; }
-  .pathNavigation button { padding: 16px 8px; }
-  .pathDetail { padding: 28px 24px; }
+.heroFootnote { display: flex; align-items: center; gap: 9px; margin-top: 28px; font-size: 10px; color: #64748b; }
+.heroFootnote > span { font: 16px monospace; color: #6366f1; }
+.studio { padding: 20px; border: 1px solid #dbe1f4; border-radius: 20px; background: #eef1fb; box-shadow: 0 24px 50px #3341550c; }
+.studio::before { content: ''; position: absolute; inset: -13px 16px 13px -13px; border: 1px solid #e0e7ff; border-radius: 24px; z-index: -1; }
+.studioHeading { display: flex; align-items: center; gap: 10px; margin-bottom: 22px; }
+.studioHeading strong { display: block; color: #334155; font-size: 11px; font-weight: 600; }
+.studioHeading div > span { display: block; color: #64748b; font-size: 9px; margin-top: 4px; }
+.studioIcon { display: grid; place-items: center; width: 34px; height: 34px; border-radius: 10px; border: 1px solid #d7dcf5; background: white; font: 15px monospace; color: #4f46e5; }
+.previewBadge { margin-left: auto; background: #fff; color: #64748b; border: 1px solid #dbe1ee; font-size: 7px; }
+.studioTask { display: flex; justify-content: space-between; gap: 12px; padding: 0 4px 20px; }
+.taskLabel { color: #6366a0; font-size: 8px; font-weight: 700; letter-spacing: 1.3px; }
+.home .studioTask h2 { font-size: 22px; letter-spacing: -.7px; font-weight: 650; margin: 9px 0; }
+.studioTask p { font-size: 10px; color: #64748b; line-height: 1.7; }
+.taskArrow { color: #818cf8; font-size: 32px; }
+.editor { transform: none; border-color: #dbe1ee; border-radius: 12px; box-shadow: 0 6px 20px #33415505; overflow: hidden; }
+.editorTop { padding: 13px 16px; background: #fcfcff; }
+.editorFilename { font: 10px monospace; color: #64748b; letter-spacing: 0; }
+.editorDots { display: flex; gap: 4px; margin-left: auto; }
+.editorDots i { height: 5px; width: 5px; border-radius: 50%; background: #cbd5e1; }
+.languageTabs { padding: 12px 14px 4px; }
+.languageTabs button { min-height: 32px; }
+.code { padding: 14px 16px 22px; min-height: 214px; overflow-x: auto; }
+.code > div { font-size: 10px; gap: 13px; line-height: 2.25; }
+.studioSteps { display: flex; align-items: center; justify-content: space-between; gap: 8px; padding: 20px 3px 2px; }
+.studioSteps > span { font-size: 8px; color: #475569; line-height: 1.7; }
+.studioSteps b { display: block; color: #6366f1; font: 10px monospace; margin-bottom: 4px; }
+.studioSteps i { font-style: normal; color: #a5b4fc; }
+.learningPath { grid-template-columns: 1fr; border: 0; background: transparent; overflow: visible; }
+.pathNavigation { flex-direction: row; background: transparent; border: 0; padding: 0; gap: 14px; margin-bottom: 20px; }
+.pathNavigation button { padding: 23px; border: 1px solid #e2e8f0; background: #fff; border-radius: 12px; }
+.pathNavigation button[aria-pressed=true] { background: #eef2ff; border-color: #a5b4fc; box-shadow: none; }
+.pathNavigation strong { font-size: 19px; }
+.pathDetail { border: 1px solid #e2e8f0; border-radius: 16px; background: #fff; padding: 34px 40px; }
+.pathDetailContent { display: grid; grid-template-columns: 76px 1.2fr 1fr; gap: 16px 30px; align-items: start; }
+.pathKicker { grid-column: 1/-1; padding-bottom: 14px; border-bottom: 1px solid #eef2f7; margin-bottom: 8px; }
+.pathSymbol { display: grid; place-items: center; background: #eef2ff; border: 1px solid #e0e7ff; width: 64px; height: 64px; border-radius: 16px; font-size: 28px; margin: 0; grid-row: 2/4; }
+.pathDetail h3 { font-size: 31px; grid-column: 2; }
+.pathDetail p { grid-column: 3; grid-row: 2/4; margin: 0; }
+.pathFlow { grid-column: 2; margin: 0; padding: 0; border: 0; font-size: 10px; }
+.pathDetail a { grid-column: 3; margin: 0; padding-top: 16px; border-top: 1px solid #e2e8f0; align-self: end; }
+@media(max-width:1050px) { .hero { gap: 35px; } .code > div { font-size: 9px; } .pathDetailContent { grid-template-columns: 65px 1fr 1fr; gap: 16px 20px; } .pathNavigation button { padding: 20px 16px; } }
+@media(max-width:760px) {
+  .header { height: 78px; } .hero { padding: 48px 24px; gap: 42px; }
+  .heroTitle { font-size: clamp(27px,7vw,40px); } .heroDescription { font-size: 14px; }
+  .studio { padding: 18px; } .code > div { font-size: clamp(8px,2vw,10px); }
+  .studioHeading strong { font-size: 10px; } .studioSteps > span { font-size: 8px; }
+  .pathNavigation { gap: 8px; } .pathNavigation button { padding: 16px 8px; } .pathNavigation strong { font-size: 13px; }
+  .pathDetail { padding: 25px; } .pathDetailContent { grid-template-columns: 1fr; gap: 18px; }
+  .pathDetailContent > * { grid-column: 1; grid-row: auto; } .pathSymbol { width: 52px; height: 52px; font-size: 24px; }
+  .pathDetail h3 { font-size: 28px; } .pathDetail p { font-size: 12px; }
 }

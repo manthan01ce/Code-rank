@@ -1,4 +1,5 @@
 'use client';
+import styles from '../overview.module.css';
 import { StudentThemeToggle, useStudentTheme } from '@/components/student/StudentTheme';
 import { usePracticalPage } from '@/hooks/usePracticalPage';
 import { fetchCollection } from '@/lib/fetch-collection';
@@ -507,7 +508,7 @@ int main() {
 
   const renderStudentHeader = () => {
     return (
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', backgroundColor: 'var(--student-ui-bg-ffffff, white)', padding: '12px 24px', borderBottom: '1px solid var(--border-color)', marginBottom: '20px', borderRadius: '10px', boxShadow: '0 4px 6px -1px rgba(0,0,0,0.05)', color: 'var(--student-ui-text-1e293b, #1e293b)' }}>
+      <div className={styles.selectionHeader} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', backgroundColor: 'var(--student-ui-bg-ffffff, white)', padding: '12px 24px', borderBottom: '1px solid var(--border-color)', marginBottom: '20px', borderRadius: '10px', boxShadow: '0 4px 6px -1px rgba(0,0,0,0.05)', color: 'var(--student-ui-text-1e293b, #1e293b)' }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: '15px' }}>
           <div style={{ width: '40px', height: '40px', borderRadius: '50%', backgroundColor: '#4f46e5', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'white', fontWeight: 'bold' }}>
             {user?.name?.charAt(0).toUpperCase() || 'S'}
@@ -539,44 +540,29 @@ int main() {
   // Render list of active subjects if no subject is selected
   if (!selectedCourse) {
     return (
-      <div style={{ padding: '20px', fontFamily: 'Inter, sans-serif' }}>
+      <div className={styles.surface}><div className={styles.content}>
         {renderStudentHeader()}
-        <div style={{ marginTop: '10px' }}>
+        <div className={styles.intro}>
+          <p className={styles.eyebrow}>YOUR COURSES</p>
           <h2 style={{ fontSize: '22px', fontWeight: 700, marginBottom: '8px' }}>Select Course / Subject</h2>
           <p style={{ color: 'var(--text-muted)', fontSize: '14px', marginBottom: '25px' }}>Select an assigned course to view its active coding practicals and workspace.</p>
         </div>
 
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(280px, 1fr))', gap: '20px' }}>
+        <div className={styles.courseGrid}>
           {courses.map(c => (
-            <div 
-              key={c.id} 
+            <button type="button" className={styles.subjectCard}
+              key={c.id}
               onClick={() => setSelectedCourse(c.id.toString())}
-              style={{
-                background: 'var(--student-ui-bg-ffffff, white)', border: '1px solid var(--border-color)', borderRadius: '12px', padding: '24px',
-                cursor: 'pointer', transition: 'transform 0.2s, box-shadow 0.2s',
-                boxShadow: '0 4px 6px -1px rgba(0,0,0,0.05)',
-                display: 'flex', flexDirection: 'column', justifyContent: 'space-between', height: '160px'
-              }}
-              onMouseEnter={(e) => {
-                e.currentTarget.style.transform = 'translateY(-4px)';
-                e.currentTarget.style.boxShadow = '0 10px 15px -3px rgba(0, 0, 0, 0.1)';
-                e.currentTarget.style.borderColor = 'var(--primary)';
-              }}
-              onMouseLeave={(e) => {
-                e.currentTarget.style.transform = 'translateY(0)';
-                e.currentTarget.style.boxShadow = '0 4px 6px -1px rgba(0,0,0,0.05)';
-                e.currentTarget.style.borderColor = 'var(--border-color)';
-              }}
             >
               <div>
-                <span style={{ fontSize: '11px', fontWeight: 700, color: 'var(--primary)', textTransform: 'uppercase', tracking: 'wide' }}>{c.course_code}</span>
+                <span className={styles.subjectCode}>{c.course_code}</span>
                 <h3 style={{ fontSize: '17px', fontWeight: 600, marginTop: '8px', color: 'var(--student-ui-text-1e293b, #1e293b)' }}>{c.name}</h3>
               </div>
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', fontSize: '12.5px', color: 'var(--student-ui-text-64748b, #64748b)' }}>
                 <span>Semester {c.semester}</span>
                 <span style={{ fontWeight: 600, color: 'var(--primary)' }}>Open Workspace &rarr;</span>
               </div>
-            </div>
+            </button>
           ))}
           {courses.length === 0 && (
             <div style={{ gridColumn: '1/-1', textAlign: 'center', padding: '40px', color: 'var(--text-muted)' }}>
@@ -584,7 +570,8 @@ int main() {
             </div>
           )}
         </div>
-      </div>
+        <ChangePasswordModal isOpen={isChangePasswordOpen} onClose={() => setIsChangePasswordOpen(false)} />
+      </div></div>
     );
   }
 
@@ -592,9 +579,9 @@ int main() {
 
   // Render list of active practicals
   return (
-    <div style={{ padding: '20px', fontFamily: 'Inter, sans-serif' }}>
+    <div className={styles.surface}><div className={styles.content}>
       {renderStudentHeader()}
-      <div className="header" style={{ marginBottom: '25px', marginTop: '15px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+      <div className={styles.selectionTitle} style={{ marginBottom: '25px', marginTop: '15px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
         <div>
           <span style={{ fontSize: '12px', fontWeight: 700, color: 'var(--primary)', textTransform: 'uppercase' }}>
             {activeCourse?.course_code}
@@ -615,12 +602,12 @@ int main() {
         </div>
       </div>
 
-      <nav aria-label="Practical pages">
+      <nav className={styles.pagination} aria-label="Practical pages">
         <button disabled={loading || !practicalPage.cursor} onClick={practicalPage.first}>First practical page</button>{' '}
         <button disabled={loading || !practicalPage.next} onClick={practicalPage.nextPage}>Next practical page</button>
         {practicalPage.error && <p role="alert">{practicalPage.error}</p>}
       </nav>
-      <div className="table-container">
+      <div className={`table-container ${styles.practicalTable}`}>
         {loading ? (
           <p>Loading assigned practicals...</p>
         ) : (
@@ -655,11 +642,7 @@ int main() {
                       </div>
                     </td>
                     <td>
-                      <span style={{
-                        padding: '4px 10px', borderRadius: '12px', fontSize: '11px', fontWeight: 600,
-                        backgroundColor: p.difficulty === 'Easy' ? 'var(--student-ui-bg-ecfdf5, #ecfdf5)' : p.difficulty === 'Medium' ? '#fef3c7' : 'var(--student-ui-bg-fef2f2, #fef2f2)',
-                        color: p.difficulty === 'Easy' ? '#10b981' : p.difficulty === 'Medium' ? '#f59e0b' : '#ef4444'
-                      }}>
+                      <span className={styles.badge} data-tone={p.difficulty === 'Easy' ? 'success' : p.difficulty === 'Medium' ? 'warning' : 'danger'}>
                         {p.difficulty}
                       </span>
                     </td>
@@ -669,11 +652,7 @@ int main() {
                     </td>
                     <td>
                       <div style={{ display: 'flex', flexDirection: 'column', gap: '4px', alignItems: 'flex-start' }}>
-                        <span style={{
-                          padding: '4px 10px', borderRadius: '12px', fontSize: '11px', fontWeight: 600,
-                          backgroundColor: p.my_status === 'Accepted' ? 'var(--student-ui-bg-ecfdf5, #ecfdf5)' : p.my_status ? 'var(--student-ui-bg-fef2f2, #fef2f2)' : 'var(--student-ui-bg-f1f5f9, #f1f5f9)',
-                          color: p.my_status === 'Accepted' ? '#10b981' : p.my_status ? '#ef4444' : 'var(--student-ui-text-64748b, #64748b)'
-                        }}>
+                        <span className={styles.badge} data-tone={p.my_status === 'Accepted' ? 'success' : p.my_status ? 'danger' : 'neutral'}>
                           {p.my_status || 'Unattempted'}
                         </span>
                         {p.my_submitted_at && endTime && new Date(p.my_submitted_at) > endTime && (
@@ -713,6 +692,6 @@ int main() {
         )}
       </div>
       <ChangePasswordModal isOpen={isChangePasswordOpen} onClose={() => setIsChangePasswordOpen(false)} />
-    </div>
+    </div></div>
   );
 }

@@ -1,4 +1,5 @@
 'use client';
+import styles from './overview.module.css';
 import { useAccountIdentity } from '@/hooks/useAccountIdentity';
 import { StudentThemeToggle } from '@/components/student/StudentTheme';
 import Link from 'next/link';
@@ -146,7 +147,7 @@ export default function StudentDashboard() {
   const batch = profile?.user?.extra_info?.batch || user?.extra_info?.batch || '';
 
   return (
-    <div className="student-dashboard" style={{ minHeight: '100vh', backgroundColor: 'var(--student-ui-bg-f8fafc, #f8fafc)', fontFamily: 'Inter, sans-serif' }}>
+    <div className={`student-dashboard ${styles.surface}`} style={{ minHeight: '100vh', backgroundColor: 'var(--student-ui-bg-f8fafc, #f8fafc)', fontFamily: 'Inter, sans-serif' }}>
       {loading && <LoadingOverlay />}
       {loadError && <div role="alert" style={{padding: '12px 20px', background: 'var(--student-ui-bg-fff3cd, #fff3cd)', color: '#664d03', display: 'flex', flexWrap: 'wrap', gap: '12px', alignItems: 'center'}}>
         <span>{loadError}</span>
@@ -154,7 +155,7 @@ export default function StudentDashboard() {
       </div>}
       
       {/* Top Navbar */}
-      <div className="student-dashboard-header" style={{
+      <div className={`student-dashboard-header ${styles.toolbar}`} style={{
         height: '70px', backgroundColor: 'var(--student-ui-bg-ffffff, white)', borderBottom: '1px solid var(--border-color)',
         display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '0 40px',
         position: 'sticky', top: 0, zIndex: 100
@@ -217,15 +218,21 @@ export default function StudentDashboard() {
         </div>
       </div>
 
-      <div style={{ maxWidth: '1200px', margin: '0 auto', padding: '40px 20px' }}>
-        <div style={{ marginBottom: '35px' }}>
+      <div className={styles.content}>
+        <div className={styles.intro}>
+          <p className={styles.eyebrow}>YOUR LEARNING, IN FOCUS</p>
           <h1 style={{ fontSize: '28px', fontWeight: 700, color: 'var(--student-ui-text-1e293b, #1e293b)', marginBottom: '8px' }}>My learning workspace</h1>
           <p style={{ color: 'var(--student-ui-text-64748b, #64748b)', fontSize: '15px' }}>
             View practicals assigned by your faculty{semester ? ` for Semester ${semester}` : ''}. Choose a practical to continue learning.
           </p>
         </div>
 
-        <nav aria-label="Dashboard practical pages" style={{ marginBottom: '20px', display: 'flex', gap: '8px' }}>
+        <div className={styles.overview} aria-label="Workspace overview">
+          <div><span>Enrolled courses</span><strong>{courses.length}</strong></div>
+          <div><span>Practicals on this page</span><strong>{practicals.length}</strong></div>
+          <div><span>Solved on this page</span><strong>{practicals.filter(practical => practical.my_status === 'Accepted').length}</strong></div>
+        </div>
+        <nav className={styles.pagination} aria-label="Dashboard practical pages" style={{ marginBottom: '20px', display: 'flex', gap: '8px' }}>
           <button disabled={practicalPage.loading || !practicalPage.cursor} onClick={practicalPage.first}>First page</button>{' '}
           <button disabled={practicalPage.loading || !practicalPage.next} onClick={practicalPage.nextPage}>Next page</button>
         </nav>
@@ -238,7 +245,7 @@ export default function StudentDashboard() {
               const openWorkspaceUrl = firstAvailable ? practicalDestination(firstAvailable, course.course_code) : null;
 
               return (
-                <div className="student-course-card"
+                <div className={`student-course-card ${styles.courseCard}`}
                   key={course.id}
                   style={{
                     background: 'var(--student-ui-bg-ffffff, white)', border: '1px solid var(--student-ui-border-e2e8f0, #e2e8f0)', borderRadius: '16px', padding: '24px',
@@ -249,7 +256,7 @@ export default function StudentDashboard() {
                   <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', borderBottom: '1px solid var(--student-ui-border-f1f5f9, #f1f5f9)', paddingBottom: '16px' }}>
                     <div>
                       <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-                        <span style={{ fontSize: '12px', fontWeight: 700, color: '#4f46e5', backgroundColor: 'var(--student-ui-bg-e0f2fe, #e0f2fe)', padding: '3px 8px', borderRadius: '6px', textTransform: 'uppercase', letterSpacing: '0.5px' }}>
+                        <span className={styles.courseCode} style={{ fontSize: '12px', fontWeight: 700, color: 'var(--overview-accent)', backgroundColor: 'var(--student-ui-bg-e0f2fe, #e0f2fe)', padding: '3px 8px', borderRadius: '6px', textTransform: 'uppercase', letterSpacing: '0.5px' }}>
                           {course.course_code}
                         </span>
                         <span style={{ fontSize: '12px', color: 'var(--student-ui-text-64748b, #64748b)', fontWeight: 500 }}>

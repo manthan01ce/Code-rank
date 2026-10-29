@@ -89,15 +89,15 @@ export default function HomePage() {
         </div>
 
           <div className={styles.studio}>
-            <div className={styles.studioHeading}><span>IDEAS INTO IMPACT</span><span>CODE / LEARN / REPEAT</span></div>
-            <div className={styles.orbit} aria-hidden="true"><div className={styles.orbitCore}><Image src="/coderank-logo.jpg" alt="" width={82} height={82} /></div><span className={styles.orbitSatellite}>{'{ }'}</span></div>
+            <div className={styles.studioHeading}><span className={styles.studioIcon} aria-hidden="true">{'</>'}</span><div><strong>A little practice. A little progress.</strong><span>Your coding journey, in one place.</span></div><span className={styles.previewBadge}>PREVIEW</span></div>
+            <div className={styles.studioTask}><div><span className={styles.taskLabel}>THE NEXT STEP</span><h2>Turn a concept into code.</h2><p>Choose your language. Explore your approach.</p></div><span className={styles.taskArrow} aria-hidden="true">↗</span></div>
             <div className={styles.editor}>
-              <div className={styles.editorTop}><span className={styles.editorMark} aria-hidden="true">{'{ }'}</span><span className={styles.editorFilename}>{language === 'Python' ? 'practice.py' : language === 'Java' ? 'CodeRank.java' : language === 'C++' ? 'practice.cpp' : 'practice.c'}</span><span className={styles.previewBadge}>CODE PREVIEW</span></div>
+              <div className={styles.editorTop}><span className={styles.editorMark} aria-hidden="true">{'{ }'}</span><span className={styles.editorFilename}>{language === 'Python' ? 'practice.py' : language === 'Java' ? 'CodeRank.java' : language === 'C++' ? 'practice.cpp' : 'practice.c'}</span><span className={styles.editorDots} aria-hidden="true"><i /><i /><i /></span></div>
               <div className={styles.languageTabs} aria-label="Preview language">{Object.keys(samples).map(item => <button key={item} aria-pressed={language === item} onClick={() => setLanguage(item)} className={language === item ? styles.selectedLanguage : ''}>{item}</button>)}</div>
               <div className={styles.code} key={language}>{samples[language].split('\n').map((line, i) => <div key={i}><span aria-hidden="true">{String(i + 1).padStart(2, '0')}</span><code>{line || ' '}</code></div>)}</div>
 
             </div>
-            <div className={styles.progressCard}><span className={styles.progressIcon} aria-hidden="true">↗</span><div><strong>Every attempt counts.</strong><p>Build confidence, one solution at a time.</p></div><span className={styles.miniBars} aria-hidden="true"><i /><i /><i /><i /><i /></span></div>
+            <div className={styles.studioSteps} aria-label="Learning process"><span><b>01</b> Write your idea</span><i aria-hidden="true">→</i><span><b>02</b> Test your thinking</span><i aria-hidden="true">→</i><span><b>03</b> Keep growing</span></div>
           </div>
         </section>
         <div className={styles.languageStrip}><span>FOUR LANGUAGES. ENDLESS POSSIBILITIES.</span><div>{['C', 'C++', 'Java', 'Python'].map((item, i) => <span key={item}><small aria-hidden="true">0{i + 1}</small>{item}</span>)}</div></div>
