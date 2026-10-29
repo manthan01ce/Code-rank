@@ -72,58 +72,27 @@ export default function HomePage() {
         <div className={styles.originalHero}>
           <p className={styles.heroBrand}>Code<span>Rank</span></p>
 
-          <h1 style={{
-            fontSize: 'clamp(2rem, 5vw, 44px)',
-            fontWeight: 800,
-            lineHeight: 1.15,
-            color: '#0f172a',
-            letterSpacing: '-1px',
-            marginBottom: '18px'
-          }}>
+          <p className={styles.heroEyebrow}><span /> THE UNIVERSITY CODING WORKSPACE</p>
+          <h1 className={styles.heroTitle}>
             <TextType text={["RANK UP CODING"]} typingSpeed={75} pauseDuration={1500} deletingSpeed={50} cursorColor="currentColor" prefixColor="currentColor" />
           </h1>
-
-          <p style={{
-            fontSize: '17px',
-            lineHeight: 1.6,
-            color: '#475569',
-            marginBottom: '32px',
-            maxWidth: '560px'
-          }}>
+          <p className={styles.heroDescription}>
             Streamlined for university computer science departments. Conduct automated practicals in C, C++, Java, and Python with live socket streaming, instant batch grading, anti-plagiarism guards, and faculty controls.
           </p>
-
-          <div style={{ display: 'flex', gap: '14px', flexWrap: 'wrap' }}>
-            <Link
-              href="/login"
-              style={{
-                display: 'inline-flex',
-                alignItems: 'center',
-                gap: '8px',
-                padding: '13px 26px',
-                backgroundColor: '#4F46E5',
-                color: '#ffffff',
-                borderRadius: '10px',
-                fontSize: '15px',
-                fontWeight: 600,
-                textDecoration: 'none',
-                boxShadow: '0 4px 12px rgba(79, 70, 229, 0.3)',
-                transition: 'transform 0.15s, background 0.2s'
-              }}
-            >
-              Get Started with CodeRank &rarr;
-            </Link>
-
-
+          <div className={styles.heroActions}>
+            <Link href={user ? dashboard : '/login'} className={styles.primary}>Get Started with CodeRank <span aria-hidden="true">↗</span></Link>
+            <a href="#experience" className={styles.heroExplore}>Explore the platform <span aria-hidden="true">↓</span></a>
           </div>
+          <div className={styles.heroFootnote}><span aria-hidden="true">{'</>'}</span> Built for your next breakthrough.</div>
 
 
         </div>
 
           <div className={styles.studio}>
-            <div className={styles.orbit} aria-hidden="true" />
+            <div className={styles.studioHeading}><span>IDEAS INTO IMPACT</span><span>CODE / LEARN / REPEAT</span></div>
+            <div className={styles.orbit} aria-hidden="true"><div className={styles.orbitCore}><Image src="/coderank-logo.jpg" alt="" width={82} height={82} /></div><span className={styles.orbitSatellite}>{'{ }'}</span></div>
             <div className={styles.editor}>
-              <div className={styles.editorTop}><span className={styles.editorMark} aria-hidden="true">{'{ }'}</span><span className={styles.previewBadge}>PREVIEW</span></div>
+              <div className={styles.editorTop}><span className={styles.editorMark} aria-hidden="true">{'{ }'}</span><span className={styles.editorFilename}>{language === 'Python' ? 'practice.py' : language === 'Java' ? 'CodeRank.java' : language === 'C++' ? 'practice.cpp' : 'practice.c'}</span><span className={styles.previewBadge}>CODE PREVIEW</span></div>
               <div className={styles.languageTabs} aria-label="Preview language">{Object.keys(samples).map(item => <button key={item} aria-pressed={language === item} onClick={() => setLanguage(item)} className={language === item ? styles.selectedLanguage : ''}>{item}</button>)}</div>
               <div className={styles.code} key={language}>{samples[language].split('\n').map((line, i) => <div key={i}><span aria-hidden="true">{String(i + 1).padStart(2, '0')}</span><code>{line || ' '}</code></div>)}</div>
 
