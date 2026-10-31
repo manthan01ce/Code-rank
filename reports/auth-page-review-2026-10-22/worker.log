@@ -1,0 +1,58 @@
+⚡ CodeRank Execution Worker Starting...
+[SubmissionWorker] Starting... Concurrency: 8
+{"level":"INFO","timestamp":"2026-10-22T16:12:13.032Z","message":"CodeRank Worker initialized and listening to queues."}
+Sandbox recovery failed: spawn docker ENOENT
+Worker capability heartbeat failed: Stream isn't writeable and enableOfflineQueue options is false
+[SubmissionWorker] Queue error: connect ECONNREFUSED 127.0.0.1:6379
+[SubmissionWorker] Queue error: connect ECONNREFUSED 127.0.0.1:6379
+{"level":"ERROR","timestamp":"2026-10-22T16:12:13.053Z","message":"[SystemWorker] Queue error","error":{"message":"connect ECONNREFUSED 127.0.0.1:6379"}}
+{"level":"ERROR","timestamp":"2026-10-22T16:12:13.053Z","message":"[SystemWorker] Queue error","error":{"message":"connect ECONNREFUSED 127.0.0.1:6379"}}
+Worker heartbeat Redis error: connect ECONNREFUSED 127.0.0.1:6379
+Worker heartbeat Redis error: connect ECONNREFUSED 127.0.0.1:6379
+Worker heartbeat Redis error: connect ECONNREFUSED 127.0.0.1:6379
+Worker heartbeat Redis error: connect ECONNREFUSED 127.0.0.1:6379
+{"level":"ERROR","timestamp":"2026-10-22T16:12:14.056Z","message":"[SystemWorker] Queue error","error":{"message":"connect ECONNREFUSED 127.0.0.1:6379"}}
+{"level":"ERROR","timestamp":"2026-10-22T16:12:14.057Z","message":"[SystemWorker] Queue error","error":{"message":"connect ECONNREFUSED 127.0.0.1:6379"}}
+[SubmissionWorker] Queue error: connect ECONNREFUSED 127.0.0.1:6379
+[SubmissionWorker] Queue error: connect ECONNREFUSED 127.0.0.1:6379
+Worker heartbeat Redis error: connect ECONNREFUSED 127.0.0.1:6379
+Worker heartbeat Redis error: connect ECONNREFUSED 127.0.0.1:6379
+[SubmissionWorker] Queue error: connect ECONNREFUSED 127.0.0.1:6379
+[SubmissionWorker] Queue error: connect ECONNREFUSED 127.0.0.1:6379
+{"level":"ERROR","timestamp":"2026-10-22T16:12:15.059Z","message":"[SystemWorker] Queue error","error":{"message":"connect ECONNREFUSED 127.0.0.1:6379"}}
+{"level":"ERROR","timestamp":"2026-10-22T16:12:15.059Z","message":"[SystemWorker] Queue error","error":{"message":"connect ECONNREFUSED 127.0.0.1:6379"}}
+{"level":"ERROR","timestamp":"2026-10-22T16:12:16.061Z","message":"[SystemWorker] Queue error","error":{"message":"connect ECONNREFUSED 127.0.0.1:6379"}}
+{"level":"ERROR","timestamp":"2026-10-22T16:12:16.061Z","message":"[SystemWorker] Queue error","error":{"message":"connect ECONNREFUSED 127.0.0.1:6379"}}
+[SubmissionWorker] Queue error: connect ECONNREFUSED 127.0.0.1:6379
+[SubmissionWorker] Queue error: connect ECONNREFUSED 127.0.0.1:6379
+Worker heartbeat Redis error: connect ECONNREFUSED 127.0.0.1:6379
+[SubmissionWorker] Queue error: connect ECONNREFUSED 127.0.0.1:6379
+[SubmissionWorker] Queue error: connect ECONNREFUSED 127.0.0.1:6379
+{"level":"ERROR","timestamp":"2026-10-22T16:12:17.063Z","message":"[SystemWorker] Queue error","error":{"message":"connect ECONNREFUSED 127.0.0.1:6379"}}
+{"level":"ERROR","timestamp":"2026-10-22T16:12:17.063Z","message":"[SystemWorker] Queue error","error":{"message":"connect ECONNREFUSED 127.0.0.1:6379"}}
+{"level":"ERROR","timestamp":"2026-10-22T16:12:18.066Z","message":"[SystemWorker] Queue error","error":{"message":"connect ECONNREFUSED 127.0.0.1:6379"}}
+{"level":"ERROR","timestamp":"2026-10-22T16:12:18.066Z","message":"[SystemWorker] Queue error","error":{"message":"connect ECONNREFUSED 127.0.0.1:6379"}}
+[SubmissionWorker] Queue error: connect ECONNREFUSED 127.0.0.1:6379
+[SubmissionWorker] Queue error: connect ECONNREFUSED 127.0.0.1:6379
+[SubmissionWorker] Queue error: connect ECONNREFUSED 127.0.0.1:6379
+[SubmissionWorker] Queue error: connect ECONNREFUSED 127.0.0.1:6379
+{"level":"ERROR","timestamp":"2026-10-22T16:12:19.068Z","message":"[SystemWorker] Queue error","error":{"message":"connect ECONNREFUSED 127.0.0.1:6379"}}
+{"level":"ERROR","timestamp":"2026-10-22T16:12:19.068Z","message":"[SystemWorker] Queue error","error":{"message":"connect ECONNREFUSED 127.0.0.1:6379"}}
+Worker heartbeat Redis error: connect ECONNREFUSED 127.0.0.1:6379
+{"level":"ERROR","timestamp":"2026-10-22T16:12:20.165Z","message":"[SystemWorker] Queue error","error":{"message":"connect ECONNREFUSED 127.0.0.1:6379"}}
+{"level":"ERROR","timestamp":"2026-10-22T16:12:20.165Z","message":"[SystemWorker] Queue error","error":{"message":"connect ECONNREFUSED 127.0.0.1:6379"}}
+[SubmissionWorker] Queue error: connect ECONNREFUSED 127.0.0.1:6379
+[SubmissionWorker] Queue error: connect ECONNREFUSED 127.0.0.1:6379
+Worker capability heartbeat failed: Stream isn't writeable and enableOfflineQueue options is false
+[SubmissionWorker] Queue error: connect ECONNREFUSED 127.0.0.1:6379
+[SubmissionWorker] Queue error: connect ECONNREFUSED 127.0.0.1:6379
+{"level":"ERROR","timestamp":"2026-10-22T16:12:23.147Z","message":"[SystemWorker] Queue error","error":{"message":"connect ECONNREFUSED 127.0.0.1:6379"}}
+{"level":"ERROR","timestamp":"2026-10-22T16:12:23.147Z","message":"[SystemWorker] Queue error","error":{"message":"connect ECONNREFUSED 127.0.0.1:6379"}}
+Worker heartbeat Redis error: connect ECONNREFUSED 127.0.0.1:6379
+Worker heartbeat Redis error: connect ECONNREFUSED 127.0.0.1:6379
+{"level":"ERROR","timestamp":"2026-10-22T16:12:31.253Z","message":"[SystemWorker] Queue error","error":{"message":"connect ECONNREFUSED 127.0.0.1:6379"}}
+{"level":"ERROR","timestamp":"2026-10-22T16:12:31.253Z","message":"[SystemWorker] Queue error","error":{"message":"connect ECONNREFUSED 127.0.0.1:6379"}}
+[SubmissionWorker] Queue error: connect ECONNREFUSED 127.0.0.1:6379
+[SubmissionWorker] Queue error: connect ECONNREFUSED 127.0.0.1:6379
+Worker capability heartbeat failed: Stream isn't writeable and enableOfflineQueue options is false
+Worker heartbeat removal failed; lease will expire: Stream isn't writeable and enableOfflineQueue options is false

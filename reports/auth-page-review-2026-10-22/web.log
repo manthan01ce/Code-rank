@@ -1,0 +1,277 @@
+✓ Running next.config.mjs took 29ms
+{"level":"INFO","timestamp":"2026-10-22T16:12:14.083Z","message":"CodeRank Server ready","local":"http://localhost:3000","network":"http://127.0.0.1:3000","mode":"development","pid":12}
+(node:12) [DEP0169] DeprecationWarning: `url.parse()` behavior is not standardized and prone to errors that have security implications. Use the WHATWG URL API instead. CVEs are not issued for `url.parse()` vulnerabilities.
+(Use `node --trace-deprecation ...` to show where the warning was created)
+ GET /api/live 200 in 344ms (next.js: 163ms, proxy.ts: 154ms, application-code: 27ms)
+Error: ENOENT: no such file or directory, uv_resident_set_memory
+    at ignore-listed frames {
+  errno: -2,
+  code: 'ENOENT',
+  syscall: 'uv_resident_set_memory'
+}
+Execution queue unavailable: connect ECONNREFUSED 127.0.0.1:6379
+Error: ENOENT: no such file or directory, uv_resident_set_memory
+    at ignore-listed frames {
+  errno: -2,
+  code: 'ENOENT',
+  syscall: 'uv_resident_set_memory'
+}
+Execution queue unavailable: connect ECONNREFUSED 127.0.0.1:6379
+Execution queue unavailable: connect ECONNREFUSED 127.0.0.1:6379
+Execution queue unavailable: connect ECONNREFUSED 127.0.0.1:6379
+Execution queue unavailable: connect ECONNREFUSED 127.0.0.1:6379
+Queue owner cleanup unavailable: connect ECONNREFUSED 127.0.0.1:6379
+{"level":"WARN","timestamp":"2026-10-22T16:12:16.214Z","message":"HTTP request failed","method":"GET","path":"/api/health","statusCode":503,"durationMs":1718}
+ GET /api/health 503 in 1716ms (next.js: 87ms, proxy.ts: 7ms, application-code: 1622ms)
+Error: ENOENT: no such file or directory, uv_resident_set_memory
+    at ignore-listed frames {
+  errno: -2,
+  code: 'ENOENT',
+  syscall: 'uv_resident_set_memory'
+}
+Error: ENOENT: no such file or directory, uv_resident_set_memory
+    at ignore-listed frames {
+  errno: -2,
+  code: 'ENOENT',
+  syscall: 'uv_resident_set_memory'
+}
+{"level":"WARN","timestamp":"2026-10-22T16:12:16.250Z","message":"HTTP request failed","method":"GET","path":"/api/health","statusCode":503,"durationMs":33}
+ GET /api/health 503 in 27ms (next.js: 7ms, proxy.ts: 14ms, application-code: 7ms)
+Error: ENOENT: no such file or directory, uv_resident_set_memory
+    at ignore-listed frames {
+  errno: -2,
+  code: 'ENOENT',
+  syscall: 'uv_resident_set_memory'
+}
+Error: ENOENT: no such file or directory, uv_resident_set_memory
+    at ignore-listed frames {
+  errno: -2,
+  code: 'ENOENT',
+  syscall: 'uv_resident_set_memory'
+}
+○ Compiling / ...
+Error: ENOENT: no such file or directory, uv_resident_set_memory
+    at ignore-listed frames {
+  errno: -2,
+  code: 'ENOENT',
+  syscall: 'uv_resident_set_memory'
+}
+Error: ENOENT: no such file or directory, uv_resident_set_memory
+    at ignore-listed frames {
+  errno: -2,
+  code: 'ENOENT',
+  syscall: 'uv_resident_set_memory'
+}
+{"level":"WARN","timestamp":"2026-10-22T16:12:21.253Z","message":"HTTP request failed","method":"GET","path":"/","statusCode":500,"durationMs":4998}
+ GET / 500 in 5.0s (next.js: 5.0s, application-code: 3ms)
+ GET / 500 in 5.0s (next.js: 5.0s, application-code: 4ms)
+Error: ENOENT: no such file or directory, uv_resident_set_memory
+    at ignore-listed frames {
+  errno: -2,
+  code: 'ENOENT',
+  syscall: 'uv_resident_set_memory'
+}
+Error: ENOENT: no such file or directory, uv_resident_set_memory
+    at ignore-listed frames {
+  errno: -2,
+  code: 'ENOENT',
+  syscall: 'uv_resident_set_memory'
+}
+{"level":"WARN","timestamp":"2026-10-22T16:12:21.314Z","message":"HTTP request failed","method":"GET","path":"/","statusCode":500,"durationMs":57}
+ GET / 500 in 56ms (next.js: 53ms, application-code: 3ms)
+ GET / 500 in 56ms (next.js: 53ms, application-code: 3ms)
+Error: ENOENT: no such file or directory, uv_resident_set_memory
+    at ignore-listed frames {
+  errno: -2,
+  code: 'ENOENT',
+  syscall: 'uv_resident_set_memory'
+}
+{"level":"WARN","timestamp":"2026-10-22T16:12:21.389Z","message":"HTTP request failed","method":"GET","path":"/","statusCode":500,"durationMs":71}
+ GET / 500 in 71ms (next.js: 1.7ms, application-code: 69ms)
+ GET / 500 in 71ms (next.js: 1.7ms, application-code: 69ms)
+Error: ENOENT: no such file or directory, uv_resident_set_memory
+    at ignore-listed frames {
+  errno: -2,
+  code: 'ENOENT',
+  syscall: 'uv_resident_set_memory'
+}
+Error: ENOENT: no such file or directory, uv_resident_set_memory
+    at ignore-listed frames {
+  errno: -2,
+  code: 'ENOENT',
+  syscall: 'uv_resident_set_memory'
+}
+Error: ENOENT: no such file or directory, uv_resident_set_memory
+    at ignore-listed frames {
+  errno: -2,
+  code: 'ENOENT',
+  syscall: 'uv_resident_set_memory'
+}
+{"level":"WARN","timestamp":"2026-10-22T16:12:21.467Z","message":"HTTP request failed","method":"GET","path":"/login","statusCode":500,"durationMs":75}
+ GET /login 500 in 74ms (next.js: 71ms, application-code: 4ms)
+ GET /login 500 in 74ms (next.js: 71ms, application-code: 4ms)
+Error: ENOENT: no such file or directory, uv_resident_set_memory
+    at ignore-listed frames {
+  errno: -2,
+  code: 'ENOENT',
+  syscall: 'uv_resident_set_memory'
+}
+Error: ENOENT: no such file or directory, uv_resident_set_memory
+    at ignore-listed frames {
+  errno: -2,
+  code: 'ENOENT',
+  syscall: 'uv_resident_set_memory'
+}
+{"level":"WARN","timestamp":"2026-10-22T16:12:21.515Z","message":"HTTP request failed","method":"GET","path":"/login","statusCode":500,"durationMs":45}
+ GET /login 500 in 44ms (next.js: 41ms, application-code: 3ms)
+ GET /login 500 in 44ms (next.js: 41ms, application-code: 3ms)
+Error: ENOENT: no such file or directory, uv_resident_set_memory
+    at ignore-listed frames {
+  errno: -2,
+  code: 'ENOENT',
+  syscall: 'uv_resident_set_memory'
+}
+Error: ENOENT: no such file or directory, uv_resident_set_memory
+    at ignore-listed frames {
+  errno: -2,
+  code: 'ENOENT',
+  syscall: 'uv_resident_set_memory'
+}
+{"level":"WARN","timestamp":"2026-10-22T16:12:21.574Z","message":"HTTP request failed","method":"GET","path":"/login","statusCode":500,"durationMs":56}
+ GET /login 500 in 55ms (next.js: 52ms, application-code: 3ms)
+ GET /login 500 in 55ms (next.js: 52ms, application-code: 3ms)
+Error: ENOENT: no such file or directory, uv_resident_set_memory
+    at ignore-listed frames {
+  errno: -2,
+  code: 'ENOENT',
+  syscall: 'uv_resident_set_memory'
+}
+Error: ENOENT: no such file or directory, uv_resident_set_memory
+    at ignore-listed frames {
+  errno: -2,
+  code: 'ENOENT',
+  syscall: 'uv_resident_set_memory'
+}
+{"level":"WARN","timestamp":"2026-10-22T16:12:21.961Z","message":"HTTP request failed","method":"GET","path":"/signup","statusCode":500,"durationMs":384}
+ GET /signup 500 in 379ms (next.js: 374ms, application-code: 5ms)
+ GET /signup 500 in 379ms (next.js: 374ms, application-code: 5ms)
+Error: ENOENT: no such file or directory, uv_resident_set_memory
+    at ignore-listed frames {
+  errno: -2,
+  code: 'ENOENT',
+  syscall: 'uv_resident_set_memory'
+}
+Error: ENOENT: no such file or directory, uv_resident_set_memory
+    at ignore-listed frames {
+  errno: -2,
+  code: 'ENOENT',
+  syscall: 'uv_resident_set_memory'
+}
+{"level":"WARN","timestamp":"2026-10-22T16:12:22.013Z","message":"HTTP request failed","method":"GET","path":"/signup","statusCode":500,"durationMs":50}
+ GET /signup 500 in 46ms (next.js: 43ms, application-code: 3ms)
+ GET /signup 500 in 46ms (next.js: 43ms, application-code: 3ms)
+Error: ENOENT: no such file or directory, uv_resident_set_memory
+    at ignore-listed frames {
+  errno: -2,
+  code: 'ENOENT',
+  syscall: 'uv_resident_set_memory'
+}
+Error: ENOENT: no such file or directory, uv_resident_set_memory
+    at ignore-listed frames {
+  errno: -2,
+  code: 'ENOENT',
+  syscall: 'uv_resident_set_memory'
+}
+{"level":"WARN","timestamp":"2026-10-22T16:12:22.064Z","message":"HTTP request failed","method":"GET","path":"/signup","statusCode":500,"durationMs":48}
+ GET /signup 500 in 46ms (next.js: 43ms, application-code: 3ms)
+ GET /signup 500 in 46ms (next.js: 43ms, application-code: 3ms)
+Error: ENOENT: no such file or directory, uv_resident_set_memory
+    at ignore-listed frames {
+  errno: -2,
+  code: 'ENOENT',
+  syscall: 'uv_resident_set_memory'
+}
+Error: ENOENT: no such file or directory, uv_resident_set_memory
+    at ignore-listed frames {
+  errno: -2,
+  code: 'ENOENT',
+  syscall: 'uv_resident_set_memory'
+}
+{"level":"WARN","timestamp":"2026-10-22T16:12:22.575Z","message":"HTTP request failed","method":"GET","path":"/student","statusCode":500,"durationMs":509}
+ GET /student 500 in 508ms (next.js: 503ms, application-code: 4ms)
+ GET /student 500 in 508ms (next.js: 503ms, application-code: 4ms)
+Error: ENOENT: no such file or directory, uv_resident_set_memory
+    at ignore-listed frames {
+  errno: -2,
+  code: 'ENOENT',
+  syscall: 'uv_resident_set_memory'
+}
+Error: ENOENT: no such file or directory, uv_resident_set_memory
+    at ignore-listed frames {
+  errno: -2,
+  code: 'ENOENT',
+  syscall: 'uv_resident_set_memory'
+}
+{"level":"WARN","timestamp":"2026-10-22T16:12:22.624Z","message":"HTTP request failed","method":"GET","path":"/student","statusCode":500,"durationMs":48}
+ GET /student 500 in 46ms (next.js: 44ms, application-code: 2ms)
+ GET /student 500 in 46ms (next.js: 44ms, application-code: 2ms)
+Error: ENOENT: no such file or directory, uv_resident_set_memory
+    at ignore-listed frames {
+  errno: -2,
+  code: 'ENOENT',
+  syscall: 'uv_resident_set_memory'
+}
+Error: ENOENT: no such file or directory, uv_resident_set_memory
+    at ignore-listed frames {
+  errno: -2,
+  code: 'ENOENT',
+  syscall: 'uv_resident_set_memory'
+}
+{"level":"WARN","timestamp":"2026-10-22T16:12:22.680Z","message":"HTTP request failed","method":"GET","path":"/student","statusCode":500,"durationMs":53}
+ GET /student 500 in 53ms (next.js: 50ms, application-code: 2ms)
+ GET /student 500 in 53ms (next.js: 50ms, application-code: 2ms)
+Error: ENOENT: no such file or directory, uv_resident_set_memory
+    at ignore-listed frames {
+  errno: -2,
+  code: 'ENOENT',
+  syscall: 'uv_resident_set_memory'
+}
+Error: ENOENT: no such file or directory, uv_resident_set_memory
+    at ignore-listed frames {
+  errno: -2,
+  code: 'ENOENT',
+  syscall: 'uv_resident_set_memory'
+}
+{"level":"WARN","timestamp":"2026-10-22T16:12:23.059Z","message":"HTTP request failed","method":"GET","path":"/student/practicals","statusCode":500,"durationMs":377}
+ GET /student/practicals 500 in 376ms (next.js: 374ms, application-code: 2ms)
+ GET /student/practicals 500 in 376ms (next.js: 374ms, application-code: 2ms)
+Error: ENOENT: no such file or directory, uv_resident_set_memory
+    at ignore-listed frames {
+  errno: -2,
+  code: 'ENOENT',
+  syscall: 'uv_resident_set_memory'
+}
+{"level":"WARN","timestamp":"2026-10-22T16:12:23.096Z","message":"HTTP request failed","method":"GET","path":"/student/practicals","statusCode":500,"durationMs":34}
+ GET /student/practicals 500 in 33ms (next.js: 1.6ms, application-code: 31ms)
+ GET /student/practicals 500 in 33ms (next.js: 1.6ms, application-code: 32ms)
+Error: ENOENT: no such file or directory, uv_resident_set_memory
+    at ignore-listed frames {
+  errno: -2,
+  code: 'ENOENT',
+  syscall: 'uv_resident_set_memory'
+}
+Error: ENOENT: no such file or directory, uv_resident_set_memory
+    at ignore-listed frames {
+  errno: -2,
+  code: 'ENOENT',
+  syscall: 'uv_resident_set_memory'
+}
+Error: ENOENT: no such file or directory, uv_resident_set_memory
+    at ignore-listed frames {
+  errno: -2,
+  code: 'ENOENT',
+  syscall: 'uv_resident_set_memory'
+}
+{"level":"WARN","timestamp":"2026-10-22T16:12:23.173Z","message":"HTTP request failed","method":"GET","path":"/student/practicals","statusCode":500,"durationMs":55}
+ GET /student/practicals 500 in 51ms (next.js: 47ms, application-code: 4ms)
+ GET /student/practicals 500 in 51ms (next.js: 47ms, application-code: 4ms)
