@@ -50,3 +50,10 @@ test('authentication lookup outages fail closed with service unavailable', async
     return true;
   });
 });
+
+test('deactivated students, faculty and administrators cannot reuse otherwise valid sessions', async () => {
+  for (const role of ['student', 'faculty', 'admin']) {
+    const row = { ...actor, role, status: 'inactive' };
+    await assert.rejects(authenticateToken(generateToken({ ...row, status: 'active' }), { query: async () => [row] }), denied(401));
+  }
+});

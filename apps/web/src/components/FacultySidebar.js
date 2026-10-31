@@ -1,165 +1,27 @@
 'use client';
 
-import { useRouter, usePathname } from 'next/navigation';
-import { useEffect, useState } from 'react';
-import { LayoutDashboard, Inbox, Award, LogOut } from 'lucide-react';
-import HeaderProfileDropdown from './HeaderProfileDropdown';
-import NotificationDropdown from './NotificationDropdown';
+import { useState } from 'react';
+import Link from 'next/link';
+import { useAccountIdentity } from '@/hooks/useAccountIdentity';
+import Image from 'next/image';
+import { useRouter, useSearchParams } from 'next/navigation';
+import { IconLayoutDashboard, IconInbox, IconChartBar, IconUser, IconKey, IconLogout } from '@tabler/icons-react';
+import ChangePasswordModal from './ChangePasswordModal';
+import LogoutConfirmModal from './LogoutConfirmModal';
 
+const links = [['Dashboard', '/faculty?tab=practicals', IconLayoutDashboard], ['Student submissions', '/faculty?tab=submissions', IconInbox], ['Marks overview', '/faculty?tab=marks', IconChartBar]];
 export default function FacultySidebar() {
   const router = useRouter();
-  const pathname = usePathname();
-  const [user, setUser] = useState(null);
-  const [activeMenu, setActiveMenu] = useState('dashboard');
-
-  const [isHydrated, setIsHydrated] = useState(false);
-
-  // Wait for client-side hydration before reading localStorage
-  useEffect(() => {
-    setIsHydrated(true);
-  }, []);
-
-  useEffect(() => {
-    if (!isHydrated) return;
-    const userData = localStorage.getItem('user');
-    if (userData) {
-      try {
-        const parsed = JSON.parse(userData);
-        if (parsed.role !== 'faculty' && parsed.role !== 'admin') {
-          router.replace('/login');
-          return;
-        }
-        setUser(parsed);
-      } catch {
-        router.replace('/login');
-      }
-    } else {
-      router.replace('/login');
-    }
-  }, [isHydrated, router]);
-
-  useEffect(() => {
-    if (typeof window !== 'undefined') {
-      const search = window.location.search;
-      if (search.includes('tab=submissions')) {
-        setActiveMenu('submissions');
-      } else if (search.includes('tab=marks')) {
-        setActiveMenu('marks');
-      } else {
-        setActiveMenu('dashboard');
-      }
-    }
-  }, [pathname]);
-
-  const handleLogout = () => {
-    if (window.confirm("Are you sure you want to log out?")) {
-      localStorage.removeItem('token');
-      localStorage.removeItem('user');
-      router.push('/');
-    }
-  };
-
-  const navItems = [
-    { id: 'dashboard', label: 'Practicals Dashboard', path: '/faculty', icon: <LayoutDashboard size={18} /> },
-    { id: 'submissions', label: 'Student Submissions', path: '/faculty?tab=submissions', icon: <Inbox size={18} /> },
-    { id: 'marks', label: 'Marks Overview', path: '/faculty?tab=marks', icon: <Award size={18} /> },
-  ];
-
-  return (
-    <>
-      {/* Top Navigation Bar */}
-      <div style={{
-        position: 'fixed',
-        top: 0,
-        right: 0,
-        left: 280,
-        height: '70px',
-        backgroundColor: '#ffffff',
-        borderBottom: '1px solid #e2e8f0',
-        display: 'flex',
-        alignItems: 'center',
-        justifyContent: 'flex-end',
-        paddingRight: '30px',
-        gap: '16px',
-        zIndex: 100
-      }}>
-        <NotificationDropdown user={user} />
-        <HeaderProfileDropdown user={user} />
-      </div>
-
-      {/* Sidebar */}
-      <div className="sidebar" style={{ paddingTop: '20px', position: 'fixed', left: 0, top: 0, bottom: 0, width: '280px', zIndex: 99 }}>
-        <div className="logo-container" style={{ padding: '0 20px', textAlign: 'center', marginBottom: '24px' }}>
-          <img 
-            src="/coderank-logo.jpg" 
-            alt="CodeRank Logo" 
-            onError={(e) => { e.target.src = '/coderank-logo.jpg'; }}
-            style={{ width: '56px', height: '56px', objectFit: 'contain', marginBottom: '8px', borderRadius: '10px' }}
-          />
-          <h2 className="brand-text" style={{ fontSize: '20px', fontWeight: 700, margin: '0 0 2px 0', color: '#1e293b' }}>
-            CodeRank
-          </h2>
-          <p style={{ fontSize: '11px', fontWeight: 600, color: '#7c3aed', margin: 0, textTransform: 'uppercase', letterSpacing: '0.05em' }}>
-            Faculty Portal
-          </p>
-        </div>
-
-        <ul className="sidebar-nav" style={{ listStyle: 'none', padding: '0 12px', margin: 0 }}>
-          {navItems.map((item) => {
-            const isActive = activeMenu === item.id;
-            return (
-              <li
-                key={item.id}
-                className={isActive ? 'active' : ''}
-                onClick={() => {
-                  setActiveMenu(item.id);
-                  router.push(item.path);
-                }}
-                style={{
-                  display: 'flex',
-                  alignItems: 'center',
-                  gap: '12px',
-                  padding: '11px 16px',
-                  borderRadius: '10px',
-                  cursor: 'pointer',
-                  fontWeight: isActive ? 600 : 500,
-                  fontSize: '14px',
-                  marginBottom: '4px',
-                  transition: 'all 0.15s ease',
-                  backgroundColor: isActive ? '#f5f3ff' : 'transparent',
-                  color: isActive ? '#7c3aed' : '#475569',
-                }}
-              >
-                <span style={{ color: isActive ? '#7c3aed' : '#64748b', display: 'flex' }}>
-                  {item.icon}
-                </span>
-                <span>{item.label}</span>
-              </li>
-            );
-          })}
-
-          <li
-            onClick={handleLogout}
-            style={{
-              marginTop: '28px',
-              display: 'flex',
-              alignItems: 'center',
-              gap: '12px',
-              padding: '11px 16px',
-              borderRadius: '10px',
-              cursor: 'pointer',
-              fontWeight: 600,
-              fontSize: '14px',
-              color: '#ef4444',
-              backgroundColor: '#fff5f5',
-              transition: 'all 0.15s ease',
-            }}
-          >
-            <LogOut size={18} />
-            <span>Sign Out</span>
-          </li>
-        </ul>
-      </div>
-    </>
-  );
+  const searchParams = useSearchParams();
+  const tab = searchParams.get('tab') || 'practicals';
+  const user = useAccountIdentity();
+  const [passwordOpen, setPasswordOpen] = useState(false);
+  const [logoutOpen, setLogoutOpen] = useState(false);
+  const [menuOpen, setMenuOpen] = useState(false);
+  const navigation = <>
+    <Link href="/faculty" className="faculty-brand"><Image src="/coderank-logo.jpg" width={36} height={36} alt=""/><span>CodeRank<small>FACULTY WORKSPACE</small></span></Link>
+    <nav aria-label="Faculty navigation">{links.map(([label, href, Icon]) => <Link key={href} href={href} aria-current={(href === '/faculty' ? tab === 'practicals' : href.endsWith(`tab=${tab}`)) ? 'page' : undefined} onClick={() => setMenuOpen(false)}><Icon size={19} aria-hidden="true"/><span>{label}</span></Link>)}</nav>
+    <div className="faculty-account"><div className="faculty-identity"><b>{user?.name?.charAt(0) || 'F'}</b><span>{user?.name || 'Faculty'}<small>FACULTY</small></span></div><Link href={user?.email ? `/profile/${encodeURIComponent(user.email.split('@')[0])}` : '/login'}><IconUser size={19}/>My profile</Link><button onClick={() => { setMenuOpen(false); setPasswordOpen(true); }}><IconKey size={19}/>Change password</button><button onClick={() => { setMenuOpen(false); setLogoutOpen(true); }}><IconLogout size={19}/>Sign out</button></div>
+  </>;
+  return <><aside className="faculty-sidebar">{navigation}</aside><div className="faculty-mobile-bar"><span>CodeRank · Faculty</span><button aria-expanded={menuOpen} aria-controls="faculty-mobile-navigation" onClick={() => setMenuOpen(!menuOpen)}>{menuOpen ? 'Close menu' : 'Menu'}</button>{menuOpen && <div id="faculty-mobile-navigation" className="faculty-mobile-navigation">{navigation}</div>}</div><ChangePasswordModal isOpen={passwordOpen} onClose={() => setPasswordOpen(false)}/><LogoutConfirmModal isOpen={logoutOpen} onCancel={() => setLogoutOpen(false)} onConfirm={() => { localStorage.removeItem('token'); localStorage.removeItem('user'); router.push('/login'); }}/></>;
 }

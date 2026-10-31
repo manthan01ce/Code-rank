@@ -12,11 +12,14 @@ export async function POST(request) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
-    const formData = await request.formData();
+    let formData;
+    try { formData = await request.formData(); } catch {
+      return NextResponse.json({ error: 'Invalid multipart payload' }, { status: 400 });
+    }
     const file = formData.get('file');
     const role = formData.get('role');
 
-    if (!file || !role) {
+    if (!file || typeof file.arrayBuffer !== 'function' || typeof file.name !== 'string' || !role) {
       return NextResponse.json({ error: 'File and role are required' }, { status: 400 });
     }
 
@@ -25,10 +28,11 @@ export async function POST(request) {
     }
 
     const fileExt = path.extname(file.name).toLowerCase();
-    if (!['.csv', '.xlsx', '.xls'].includes(fileExt)) {
+    if (!['.csv', '.xlsx'].includes(fileExt)) {
       return NextResponse.json({ error: 'Unsupported file type. Only CSV and Excel files are allowed.' }, { status: 400 });
     }
 
+    if (file.size > 5 * 1024 * 1024) return NextResponse.json({ error: 'File size exceeds 5MB limit' }, { status: 400 });
     const bytes = await file.arrayBuffer();
     const buffer = Buffer.from(bytes);
 
@@ -38,6 +42,7 @@ export async function POST(request) {
 
     let parsedUsers = [];
 
+    try {
     if (fileExt === '.csv') {
       const records = parse(buffer.toString('utf-8'), {
         columns: true,
@@ -89,6 +94,10 @@ export async function POST(request) {
           }
         }
       });
+    }
+
+    } catch {
+      return NextResponse.json({ error: 'Invalid spreadsheet file' }, { status: 400 });
     }
 
     const result = await UserService.bulkUploadUsers(user, parsedUsers, role);

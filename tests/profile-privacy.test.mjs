@@ -39,6 +39,11 @@ test("profile history is bounded and excludes source/secret grading fields; hand
     await db.exec(
       "INSERT INTO users(name,email,password,role) VALUES('Wrong','studentX1@test','secret','student'),('Student','student_1@test','secret','student'); INSERT INTO courses(course_code,name,semester) VALUES('CS','CS',1); INSERT INTO practicals(faculty_id,course_id,title) SELECT 1,1,'P'||n FROM generate_series(1,150) n; INSERT INTO practical_submissions(student_id,practical_id,code,language,status) SELECT 2,id,convert_to('private-source','UTF8'),'python','Accepted' FROM practicals",
     );
+    const ownProfile = await UserService.getProfile({ id: 2, role: 'student', session_token: null });
+    assert.equal(ownProfile.status, 'active');
+    assert.equal(ownProfile.session_token, undefined);
+    assert.equal(ownProfile.password, undefined);
+    await assert.rejects(UserService.getProfile({ id: 2, role: 'admin' }), e => e.status === 401);
     const profile = await UserService.getStudentProfileByUsername("student_1");
     assert.equal(profile.user.id, 2);
     assert.equal(profile.submissions.length, 100);

@@ -3,6 +3,12 @@ import { Sandbox } from './Sandbox.js';
 export { dockerCommand } from './docker.js';
 import crypto from 'node:crypto';
 
+export const MAX_EXECUTION_MS = 5000;
+export function executionBudget(value = MAX_EXECUTION_MS) {
+  const parsed = Number(value);
+  return Number.isFinite(parsed) && parsed > 0 ? Math.min(parsed, MAX_EXECUTION_MS) : MAX_EXECUTION_MS;
+}
+
 const RESOURCE_MARKER = '__CODERANK_RESOURCE__';
 const LANGUAGES = {
   cpp: { compile: 'g++ -O2 solution.cpp -o solution', run: './solution', filename: 'solution.cpp' },
@@ -20,12 +26,12 @@ function resources(stderr = '') {
 }
 
 export class Executor {
-  constructor(language, code, timeLimit = 3000, userId = null, { runDocker = dockerCommand } = {}) {
+  constructor(language, code, timeLimit = MAX_EXECUTION_MS, userId = null, { runDocker = dockerCommand } = {}) {
     if (!LANGUAGES[language]) throw new Error('Unsupported language');
     this.config = LANGUAGES[language];
     this.sandbox = new Sandbox(runDocker, { language });
     this.code = language === 'java' && !code.includes('class Solution') ? `public class Solution {\n${code}\n}` : code;
-    this.timeLimit = timeLimit;
+    this.timeLimit = executionBudget(timeLimit);
     this.executionId = crypto.randomUUID();
     // Never treat directory existence as a compiled-artifact cache hit.
     this.workdir = `/app/exec_${this.executionId}`;
@@ -56,13 +62,13 @@ export class Executor {
     const start = performance.now();
     let stdout = '', stderr = '', exitCode = 0;
     try {
-      const result = await this.script(`set -e\ncd '${this.workdir}'\nprintf '%s' '${b64(input)}' | base64 -d > input.txt\n/usr/bin/time -f '${RESOURCE_MARKER}:%U:%S:%M' ${this.config.run} < input.txt\n`, timeLimit);
+      const result = await this.script(`set -e\ncd '${this.workdir}'\nprintf '%s' '${b64(input)}' | base64 -d > input.txt\n/usr/bin/time -f '${RESOURCE_MARKER}:%U:%S:%M' ${this.config.run} < input.txt\n`, Math.min(this.timeLimit, executionBudget(timeLimit)));
       stdout = result.stdout || ''; stderr = result.stderr || '';
     } catch (error) {
       if (error.infrastructure) throw error;
       stdout = error.stdout || ''; stderr = error.stderr || '';
       exitCode = typeof error.code === 'number' ? error.code : 1;
-      if (error.killed || exitCode === 124 || exitCode === 137) stderr = 'Time Limit Exceeded';
+      if (error.killed || exitCode === 124 || exitCode === 137) { exitCode = 124; stderr = 'Time Limit Exceeded'; }
       else if (!stderr) stderr = error.message || `Process exited with code ${exitCode}`;
     }
     const metrics = resources(stderr);
@@ -74,7 +80,7 @@ export class Executor {
     for (const [idx, tc] of testCases.entries()) {
       if (typeof tc.input !== 'string' || (typeof tc.expected !== 'string' && typeof tc.expected !== 'number')) throw new Error('stdin/stdout test cases require input and expected output');
       const seconds = Number(tc.time_limit);
-      const limit = Number.isFinite(seconds) && seconds > 0 ? Math.min(seconds * 1000, 30000) : this.timeLimit;
+      const limit = Number.isFinite(seconds) && seconds > 0 ? executionBudget(seconds * 1000) : this.timeLimit;
       results.push(await this.runOneTestCase(tc.input, tc.expected, tc.id, idx, tc.marks, limit));
     }
     return results;

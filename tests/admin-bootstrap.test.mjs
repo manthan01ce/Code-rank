@@ -35,6 +35,10 @@ mock.module(
   new URL("../packages/core/src/db/client.js", import.meta.url).href,
   { defaultExport: sql },
 );
+sql.readQuery = async () => {
+  if (offline) throw Error('offline');
+  return user ? [user] : [];
+};
 const { UserService } = await import(
   "../packages/core/src/services/UserService.js"
 );

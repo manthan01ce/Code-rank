@@ -46,3 +46,24 @@ test('playground cleanup runs after failures', async () => {
   await assert.rejects(runner.runPlayground(''), /offline/);
   assert.deepEqual(calls.at(-1).slice(0, 2), ['rm', '-f']);
 });
+
+test('execution cannot exceed five seconds through defaults, constructor or testcase overrides', async () => {
+  const { executionBudget } = await import('../packages/runner/src/Executor.js');
+  for (const value of [undefined, 0, -1, Infinity, NaN, 999999]) assert.equal(executionBudget(value), 5000);
+  assert.equal(executionBudget(40), 40);
+  const calls = [];
+  const runner = new Executor('python', 'while True: pass', 60000, null, {
+    runDocker: async (args, options) => { calls.push({ args, options }); return { stdout: '', stderr: '' }; },
+  });
+  assert.equal(runner.timeLimit, 5000);
+  await runner.runOneTestCase('', '', 'direct', 0, 0, 60000);
+  await runner.runBatch([{ input: '', expected: '', time_limit: 90 }]);
+  const executions = calls.filter(call => call.args[0] === 'exec');
+  assert.equal(executions.length, 2);
+  for (const call of executions) {
+    const budget = call.args.find(value => /^\d+\.\d+s$/.test(value));
+    assert.ok(parseFloat(budget) <= 5, budget);
+    assert.ok(call.options.timeout <= 7000);
+  }
+  await runner.cleanup();
+});

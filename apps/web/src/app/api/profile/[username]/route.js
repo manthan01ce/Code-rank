@@ -34,6 +34,6 @@ export async function PUT(request) {
       return NextResponse.json({ error: error.message }, { status: error.status });
     }
     console.error('PUT /api/profile/[username] error:', error);
-    return NextResponse.json({ error: error.message || 'Internal server error' }, { status: 500 });
+    return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
   }
 }

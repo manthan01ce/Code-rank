@@ -1,0 +1,76 @@
+/* Only the overview and selection pages inherit these tokens; the editor stays independent. */
+.surface {
+  --overview-accent:#4338ca; --overview-tint:#eef2ff; --overview-subtle:#f8faff;
+  --overview-success:#047857; --overview-success-bg:#ecfdf5;
+  --overview-warning:#92400e; --overview-warning-bg:#fffbeb;
+  --overview-danger:#b91c1c; --overview-danger-bg:#fef2f2;
+  --bg-color:#f4f6fb; --card-bg:#fff; --text-main:#1e293b; --text-muted:#5e6b82; --border-color:#dfe5ef; --primary:#4338ca;
+  --student-ui-bg-f8fafc:var(--bg-color); --student-ui-bg-ffffff:var(--card-bg); --student-ui-bg-f1f5f9:#edf1f8; --student-ui-bg-e2e8f0:#e3e9f4; --student-ui-bg-e0f2fe:var(--overview-tint);
+  --student-ui-text-1e293b:var(--text-main); --student-ui-text-475569:#475569; --student-ui-text-64748b:var(--text-muted); --student-ui-text-94a3b8:var(--text-muted);
+  --student-ui-border-e2e8f0:var(--border-color); --student-ui-border-f1f5f9:var(--border-color); --student-ui-border-cbd5e1:#cad3e2;
+  min-height:100dvh; background:var(--bg-color); color:var(--text-main); font-family:Inter,system-ui,sans-serif;
+}
+:global([data-student-theme=dark]) .surface {
+  --overview-accent:#b5b9ff; --overview-tint:#292b4f; --overview-subtle:#1a2436;
+  --overview-success:#6ee7b7; --overview-success-bg:#16382f;
+  --overview-warning:#fcd38b; --overview-warning-bg:#3c311e;
+  --overview-danger:#fda4af; --overview-danger-bg:#402630;
+  --bg-color:#101725; --card-bg:#192233; --text-main:#e9eef8; --text-muted:#a6b3c9; --border-color:#303c51; --primary:#b5b9ff;
+  --student-ui-bg-f1f5f9:#222e42; --student-ui-bg-e2e8f0:#2d3a52; --student-ui-text-475569:#bec9da; --student-ui-border-cbd5e1:#3c4961;
+}
+.surface :focus-visible {outline:3px solid #818cf8;outline-offset:4px}
+.content {max-width:1220px;margin:0 auto;padding:36px 28px 64px}
+.surface .toolbar {background:var(--card-bg);border-bottom-color:var(--border-color);box-shadow:0 1px 8px #0f172a03}
+.intro {margin:0 0 28px;padding:8px 0}
+.eyebrow {font-size:10px!important;letter-spacing:1.5px;font-weight:700;color:var(--overview-accent)!important;margin:0 0 13px}
+.intro h1,.intro h2 {font-size:clamp(24px,3vw,32px)!important;font-weight:650!important;letter-spacing:-.9px;color:var(--text-main)}
+.intro>p:last-child {max-width:680px;line-height:1.8;font-size:14px!important;margin-top:10px;margin-bottom:0!important}
+.overview {display:grid;grid-template-columns:repeat(3,1fr);gap:16px;margin:0 0 28px}
+.overview>div {background:var(--card-bg);border:1px solid var(--border-color);border-radius:12px;padding:20px 23px;display:flex;align-items:center;justify-content:space-between;gap:14px}
+.overview span {font-size:12px;line-height:1.7;color:var(--text-muted)}
+.overview strong {font-size:26px;font-weight:600;color:var(--overview-accent);font-variant-numeric:tabular-nums}
+.surface .pagination {display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin:0 0 20px}
+.surface .pagination button {border:1px solid var(--border-color);border-radius:8px;background:var(--card-bg);color:var(--text-main);padding:9px 14px;font:500 12px Inter,system-ui,sans-serif;min-height:38px;cursor:pointer}
+.surface .pagination button:disabled {color:var(--text-muted);opacity:.55;cursor:default}
+.surface .pagination button:not(:disabled):hover {border-color:var(--overview-accent);background:var(--overview-tint)}
+.surface .courseCard {border:1px solid var(--border-color)!important;box-shadow:0 5px 18px #0f172a04!important;border-radius:16px!important}
+.courseCode {border:1px solid color-mix(in srgb,var(--overview-accent) 18%,transparent)}
+.surface :global(.student-question-list) ol {border-color:var(--border-color);border-radius:10px}
+.surface :global(.question-list-heading) {font-size:9px;letter-spacing:1px}
+.surface :global(.student-question-row) {background:var(--card-bg);padding-block:22px}
+.surface :global(.student-question-row):nth-child(even) {background:var(--overview-subtle)}
+.surface :global(.student-question-row):hover {background:var(--overview-tint)}
+.surface :global(.question-index) {border-color:var(--border-color);background:var(--overview-subtle);color:var(--text-muted);width:34px;height:34px}
+.surface :global(.question-status) {background:var(--overview-subtle);border:1px solid var(--border-color);border-radius:20px;padding:5px 9px;font-size:10px;white-space:nowrap}
+.surface :global(.question-solved) {color:var(--overview-success);background:var(--overview-success-bg);border-color:transparent}
+.surface :global(.question-attempted) {color:var(--overview-warning);background:var(--overview-warning-bg);border-color:transparent}
+.surface :global(.question-action) a {background:var(--card-bg);color:var(--overview-accent);border-color:var(--border-color);min-height:36px}
+.surface :global(.question-action) a:hover {border-color:var(--overview-accent);background:var(--overview-tint)}
+.selectionHeader {gap:20px;flex-wrap:wrap;padding:18px 22px!important;border:1px solid var(--border-color);border-radius:12px!important;box-shadow:none!important;margin-bottom:32px!important}
+.selectionHeader>div:last-child {flex-wrap:wrap;align-items:center}
+.selectionTitle {gap:20px;flex-wrap:wrap;padding-bottom:24px;border-bottom:1px solid var(--border-color)}
+.selectionTitle p {line-height:1.7}
+.courseGrid {display:grid;grid-template-columns:repeat(auto-fill,minmax(min(100%,280px),1fr));gap:20px}
+.subjectCard {appearance:none;text-align:left;font:inherit;padding:26px;min-height:190px;display:flex;flex-direction:column;justify-content:space-between;gap:30px;background:var(--card-bg);border:1px solid var(--border-color);border-radius:14px;cursor:pointer;box-shadow:0 5px 18px #0f172a04;transition:border-color .2s,transform .2s,box-shadow .2s}
+.subjectCard:hover {transform:translateY(-3px);border-color:var(--overview-accent);box-shadow:0 10px 28px #0f172a0b}
+.subjectCard h3 {line-height:1.5;overflow-wrap:anywhere}
+.subjectCode {display:inline-block;padding:5px 9px;border-radius:6px;background:var(--overview-tint);color:var(--overview-accent);font-size:10px;font-weight:700;letter-spacing:.8px}
+.practicalTable {border:1px solid var(--border-color);border-radius:12px;background:var(--card-bg);overflow-x:auto;box-shadow:none}
+.practicalTable table {width:100%;border-collapse:collapse;min-width:860px;background:var(--card-bg);color:var(--text-main)}
+.practicalTable th {background:var(--overview-subtle);color:var(--text-muted);font-size:10px;letter-spacing:.65px;text-transform:uppercase;font-weight:600;padding:17px;border-bottom:1px solid var(--border-color)}
+.practicalTable td {padding:21px 17px;font-size:12px;border-bottom:1px solid var(--border-color)}
+.practicalTable tr:last-child td {border-bottom:0}
+.practicalTable tbody tr:hover {background:var(--overview-subtle)}
+.badge {display:inline-flex;align-items:center;padding:5px 9px;border-radius:20px;font-size:10px;font-weight:600;white-space:nowrap;color:var(--text-muted);background:var(--overview-subtle)}
+.badge[data-tone=success] {color:var(--overview-success);background:var(--overview-success-bg)}
+.badge[data-tone=warning] {color:var(--overview-warning);background:var(--overview-warning-bg)}
+.badge[data-tone=danger] {color:var(--overview-danger);background:var(--overview-danger-bg)}
+@media(max-width:760px) {
+  .content {padding:28px 16px 48px}
+  .overview {gap:8px}.overview>div {flex-direction:column-reverse;align-items:flex-start;gap:4px;padding:15px 12px}
+  .overview span {font-size:10px}.overview strong {font-size:23px}
+  .surface .toolbar {position:relative!important}
+  .selectionHeader {padding:16px!important}.selectionHeader>div:last-child {gap:8px!important}
+  .subjectCard {padding:22px}
+}
+@media(prefers-reduced-motion:reduce) {.subjectCard {transition:none}.subjectCard:hover {transform:none}}

@@ -75,9 +75,9 @@ setCourses(rows);
     setProcessing(true);
     try {
       const token = localStorage.getItem('token');
-      const payload = { 
+      const payload = {
         course_code: newCourseCode,
-        name: newCourseName, 
+        name: newCourseName,
         semester: parseInt(newCourseSem)
       };
 
@@ -156,11 +156,11 @@ setCourses(rows);
     <div>
       {processing && <LoadingOverlay />}
       <div className="header">
-        <h2>Courses Management</h2>
-        <input 
-          type="text" 
-          className="search-bar" 
-          placeholder="Search courses..." 
+        <div><h2>Courses</h2><p>Maintain the course catalog and semester assignments.</p></div>
+        <input
+          type="text"
+          className="search-bar"
+          aria-label="Search courses..." placeholder="Search courses..."
           value={search}
           onChange={(e) => setSearch(e.target.value)}
         />
@@ -185,8 +185,8 @@ setCourses(rows);
         <div className="table-container" style={{ marginBottom: '20px' }}>
           <h3>{editId ? 'Edit Course' : 'Add New Course'}</h3>
           <form onSubmit={handleAddOrEditCourse} style={{ display: 'flex', flexDirection: 'column', gap: '15px', marginTop: '15px', maxWidth: '500px' }}>
-            <input type="text" className="input-field" placeholder="Course Code (e.g. CE101)" value={newCourseCode} onChange={e => setNewCourseCode(e.target.value)} required />
-            <input type="text" className="input-field" placeholder="Course Name" value={newCourseName} onChange={e => setNewCourseName(e.target.value)} required />
+            <input type="text" className="input-field" aria-label="Course Code (e.g. CE101)" placeholder="Course Code (e.g. CE101)" value={newCourseCode} onChange={e => setNewCourseCode(e.target.value)} required />
+            <input type="text" className="input-field" aria-label="Course Name" placeholder="Course Name" value={newCourseName} onChange={e => setNewCourseName(e.target.value)} required />
             <select className="input-field" value={newCourseSem} onChange={e => setNewCourseSem(e.target.value)} required>
               <option value="" disabled>Select Semester *</option>
               {[1, 2, 3, 4, 5, 6, 7, 8].map(s => <option key={s} value={s}>{s}</option>)}
@@ -203,10 +203,10 @@ setCourses(rows);
           <table>
             <thead>
               <tr>
-                <th>Code</th>
-                <th>Name</th>
-                <th>Semester</th>
-                <th>Actions</th>
+                <th scope="col">Code</th>
+                <th scope="col">Name</th>
+                <th scope="col">Semester</th>
+                <th scope="col">Actions</th>
               </tr>
             </thead>
             <tbody>
@@ -217,10 +217,10 @@ setCourses(rows);
                   <td>{c.semester}</td>
                   <td>
                       <div className="btn-actions">
-                        <button className="btn-small" style={{ backgroundColor: '#f59e0b', color: 'white' }} onClick={() => handleEditClick(c)}>
+                        <button className="btn-small" style={{ backgroundColor: '#475569', color: 'white' }} onClick={() => handleEditClick(c)}>
                           Edit
                         </button>
-                        <button className="btn-small" style={{ backgroundColor: '#ef4444', color: 'white' }} onClick={() => deleteCourse(c.id)}>
+                        <button className="btn-small" style={{ backgroundColor: '#b91c1c', color: 'white' }} onClick={() => deleteCourse(c.id)}>
                           Delete
                         </button>
                       </div>

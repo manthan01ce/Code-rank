@@ -18,14 +18,14 @@ export async function GET() {
   try {
     const stats = await SubmissionService.getQueueStats();
     return NextResponse.json({
-      status: 'healthy',
+      status: stats.cached ? 'degraded' : 'healthy',
       queue: stats,
       languages: Array.from(ALLOWED_LANGUAGES),
-      message: 'Execution engine queue is operational.'
-    });
-  } catch (err) {
+      message: 'Execution queue connectivity; runner capacity is monitored separately'
+    }, { status: stats.cached ? 503 : 200, headers: { 'Cache-Control': 'no-store' } });
+  } catch {
     return NextResponse.json(
-      { status: 'error', message: 'Execution queue unreachable: ' + err.message },
+      { status: 'error', message: 'Execution queue unavailable' },
       { status: 503 }
     );
   }

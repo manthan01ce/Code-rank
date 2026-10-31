@@ -139,7 +139,7 @@ export async function GET(request) {
     return NextResponse.json({
       timestamp: new Date().toISOString(),
       error: 'Failed to retrieve detailed health status',
-      message: error.message
+      message: 'Internal server error'
     }, { status: 500 });
   }
 }

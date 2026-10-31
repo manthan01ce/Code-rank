@@ -1,0 +1,33 @@
+{
+  "scope": "Single host outage-response probes. Not successful authentication, production browser timing or matched server-cold benchmark.",
+  "rows": [
+    {
+      "metric": "login HTTP first request failure",
+      "beforeMs": 4025.93,
+      "afterMs": 172.73,
+      "beforeStatus": 429,
+      "afterStatus": 503,
+      "durationReductionPercent": 95.71
+    },
+    {
+      "metric": "login HTTP repeat failure",
+      "beforeMs": 3028.68,
+      "afterMs": 26.35,
+      "beforeStatus": 429,
+      "afterStatus": 503,
+      "durationReductionPercent": 99.13
+    },
+    {
+      "metric": "isolated Redis unavailable path",
+      "beforeMs": 3083.19,
+      "afterMs": 49.72,
+      "durationReductionPercent": 98.39
+    },
+    {
+      "metric": "isolated DB unavailable login path",
+      "beforeMs": 6142.82,
+      "afterMs": 782.97,
+      "durationReductionPercent": 87.25
+    }
+  ]
+}

@@ -5,18 +5,16 @@ import { fetchUserOptions } from '@/lib/fetch-user-options';
 import { useState, useEffect, useRef } from 'react';
 import LoadingOverlay from '@/components/LoadingOverlay';
 import { useAdminAuth } from '@/hooks/useAdminAuth';
-import { useSocket } from '@/hooks/useSocket';
-import RefreshButton from '@/components/RefreshButton';
+import { usePolling } from '@/hooks/usePolling';
 
 export default function CourseMapping() {
-  const socket = useSocket();
   const [courses, setCourses] = useState([]);
   const [faculties, setFaculties] = useState([]);
   const [mappings, setMappings] = useState({}); // { course_id: { faculty_ids: [...], co_coordinator_id: null } }
   const [loading, setLoading] = useState(true);
   const [processing, setProcessing] = useState(false);
   const [toast, setToast] = useState(null);
-  const [lastUpdated, setLastUpdated] = useState(null);
+  const isDirtyRef = useRef(false);
 
   const showToast = (type, msg) => {
     setToast({ type, msg });
@@ -26,11 +24,11 @@ export default function CourseMapping() {
   const { token: authToken, isReady } = useAdminAuth();
 
   useEffect(() => {
-    if (isReady) fetchData();
+    if (isReady) fetchData(true);
   }, [isReady]);
 
-  const fetchData = async () => {
-    setLoading(true);
+  const fetchData = async (isInitial = false) => {
+    if (isInitial) setLoading(true);
     try {
       const token = authToken;
       const headers = { 'Authorization': `Bearer ${token}` };
@@ -54,52 +52,39 @@ export default function CourseMapping() {
             co_coordinator_id: co ? co.id : (facs[0]?.id || null)
           };
         }
-        setMappings(initialMap);
+        if (!isDirtyRef.current) {
+          setMappings(initialMap);
+        }
       }
-      setLastUpdated(new Date());
     } catch (e) {
       console.error(e);
-      showToast('error', 'Error loading data');
+      if (isInitial) showToast('error', 'Error loading data');
     } finally {
-      setLoading(false);
+      if (isInitial) setLoading(false);
     }
   };
 
-  // Real-time WebSocket synchronization for course mapping
-  useEffect(() => {
-    if (!socket) return;
-    socket.emit('join_admin_room');
-
-    const handleUpdate = () => {
-      fetchData();
-    };
-
-    socket.on('course_updated', handleUpdate);
-    socket.on('admin_stats_changed', handleUpdate);
-
-    return () => {
-      socket.off('course_updated', handleUpdate);
-      socket.off('admin_stats_changed', handleUpdate);
-    };
-  }, [socket]);
+  // Auto-refresh courses and mappings silently every 30s (skips when user has pending unsaved edits)
+  usePolling(() => { if (!processing && !isDirtyRef.current) fetchData(false); }, 30_000, isReady);
 
   const handleSelectFaculty = (courseId, facultyId) => {
     if (!facultyId) return; // Empty selection
-    
+    isDirtyRef.current = true;
+
     setMappings(prev => {
       const current = prev[courseId] || { faculty_ids: [], co_coordinator_id: null };
       // If already added, don't add again
       if (current.faculty_ids.includes(facultyId)) return prev;
-      
+
       // Limit to 4
       if (current.faculty_ids.length >= 4) {
         showToast('error', 'You can assign a maximum of 4 faculties per course.');
         return prev;
       }
-      
+
       const newFids = [...current.faculty_ids, facultyId];
-      return { 
-        ...prev, 
+      return {
+        ...prev,
         [courseId]: {
           faculty_ids: newFids,
           co_coordinator_id: current.co_coordinator_id || facultyId
@@ -109,6 +94,7 @@ export default function CourseMapping() {
   };
 
   const handleRemoveFaculty = (courseId, facultyId) => {
+    isDirtyRef.current = true;
     setMappings(prev => {
       const current = prev[courseId] || { faculty_ids: [], co_coordinator_id: null };
       const newFids = current.faculty_ids.filter(id => id !== facultyId);
@@ -116,8 +102,8 @@ export default function CourseMapping() {
       if (newCo === facultyId) {
         newCo = newFids[0] || null;
       }
-      return { 
-        ...prev, 
+      return {
+        ...prev,
         [courseId]: {
           faculty_ids: newFids,
           co_coordinator_id: newCo
@@ -127,6 +113,7 @@ export default function CourseMapping() {
   };
 
   const handleSetCoCoordinator = (courseId, facultyId) => {
+    isDirtyRef.current = true;
     setMappings(prev => {
       const current = prev[courseId] || { faculty_ids: [], co_coordinator_id: null };
       return {
@@ -160,6 +147,7 @@ export default function CourseMapping() {
       });
 
       if (res.ok) {
+        isDirtyRef.current = false;
         showToast('success', 'Mapping and Co-coordinator saved successfully');
       } else {
         const data = await res.json();
@@ -180,14 +168,14 @@ export default function CourseMapping() {
   return (
     <div style={{ position: 'relative' }}>
       {processing && <LoadingOverlay />}
-      
+
       {toast && (
         <div style={{
           position: 'fixed', top: '20px', right: '20px', zIndex: 9999,
           padding: '14px 20px', borderRadius: '10px', fontWeight: 600, fontSize: '14px',
-          backgroundColor: toast.type === 'success' ? '#ecfdf5' : '#fef2f2',
-          color: toast.type === 'success' ? '#065f46' : '#991b1b',
-          border: `1px solid ${toast.type === 'success' ? '#6ee7b7' : '#fca5a5'}`,
+          backgroundColor: toast.type === 'success' ? '#eff1ff' : '#fef2f2',
+          color: toast.type === 'success' ? '#4338ca' : '#991b1b',
+          border: `1px solid ${toast.type === 'success' ? '#c7d2fe' : '#fca5a5'}`,
           boxShadow: '0 4px 20px rgba(0,0,0,0.12)'
         }}>
           {toast.msg}
@@ -199,12 +187,13 @@ export default function CourseMapping() {
           <h2 style={{ fontSize: '22px', fontWeight: 700 }}>Course-Faculty Mapping</h2>
           <p style={{ color: 'var(--text-muted)', fontSize: '13px' }}>Assign up to 4 faculties per course.</p>
         </div>
-        <RefreshButton
-          onRefresh={fetchData}
-          lastUpdated={lastUpdated}
-          label="Refresh"
-          variant="default"
-        />
+        <button
+          className="btn-small"
+          style={{ padding: '10px 16px', borderRadius: '8px', border: '1px solid var(--border-color)', background: 'transparent', cursor: 'pointer' }}
+          onClick={fetchData}
+        >
+          ↻ Refresh
+        </button>
       </div>
 
       <div className="table-container">
@@ -234,12 +223,12 @@ export default function CourseMapping() {
                         {assigned.map(fid => {
                           const isCo = current.co_coordinator_id === fid;
                           return (
-                            <div key={fid} style={{ 
-                              display: 'flex', alignItems: 'center', gap: '8px', 
-                              padding: '6px 12px', borderRadius: '6px', 
-                              backgroundColor: isCo ? '#fef3c7' : '#eff6ff', 
-                              border: `1px solid ${isCo ? '#fde68a' : '#bfdbfe'}`, 
-                              fontSize: '13px', color: isCo ? '#92400e' : '#1e40af' 
+                            <div key={fid} style={{
+                              display: 'flex', alignItems: 'center', gap: '8px',
+                              padding: '6px 12px', borderRadius: '6px',
+                              backgroundColor: isCo ? '#f1f5f9' : '#eff1ff',
+                              border: `1px solid ${isCo ? '#fde68a' : '#bfdbfe'}`,
+                              fontSize: '13px', color: isCo ? '#475569' : '#4338ca'
                             }}>
                               <span style={{ fontWeight: isCo ? 'bold' : 'normal' }}>
                                 {isCo ? '👑 ' : ''}{getFacultyName(fid)}
@@ -248,24 +237,24 @@ export default function CourseMapping() {
                                 <button
                                   onClick={() => handleSetCoCoordinator(c.id, fid)}
                                   title="Make Co-coordinator"
-                                  style={{ background: 'none', border: 'none', color: '#b45309', cursor: 'pointer', fontSize: '11px', textDecoration: 'underline', padding: 0 }}
+                                  style={{ background: 'none', border: 'none', color: '#475569', cursor: 'pointer', fontSize: '11px', textDecoration: 'underline', padding: 0 }}
                                 >
                                   Make Co
                                 </button>
                               )}
-                              <button 
+                              <button
                                 onClick={() => handleRemoveFaculty(c.id, fid)}
-                                style={{ background: 'none', border: 'none', color: '#ef4444', cursor: 'pointer', fontWeight: 'bold', marginLeft: '4px' }}
+                                style={{ background: 'none', border: 'none', color: '#b91c1c', cursor: 'pointer', fontWeight: 'bold', marginLeft: '4px' }}
                               >×</button>
                             </div>
                           );
                         })}
                         {assigned.length === 0 && <span style={{ color: '#94a3b8', fontSize: '13px', fontStyle: 'italic' }}>Unassigned</span>}
                       </div>
-                      
+
                       {assigned.length < 4 && (
-                        <select 
-                          className="input-field" 
+                        <select
+                          className="input-field"
                           style={{ padding: '6px', fontSize: '13px' }}
                           onChange={(e) => {
                             handleSelectFaculty(c.id, parseInt(e.target.value));
@@ -281,8 +270,8 @@ export default function CourseMapping() {
                       )}
                     </td>
                     <td>
-                      <button 
-                        className="btn-primary" 
+                      <button
+                        className="btn-primary"
                         style={{ margin: 0, padding: '8px 16px', fontSize: '13px', width: 'auto' }}
                         onClick={() => handleSaveMapping(c.id)}
                       >

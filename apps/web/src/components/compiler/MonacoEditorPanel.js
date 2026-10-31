@@ -20,9 +20,11 @@ export default function MonacoEditorPanel({
   theme,
   minimap,
   wordWrap,
+  saveStatus,
+  isSaving,
 }) {
   const langConfig = LANGUAGES[selectedLang];
-  const clipboardRestricted = activeProblem?.clipboardRestricted === true;
+  const clipboardRestricted = activeProblem?.clipboardRestricted === true || activeProblem?.isPractical === true;
   const onRunRef = useRef(onRun);
   const onSubmitRef = useRef(onSubmit);
   const editorContainerRef = useRef(null);
@@ -82,6 +84,14 @@ export default function MonacoEditorPanel({
         e.preventDefault();
         e.stopPropagation();
       }, true);
+      domNode.addEventListener('drop', (e) => {
+        e.preventDefault();
+        e.stopPropagation();
+      }, true);
+      domNode.addEventListener('dragover', (e) => {
+        e.preventDefault();
+        e.stopPropagation();
+      }, true);
     }
     }
   }
@@ -100,15 +110,15 @@ export default function MonacoEditorPanel({
     justifyContent: 'space-between',
     height: '44px',
     padding: '0 16px',
-    background: '#0d0d0d',
-    borderBottom: '1px solid #262626',
+    background: 'var(--student-code-bg-0d0d0d, #0d0d0d)',
+    borderBottom: '1px solid var(--student-code-border-262626, #262626)',
     flexShrink: 0,
   };
 
   const selectStyle = {
-    background: '#1a1a1a',
-    color: '#ffffff',
-    border: '1px solid #3c3c3c',
+    background: 'var(--student-code-bg-1a1a1a, #1a1a1a)',
+    color: 'var(--student-code-text-ffffff, #ffffff)',
+    border: '1px solid var(--student-code-border-3c3c3c, #3c3c3c)',
     fontSize: '11px',
     fontWeight: 700,
     letterSpacing: '1px',
@@ -122,7 +132,7 @@ export default function MonacoEditorPanel({
   const iconBtnStyle = {
     background: 'transparent',
     border: 'none',
-    color: '#7e7e7e',
+    color: 'var(--student-code-text-7e7e7e, #7e7e7e)',
     cursor: 'pointer',
     padding: '6px',
     display: 'flex',
@@ -131,7 +141,7 @@ export default function MonacoEditorPanel({
   };
 
   return (
-    <div ref={editorContainerRef} style={{ height: '100%', display: 'flex', flexDirection: 'column', background: '#1e1e1e' }}>
+    <div ref={editorContainerRef} style={{ height: '100%', display: 'flex', flexDirection: 'column', background: 'var(--student-code-bg-1e1e1e, #1e1e1e)' }}>
 
       {/* Header */}
       <div style={headerStyle}>
@@ -155,29 +165,65 @@ export default function MonacoEditorPanel({
                 <option key={key} value={key}>{cfg.label}</option>
               ))}
           </select>
-          {!langConfig.executableInPhase1 && (
-            <span style={{ fontSize: '10px', fontWeight: 700, color: '#f4b400', background: 'rgba(244,180,0,0.1)', border: '1px solid rgba(244,180,0,0.25)', padding: '2px 8px', letterSpacing: '0.5px', textTransform: 'uppercase' }}>
-              Phase 2
-            </span>
-          )}
+
         </div>
-        <div style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+          {/* Small subtle autosave indicator beside reload button */}
+          <div
+            id="autosave-status"
+            style={{
+              display: 'flex',
+              alignItems: 'center',
+              gap: '4px',
+              fontSize: '11px',
+              fontWeight: 500,
+              color: isSaving ? '#38bdf8' : saveStatus === 'saved' ? '#10b981' : saveStatus === 'error' ? '#ef4444' : 'var(--student-code-text-64748b, #64748b)',
+              userSelect: 'none',
+              paddingRight: '6px',
+              borderRight: '1px solid var(--student-code-border-262626, #262626)',
+              letterSpacing: '0.2px',
+              transition: 'color 0.2s ease',
+            }}
+            title="Autosave is active. Changes are automatically saved as you code."
+          >
+            {isSaving ? (
+              <>
+                <span style={{ width: '8px', height: '8px', border: '1.5px solid #38bdf8', borderTopColor: 'transparent', borderRadius: '50%', display: 'inline-block', animation: 'spin 0.8s linear infinite' }} />
+                <span style={{ color: 'var(--student-code-text-94a3b8, #94a3b8)' }}>Saving…</span>
+              </>
+            ) : saveStatus === 'saved' ? (
+              <>
+                <span style={{ color: '#10b981', fontSize: '11px', fontWeight: 700 }}>✓</span>
+                <span>Saved</span>
+              </>
+            ) : saveStatus === 'error' ? (
+              <>
+                <span style={{ color: '#ef4444', fontSize: '11px', fontWeight: 700 }}>✕</span>
+                <span style={{ color: '#ef4444' }}>Save failed</span>
+              </>
+            ) : (
+              <>
+                <span style={{ color: 'var(--student-code-text-64748b, #64748b)', fontSize: '11px' }}>✓</span>
+                <span>Saved</span>
+              </>
+            )}
+          </div>
+
           <button style={iconBtnStyle} aria-label="Reset to boilerplate" title="Reset to Boilerplate" onClick={handleReset} disabled={isRunning}
-            onMouseEnter={e => e.currentTarget.style.color = '#ffffff'}
-            onMouseLeave={e => e.currentTarget.style.color = '#7e7e7e'}
+            onMouseEnter={e => e.currentTarget.style.color = 'var(--student-code-text-ffffff, #ffffff)'}
+            onMouseLeave={e => e.currentTarget.style.color = 'var(--student-code-text-7e7e7e, #7e7e7e)'}
           >
             <RotateCcw size={13} />
           </button>
           <button style={iconBtnStyle} aria-label="Toggle editor fullscreen" title="Fullscreen" onClick={() => { const node = editorContainerRef.current; if (document.fullscreenElement) document.exitFullscreen(); else node?.requestFullscreen(); }}
-            onMouseEnter={e => e.currentTarget.style.color = '#ffffff'}
-            onMouseLeave={e => e.currentTarget.style.color = '#7e7e7e'}
+            onMouseEnter={e => e.currentTarget.style.color = 'var(--student-code-text-ffffff, #ffffff)'}
+            onMouseLeave={e => e.currentTarget.style.color = 'var(--student-code-text-7e7e7e, #7e7e7e)'}
           >
             <Maximize2 size={13} />
           </button>
         </div>
       </div>
 
-      {clipboardRestricted && <p role="note" style={{ margin: 8 }}>Exam policy: clipboard operations are disabled.</p>}
       {/* Monaco Editor */}
       <div style={{ flex: 1, minHeight: 0, position: 'relative' }}>
         <Editor key={`${activeProblem?.id}:${clipboardRestricted}`}
@@ -188,7 +234,7 @@ export default function MonacoEditorPanel({
           onChange={(value) => onCodeChange(value ?? '')}
           onMount={handleEditorDidMount}
           loading={
-            <div style={{ height: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', background: '#1e1e1e', color: '#7e7e7e', fontSize: '13px', fontFamily: 'Inter, sans-serif' }}>
+            <div style={{ height: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', background: 'var(--student-code-bg-1e1e1e, #1e1e1e)', color: 'var(--student-code-text-7e7e7e, #7e7e7e)', fontSize: '13px', fontFamily: 'Inter, sans-serif' }}>
               Loading editor...
             </div>
           }

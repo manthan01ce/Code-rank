@@ -1,0 +1,31 @@
+{
+  "method": "Actual bcrypt cost-10 and unavailable local dependency paths; no successful signup/login end-to-end measurement.",
+  "startedAt": "2026-10-22T16:28:38.973Z",
+  "passwordHash": {
+    "n": 10,
+    "minMs": 92.66,
+    "medianMs": 95.07,
+    "p95Ms": 121.62,
+    "maxMs": 121.62,
+    "avgMs": 100.35
+  },
+  "passwordCompare": {
+    "n": 10,
+    "minMs": 91.59,
+    "medianMs": 100.24,
+    "p95Ms": 119.46,
+    "maxMs": 119.46,
+    "avgMs": 102.12
+  },
+  "rateLimitResult": {
+    "allowed": false,
+    "unavailable": true
+  },
+  "rateLimitMs": 49.72,
+  "directLoginService": {
+    "elapsedMs": 782.97,
+    "status": 503,
+    "error": "Sign-in is temporarily unavailable. Please try again shortly."
+  },
+  "finishedAt": "2026-10-22T16:28:41.832Z"
+}

@@ -1,3 +1,4 @@
+import { jsonBody } from '@/lib/route-response';
 import { NextResponse } from 'next/server';
 import { CourseService } from '@coderank/core/services/CourseService';
 import { authenticateRequest } from '@coderank/core/security/active-actor';
@@ -6,7 +7,7 @@ export async function PUT(request, { params }) {
   try {
     const user = await authenticateRequest(request);
     const { id } = await params;
-    const body = await request.json();
+    const body = await jsonBody(request);
     const department = await CourseService.updateDepartment(user, id, body);
     return NextResponse.json({ success: true, department });
   } catch (error) {

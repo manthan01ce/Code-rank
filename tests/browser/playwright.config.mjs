@@ -4,7 +4,7 @@ const path = (value) => fileURLToPath(new URL(value, import.meta.url));
 
 export default defineConfig({
   testDir: ".",
-  testMatch: "**/*.spec.mjs",
+  testMatch: process.env.BROWSER_PERFORMANCE === "true" ? "**/auth-performance.spec.mjs" : "**/role-workflows.spec.mjs",
   timeout: 60_000,
   expect: { timeout: 15_000 },
   forbidOnly: Boolean(process.env.CI),

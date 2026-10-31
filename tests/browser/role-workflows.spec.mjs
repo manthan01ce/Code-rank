@@ -12,10 +12,10 @@ function practicalId() {
 }
 async function login(page, role) {
   await page.goto('/login');
-  await page.getByLabel('Username or Email', { exact: true }).fill(required(`E2E_${role.toUpperCase()}_EMAIL`));
+  await page.getByLabel('Username or email', { exact: true }).fill(required(`E2E_${role.toUpperCase()}_EMAIL`));
   await page.getByLabel('Password', { exact: true }).fill(required(`E2E_${role.toUpperCase()}_PASSWORD`));
   const loginResponse = page.waitForResponse(response => response.url().endsWith('/api/auth/login') && response.request().method() === 'POST');
-  await page.getByRole('button', { name: 'Sign In →', exact: true }).click();
+  await page.getByRole('button', { name: /sign in/i }).click();
   expect((await loginResponse).status()).toBe(200);
   await expect(page).toHaveURL(new RegExp(`/${role}/?$`));
   const identity = await page.evaluate(() => ({ token: localStorage.getItem('token'), user: JSON.parse(localStorage.getItem('user') || 'null') }));
@@ -37,15 +37,15 @@ function failOnPageErrors(page) {
 test('administrator hydrates dashboard, retains login on reload and loads master selectors', async ({ page, context }) => {
   const assertNoErrors = failOnPageErrors(page);
   const { headers } = await login(page, 'admin');
-  await expect(page.getByRole('heading', { name: 'Dashboard Overview', exact: true })).toBeVisible();
+  await expect(page.getByRole('heading', { name: /dashboard overview/i })).toBeVisible();
   const stats = await getJson(context.request, '/api/stats', headers);
   expect(Number(stats.courses)).toBeGreaterThan(0);
   await page.reload();
-  await expect(page.getByRole('heading', { name: 'Dashboard Overview', exact: true })).toBeVisible();
+  await expect(page.getByRole('heading', { name: /dashboard overview/i })).toBeVisible();
   const courses = await getJson(context.request, '/api/courses?limit=1', headers);
   expect(courses).toHaveLength(1);
   await page.goto('/admin/courses');
-  await expect(page.getByRole('heading', { name: 'Courses Management', exact: true })).toBeVisible();
+  await expect(page.getByRole('heading', { name: /courses/i })).toBeVisible();
   await expect(page.getByRole('cell', { name: courses[0].course_code, exact: true })).toBeVisible();
   const departments = await getJson(context.request, '/api/departments?limit=1', headers);
   expect(departments).toHaveLength(1);
@@ -60,12 +60,26 @@ test('faculty course selection renders the assigned practical and survives refre
   const { headers } = await login(page, 'faculty');
   await expect(page.getByRole('heading', { name: 'Select Allocated Subject', exact: true })).toBeVisible();
   const practical = await getJson(context.request, `/api/faculty/practicals/${practicalId()}`, headers);
+  const shell = await context.request.get(`/student/code/practical_${practicalId()}`);
+  expect(await shell.text()).not.toContain(practical.title);
+  const anonymousDetail = await context.request.get(`/api/student/practicals/${practicalId()}`);
+  expect(anonymousDetail.status()).toBe(401);
   const courses = await getJson(context.request, '/api/faculty/courses', headers);
   const course = courses.find(item => Number(item.id) === Number(practical.course_id));
   expect(course, 'Seeded faculty is assigned to practical course').toBeTruthy();
   await page.getByRole('heading', { name: course.name, exact: true }).click();
   await expect(page.getByRole('heading', { name: 'Available Practicals', exact: true })).toBeVisible();
   await expect(page.getByRole('cell', { name: practical.title, exact: true })).toBeVisible();
+  await page.getByRole('row').filter({ has: page.getByRole('cell', { name: practical.title, exact: true }) }).getByRole('button', { name: 'Grades', exact: true }).click();
+  const report = page.getByRole('dialog', { name: 'Practical grade report' });
+  await expect(report).toBeVisible();
+  await expect(report.getByRole('button', { name: 'First grade page' })).toBeVisible();
+  const gradePage = await getJson(context.request, `/api/faculty/practicals/${practicalId()}/stats?limit=1`, headers);
+  expect(gradePage.students).toHaveLength(1);
+  expect(gradePage.pagination.nextCursor).toBeTruthy();
+  const secondPage = await getJson(context.request, `/api/faculty/practicals/${practicalId()}/stats?limit=1&cursor=${gradePage.pagination.nextCursor}`, headers);
+  expect(secondPage.students[0].id).not.toBe(gradePage.students[0].id);
+  await report.getByRole('button', { name: 'Close grades' }).click();
   await page.reload();
   await expect(page).toHaveURL(/\/faculty(?:\?.*)?$/);
   await expect(page.getByRole('heading', { name: 'Available Practicals', exact: true })).toBeVisible();
@@ -79,8 +93,9 @@ test('student dashboard shows the assigned practical and retains current authent
   const practicals = await getJson(context.request, '/api/student/practicals', headers);
   const practical = practicals.find(item => Number(item.id) === practicalId());
   expect(practical, 'Active practical matches the student batch and semester').toBeTruthy();
-  await expect(page.getByRole('heading', { name: 'My Assigned Subjects & Practicals', exact: true })).toBeVisible();
+  await expect(page.getByRole('heading', { name: /(?:my learning workspace|my assigned subjects)/i })).toBeVisible();
   await expect(page.getByText(practical.title, { exact: true })).toBeVisible();
+  await expect(page.getByRole('navigation', { name: 'Dashboard practical pages' })).toBeVisible();
   await page.reload();
   await expect(page).toHaveURL(/\/student\/?$/);
   await expect(page.getByText(practical.title, { exact: true })).toBeVisible();
@@ -123,4 +138,100 @@ test('browser sessions enforce role mutations, grade ownership and hidden-case p
   } finally {
     await facultyContext.close();
   }
+});
+
+// Capture only public pages or disposable fixture data; never capture login credentials.
+test('public pages preserve theme and remain usable at phone, tablet and desktop widths', async ({page}) => {
+ const assertNoErrors=failOnPageErrors(page);
+ await page.emulateMedia({reducedMotion:'reduce'});
+ for(const width of [360,768,1280]) {
+  await page.setViewportSize({width,height:900});
+  for(const route of ['/', '/login', '/signup']) {
+   await page.goto(route);
+   await expect(page.locator('h1')).toBeVisible();
+   expect(await page.locator('.admin-desktop-sidebar').count()).toBe(0);
+   const layout=await page.evaluate(()=>({width:innerWidth,scrollWidth:document.documentElement.scrollWidth,overflow:Array.from(document.querySelectorAll('body *')).filter(el=>el.getBoundingClientRect().right>innerWidth+1).slice(0,8).map(el=>({tag:el.tagName,text:el.textContent?.slice(0,50),right:el.getBoundingClientRect().right}))}));
+   expect(layout.scrollWidth,`No horizontal page clipping: ${route} ${JSON.stringify(layout)}`).toBeLessThanOrEqual(layout.width+1);
+   if(route==='/'){
+    await expect(page.getByRole('heading',{name:'RANK UP CODING'})).toBeVisible();
+    expect(await page.locator('footer input, footer a[href^="mailto:"]').count()).toBe(0);
+    const featureBounds = await page.locator('#experience').evaluate(el => Array.from(el.querySelectorAll('button, #feature-detail h3, #feature-detail p')).map(node => ({ text: node.textContent.slice(0, 45), left: node.getBoundingClientRect().left, right: node.getBoundingClientRect().right })));
+    for (const bounds of featureBounds) {
+      expect(bounds.left, `Feature is not clipped on the left: ${bounds.text}`).toBeGreaterThanOrEqual(0);
+      expect(bounds.right, `Feature is not clipped on the right: ${bounds.text}`).toBeLessThanOrEqual(width);
+    }
+   }
+   if(route==='/login') {
+    await page.getByLabel('Password', { exact: true }).fill('');
+    await expect(page.getByRole('button',{name:/sign in/i})).toBeVisible();
+   }
+   await page.screenshot({path:`test-results/ui-review/${route==='/'?'home':route.slice(1)}-${width}.png`,fullPage:true,animations:'disabled'});
+  }
+ }
+ assertNoErrors();
+});
+test('admin menu preserves existing destinations and keyboard operation on mobile', async ({page}) => {
+ await login(page,'admin');
+ await page.setViewportSize({width:360,height:900});
+ expect(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth+1),'Admin overflow stays inside content').toBe(true);
+ await page.getByRole('button',{name:'Open admin menu'}).click();
+ const menu=page.getByRole('dialog',{name:'Admin menu'});
+ await expect(menu).toBeVisible();
+ for(const label of ['Dashboard','Department Master','Faculty Master','Student Master','Courses','Course Mapping','Activity Logs','Settings','Profile'])await expect(menu.getByRole('link',{name:label,exact:true})).toBeVisible();
+ await expect(menu.getByRole('button',{name:'Change Password',exact:true})).toBeVisible();
+ await expect(menu.getByRole('button',{name:'Logout',exact:true})).toBeVisible();
+ await page.screenshot({path:'test-results/ui-review/admin-mobile.png',fullPage:true,animations:'disabled'});
+ await page.keyboard.press('Escape');
+ await expect(menu).not.toBeVisible();
+ await expect(page.getByRole('button',{name:'Open admin menu'})).toBeFocused();
+});
+
+test('student overview and practical selection retain readable themes, navigation and mobile layout', async ({ page, context }) => {
+  const assertNoErrors = failOnPageErrors(page);
+  await page.emulateMedia({ reducedMotion: 'reduce' });
+  const { headers, token } = await login(page, 'student');
+  const practicals = await getJson(context.request, '/api/student/practicals', headers);
+  const practical = practicals.find(item => Number(item.id) === practicalId());
+  expect(practical).toBeTruthy();
+  const profile = await getJson(context.request, '/api/auth/profile', headers);
+  const courses = await getJson(context.request, `/api/courses?semester=${profile.user.extra_info.semester}`, headers);
+  const course = courses.find(item => Number(item.id) === Number(practical.course_id));
+  expect(course).toBeTruthy();
+  for (const theme of ['light', 'dark']) {
+    for (const width of [360, 768, 1280]) {
+      await page.setViewportSize({ width, height: 900 });
+      await page.goto('/student');
+      const root = page.locator('.student-theme');
+      if (await root.getAttribute('data-student-theme') !== theme) await page.getByRole('button', { name: 'Light theme', exact: true }).click();
+      await expect(root).toHaveAttribute('data-student-theme', theme);
+      const row = page.locator('.student-question-row').filter({ hasText: practical.title });
+      await expect(row).toBeVisible();
+      await expect(row.getByRole('link')).toHaveAttribute('href', /\/student\/code\//);
+      expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth + 1), `Dashboard fits ${width}px in ${theme}`).toBe(true);
+      // Ensure the body, course and alternating row layers are visibly distinct.
+      const layers = await page.locator('.student-dashboard').evaluate(el => ({
+        page: getComputedStyle(el).backgroundColor,
+        card: getComputedStyle(el.querySelector('.student-course-card')).backgroundColor,
+        text: getComputedStyle(el.querySelector('h1')).color,
+      }));
+      expect(layers.page).not.toBe(layers.card);
+      expect(layers.text).not.toBe(layers.card);
+      await page.screenshot({ path: `test-results/ui-review/student-${theme}-${width}.png`, fullPage: true, animations: 'disabled' });
+      await page.goto('/student/practicals');
+      await expect(page.getByRole('heading', { name: 'Select Course / Subject', exact: true })).toBeVisible();
+      await expect(root).toHaveAttribute('data-student-theme', theme);
+      const courseButton = page.getByRole('button').filter({ has: page.getByRole('heading', { name: course.name, exact: true }) });
+      await expect(courseButton).toBeVisible();
+      expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth + 1), `Course selection fits ${width}px in ${theme}`).toBe(true);
+      await page.screenshot({ path: `test-results/ui-review/courses-${theme}-${width}.png`, fullPage: true, animations: 'disabled' });
+      await courseButton.focus();
+      await page.keyboard.press('Enter');
+      await expect(page.getByRole('cell', { name: practical.title, exact: true })).toBeVisible();
+      await expect(page.getByRole('button', { name: /Switch Subject/ })).toBeVisible();
+      expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth + 1), `Practical table scrolls within its container at ${width}px in ${theme}`).toBe(true);
+      await page.screenshot({ path: `test-results/ui-review/practicals-${theme}-${width}.png`, fullPage: true, animations: 'disabled' });
+    }
+  }
+  expect(await page.evaluate(() => localStorage.getItem('token'))).toBe(token);
+  assertNoErrors();
 });

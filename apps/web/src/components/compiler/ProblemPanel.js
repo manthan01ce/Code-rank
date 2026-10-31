@@ -159,10 +159,10 @@ export default function ProblemPanel({ problem, onLoadSubmissionCode }) {
   const diff = DIFFICULTY_COLORS[p.difficulty] ?? DIFFICULTY_COLORS.Easy;
 
   return (
-    <div style={{ height: '100%', display: 'flex', flexDirection: 'column', background: '#0d0d0d', fontFamily: 'Inter, sans-serif', color: '#bbbbbb' }}>
+    <div style={{ height: '100%', display: 'flex', flexDirection: 'column', background: 'var(--student-code-bg-0d0d0d, #0d0d0d)', fontFamily: 'Inter, sans-serif', color: 'var(--student-code-text-bbbbbb, #bbbbbb)' }}>
 
       {/* Tab Bar */}
-      <div style={{ display: 'flex', alignItems: 'flex-end', background: '#000000', borderBottom: '1px solid #262626', padding: '0 20px', flexShrink: 0, overflowX: 'auto' }}>
+      <div style={{ display: 'flex', alignItems: 'flex-end', background: 'var(--student-code-bg-000000, #000000)', borderBottom: '1px solid var(--student-code-border-262626, #262626)', padding: '0 20px', flexShrink: 0, overflowX: 'auto' }}>
         {TABS.map(({ id, icon, label }) => (
           <button suppressHydrationWarning
             key={id}
@@ -171,7 +171,7 @@ export default function ProblemPanel({ problem, onLoadSubmissionCode }) {
               background: 'transparent',
               border: 'none',
               borderBottom: activeTab === id ? '2px solid #ffffff' : '2px solid transparent',
-              color: activeTab === id ? '#ffffff' : '#7e7e7e',
+              color: activeTab === id ? 'var(--student-code-text-ffffff, #ffffff)' : 'var(--student-code-text-7e7e7e, #7e7e7e)',
               fontSize: '11px',
               fontWeight: 700,
               letterSpacing: '1.5px',
@@ -196,7 +196,7 @@ export default function ProblemPanel({ problem, onLoadSubmissionCode }) {
             {/* Real-time extra time alert notification */}
             {extraTimeAlert && (
               <div style={{
-                backgroundColor: '#064e3b', border: '1px solid #059669', color: '#a7f3d0',
+                backgroundColor: '#064e3b', border: '1px solid #059669', color: 'var(--student-code-text-a7f3d0, #a7f3d0)',
                 padding: '10px 16px', borderRadius: '8px', fontSize: '12.5px', fontWeight: 600,
                 marginBottom: '16px', display: 'flex', alignItems: 'center', gap: '8px'
               }}>
@@ -205,19 +205,19 @@ export default function ProblemPanel({ problem, onLoadSubmissionCode }) {
             )}
 
             {/* Problem number + title */}
-            <h1 style={{ color: '#ffffff', fontSize: '22px', fontWeight: 700, marginBottom: '16px', lineHeight: 1.2 }}>{p.title}</h1>
+            <h1 style={{ color: 'var(--student-code-text-ffffff, #ffffff)', fontSize: '22px', fontWeight: 700, marginBottom: '16px', lineHeight: 1.2 }}>{p.title}</h1>
 
             {/* Difficulty + tags */}
             <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '16px', flexWrap: 'wrap' }}>
               <span style={{ color: diff.color, background: diff.bg, border: `1px solid ${diff.border}`, fontSize: '10px', fontWeight: 700, letterSpacing: '1px', textTransform: 'uppercase', padding: '3px 10px' }}>
                 {p.difficulty}
               </span>
-              {p.topics && p.topics.split(",").map(topic => <button suppressHydrationWarning key={topic.trim()} style={{ background: '#1a1a1a', border: '1px solid #262626', color: '#7e7e7e', fontSize: '10px', fontWeight: 700, letterSpacing: '1px', textTransform: 'uppercase', padding: '3px 10px', cursor: 'default' }}>{topic.trim()}</button>)}
+              {p.topics && p.topics.split(",").map(topic => <button suppressHydrationWarning key={topic.trim()} style={{ background: 'var(--student-code-bg-1a1a1a, #1a1a1a)', border: '1px solid var(--student-code-border-262626, #262626)', color: 'var(--student-code-text-7e7e7e, #7e7e7e)', fontSize: '10px', fontWeight: 700, letterSpacing: '1px', textTransform: 'uppercase', padding: '3px 10px', cursor: 'default' }}>{topic.trim()}</button>)}
             </div>
 
             {/* Description */}
             <div
-              style={{ fontSize: '15px', fontWeight: 300, lineHeight: 1.7, color: '#bbbbbb', marginBottom: '32px' }}
+              style={{ fontSize: '15px', fontWeight: 300, lineHeight: 1.7, color: 'var(--student-code-text-bbbbbb, #bbbbbb)', marginBottom: '32px' }}
               dangerouslySetInnerHTML={{ __html: p.description }}
             />
 
@@ -227,11 +227,11 @@ export default function ProblemPanel({ problem, onLoadSubmissionCode }) {
               <div style={{ display: 'flex', flexDirection: 'column', gap: '20px', marginBottom: '32px' }}>
                 {p.examples.map((ex, i) => (
                   <div key={i}>
-                    <p style={{ color: '#e6e6e6', fontWeight: 700, fontSize: '13px', marginBottom: '8px', letterSpacing: '0.5px' }}>Example {i + 1}:</p>
-                    <div style={{ background: '#1a1a1a', borderLeft: '3px solid #0066b1', padding: '14px 16px', fontFamily: 'JetBrains Mono, Fira Code, Consolas, monospace', fontSize: '13px' }}>
-                      <div style={{ marginBottom: '4px' }}><span style={{ color: '#7e7e7e' }}>Input: </span><span style={{ color: '#e6e6e6' }}>{ex.input}</span></div>
-                      <div style={{ marginBottom: ex.explanation ? '4px' : 0 }}><span style={{ color: '#7e7e7e' }}>Output: </span><span style={{ color: '#e6e6e6' }}>{ex.output}</span></div>
-                      {ex.explanation && <div><span style={{ color: '#7e7e7e' }}>Explanation: </span><span style={{ color: '#e6e6e6' }}>{ex.explanation}</span></div>}
+                    <p style={{ color: 'var(--student-code-text-e6e6e6, #e6e6e6)', fontWeight: 700, fontSize: '13px', marginBottom: '8px', letterSpacing: '0.5px' }}>Example {i + 1}:</p>
+                    <div style={{ background: 'var(--student-code-bg-1a1a1a, #1a1a1a)', borderLeft: '3px solid #0066b1', padding: '14px 16px', fontFamily: 'JetBrains Mono, Fira Code, Consolas, monospace', fontSize: '13px' }}>
+                      <div style={{ marginBottom: '4px' }}><span style={{ color: 'var(--student-code-text-7e7e7e, #7e7e7e)' }}>Input: </span><span style={{ color: 'var(--student-code-text-e6e6e6, #e6e6e6)' }}>{ex.input}</span></div>
+                      <div style={{ marginBottom: ex.explanation ? '4px' : 0 }}><span style={{ color: 'var(--student-code-text-7e7e7e, #7e7e7e)' }}>Output: </span><span style={{ color: 'var(--student-code-text-e6e6e6, #e6e6e6)' }}>{ex.output}</span></div>
+                      {ex.explanation && <div><span style={{ color: 'var(--student-code-text-7e7e7e, #7e7e7e)' }}>Explanation: </span><span style={{ color: 'var(--student-code-text-e6e6e6, #e6e6e6)' }}>{ex.explanation}</span></div>}
                     </div>
                   </div>
                 ))}
@@ -243,16 +243,16 @@ export default function ProblemPanel({ problem, onLoadSubmissionCode }) {
               <div style={{ display: 'flex', flexDirection: 'column', gap: '20px', marginBottom: '32px' }}>
                 {p.inputFormat && (
                   <div>
-                    <p style={{ color: '#e6e6e6', fontWeight: 700, fontSize: '13px', marginBottom: '8px', letterSpacing: '0.5px' }}>Input Format:</p>
-                    <div style={{ background: '#1a1a1a', borderLeft: '3px solid #00b8a3', padding: '14px 16px', fontSize: '13px', color: '#bbbbbb', whiteSpace: 'pre-wrap' }}>
+                    <p style={{ color: 'var(--student-code-text-e6e6e6, #e6e6e6)', fontWeight: 700, fontSize: '13px', marginBottom: '8px', letterSpacing: '0.5px' }}>Input Format:</p>
+                    <div style={{ background: 'var(--student-code-bg-1a1a1a, #1a1a1a)', borderLeft: '3px solid #00b8a3', padding: '14px 16px', fontSize: '13px', color: 'var(--student-code-text-bbbbbb, #bbbbbb)', whiteSpace: 'pre-wrap' }}>
                       {p.inputFormat}
                     </div>
                   </div>
                 )}
                 {p.outputFormat && (
                   <div>
-                    <p style={{ color: '#e6e6e6', fontWeight: 700, fontSize: '13px', marginBottom: '8px', letterSpacing: '0.5px' }}>Output Format:</p>
-                    <div style={{ background: '#1a1a1a', borderLeft: '3px solid #00b8a3', padding: '14px 16px', fontSize: '13px', color: '#bbbbbb', whiteSpace: 'pre-wrap' }}>
+                    <p style={{ color: 'var(--student-code-text-e6e6e6, #e6e6e6)', fontWeight: 700, fontSize: '13px', marginBottom: '8px', letterSpacing: '0.5px' }}>Output Format:</p>
+                    <div style={{ background: 'var(--student-code-bg-1a1a1a, #1a1a1a)', borderLeft: '3px solid #00b8a3', padding: '14px 16px', fontSize: '13px', color: 'var(--student-code-text-bbbbbb, #bbbbbb)', whiteSpace: 'pre-wrap' }}>
                       {p.outputFormat}
                     </div>
                   </div>
@@ -266,10 +266,10 @@ export default function ProblemPanel({ problem, onLoadSubmissionCode }) {
                         <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
                           {parsed.map((ex, i) => (
                             <div key={i}>
-                              <p style={{ color: '#e6e6e6', fontWeight: 700, fontSize: '13px', marginBottom: '8px', letterSpacing: '0.5px' }}>Sample {i + 1}:</p>
-                              <div style={{ background: '#1a1a1a', borderLeft: '3px solid #00b8a3', padding: '14px 16px', fontFamily: 'JetBrains Mono, Fira Code, Consolas, monospace', fontSize: '13px' }}>
-                                <div style={{ marginBottom: '4px' }}><span style={{ color: '#7e7e7e' }}>Input: </span><br/><span style={{ color: '#e6e6e6', whiteSpace: 'pre-wrap' }}>{ex.input}</span></div>
-                                <div style={{ marginTop: '10px' }}><span style={{ color: '#7e7e7e' }}>Output: </span><br/><span style={{ color: '#e6e6e6', whiteSpace: 'pre-wrap' }}>{ex.expected || ex.output}</span></div>
+                              <p style={{ color: 'var(--student-code-text-e6e6e6, #e6e6e6)', fontWeight: 700, fontSize: '13px', marginBottom: '8px', letterSpacing: '0.5px' }}>Sample {i + 1}:</p>
+                              <div style={{ background: 'var(--student-code-bg-1a1a1a, #1a1a1a)', borderLeft: '3px solid #00b8a3', padding: '14px 16px', fontFamily: 'JetBrains Mono, Fira Code, Consolas, monospace', fontSize: '13px' }}>
+                                <div style={{ marginBottom: '4px' }}><span style={{ color: 'var(--student-code-text-7e7e7e, #7e7e7e)' }}>Input: </span><br/><span style={{ color: 'var(--student-code-text-e6e6e6, #e6e6e6)', whiteSpace: 'pre-wrap' }}>{ex.input}</span></div>
+                                <div style={{ marginTop: '10px' }}><span style={{ color: 'var(--student-code-text-7e7e7e, #7e7e7e)' }}>Output: </span><br/><span style={{ color: 'var(--student-code-text-e6e6e6, #e6e6e6)', whiteSpace: 'pre-wrap' }}>{ex.expected || ex.output}</span></div>
                               </div>
                             </div>
                           ))}
@@ -283,15 +283,15 @@ export default function ProblemPanel({ problem, onLoadSubmissionCode }) {
                   return (
                     <>
                       <div>
-                        <p style={{ color: '#e6e6e6', fontWeight: 700, fontSize: '13px', marginBottom: '8px', letterSpacing: '0.5px' }}>Sample Input:</p>
-                        <pre style={{ background: '#1a1a1a', border: '1px solid #262626', padding: '14px 16px', fontFamily: 'monospace', fontSize: '13px', color: '#e6e6e6', overflowX: 'auto', margin: 0, whiteSpace: 'pre-wrap' }}>
+                        <p style={{ color: 'var(--student-code-text-e6e6e6, #e6e6e6)', fontWeight: 700, fontSize: '13px', marginBottom: '8px', letterSpacing: '0.5px' }}>Sample Input:</p>
+                        <pre style={{ background: 'var(--student-code-bg-1a1a1a, #1a1a1a)', border: '1px solid var(--student-code-border-262626, #262626)', padding: '14px 16px', fontFamily: 'monospace', fontSize: '13px', color: 'var(--student-code-text-e6e6e6, #e6e6e6)', overflowX: 'auto', margin: 0, whiteSpace: 'pre-wrap' }}>
                           {p.sampleInput}
                         </pre>
                       </div>
                       {p.sampleOutput && (
                         <div style={{ marginTop: '20px' }}>
-                          <p style={{ color: '#e6e6e6', fontWeight: 700, fontSize: '13px', marginBottom: '8px', letterSpacing: '0.5px' }}>Sample Output:</p>
-                          <pre style={{ background: '#1a1a1a', border: '1px solid #262626', padding: '14px 16px', fontFamily: 'monospace', fontSize: '13px', color: '#e6e6e6', overflowX: 'auto', margin: 0, whiteSpace: 'pre-wrap' }}>
+                          <p style={{ color: 'var(--student-code-text-e6e6e6, #e6e6e6)', fontWeight: 700, fontSize: '13px', marginBottom: '8px', letterSpacing: '0.5px' }}>Sample Output:</p>
+                          <pre style={{ background: 'var(--student-code-bg-1a1a1a, #1a1a1a)', border: '1px solid var(--student-code-border-262626, #262626)', padding: '14px 16px', fontFamily: 'monospace', fontSize: '13px', color: 'var(--student-code-text-e6e6e6, #e6e6e6)', overflowX: 'auto', margin: 0, whiteSpace: 'pre-wrap' }}>
                             {p.sampleOutput}
                           </pre>
                         </div>
@@ -305,10 +305,10 @@ export default function ProblemPanel({ problem, onLoadSubmissionCode }) {
             {/* Constraints (Static Problems) */}
             {!p.isPractical && p.constraints && p.constraints.length > 0 && (
               <div>
-                <p style={{ color: '#e6e6e6', fontWeight: 700, fontSize: '13px', marginBottom: '12px', letterSpacing: '0.5px', textTransform: 'uppercase' }}>Constraints</p>
-                <div style={{ background: '#1a1a1a', border: '1px solid #262626', padding: '16px' }}>
+                <p style={{ color: 'var(--student-code-text-e6e6e6, #e6e6e6)', fontWeight: 700, fontSize: '13px', marginBottom: '12px', letterSpacing: '0.5px', textTransform: 'uppercase' }}>Constraints</p>
+                <div style={{ background: 'var(--student-code-bg-1a1a1a, #1a1a1a)', border: '1px solid var(--student-code-border-262626, #262626)', padding: '16px' }}>
                   {p.constraints.map((c, i) => (
-                    <div key={i} style={{ display: 'flex', alignItems: 'flex-start', gap: '10px', marginBottom: i < p.constraints.length - 1 ? '8px' : 0, fontFamily: 'JetBrains Mono, Fira Code, Consolas, monospace', fontSize: '13px', color: '#bbbbbb' }}>
+                    <div key={i} style={{ display: 'flex', alignItems: 'flex-start', gap: '10px', marginBottom: i < p.constraints.length - 1 ? '8px' : 0, fontFamily: 'JetBrains Mono, Fira Code, Consolas, monospace', fontSize: '13px', color: 'var(--student-code-text-bbbbbb, #bbbbbb)' }}>
                       <span style={{ color: '#0066b1', flexShrink: 0, marginTop: '1px' }}>›</span>
                       <span>{c}</span>
                     </div>
@@ -320,8 +320,8 @@ export default function ProblemPanel({ problem, onLoadSubmissionCode }) {
             {/* Constraints (Dynamic Practicals) */}
             {p.isPractical && p.constraints && (
               <div>
-                <p style={{ color: '#e6e6e6', fontWeight: 700, fontSize: '13px', marginBottom: '12px', letterSpacing: '0.5px', textTransform: 'uppercase' }}>Constraints</p>
-                <div style={{ background: '#1a1a1a', border: '1px solid #262626', padding: '16px', fontSize: '13px', color: '#bbbbbb', whiteSpace: 'pre-wrap', fontFamily: 'monospace' }}>
+                <p style={{ color: 'var(--student-code-text-e6e6e6, #e6e6e6)', fontWeight: 700, fontSize: '13px', marginBottom: '12px', letterSpacing: '0.5px', textTransform: 'uppercase' }}>Constraints</p>
+                <div style={{ background: 'var(--student-code-bg-1a1a1a, #1a1a1a)', border: '1px solid var(--student-code-border-262626, #262626)', padding: '16px', fontSize: '13px', color: 'var(--student-code-text-bbbbbb, #bbbbbb)', whiteSpace: 'pre-wrap', fontFamily: 'monospace' }}>
                   {p.constraints}
                 </div>
               </div>
@@ -332,18 +332,18 @@ export default function ProblemPanel({ problem, onLoadSubmissionCode }) {
         {activeTab === 'submissions' && (
           <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
             <div>
-              <h3 style={{ fontSize: '16px', fontWeight: 700, color: '#ffffff', marginBottom: '4px' }}>Recorded Submission & Grade</h3>
-              <p style={{ fontSize: '12px', color: '#7e7e7e', margin: 0 }}>
+              <h3 style={{ fontSize: '16px', fontWeight: 700, color: 'var(--student-code-text-ffffff, #ffffff)', marginBottom: '4px' }}>Recorded Submission & Grade</h3>
+              <p style={{ fontSize: '12px', color: 'var(--student-code-text-7e7e7e, #7e7e7e)', margin: 0 }}>
                 Your single highest marks achieved are permanently preserved and shown here.
               </p>
             </div>
             
             {loading ? (
-              <div style={{ display: 'flex', justifyContent: 'center', padding: '30px', color: '#7e7e7e', fontSize: '13px' }}>
+              <div style={{ display: 'flex', justifyContent: 'center', padding: '30px', color: 'var(--student-code-text-7e7e7e, #7e7e7e)', fontSize: '13px' }}>
                 Loading submission record...
               </div>
             ) : submissions.length === 0 ? (
-              <div style={{ padding: '30px', textAlign: 'center', color: '#5e5e5e', fontSize: '13px', background: '#111', borderRadius: '6px' }}>
+              <div style={{ padding: '30px', textAlign: 'center', color: 'var(--student-code-text-5e5e5e, #5e5e5e)', fontSize: '13px', background: 'var(--student-code-bg-111111, #111)', borderRadius: '6px' }}>
                 No submissions recorded yet for this practical. Write your solution and click <strong>Submit Code</strong>!
               </div>
             ) : (
@@ -351,7 +351,7 @@ export default function ProblemPanel({ problem, onLoadSubmissionCode }) {
                 {submissions.map((sub) => {
                   const isAccepted = sub.status === 'Accepted' || sub.status === 'Passed' || sub.status === 'success';
                   return (
-                    <div key={sub.id} style={{ backgroundColor: '#141414', border: '1px solid #262626', borderRadius: '10px', padding: '18px' }}>
+                    <div key={sub.id} style={{ backgroundColor: 'var(--student-code-bg-141414, #141414)', border: '1px solid var(--student-code-border-262626, #262626)', borderRadius: '10px', padding: '18px' }}>
                       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '12px' }}>
                         
                         <span style={{
@@ -367,19 +367,19 @@ export default function ProblemPanel({ problem, onLoadSubmissionCode }) {
                       </div>
 
                       <div style={{
-                        backgroundColor: '#0a0a0a', border: '1px solid #1e1e1e', borderRadius: '8px',
+                        backgroundColor: 'var(--student-code-bg-0a0a0a, #0a0a0a)', border: '1px solid var(--student-code-border-1e1e1e, #1e1e1e)', borderRadius: '8px',
                         padding: '14px', marginBottom: '12px', display: 'flex', justifyContent: 'space-between', alignItems: 'center'
                       }}>
                         <div>
-                          <div style={{ fontSize: '11px', color: '#888', textTransform: 'uppercase', fontWeight: 600 }}>Highest Stored Marks</div>
+                          <div style={{ fontSize: '11px', color: 'var(--student-code-text-888888, #888)', textTransform: 'uppercase', fontWeight: 600 }}>Highest Stored Marks</div>
                           <div style={{ fontSize: '24px', fontWeight: 800, color: '#10b981', marginTop: '2px' }}>
-                            {sub.normalized_marks} <span style={{ fontSize: '14px', fontWeight: 500, color: '#777' }}>/ 10</span>
+                            {sub.normalized_marks} <span style={{ fontSize: '14px', fontWeight: 500, color: 'var(--student-code-text-777777, #777)' }}>/ 10</span>
                           </div>
                         </div>
 
                         <div style={{ textAlign: 'right' }}>
-                          <div style={{ fontSize: '11px', color: '#888' }}>Raw Points: <strong style={{ color: '#fff' }}>{sub.raw_marks}</strong></div>
-                          <div style={{ fontSize: '11px', color: '#666', marginTop: '4px' }}>
+                          <div style={{ fontSize: '11px', color: 'var(--student-code-text-888888, #888)' }}>Raw Points: <strong style={{ color: 'var(--student-code-text-ffffff, #fff)' }}>{sub.raw_marks}</strong></div>
+                          <div style={{ fontSize: '11px', color: 'var(--student-code-text-666666, #666)', marginTop: '4px' }}>
                             {new Date(sub.submitted_at).toLocaleString()}
                           </div>
                         </div>

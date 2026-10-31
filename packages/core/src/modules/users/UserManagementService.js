@@ -8,7 +8,8 @@ export class UserManagementService {
   static admin(user) {
     if (!user || user.role !== "admin") fail(401, "Unauthorized");
   }
-  static async mutate(admin, id, action, body = {}) {
+  static async mutate(admin, id, action, body = {}, {onTiming = () => {}} = {}) {
+    const validationStart = performance.now();
     this.admin(admin);
     if (!body || typeof body !== "object" || Array.isArray(body))
       fail(400, "Invalid user payload");
@@ -60,6 +61,8 @@ export class UserManagementService {
         payload.extra_info.division = division.trim().toUpperCase();
       }
     }
+    onTiming('validation', performance.now() - validationStart);
+    const hashStart = performance.now();
     let rawPassword;
     if (action === "create") {
       if (!payload.name || !payload.email || !payload.role)
@@ -77,6 +80,8 @@ export class UserManagementService {
         fail(400, "Password must be 8 to 72 characters");
       payload.password_hash = await hashPassword(body.password);
     }
+    onTiming('password_hash', performance.now() - hashStart);
+    const databaseStart = performance.now();
     try {
       const [row] = await sql.query(
         "SELECT coderank_manage_user($1,$2,$3,$4::jsonb) u",
@@ -87,6 +92,7 @@ export class UserManagementService {
           JSON.stringify(payload),
         ],
       );
+      onTiming('database_commit', performance.now() - databaseStart);
       return { user: row.u, ...(rawPassword ? { rawPassword } : {}) };
     } catch (error) {
       if (error.code === "23505") fail(409, "Email already exists");

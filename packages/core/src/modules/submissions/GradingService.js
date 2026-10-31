@@ -116,7 +116,7 @@ export async function gradePractical({ language, code, dbId, userId, isSubmit = 
     const casesReport = [];
     const submissionCasesToInsert = [];
 
-    executor = createExecutor(language.toLowerCase(), code, 3000, userId);
+    executor = createExecutor(language.toLowerCase(), code, 5000, userId);
     const compileResult = await executor.compile();
 
     if (!compileResult.success) {

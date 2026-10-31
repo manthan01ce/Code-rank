@@ -26,5 +26,9 @@
   {
     "name": "006_authorized_submission_reset.sql",
     "checksum": "44a25034144095c56b0fab5c858911812e1472de0b0c8810159494e486b28ae5"
+  },
+  {
+    "name": "007_retention_and_report_indexes.sql",
+    "checksum": "049ae70c7f29492f94489d832afa66649147db2027c7d13a473db317e9b54c31"
   }
 ]

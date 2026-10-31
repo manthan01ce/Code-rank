@@ -8,5 +8,8 @@ export function pageResponse(rows,limit){
 }
 
 export async function jsonBody(request){
- try{return await request.json();}catch{throw {status:400,message:'Invalid JSON payload'};}
+ let body;
+ try{body=await request.json();}catch{throw {status:400,message:'Invalid JSON payload'};}
+ if(!body || typeof body !== 'object' || Array.isArray(body)) throw {status:400,message:'Expected a JSON object'};
+ return body;
 }

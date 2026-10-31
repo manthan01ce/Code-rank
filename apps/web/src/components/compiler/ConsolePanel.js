@@ -108,20 +108,20 @@ export default function ConsolePanel({
     justifyContent: 'space-between',
     height: '44px',
     padding: '0 16px',
-    background: '#0d0d0d',
-    borderBottom: '1px solid #262626',
+    background: 'var(--student-code-bg-0d0d0d, #0d0d0d)',
+    borderBottom: '1px solid var(--student-code-border-262626, #262626)',
     flexShrink: 0,
   };
 
   return (
-    <div style={{ height: '100%', display: 'flex', flexDirection: 'column', background: '#000000', fontFamily: 'Inter, sans-serif' }}>
+    <div className="execution-console" style={{ height: '100%', minHeight: 0, minWidth: 0, display: 'flex', flexDirection: 'column', background: 'var(--student-code-bg-000000, #000000)', fontFamily: 'Inter, sans-serif' }}>
 
       {/* ── Console Header ── */}
       <div style={headerStyle}>
         <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: '6px', borderBottom: '2px solid #0066b1', paddingBottom: '2px' }}>
             <Terminal size={13} color="#0066b1" />
-            <span style={{ fontSize: '11px', fontWeight: 700, letterSpacing: '1.5px', textTransform: 'uppercase', color: '#ffffff' }}>
+            <span style={{ fontSize: '11px', fontWeight: 700, letterSpacing: '1.5px', textTransform: 'uppercase', color: 'var(--student-code-text-ffffff, #ffffff)' }}>
               {actionMode === 'submit' ? 'Submit Result' : 'Console'}
             </span>
           </div>
@@ -150,58 +150,97 @@ export default function ConsolePanel({
 
         <button
           onClick={onClose}
-          style={{ background: 'transparent', border: 'none', color: '#7e7e7e', cursor: 'pointer', padding: '6px', display: 'flex', alignItems: 'center' }}
-          onMouseEnter={e => e.currentTarget.style.color = '#ffffff'}
-          onMouseLeave={e => e.currentTarget.style.color = '#7e7e7e'}
+          style={{ background: 'transparent', border: 'none', color: 'var(--student-code-text-7e7e7e, #7e7e7e)', cursor: 'pointer', padding: '6px', display: 'flex', alignItems: 'center' }}
+          onMouseEnter={e => e.currentTarget.style.color = 'var(--student-code-text-ffffff, #ffffff)'}
+          onMouseLeave={e => e.currentTarget.style.color = 'var(--student-code-text-7e7e7e, #7e7e7e)'}
         >
           <X size={14} />
         </button>
       </div>
 
       {/* ── Console Body ── */}
-      <div style={{ flex: 1, display: 'flex', flexDirection: 'column', background: '#000000', overflow: 'hidden' }}>
+      <div style={{ flex: 1, display: 'flex', flexDirection: 'column', background: 'var(--student-code-bg-000000, #000000)', overflow: 'hidden' }}>
 
-        {/* 1. Loading State Panel with Phased Stepper */}
+        {/* 1. Loading State Panel with Circular Processing Animation */}
         {judgeState === 'loading' && (
-          <div style={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: '20px', color: '#ffffff', padding: '24px' }}>
-            <div style={{ position: 'relative', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-              <Loader2 size={36} style={{ color: '#0066b1', animation: 'spin 0.8s linear infinite' }} />
-              <div style={{ position: 'absolute', width: '48px', height: '48px', borderRadius: '50%', border: '1px solid rgba(0,102,177,0.2)', animation: 'ping 2s cubic-bezier(0, 0, 0.2, 1) infinite' }} />
+          <div style={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: '22px', color: 'var(--student-code-text-ffffff, #ffffff)', padding: '32px' }}>
+            {/* Animated Processing Circle */}
+            <div style={{ position: 'relative', width: '64px', height: '64px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+              {/* Outer soft ambient glow */}
+              <div style={{
+                position: 'absolute',
+                inset: '-8px',
+                borderRadius: '50%',
+                background: 'radial-gradient(circle, rgba(59, 130, 246, 0.22) 0%, rgba(59, 130, 246, 0) 70%)',
+                animation: 'pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite',
+              }} />
+
+              {/* Background circular track */}
+              <svg width="64" height="64" viewBox="0 0 64 64" style={{ transform: 'rotate(-90deg)' }}>
+                <circle
+                  cx="32"
+                  cy="32"
+                  r="26"
+                  stroke="#1e293b"
+                  strokeWidth="3.5"
+                  fill="none"
+                />
+                {/* Foreground spinning ring */}
+                <circle
+                  cx="32"
+                  cy="32"
+                  r="26"
+                  stroke="#38bdf8"
+                  strokeWidth="3.5"
+                  strokeLinecap="round"
+                  strokeDasharray="163"
+                  strokeDashoffset="110"
+                  fill="none"
+                  style={{
+                    transformOrigin: 'center',
+                    animation: 'spin 1s cubic-bezier(0.4, 0, 0.2, 1) infinite',
+                  }}
+                />
+              </svg>
+
+              {/* Center pulsing core dot */}
+              <div style={{
+                position: 'absolute',
+                width: '10px',
+                height: '10px',
+                borderRadius: '50%',
+                backgroundColor: '#38bdf8',
+                boxShadow: '0 0 10px rgba(56, 189, 248, 0.8)',
+                animation: 'pulse 1.4s ease-in-out infinite',
+              }} />
             </div>
 
-            <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '6px', textAlign: 'center' }}>
-              <span style={{ fontSize: '15px', fontWeight: 700, letterSpacing: '0.5px' }}>
-                {actionMode === 'submit'
-                  ? (submitPhase === 'submitting' ? 'Submitting solution...' : 'Evaluating against test cases...')
-                  : 'Executing code in sandbox...'
-                }
+            {/* Clean Student-Facing Status Text */}
+            <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '8px', textAlign: 'center' }}>
+              <span style={{ fontSize: '15px', fontWeight: 600, letterSpacing: '0.3px', color: 'var(--student-code-text-f1f5f9, #f1f5f9)' }}>
+                {actionMode === 'submit' ? 'Evaluating submission…' : 'Running code…'}
               </span>
-              <span style={{ color: '#888888', fontSize: '12px', maxWidth: '380px', lineHeight: 1.5 }}>
-                {actionMode === 'submit'
-                  ? (submitPhase === 'submitting'
-                      ? 'Dispatching code to secure execution worker queue...'
-                      : 'Running all configured evaluation test cases...')
-                  : 'Compiling & evaluating input in isolated environment...'
-                }
+              <span style={{
+                color: 'var(--student-code-text-94a3b8, #94a3b8)',
+                fontSize: '12px',
+                display: 'inline-flex',
+                alignItems: 'center',
+                gap: '6px',
+                background: 'rgba(255, 255, 255, 0.04)',
+                border: '1px solid rgba(255, 255, 255, 0.08)',
+                padding: '4px 14px',
+                borderRadius: '16px',
+                letterSpacing: '0.2px'
+              }}>
+                <span style={{
+                  width: '6px',
+                  height: '6px',
+                  borderRadius: '50%',
+                  backgroundColor: '#38bdf8',
+                  animation: 'pulse 1s infinite',
+                }} />
+                Processing…
               </span>
-            </div>
-
-            {/* Visual execution phase milestones */}
-            <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginTop: '4px', background: '#0d0d0d', border: '1px solid #262626', borderRadius: '24px', padding: '6px 16px' }}>
-              <div style={{ display: 'flex', alignItems: 'center', gap: '6px', fontSize: '11px', color: '#10b981', fontWeight: 600 }}>
-                <span style={{ width: '6px', height: '6px', borderRadius: '50%', background: '#10b981' }} />
-                Queue Dispatched
-              </div>
-              <span style={{ color: '#444' }}>→</span>
-              <div style={{ display: 'flex', alignItems: 'center', gap: '6px', fontSize: '11px', color: '#38bdf8', fontWeight: 600 }}>
-                <span style={{ width: '6px', height: '6px', borderRadius: '50%', background: '#38bdf8', animation: 'pulse 1.2s infinite' }} />
-                Sandbox Active
-              </div>
-              <span style={{ color: '#444' }}>→</span>
-              <div style={{ display: 'flex', alignItems: 'center', gap: '6px', fontSize: '11px', color: '#777', fontWeight: 500 }}>
-                <span style={{ width: '6px', height: '6px', borderRadius: '50%', background: '#555' }} />
-                Verifying Results
-              </div>
             </div>
           </div>
         )}
@@ -211,27 +250,13 @@ export default function ConsolePanel({
           <div style={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: '16px', color: '#e22718', padding: '20px' }}>
             <XCircle size={36} />
             <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '6px', textAlign: 'center' }}>
-              <span style={{ fontSize: '14px', fontWeight: 700, letterSpacing: '0.5px', color: '#ffffff' }}>Execution failed</span>
-              <span style={{ color: '#7e7e7e', fontSize: '12px', maxWidth: '340px', lineHeight: 1.5 }}>
-                Could not execute solution. Verify your authorization session, connection, or check if the local server is running.
+              <span style={{ fontSize: '14px', fontWeight: 700, letterSpacing: '0.5px', color: 'var(--student-code-text-ffffff, #ffffff)' }}>Execution failed</span>
+              <span style={{ color: 'var(--student-code-text-7e7e7e, #7e7e7e)', fontSize: '12px', maxWidth: '340px', lineHeight: 1.5 }}>
+                We couldn’t run your code right now. Check your connection and try again. If the problem continues, contact your faculty.
               </span>
-              {output?.runtimeError && (
-                <pre style={{
-                  color: '#e22718',
-                  background: '#0d0d0d',
-                  border: '1px solid #262626',
-                  padding: '10px 12px',
-                  fontSize: '11px',
-                  fontFamily: 'JetBrains Mono, monospace',
-                  textAlign: 'left',
-                  maxHeight: '100px',
-                  overflowY: 'auto',
-                  marginTop: '10px',
-                  width: '100%'
-                }}>{output.runtimeError}</pre>
-              )}
-              <span style={{ color: '#bbbbbb', fontSize: '11px', marginTop: '10px', fontWeight: 700, letterSpacing: '1px', textTransform: 'uppercase' }}>
-                Retry Guidance: Check network & click Run/Submit again
+
+              <span style={{ color: 'var(--student-code-text-bbbbbb, #bbbbbb)', fontSize: '11px', marginTop: '10px', fontWeight: 700, letterSpacing: '1px', textTransform: 'uppercase' }}>
+                Try Run or Submit again when your connection is ready.
               </span>
             </div>
           </div>
@@ -239,15 +264,15 @@ export default function ConsolePanel({
 
         {/* 3. Idle / Welcome State */}
         {judgeState === 'idle' && !hasOutput && (
-          <div style={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: '12px', color: '#3c3c3c' }}>
+          <div style={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: '12px', color: 'var(--student-code-text-3c3c3c, #3c3c3c)' }}>
             <Terminal size={28} />
-            <p style={{ color: '#7e7e7e', fontSize: '12px', letterSpacing: '0.5px' }}>Press RUN to test or SUBMIT to judge your code</p>
+            <p style={{ color: 'var(--student-code-text-7e7e7e, #7e7e7e)', fontSize: '12px', letterSpacing: '0.5px' }}>Press RUN to test or SUBMIT to judge your code</p>
           </div>
         )}
 
         {/* 4. Success State Panels */}
         {judgeState === 'success' && hasOutput && (
-          <div style={{ flex: 1, display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
+          <div style={{ flex: 1, minHeight: 0, minWidth: 0, display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
 
             {/* ── Prominent Verdict Banner for Submissions (Shown for ALL statuses) ── */}
             {actionMode === 'submit' && (
@@ -267,7 +292,7 @@ export default function ConsolePanel({
                     <span style={{ fontSize: '15px', fontWeight: 700, color: status === 'accepted' ? '#0fa336' : '#e22718', letterSpacing: '0.5px', textTransform: 'uppercase' }}>
                       {currentStatus.label}
                     </span>
-                    <span style={{ color: '#bbbbbb', fontSize: '11px' }}>
+                    <span style={{ color: 'var(--student-code-text-bbbbbb, #bbbbbb)', fontSize: '11px' }}>
                       {status === 'compile_error'
                         ? 'Your code failed to compile'
                         : status === 'runtime_error'
@@ -284,8 +309,8 @@ export default function ConsolePanel({
                 {/* Max runtime in submission (if any cases ran) */}
                 {cases.length > 0 && output.cases?.some(c => c.runtimeMs !== undefined) && (
                   <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: '2px' }}>
-                    <span style={{ fontSize: '10px', color: '#7e7e7e', textTransform: 'uppercase', letterSpacing: '0.5px' }}>Runtime</span>
-                    <span style={{ fontSize: '13px', color: '#ffffff', fontFamily: 'JetBrains Mono, monospace', fontWeight: 700 }}>
+                    <span style={{ fontSize: '10px', color: 'var(--student-code-text-7e7e7e, #7e7e7e)', textTransform: 'uppercase', letterSpacing: '0.5px' }}>Runtime</span>
+                    <span style={{ fontSize: '13px', color: 'var(--student-code-text-ffffff, #ffffff)', fontFamily: 'JetBrains Mono, monospace', fontWeight: 700 }}>
                       {Math.max(...output.cases.map(c => c.runtimeMs || 0))} ms
                     </span>
                   </div>
@@ -297,9 +322,9 @@ export default function ConsolePanel({
 
             {/* A. Compilation Errors */}
             {status === 'compile_error' && (
-              <div style={{ flex: 1, overflowY: 'auto', padding: '20px', background: '#000000', fontFamily: 'JetBrains Mono, Fira Code, Consolas, monospace' }}>
-                <div style={{ fontSize: '11px', fontWeight: 700, color: '#7e7e7e', letterSpacing: '1.5px', textTransform: 'uppercase', marginBottom: '8px', fontFamily: 'Inter, sans-serif' }}>Compiler Error Message</div>
-                <pre style={{ color: '#e22718', lineHeight: 1.6, whiteSpace: 'pre-wrap', wordBreak: 'break-word', background: '#0d0d0d', border: '1px solid #262626', padding: '16px', fontSize: '12px' }}>
+              <div style={{ flex: 1, minHeight: 0, overflowY: 'auto', padding: '20px', background: 'var(--student-code-bg-000000, #000000)', fontFamily: 'JetBrains Mono, Fira Code, Consolas, monospace' }}>
+                <div style={{ fontSize: '11px', fontWeight: 700, color: 'var(--student-code-text-7e7e7e, #7e7e7e)', letterSpacing: '1.5px', textTransform: 'uppercase', marginBottom: '8px', fontFamily: 'Inter, sans-serif' }}>Compiler Error Message</div>
+                <pre style={{ color: '#e22718', lineHeight: 1.6, whiteSpace: 'pre-wrap', wordBreak: 'break-word', background: 'var(--student-code-bg-0d0d0d, #0d0d0d)', border: '1px solid var(--student-code-border-262626, #262626)', padding: '16px', fontSize: '12px' }}>
                   {output?.compileError || 'Syntax / Compilation error occurred.'}
                 </pre>
               </div>
@@ -307,9 +332,9 @@ export default function ConsolePanel({
 
             {/* B. Global Runtime Errors (Startup crashes) */}
             {status === 'runtime_error' && cases.length === 0 && (
-              <div style={{ flex: 1, overflowY: 'auto', padding: '20px', background: '#000000', fontFamily: 'JetBrains Mono, Fira Code, Consolas, monospace' }}>
-                <div style={{ fontSize: '11px', fontWeight: 700, color: '#7e7e7e', letterSpacing: '1.5px', textTransform: 'uppercase', marginBottom: '8px', fontFamily: 'Inter, sans-serif' }}>Initialization / Runtime Error</div>
-                <pre style={{ color: '#e22718', lineHeight: 1.6, whiteSpace: 'pre-wrap', wordBreak: 'break-word', background: '#0d0d0d', border: '1px solid #262626', padding: '16px', fontSize: '12px' }}>
+              <div style={{ flex: 1, minHeight: 0, overflowY: 'auto', padding: '20px', background: 'var(--student-code-bg-000000, #000000)', fontFamily: 'JetBrains Mono, Fira Code, Consolas, monospace' }}>
+                <div style={{ fontSize: '11px', fontWeight: 700, color: 'var(--student-code-text-7e7e7e, #7e7e7e)', letterSpacing: '1.5px', textTransform: 'uppercase', marginBottom: '8px', fontFamily: 'Inter, sans-serif' }}>Initialization / Runtime Error</div>
+                <pre style={{ color: '#e22718', lineHeight: 1.6, whiteSpace: 'pre-wrap', wordBreak: 'break-word', background: 'var(--student-code-bg-0d0d0d, #0d0d0d)', border: '1px solid var(--student-code-border-262626, #262626)', padding: '16px', fontSize: '12px' }}>
                   {output?.runtimeError || 'An error occurred during program startup.'}
                 </pre>
               </div>
@@ -320,7 +345,7 @@ export default function ConsolePanel({
               <div style={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: '8px', color: '#f4b400', padding: '20px' }}>
                 <XCircle size={32} />
                 <span style={{ fontSize: '14px', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '1px' }}>{currentStatus.label}</span>
-                <span style={{ color: '#7e7e7e', fontSize: '12px', textAlign: 'center', maxWidth: '360px', lineHeight: 1.5 }}>
+                <span style={{ color: 'var(--student-code-text-7e7e7e, #7e7e7e)', fontSize: '12px', textAlign: 'center', maxWidth: '360px', lineHeight: 1.5 }}>
                   {status === 'time_limit_exceeded'
                     ? 'Your program exceeded the 5.0 seconds runtime limit. Ensure there are no infinite loops or inefficient algorithms.'
                     : 'Your program exceeded the 128MB memory limit. Check for massive memory allocations.'
@@ -339,8 +364,8 @@ export default function ConsolePanel({
                 justifyContent: 'center',
                 gap: '20px',
                 padding: '40px 20px',
-                background: '#070707',
-                color: '#ffffff',
+                background: 'var(--student-code-bg-070707, #070707)',
+                color: 'var(--student-code-text-ffffff, #ffffff)',
                 textAlign: 'center'
               }}>
                 <div style={{
@@ -361,20 +386,20 @@ export default function ConsolePanel({
                 </div>
 
                 <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', maxWidth: '340px' }}>
-                  <h3 style={{ fontSize: '18px', fontWeight: 700, color: '#ffffff', margin: 0 }}>Submission Accepted!</h3>
-                  <p style={{ color: '#7e7e7e', fontSize: '12px', lineHeight: 1.6, margin: 0 }}>
+                  <h3 style={{ fontSize: '18px', fontWeight: 700, color: 'var(--student-code-text-ffffff, #ffffff)', margin: 0 }}>Submission Accepted!</h3>
+                  <p style={{ color: 'var(--student-code-text-7e7e7e, #7e7e7e)', fontSize: '12px', lineHeight: 1.6, margin: 0 }}>
                     Your code successfully passed compilation checks and was submitted to the platform.
                   </p>
                 </div>
 
                 <div style={{
-                  background: '#0d0d0d',
-                  border: '1px solid #1a1a1a',
+                  background: 'var(--student-code-bg-0d0d0d, #0d0d0d)',
+                  border: '1px solid var(--student-code-border-1a1a1a, #1a1a1a)',
                   borderRadius: '8px',
                   padding: '12px 24px',
                   fontSize: '11px',
                   fontWeight: 600,
-                  color: '#bbbbbb',
+                  color: 'var(--student-code-text-bbbbbb, #bbbbbb)',
                   display: 'flex',
                   alignItems: 'center',
                   gap: '8px'
@@ -387,11 +412,11 @@ export default function ConsolePanel({
 
             {/* D. Successful Execution with case runs (HackerRank-style list for SUBMIT, LeetCode tabs for RUN) */}
             {cases.length > 0 && (
-              <div style={{ flex: 1, display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
+              <div style={{ flex: 1, minHeight: 0, minWidth: 0, display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
                 
                 {actionMode === 'submit' ? (
                   /* ── HackerRank-Style List View (Expandable Cards) ── */
-                  <div style={{ flex: 1, overflowY: 'auto', padding: '20px', display: 'flex', flexDirection: 'column', gap: '12px' }}>
+                  <div style={{ flex: 1, minHeight: 0, overflowY: 'auto', padding: '20px', display: 'flex', flexDirection: 'column', gap: '12px' }}>
                     {cases.map((c, idx) => {
                       const casePassed = c.status === 'passed';
                       const isExpanded = !!expandedCases[idx];
@@ -434,9 +459,10 @@ export default function ConsolePanel({
                       return (
                         <div
                           key={idx}
-                          style={{
-                            background: '#0a0a0a',
-                            border: `1px solid ${isExpanded ? '#333333' : '#1a1a1a'}`,
+                          className="test-result-card"
+                          style={{ flexShrink: 0, minWidth: 0,
+                            background: 'var(--student-code-bg-0a0a0a, #0a0a0a)',
+                            border: `1px solid ${isExpanded ? 'var(--student-code-border-333333, #333333)' : 'var(--student-code-border-1a1a1a, #1a1a1a)'}`,
                             borderRadius: '4px',
                             display: 'flex',
                             flexDirection: 'column',
@@ -445,6 +471,8 @@ export default function ConsolePanel({
                         >
                           {/* Row Header */}
                           <div
+                            role="button" tabIndex={0} aria-expanded={isExpanded}
+                            onKeyDown={event => { if (event.key === 'Enter' || event.key === ' ') { event.preventDefault(); toggleExpand(idx); } }}
                             onClick={() => toggleExpand(idx)}
                             style={{
                               padding: '12px 16px',
@@ -452,15 +480,15 @@ export default function ConsolePanel({
                               alignItems: 'center',
                               justifyContent: 'space-between',
                               cursor: 'pointer',
-                              background: isExpanded ? '#111111' : 'transparent',
+                              background: isExpanded ? 'var(--student-code-bg-111111, #111111)' : 'transparent',
                               userSelect: 'none',
                             }}
-                            onMouseEnter={e => e.currentTarget.style.background = '#151515'}
-                            onMouseLeave={e => e.currentTarget.style.background = isExpanded ? '#111111' : 'transparent'}
+                            onMouseEnter={e => e.currentTarget.style.background = 'var(--student-code-bg-151515, #151515)'}
+                            onMouseLeave={e => e.currentTarget.style.background = isExpanded ? 'var(--student-code-bg-111111, #111111)' : 'transparent'}
                           >
                             <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
                               {casePassed || (actionMode === 'run' && c.status === 'wrong_answer') ? <CheckCircle size={15} color="#0fa336" /> : <XCircle size={15} color="#e22718" />}
-                              <span style={{ fontSize: '12px', fontWeight: 600, color: '#ffffff' }}>
+                              <span style={{ fontSize: '12px', fontWeight: 600, color: 'var(--student-code-text-ffffff, #ffffff)' }}>
                                 {false ? `Hidden Test Case ${idx + 1}` : `Test Case ${idx + 1}`}
                               </span>
                             </div>
@@ -476,27 +504,27 @@ export default function ConsolePanel({
                                 {casePassed ? 'Passed' : actionMode === 'run' && c.status === 'wrong_answer' ? 'Executed' : c.status === 'wrong_answer' ? 'Wrong Answer' : c.status === 'runtime_error' ? 'Runtime Error' : c.status}
                               </span>
                               {runtimeVal !== null && (
-                                <span style={{ fontSize: '11px', color: '#7e7e7e', fontFamily: 'JetBrains Mono, monospace' }}>
+                                <span style={{ fontSize: '11px', color: 'var(--student-code-text-7e7e7e, #7e7e7e)', fontFamily: 'JetBrains Mono, monospace' }}>
                                   {runtimeVal} ms
                                 </span>
                               )}
-                              {isExpanded ? <ChevronUp size={14} color="#7e7e7e" /> : <ChevronDown size={14} color="#7e7e7e" />}
+                              {isExpanded ? <ChevronUp size={14} color="var(--student-code-text-7e7e7e, #7e7e7e)" /> : <ChevronDown size={14} color="var(--student-code-text-7e7e7e, #7e7e7e)" />}
                             </div>
                           </div>
 
                           {/* Row Expanded Details */}
                           {isExpanded && (
-                            <div style={{ padding: '16px', borderTop: '1px solid #1a1a1a', background: '#070707', display: 'flex', flexDirection: 'column', gap: '12px' }}>
+                            <div style={{ padding: '16px', borderTop: '1px solid var(--student-code-border-1a1a1a, #1a1a1a)', background: 'var(--student-code-bg-070707, #070707)', display: 'flex', flexDirection: 'column', gap: '12px' }}>
                               {false ? (
                                 <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
-                                  <div style={{ fontSize: '12px', color: '#7e7e7e', fontStyle: 'italic', display: 'flex', alignItems: 'center', gap: '8px' }}>
+                                  <div style={{ fontSize: '12px', color: 'var(--student-code-text-7e7e7e, #7e7e7e)', fontStyle: 'italic', display: 'flex', alignItems: 'center', gap: '8px' }}>
                                     <Terminal size={14} />
                                     Hidden Test Case — Details hidden.
                                   </div>
                                   {c.stdout && (
                                     <div>
-                                      <div style={{ fontSize: '9px', fontWeight: 700, color: '#7e7e7e', letterSpacing: '1.5px', textTransform: 'uppercase', marginBottom: '4px' }}>Stdout (Console Print)</div>
-                                      <pre style={{ color: '#bbbbbb', background: '#0d0d0d', border: '1px solid #1a1a1a', padding: '10px 12px', fontSize: '11px', fontFamily: 'JetBrains Mono, monospace', whiteSpace: 'pre-wrap' }}>
+                                      <div style={{ fontSize: '9px', fontWeight: 700, color: 'var(--student-code-text-7e7e7e, #7e7e7e)', letterSpacing: '1.5px', textTransform: 'uppercase', marginBottom: '4px' }}>Stdout (Console Print)</div>
+                                      <pre style={{ color: 'var(--student-code-text-bbbbbb, #bbbbbb)', background: 'var(--student-code-bg-0d0d0d, #0d0d0d)', border: '1px solid var(--student-code-border-1a1a1a, #1a1a1a)', padding: '10px 12px', fontSize: '11px', fontFamily: 'JetBrains Mono, monospace', whiteSpace: 'pre-wrap' }}>
                                         {c.stdout}
                                       </pre>
                                     </div>
@@ -504,7 +532,7 @@ export default function ConsolePanel({
                                   {(c.stderr || c.traceback || c.error_message) && (
                                     <div>
                                       <div style={{ fontSize: '9px', fontWeight: 700, color: '#e22718', letterSpacing: '1.5px', textTransform: 'uppercase', marginBottom: '4px' }}>Error Details / Stderr</div>
-                                      <pre style={{ color: '#e22718', background: '#0d0d0d', border: '1px solid #1a1a1a', padding: '10px 12px', fontSize: '11px', fontFamily: 'JetBrains Mono, monospace', whiteSpace: 'pre-wrap', lineHeight: 1.5 }}>
+                                      <pre style={{ color: '#e22718', background: 'var(--student-code-bg-0d0d0d, #0d0d0d)', border: '1px solid var(--student-code-border-1a1a1a, #1a1a1a)', padding: '10px 12px', fontSize: '11px', fontFamily: 'JetBrains Mono, monospace', whiteSpace: 'pre-wrap', lineHeight: 1.5 }}>
                                         {c.traceback || c.stderr || c.error_message}
                                       </pre>
                                     </div>
@@ -514,8 +542,8 @@ export default function ConsolePanel({
                                 <>
                                   {/* Input */}
                                   <div>
-                                    <div style={{ fontSize: '9px', fontWeight: 700, color: '#7e7e7e', letterSpacing: '1.5px', textTransform: 'uppercase', marginBottom: '4px' }}>Input</div>
-                                    <pre style={{ color: '#ffffff', background: '#0d0d0d', border: '1px solid #1a1a1a', padding: '10px 12px', fontSize: '11px', fontFamily: 'JetBrains Mono, monospace', whiteSpace: 'pre-wrap' }}>
+                                    <div style={{ fontSize: '9px', fontWeight: 700, color: 'var(--student-code-text-7e7e7e, #7e7e7e)', letterSpacing: '1.5px', textTransform: 'uppercase', marginBottom: '4px' }}>Input</div>
+                                    <pre style={{ color: 'var(--student-code-text-ffffff, #ffffff)', background: 'var(--student-code-bg-0d0d0d, #0d0d0d)', border: '1px solid var(--student-code-border-1a1a1a, #1a1a1a)', padding: '10px 12px', fontSize: '11px', fontFamily: 'JetBrains Mono, monospace', whiteSpace: 'pre-wrap' }}>
                                       {formatInput() || 'None'}
                                     </pre>
                                   </div>
@@ -523,17 +551,17 @@ export default function ConsolePanel({
                                   {/* Outputs */}
                                   <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '12px' }}>
                                     <div>
-                                      <div style={{ fontSize: '9px', fontWeight: 700, color: '#7e7e7e', letterSpacing: '1.5px', textTransform: 'uppercase', marginBottom: '4px' }}>Expected Output</div>
-                                      <pre style={{ color: '#0fa336', background: '#0d0d0d', border: '1px solid #1a1a1a', padding: '10px 12px', fontSize: '11px', fontFamily: 'JetBrains Mono, monospace', whiteSpace: 'pre-wrap' }}>
+                                      <div style={{ fontSize: '9px', fontWeight: 700, color: 'var(--student-code-text-7e7e7e, #7e7e7e)', letterSpacing: '1.5px', textTransform: 'uppercase', marginBottom: '4px' }}>Expected Output</div>
+                                      <pre style={{ color: '#0fa336', background: 'var(--student-code-bg-0d0d0d, #0d0d0d)', border: '1px solid var(--student-code-border-1a1a1a, #1a1a1a)', padding: '10px 12px', fontSize: '11px', fontFamily: 'JetBrains Mono, monospace', whiteSpace: 'pre-wrap' }}>
                                         {formatOutputValue(expectedVal)}
                                       </pre>
                                     </div>
                                     <div>
-                                      <div style={{ fontSize: '9px', fontWeight: 700, color: '#7e7e7e', letterSpacing: '1.5px', textTransform: 'uppercase', marginBottom: '4px' }}>YOUR OUTPUT</div>
+                                      <div style={{ fontSize: '9px', fontWeight: 700, color: 'var(--student-code-text-7e7e7e, #7e7e7e)', letterSpacing: '1.5px', textTransform: 'uppercase', marginBottom: '4px' }}>YOUR OUTPUT</div>
                                       <pre style={{
                                         color: casePassed ? '#0fa336' : '#e22718',
-                                        background: '#0d0d0d',
-                                        border: '1px solid #1a1a1a',
+                                        background: 'var(--student-code-bg-0d0d0d, #0d0d0d)',
+                                        border: '1px solid var(--student-code-border-1a1a1a, #1a1a1a)',
                                         padding: '10px 12px',
                                         fontSize: '11px',
                                         fontFamily: 'JetBrains Mono, monospace',
@@ -547,8 +575,8 @@ export default function ConsolePanel({
                                   {/* Console stdout prints */}
                                   {c.stdout && (
                                     <div>
-                                      <div style={{ fontSize: '9px', fontWeight: 700, color: '#7e7e7e', letterSpacing: '1.5px', textTransform: 'uppercase', marginBottom: '4px' }}>Stdout (Console Print)</div>
-                                      <pre style={{ color: '#bbbbbb', background: '#0d0d0d', border: '1px solid #1a1a1a', padding: '10px 12px', fontSize: '11px', fontFamily: 'JetBrains Mono, monospace', whiteSpace: 'pre-wrap' }}>
+                                      <div style={{ fontSize: '9px', fontWeight: 700, color: 'var(--student-code-text-7e7e7e, #7e7e7e)', letterSpacing: '1.5px', textTransform: 'uppercase', marginBottom: '4px' }}>Stdout (Console Print)</div>
+                                      <pre style={{ color: 'var(--student-code-text-bbbbbb, #bbbbbb)', background: 'var(--student-code-bg-0d0d0d, #0d0d0d)', border: '1px solid var(--student-code-border-1a1a1a, #1a1a1a)', padding: '10px 12px', fontSize: '11px', fontFamily: 'JetBrains Mono, monospace', whiteSpace: 'pre-wrap' }}>
                                         {c.stdout}
                                       </pre>
                                     </div>
@@ -558,7 +586,7 @@ export default function ConsolePanel({
                                   {(c.stderr || c.traceback || c.error_message) && (
                                     <div>
                                       <div style={{ fontSize: '9px', fontWeight: 700, color: '#e22718', letterSpacing: '1.5px', textTransform: 'uppercase', marginBottom: '4px' }}>Error Details / Stderr</div>
-                                      <pre style={{ color: '#e22718', background: '#0d0d0d', border: '1px solid #1a1a1a', padding: '10px 12px', fontSize: '11px', fontFamily: 'JetBrains Mono, monospace', whiteSpace: 'pre-wrap', lineHeight: 1.5 }}>
+                                      <pre style={{ color: '#e22718', background: 'var(--student-code-bg-0d0d0d, #0d0d0d)', border: '1px solid var(--student-code-border-1a1a1a, #1a1a1a)', padding: '10px 12px', fontSize: '11px', fontFamily: 'JetBrains Mono, monospace', whiteSpace: 'pre-wrap', lineHeight: 1.5 }}>
                                         {c.traceback || c.stderr || c.error_message}
                                       </pre>
                                     </div>
@@ -573,10 +601,10 @@ export default function ConsolePanel({
                   </div>
                 ) : (
                   /* ── LeetCode-Style Tabs View (Perfect for RUN mode) ── */
-                  <div style={{ flex: 1, display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
+                  <div style={{ flex: 1, minHeight: 0, minWidth: 0, display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
                     
                     {/* Case Selector Tabs */}
-                    <div style={{ display: 'flex', background: '#000000', borderBottom: '1px solid #262626', padding: '0 16px', gap: '4px', flexShrink: 0 }}>
+                    <div style={{ display: 'flex', background: 'var(--student-code-bg-000000, #000000)', borderBottom: '1px solid var(--student-code-border-262626, #262626)', padding: '0 16px', gap: '4px', flexShrink: 0 }}>
                       {cases.map((c, idx) => {
                         const casePassed = c.status === 'passed';
                         const isActive = activeCaseIdx === idx;
@@ -588,7 +616,7 @@ export default function ConsolePanel({
                               background: 'transparent',
                               border: 'none',
                               borderBottom: isActive ? '2px solid #ffffff' : '2px solid transparent',
-                              color: isActive ? '#ffffff' : '#7e7e7e',
+                              color: isActive ? 'var(--student-code-text-ffffff, #ffffff)' : 'var(--student-code-text-7e7e7e, #7e7e7e)',
                               fontSize: '11px',
                               fontWeight: 700,
                               letterSpacing: '1px',
@@ -613,7 +641,7 @@ export default function ConsolePanel({
                     </div>
 
                     {/* Selected Case Details */}
-                    <div style={{ flex: 1, overflowY: 'auto', padding: '20px', display: 'flex', flexDirection: 'column', gap: '16px' }}>
+                    <div style={{ flex: 1, minHeight: 0, overflowY: 'auto', padding: '20px', display: 'flex', flexDirection: 'column', gap: '16px' }}>
                       {(() => {
                         const c = cases[activeCaseIdx];
                         if (!c) return null;
@@ -657,11 +685,11 @@ export default function ConsolePanel({
                           <>
                             {/* Input */}
                             <div>
-                              <div style={{ fontSize: '10px', fontWeight: 700, color: '#7e7e7e', letterSpacing: '1.5px', textTransform: 'uppercase', marginBottom: '6px' }}>Input</div>
+                              <div style={{ fontSize: '10px', fontWeight: 700, color: 'var(--student-code-text-7e7e7e, #7e7e7e)', letterSpacing: '1.5px', textTransform: 'uppercase', marginBottom: '6px' }}>Input</div>
                               <pre style={{
-                                color: '#ffffff',
-                                background: '#0d0d0d',
-                                border: '1px solid #1a1a1a',
+                                color: 'var(--student-code-text-ffffff, #ffffff)',
+                                background: 'var(--student-code-bg-0d0d0d, #0d0d0d)',
+                                border: '1px solid var(--student-code-border-1a1a1a, #1a1a1a)',
                                 padding: '10px 12px',
                                 fontSize: '12px',
                                 fontFamily: 'JetBrains Mono, monospace',
@@ -674,17 +702,17 @@ export default function ConsolePanel({
                             {/* Outputs */}
                             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '16px' }}>
                               <div>
-                                <div style={{ fontSize: '10px', fontWeight: 700, color: '#7e7e7e', letterSpacing: '1.5px', textTransform: 'uppercase', marginBottom: '6px' }}>Expected Output</div>
-                                <pre style={{ color: '#0fa336', background: '#0d0d0d', border: '1px solid #1a1a1a', padding: '10px 12px', fontSize: '12px', fontFamily: 'JetBrains Mono, monospace', whiteSpace: 'pre-wrap' }}>
+                                <div style={{ fontSize: '10px', fontWeight: 700, color: 'var(--student-code-text-7e7e7e, #7e7e7e)', letterSpacing: '1.5px', textTransform: 'uppercase', marginBottom: '6px' }}>Expected Output</div>
+                                <pre style={{ color: '#0fa336', background: 'var(--student-code-bg-0d0d0d, #0d0d0d)', border: '1px solid var(--student-code-border-1a1a1a, #1a1a1a)', padding: '10px 12px', fontSize: '12px', fontFamily: 'JetBrains Mono, monospace', whiteSpace: 'pre-wrap' }}>
                                   {formatOutputValue(expectedVal)}
                                 </pre>
                               </div>
                               <div>
-                                <div style={{ fontSize: '10px', fontWeight: 700, color: '#7e7e7e', letterSpacing: '1.5px', textTransform: 'uppercase', marginBottom: '6px' }}>YOUR OUTPUT</div>
+                                <div style={{ fontSize: '10px', fontWeight: 700, color: 'var(--student-code-text-7e7e7e, #7e7e7e)', letterSpacing: '1.5px', textTransform: 'uppercase', marginBottom: '6px' }}>YOUR OUTPUT</div>
                                 <pre style={{
                                   color: c.status === 'passed' ? '#0fa336' : '#e22718',
-                                  background: '#0d0d0d',
-                                  border: '1px solid #1a1a1a',
+                                  background: 'var(--student-code-bg-0d0d0d, #0d0d0d)',
+                                  border: '1px solid var(--student-code-border-1a1a1a, #1a1a1a)',
                                   padding: '10px 12px',
                                   fontSize: '12px',
                                   fontFamily: 'JetBrains Mono, monospace',
@@ -697,7 +725,7 @@ export default function ConsolePanel({
 
                             {/* Case status details */}
                             {c.status !== 'passed' && (
-                              <div style={{ display: 'flex', gap: '8px', fontSize: '11px', color: '#7e7e7e' }}>
+                              <div style={{ display: 'flex', gap: '8px', fontSize: '11px', color: 'var(--student-code-text-7e7e7e, #7e7e7e)' }}>
                                 <span style={{ fontWeight: 700, textTransform: 'uppercase', letterSpacing: '1px' }}>Verdict:</span>
                                 <span style={{ color: '#e22718', fontWeight: 700, textTransform: 'uppercase' }}>
                                   {c.status === 'wrong_answer' ? 'Wrong Answer' : c.status === 'runtime_error' ? 'Runtime Error' : c.status}
@@ -706,9 +734,9 @@ export default function ConsolePanel({
                             )}
 
                             {/* Runtime */}
-                            <div style={{ display: 'flex', gap: '8px', fontSize: '11px', color: '#7e7e7e' }}>
+                            <div style={{ display: 'flex', gap: '8px', fontSize: '11px', color: 'var(--student-code-text-7e7e7e, #7e7e7e)' }}>
                               <span style={{ fontWeight: 700, textTransform: 'uppercase', letterSpacing: '1px' }}>Runtime:</span>
-                              <span style={{ color: '#ffffff', fontFamily: 'JetBrains Mono, monospace' }}>
+                              <span style={{ color: 'var(--student-code-text-ffffff, #ffffff)', fontFamily: 'JetBrains Mono, monospace' }}>
                                 {runtimeVal !== null ? `${runtimeVal} ms` : '—'}
                               </span>
                             </div>
@@ -716,8 +744,8 @@ export default function ConsolePanel({
                             {/* Stdout */}
                             {c.stdout && (
                               <div>
-                                <div style={{ fontSize: '10px', fontWeight: 700, color: '#7e7e7e', letterSpacing: '1.5px', textTransform: 'uppercase', marginBottom: '6px' }}>Stdout (Console Print)</div>
-                                <pre style={{ color: '#bbbbbb', background: '#0d0d0d', border: '1px solid #1a1a1a', padding: '10px 12px', fontSize: '12px', fontFamily: 'JetBrains Mono, monospace', whiteSpace: 'pre-wrap' }}>
+                                <div style={{ fontSize: '10px', fontWeight: 700, color: 'var(--student-code-text-7e7e7e, #7e7e7e)', letterSpacing: '1.5px', textTransform: 'uppercase', marginBottom: '6px' }}>Stdout (Console Print)</div>
+                                <pre style={{ color: 'var(--student-code-text-bbbbbb, #bbbbbb)', background: 'var(--student-code-bg-0d0d0d, #0d0d0d)', border: '1px solid var(--student-code-border-1a1a1a, #1a1a1a)', padding: '10px 12px', fontSize: '12px', fontFamily: 'JetBrains Mono, monospace', whiteSpace: 'pre-wrap' }}>
                                   {c.stdout}
                                 </pre>
                               </div>
@@ -727,7 +755,7 @@ export default function ConsolePanel({
                             {(c.stderr || c.traceback || c.error_message) && (
                               <div>
                                 <div style={{ fontSize: '10px', fontWeight: 700, color: '#e22718', letterSpacing: '1.5px', textTransform: 'uppercase', marginBottom: '6px' }}>Error Details / Stderr</div>
-                                <pre style={{ color: '#e22718', background: '#0d0d0d', border: '1px solid #1a1a1a', padding: '10px 12px', fontSize: '12px', fontFamily: 'JetBrains Mono, monospace', whiteSpace: 'pre-wrap', lineHeight: 1.5 }}>
+                                <pre style={{ color: '#e22718', background: 'var(--student-code-bg-0d0d0d, #0d0d0d)', border: '1px solid var(--student-code-border-1a1a1a, #1a1a1a)', padding: '10px 12px', fontSize: '12px', fontFamily: 'JetBrains Mono, monospace', whiteSpace: 'pre-wrap', lineHeight: 1.5 }}>
                                   {c.traceback || c.stderr || c.error_message}
                                 </pre>
                               </div>
