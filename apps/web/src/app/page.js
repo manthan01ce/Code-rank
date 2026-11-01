@@ -5,6 +5,7 @@ import Link from 'next/link';
 import Image from 'next/image';
 import TextType from '@/components/ui/TextType';
 import styles from './home.module.css';
+import HeroWaves from './HeroWaves';
 
 const samples = {
   Python: 'def rank_up(practice):\n    skills = []\n    for challenge in practice:\n        skills.append(solve(challenge))\n    return skills\n\nprint("Keep building. Keep growing.")',
@@ -89,20 +90,13 @@ export default function HomePage() {
         </div>
 
           <div className={styles.studio}>
-            <svg className={styles.studioOrbit} viewBox="0 0 600 600" fill="none" aria-hidden="true">
-              <circle cx="300" cy="300" r="258" />
-              <circle cx="300" cy="300" r="218" strokeDasharray="3 12" />
-              <ellipse cx="300" cy="300" rx="285" ry="155" transform="rotate(-35 300 300)" />
-              <circle className={styles.orbitNode} cx="112" cy="123" r="9" />
-              <circle className={styles.orbitNode} cx="548" cy="371" r="6" />
-              <circle className={styles.orbitNode} cx="204" cy="540" r="5" />
-            </svg>
+            <HeroWaves />
             <div className={styles.studioHeading}><span className={styles.studioIcon} aria-hidden="true">{'</>'}</span><div><strong>A little practice. A little progress.</strong><span>Your coding journey, in one place.</span></div><span className={styles.previewBadge}>PREVIEW</span></div>
             <div className={styles.studioTask}><div><span className={styles.taskLabel}>THE NEXT STEP</span><h2>Turn a concept into code.</h2><p>Choose your language. Explore your approach.</p></div><span className={styles.taskArrow} aria-hidden="true">↗</span></div>
             <div className={styles.editor}>
               <div className={styles.editorTop}><span className={styles.editorMark} aria-hidden="true">{'{ }'}</span><span className={styles.editorFilename}>{language === 'Python' ? 'practice.py' : language === 'Java' ? 'CodeRank.java' : language === 'C++' ? 'practice.cpp' : 'practice.c'}</span><span className={styles.editorDots} aria-hidden="true"><i /><i /><i /></span></div>
               <div className={styles.languageTabs} aria-label="Preview language">{Object.keys(samples).map(item => <button key={item} aria-pressed={language === item} onClick={() => setLanguage(item)} className={language === item ? styles.selectedLanguage : ''}>{item}</button>)}</div>
-              <div className={styles.code} key={language}>{samples[language].split('\n').map((line, i) => <div key={i}><span aria-hidden="true">{String(i + 1).padStart(2, '0')}</span><code>{line || ' '}</code></div>)}</div>
+              <div className={styles.code} key={language}>{samples[language].split('\n').map((line, i) => <div key={i} style={{ '--line-index': i }}><span aria-hidden="true">{String(i + 1).padStart(2, '0')}</span><code>{line || ' '}</code></div>)}</div>
 
             </div>
             <div className={styles.studioSteps} aria-label="Learning process"><span><b>01</b> Write your idea</span><i aria-hidden="true">→</i><span><b>02</b> Test your thinking</span><i aria-hidden="true">→</i><span><b>03</b> Keep growing</span></div>
