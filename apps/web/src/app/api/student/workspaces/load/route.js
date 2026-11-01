@@ -6,7 +6,7 @@ export async function GET(request) {
   try {
     const user = await authenticateRequest(request);
     const params = new URL(request.url).searchParams;
-    return NextResponse.json(await SubmissionService.loadWorkspace(user, params.get('practical_id'), params.get('language')));
+    return NextResponse.json(await SubmissionService.loadWorkspace(user, (params.get('practical_id') || params.get('practicalId')), params.get('language')));
   } catch (error) {
     return NextResponse.json({ error: error.status ? error.message : 'Internal server error' }, { status: error.status || 500 });
   }

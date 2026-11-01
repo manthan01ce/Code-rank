@@ -92,10 +92,11 @@ async function refreshHealthCache() {
 }
 
 export async function GET() {
+  const isCacheDisabled = process.env.DISABLE_CACHE === 'true';
   const now = Date.now();
   const cacheAge = now - healthCacheTime;
 
-  if (healthCache && cacheAge < HEALTH_CACHE_TTL) {
+  if (!isCacheDisabled && healthCache && cacheAge < HEALTH_CACHE_TTL) {
     return NextResponse.json(healthCache, { 
       status: healthCache.status === 'healthy' ? 200 : 503,
       headers: { 
@@ -110,7 +111,7 @@ export async function GET() {
   return NextResponse.json(healthCache, { 
     status: healthCache.status === 'healthy' ? 200 : 503,
     headers: { 
-      'X-Cache': 'MISS',
+      'X-Cache': isCacheDisabled ? 'DISABLED' : 'MISS',
       'Cache-Control': 'no-store'
     }
   });

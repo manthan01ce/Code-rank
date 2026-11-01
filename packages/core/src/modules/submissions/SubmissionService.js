@@ -75,8 +75,9 @@ export class SubmissionService {
   static async getWorkerStatus() { return readExecutionWorkers(getExecutionQueue()); }
 
   static async getQueueStats() {
+    const isCacheDisabled = process.env.DISABLE_CACHE === 'true';
     const now = Date.now();
-    if (queueStatsCache && now - queueStatsCacheAt < QUEUE_STATS_TTL_MS) {
+    if (!isCacheDisabled && queueStatsCache && now - queueStatsCacheAt < QUEUE_STATS_TTL_MS) {
       return queueStatsCache;
     }
     if (queueStatsPromise) return queueStatsPromise;
@@ -184,7 +185,8 @@ export class SubmissionService {
   /**
    * Save workspace code for a student
    */
-  static async saveWorkspace(user, { practical_id, code, language }) {
+  static async saveWorkspace(user, { practical_id, practicalId: altId, code, language }) {
+    practical_id = practical_id ?? altId;
     if (!user || user.role !== 'student') {
       throw { status: 401, message: 'Unauthorized' };
     }

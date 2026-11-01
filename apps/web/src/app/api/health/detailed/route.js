@@ -103,11 +103,12 @@ async function refreshDetailedHealth() {
 export async function GET(request) {
   try {
     if ((await authenticateRequest(request))?.role !== 'admin') return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    const isCacheDisabled = process.env.DISABLE_CACHE === 'true';
     const now = Date.now();
     const cacheAge = now - detailedHealthCacheTime;
 
     // Return fresh cache if available and not expired
-    if (detailedHealthCache && cacheAge < DETAILED_HEALTH_CACHE_TTL) {
+    if (!isCacheDisabled && detailedHealthCache && cacheAge < DETAILED_HEALTH_CACHE_TTL) {
       const headers = new Headers({
         'X-Cache': 'HIT',
         'Cache-Control': 'no-store'
@@ -116,7 +117,7 @@ export async function GET(request) {
     }
 
     // Return stale cache while refreshing in background
-    if (detailedHealthCache && cacheAge < DETAILED_HEALTH_CACHE_TTL * 2) {
+    if (!isCacheDisabled && detailedHealthCache && cacheAge < DETAILED_HEALTH_CACHE_TTL * 2) {
       const headers = new Headers({
         'X-Cache': 'STALE',
         'Cache-Control': 'no-store'
@@ -128,7 +129,7 @@ export async function GET(request) {
     // Cache miss or too old - fetch synchronously
     const report = await refreshDetailedHealth();
     const headers = new Headers({
-      'X-Cache': 'MISS',
+      'X-Cache': isCacheDisabled ? 'DISABLED' : 'MISS',
       'Cache-Control': 'no-store'
     });
     return NextResponse.json(report, { headers });

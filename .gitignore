@@ -86,5 +86,6 @@ coderank-frontend/
 
 # Local load-test credentials and generated results
 load-tests/students.local.json
+load-tests/reports/
 qualification-*-summary.json
 

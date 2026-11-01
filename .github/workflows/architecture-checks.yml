@@ -2,14 +2,24 @@ name: Architecture checks
 on:
   pull_request:
   push:
-    branches: [master, main, 'fix/architecture-*']
+    branches:
+      - master
+      - main
+      - 'feat/**'
+      - 'fix/**'
+      - 'design/**'
+      - 'fix/architecture-*'
+
 permissions:
   contents: read
+
 concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
   cancel-in-progress: true
+
 jobs:
   verify:
+    name: Full Stack & Strict Architecture Certification
     runs-on: ubuntu-latest
     timeout-minutes: 45
     services:
@@ -27,37 +37,63 @@ jobs:
     env:
       JWT_SECRET: ci-only-secret-not-for-production
       TEST_DATABASE_URL: postgresql://postgres:test-only-password@127.0.0.1:5432/coderank_test
-      DATABASE_URL: postgresql://placeholder:placeholder@localhost/placeholder
+      DATABASE_URL: postgresql://postgres:test-only-password@127.0.0.1:5432/coderank_test
       NEXT_TELEMETRY_DISABLED: '1'
       PG_DUMP_BIN: /usr/lib/postgresql/16/bin/pg_dump
       PG_RESTORE_BIN: /usr/lib/postgresql/16/bin/pg_restore
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-node@v4
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js 24
+        uses: actions/setup-node@v4
         with:
           node-version: 24
           cache: npm
-      - run: npm ci
-      - run: npm run lint:critical
-      - run: npm test
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Lint critical paths
+        run: npm run lint:critical
+
+      - name: Verify database preflight and schema integrity
+        run: npm run db:preflight
+
+      - name: Run unit tests
+        run: npm test
         timeout-minutes: 5
-      - run: npm run test:integration
+
+      - name: Run integration tests
+        run: npm run test:integration
         timeout-minutes: 5
-      - run: docker build -t coderank-base:latest -f infrastructure/docker/runner/Dockerfile .
-      - run: npm run test:docker
+
+      - name: Build base execution container
+        run: docker build -t coderank-base:latest -f infrastructure/docker/runner/Dockerfile .
+
+      - name: Run Docker sandbox isolation tests
+        run: npm run test:docker
         timeout-minutes: 5
+
       - name: Validate authoritative Compose configuration
         run: docker compose -f infrastructure/docker-compose.yml config --quiet
+
       - name: Build worker deployment image
         run: docker build -t coderank-worker:ci -f apps/worker/Dockerfile .
-      - run: npm run build --workspace=apps/web
+
+      - name: Build web application bundle
+        run: npm run build --workspace=apps/web
+
       - name: Build isolated web deployment image
         run: docker build -t coderank-web:ci -f apps/web/Dockerfile .
+
       - name: Full web-to-worker execution round trip
         run: npm run test:stack
+
       - name: Install real browser
         run: node scripts/ci/install-browser.mjs
         timeout-minutes: 14
+
       - name: Install matching database recovery tools
         run: |
           sudo apt-get update
@@ -65,11 +101,26 @@ jobs:
           "$PG_DUMP_BIN" --version
           "$PG_RESTORE_BIN" --version
         timeout-minutes: 5
+
       - name: Verify authenticated cluster, capacity and database/process recovery
         run: npm run test:authenticated
         timeout-minutes: 10
+
       - name: Certify this exact commit against complete strict CI evidence
         run: node scripts/ci/write-certification.mjs
+
+      - name: Publish certification summary
+        if: always()
+        run: |
+          echo "### 🛡️ Strict Architecture Certification" >> $GITHUB_STEP_SUMMARY
+          if [ -f test-results/certification.json ]; then
+            echo '```json' >> $GITHUB_STEP_SUMMARY
+            cat test-results/certification.json >> $GITHUB_STEP_SUMMARY
+            echo '```' >> $GITHUB_STEP_SUMMARY
+          else
+            echo "Certification file not generated." >> $GITHUB_STEP_SUMMARY
+          fi
+
       - name: Preserve strict test reports and stack diagnostics
         if: always()
         uses: actions/upload-artifact@v4
