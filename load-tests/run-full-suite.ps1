@@ -1,7 +1,9 @@
 # CodeRank - Complete Load Test Suite Runner
 # Tests: Smoke -> API Load -> WebSocket -> Execution/Concurrency -> Submission
-# Cache ENABLED (DISABLE_CACHE=false - production scaling improvements verification)
-# Rate Limit DISABLED (DISABLE_RATE_LIMIT=true already in .env)
+# Caching is ENABLED by default. Use -DisableCacheForTestingOnly switch for raw DB tests.
+param(
+    [switch]$DisableCacheForTestingOnly = $false
+)
 
 $BASE_URL    = "http://localhost:3000"
 $K6          = "C:\Program Files\k6\k6.exe"
@@ -42,7 +44,7 @@ function Run-Test {
         "-e", "PRACTICAL_ID=$PRACTICAL_ID",
         "-e", "COURSE_ID=$COURSE_ID",
         "-e", "DISABLE_RATE_LIMIT=true",
-        "-e", "DISABLE_CACHE=false"
+        "-e", ("DISABLE_CACHE=" + ($DisableCacheForTestingOnly ? "true" : "false"))
     ) + $Extra + @($scriptPath)
 
     $t0 = Get-Date
@@ -71,7 +73,7 @@ function Run-Test {
 Write-Host ""
 Write-Host "============================================================" -ForegroundColor Magenta
 Write-Host "  CodeRank Full Load Test Suite  -  $TIMESTAMP" -ForegroundColor Yellow
-Write-Host "  Cache        : ENABLED (micro-cache active)" -ForegroundColor Green
+Write-Host "  Cache        : $(if ($DisableCacheForTestingOnly) { 'DISABLED (raw DB test mode)' } else { 'ENABLED (micro-cache active)' })" -ForegroundColor $(if ($DisableCacheForTestingOnly) { 'Red' } else { 'Green' })
 Write-Host "  Rate Limiting: DISABLED" -ForegroundColor Yellow
 Write-Host "============================================================" -ForegroundColor Magenta
 Write-Host ""
