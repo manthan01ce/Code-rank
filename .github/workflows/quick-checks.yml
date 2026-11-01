@@ -37,6 +37,7 @@ jobs:
 
     env:
       JWT_SECRET: ci-quick-check-secret
+      DATABASE_DRIVER: postgres
       DATABASE_URL: postgresql://postgres:test-only-password@127.0.0.1:5432/coderank_test
       TEST_DATABASE_URL: postgresql://postgres:test-only-password@127.0.0.1:5432/coderank_test
       NEXT_TELEMETRY_DISABLED: '1'
