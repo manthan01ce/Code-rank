@@ -585,3 +585,49 @@
 .editDialog { margin: auto; padding: 0; border: 0; border-radius: 18px; background: transparent; max-width: calc(100vw - 32px); max-height: calc(100dvh - 32px); overflow-y: auto; }
 .editDialog::backdrop { background: rgba(15,23,42,.45); }
 .editDialog .modal { max-width: 100%; }
+
+/* Admin profile: an open account header and editorial workspace, not a sidebar. */
+.adminProfile { max-width:1200px; padding-top:24px; }
+.adminProfile .profileLayout { grid-template-columns:minmax(0,1fr); gap:40px; }
+.adminProfile .headerTitle { font-size:10px; letter-spacing:2px; margin-bottom:24px; }
+.adminProfile .identityCard { display:grid; grid-template-columns:minmax(0,1fr) minmax(0,1.25fr); align-items:center; gap:40px; border:0; border-bottom:1px solid #e2def2; border-radius:0; padding:20px 0 36px; background:transparent; box-shadow:none; overflow:visible; }
+.adminProfile .identityCard::before { display:none; }
+.adminProfile .identityMain { flex-direction:row; align-items:center; text-align:left; gap:22px; min-width:0; }
+.adminProfile .avatarWrap { width:84px; height:84px; flex-shrink:0; border-radius:50%; box-shadow:0 0 0 7px #f1eeff; }
+.adminProfile .avatarImage { width:100%; height:100%; border-radius:50%; object-fit:cover; }
+.adminProfile .userInfo { min-width:0; }
+.adminProfile .userName { font-size:clamp(24px,3vw,36px); letter-spacing:-1px; overflow-wrap:anywhere; }
+.adminProfile .userHandle { overflow-wrap:anywhere; }
+.adminProfile .badgeRow { justify-content:flex-start; }
+.adminProfile .identityMeta { gap:20px; min-width:0; }
+.adminProfile .metaGrid { display:grid; grid-template-columns:1fr 1fr; gap:18px 24px; }
+.adminProfile .metaItem { display:flex; flex-direction:column; align-items:flex-start; gap:7px; padding:0; border:0; min-width:0; }
+.adminProfile .metaItem:last-child { grid-column:1/-1; }
+.adminProfile .metaLabel { font-size:9px; letter-spacing:1.3px; color:#8990a4; }
+.adminProfile .metaValue { max-width:100%; text-align:left; overflow-wrap:anywhere; }
+.adminProfile .btnEdit { width:auto; align-self:flex-start; min-height:44px; padding:10px 18px; border-color:#d8d0f5; background:#f5f2ff; }
+.adminProfile .adminOverview { gap:40px; }
+.adminProfile .adminSection { padding:0 0 32px; border:0; border-bottom:1px solid #e6e2f2; border-radius:0; background:transparent; }
+.adminProfile .adminSection:last-of-type { border-bottom:0; }
+.adminProfile .adminHeading { flex-wrap:wrap; }
+.adminProfile .adminHeading h2 { font-size:27px; letter-spacing:-.7px; }
+.adminProfile .adminStats { gap:0; margin:26px 0; padding:24px 0; border-block:1px solid #e6e2f2; }
+.adminProfile .adminStats a { border:0; border-right:1px solid #e6e2f2; border-radius:0; padding:0 28px; background:transparent; }
+.adminProfile .adminStats a:first-child { padding-left:0; }
+.adminProfile .adminStats a:last-child { border-right:0; }
+.adminProfile .adminStats strong { font-size:clamp(30px,4vw,48px); font-weight:600; letter-spacing:-2px; }
+.adminProfile .adminStats span { font-size:12px; }
+.adminProfile .adminLinks { grid-template-columns:repeat(2,minmax(0,1fr)); gap:0 40px; }
+.adminProfile .adminLinks a { padding:20px 0; border:0; border-bottom:1px solid #e8e5f2; border-radius:0; transition:color .2s,background .2s; }
+.adminProfile .adminLinks a:hover { background:#f7f5ff; }
+.adminProfile .adminLinks strong { font-size:15px; color:#3b3655; }
+.adminProfile .adminLinks a:hover strong { color:#4f46e5; }
+.adminProfile .adminButtons button { min-height:44px; }
+@media(max-width:760px) {
+ .adminProfile .identityCard { grid-template-columns:minmax(0,1fr); gap:30px; padding-top:8px; }
+ .adminProfile .identityMain { gap:18px; }
+ .adminProfile .avatarWrap { width:64px; height:64px; }
+ .adminProfile .adminStats a { padding:0 12px; }
+ .adminProfile .adminLinks { grid-template-columns:minmax(0,1fr); }
+ .adminProfile .profileLayout,.adminProfile .adminOverview { gap:28px; }
+}

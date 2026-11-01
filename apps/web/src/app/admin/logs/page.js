@@ -1,4 +1,5 @@
 'use client';
+import RefreshButton from '@/components/RefreshButton';
 
 import { useCallback, useEffect, useState } from 'react';
 import LoadingOverlay from '@/components/LoadingOverlay';
@@ -49,9 +50,9 @@ export default function ActivityLogsPage() {
           <h2 style={{ fontSize: '24px', fontWeight: 700 }}>Activity logs</h2>
           <p style={{ color: 'var(--text-muted)', fontSize: '14px' }}>The latest administrative and user actions.</p>
         </div>
-        <button className="btn-primary" style={{ width: 'auto', padding: '10px 20px', margin: 0 }} onClick={fetchLogs}>
+        <RefreshButton className="btn-primary" style={{ width: 'auto', padding: '10px 20px', margin: 0 }} onRefresh={fetchLogs}>
           Refresh Logs
-        </button>
+        </RefreshButton>
       </div>
 
       {error && <p role="alert" style={{ color: '#dc2626', marginBottom: '16px' }}>{error}</p>}

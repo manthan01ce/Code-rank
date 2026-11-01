@@ -1,4 +1,5 @@
 'use client';
+import RefreshButton from '@/components/RefreshButton';
 import { fetchCollection } from '@/lib/fetch-collection';
 
 import { useState, useEffect } from 'react';
@@ -157,15 +158,15 @@ export default function DepartmentMaster() {
         <button className="btn-primary" style={{ width: 'auto', padding: '10px 22px', margin: 0 }} onClick={openAdd}>
           + Add Department
         </button>
-        <button
-          onClick={fetchDepartments}
+        <RefreshButton
+          onRefresh={fetchDepartments}
           style={{
             padding: '10px 16px', borderRadius: '8px', border: '1px solid var(--border-color)',
             background: 'transparent', cursor: 'pointer', fontSize: '13px', color: 'var(--text-muted)',
           }}
         >
-          ↻ Refresh
-        </button>
+          Refresh
+        </RefreshButton>
       </div>
 
       {showModal && (

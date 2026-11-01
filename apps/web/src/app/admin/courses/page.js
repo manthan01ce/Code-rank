@@ -1,4 +1,5 @@
 'use client';
+import RefreshButton from '@/components/RefreshButton';
 import { fetchCollection } from '@/lib/fetch-collection';
 
 import { useState, useEffect } from 'react';
@@ -150,13 +151,13 @@ export default function CoursesManagement() {
         }}>
           {showAddModal ? 'Cancel' : '+ Add New Course'}
         </button>
-        <button
+        <RefreshButton
           className="btn-small"
           style={{ padding: '10px 16px', borderRadius: '8px', border: '1px solid var(--border-color)', background: 'transparent', cursor: 'pointer', fontSize: '13px', color: 'var(--text-muted)' }}
-          onClick={fetchCourses}
+          onRefresh={fetchCourses}
         >
-          ↻ Refresh
-        </button>
+          Refresh
+        </RefreshButton>
       </div>
 
       {showAddModal && (

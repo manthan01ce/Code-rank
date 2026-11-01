@@ -1,4 +1,5 @@
 'use client';
+import RefreshButton from '@/components/RefreshButton';
 
 import { useState, useEffect, useCallback } from 'react';
 import Link from 'next/link';
@@ -41,7 +42,7 @@ export default function AdminDashboard() {
   usePolling(fetchDashboardData, 15_000, isReady);
 
   return <div>
-    <div className="header"><div><div className="admin-eyebrow">INSTITUTION WORKSPACE</div><h2>Dashboard overview</h2><p>Your people, courses, and recent activity in one place.</p></div><button className="btn-primary" style={{ width: 'auto', margin: 0 }} disabled={loading} onClick={() => { setLoading(true); fetchDashboardData(); }}>{loading ? 'Refreshing…' : 'Refresh overview'}</button></div>
+    <div className="header"><div><div className="admin-eyebrow">INSTITUTION WORKSPACE</div><h2>Dashboard overview</h2><p>Your people, courses, and recent activity in one place.</p></div><RefreshButton className="btn-primary" style={{ width: 'auto', margin: 0 }} disabled={loading} onRefresh={() => { setLoading(true); return fetchDashboardData(); }}>{loading ? 'Refreshing…' : 'Refresh overview'}</RefreshButton></div>
     {error && <p role="alert" className="admin-alert">{error}{data && ' Showing the last successfully loaded overview.'}</p>}
     <div className="admin-stat-grid" aria-busy={loading}>{cards.map(([key, label, href, Icon, description]) => <Link className="admin-stat-link" href={href} key={key}><div className="admin-stat-top"><span>{label}</span><Icon aria-hidden="true" /></div><strong>{data ? data.stats[key].toLocaleString() : '—'}</strong><small>{description} ↗</small></Link>)}</div>
     <nav aria-label="Quick administration" className="admin-shortcuts"><Link href="/admin/students">Manage students ↗</Link><Link href="/admin/faculty">Manage faculty ↗</Link><Link href="/admin/mapping">Map courses ↗</Link><Link href="/admin/departments">Manage departments ↗</Link></nav>

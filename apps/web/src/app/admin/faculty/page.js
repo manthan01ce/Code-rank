@@ -1,4 +1,5 @@
 'use client';
+import RefreshButton from '@/components/RefreshButton';
 import { fetchCollection } from '@/lib/fetch-collection';
 
 import { useState, useEffect, useRef } from 'react';
@@ -403,15 +404,15 @@ export default function FacultyManagement() {
           <input ref={fileRef} type="file" accept=".xlsx,.xls,.csv" className="admin-file-input" aria-label="Upload enrollment spreadsheet" onChange={handleBulkUpload} />
         </label>
 
-        <button
-          onClick={() => fetchFaculty()}
+        <RefreshButton
+          onRefresh={() => fetchFaculty()}
           style={{
             padding: '10px 16px', borderRadius: '8px', border: '1px solid var(--border-color)',
             background: 'transparent', cursor: 'pointer', fontSize: '13px', color: 'var(--text-muted)',
           }}
         >
-          ↻ Refresh
-        </button>
+          Refresh
+        </RefreshButton>
       </div>
 
       <p style={{ fontSize: '12px', color: '#94a3b8', marginBottom: '16px' }}>

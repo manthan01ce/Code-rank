@@ -1,4 +1,5 @@
 'use client';
+import RefreshButton from '@/components/RefreshButton';
 import { fetchCollection } from '@/lib/fetch-collection';
 
 import { fetchUserOptions } from '@/lib/fetch-user-options';
@@ -187,13 +188,13 @@ export default function CourseMapping() {
           <h2 style={{ fontSize: '22px', fontWeight: 700 }}>Course-Faculty Mapping</h2>
           <p style={{ color: 'var(--text-muted)', fontSize: '13px' }}>Assign up to 4 faculties per course.</p>
         </div>
-        <button
+        <RefreshButton
           className="btn-small"
           style={{ padding: '10px 16px', borderRadius: '8px', border: '1px solid var(--border-color)', background: 'transparent', cursor: 'pointer' }}
-          onClick={fetchData}
+          onRefresh={fetchData}
         >
-          ↻ Refresh
-        </button>
+          Refresh
+        </RefreshButton>
       </div>
 
       <div className="table-container">

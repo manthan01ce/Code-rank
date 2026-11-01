@@ -258,7 +258,7 @@ export default function ProfilePage() {
   const isActive = user.status === 'active';
 
   return (
-    <div className={styles.profileContainer}>
+    <div className={`${styles.profileContainer} ${user.role === 'admin' ? styles.adminProfile : ''}`}>
       {/* Section label */}
       <div className={styles.headerTitle}>
         <span>👤</span> PROFILE

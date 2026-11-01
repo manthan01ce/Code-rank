@@ -1,4 +1,5 @@
 'use client';
+import RefreshButton from '@/components/RefreshButton';
 
 import { useCallback, useEffect, useState } from 'react';
 import Link from 'next/link';
@@ -36,7 +37,7 @@ export default function AdminProfileOverview({ onEdit }) {
   }, [router]);
   const refresh = () => {
     setLoading(true); setError('');
-    load().then(setStats).catch(err => setError(err.message || 'Unable to load overview.')).finally(() => setLoading(false));
+    return load().then(setStats).catch(err => setError(err.message || 'Unable to load overview.')).finally(() => setLoading(false));
   };
   useEffect(() => {
     const controller = new AbortController();
@@ -48,9 +49,9 @@ export default function AdminProfileOverview({ onEdit }) {
 
   return <div className={styles.adminOverview}>
     <section className={styles.adminSection} aria-labelledby="institution-heading" aria-busy={loading}>
-      <div className={styles.adminHeading}><div><p className={styles.adminEyebrow}>ADMINISTRATOR WORKSPACE</p><h2 id="institution-heading">Institution overview</h2></div><button onClick={refresh} disabled={loading}>{loading ? 'Loading…' : 'Refresh'}</button></div>
+      <div className={styles.adminHeading}><div><p className={styles.adminEyebrow}>ADMINISTRATOR WORKSPACE</p><h2 id="institution-heading">Institution overview</h2></div><RefreshButton onRefresh={refresh} disabled={loading}>Refresh</RefreshButton></div>
       <p>Manage your institution and account from one place.</p>
-      {error ? <p role="alert" className={styles.adminError}>{error}</p> : <div className={styles.adminStats}>{[['students', 'Students', '/admin/students'], ['faculty', 'Faculty', '/admin/faculty'], ['courses', 'Courses', '/admin/courses']].map(([key, label, href]) => <Link key={key} href={href}><strong>{loading ? '—' : Number(stats?.[key]).toLocaleString()}</strong><span>{label} ↗</span></Link>)}</div>}
+      {error ? <p role="alert" className={styles.adminError}>{error}</p> : <div className={styles.adminStats}>{[['students', 'Students', '/admin/students'], ['faculty', 'Faculty', '/admin/faculty'], ['courses', 'Courses', '/admin/courses']].map(([key, label, href]) => <Link key={key} href={href}><strong>{stats ? Number(stats[key]).toLocaleString() : '—'}</strong><span>{label} ↗</span></Link>)}</div>}
       <Link className={styles.adminTextLink} href="/admin">Open full dashboard →</Link>
     </section>
     <section className={styles.adminSection} aria-labelledby="management-heading"><h2 id="management-heading">Management shortcuts</h2><div className={styles.adminLinks}>{destinations.map(([title, href, text]) => <Link href={href} key={href}><strong>{title} ↗</strong><span>{text}</span></Link>)}</div></section>
