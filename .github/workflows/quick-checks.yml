@@ -57,6 +57,9 @@ jobs:
       - name: Lint critical packages and services
         run: npm run lint:critical
 
+      - name: Apply database migrations
+        run: npm run db:migrate
+
       - name: Database schema preflight validation
         run: npm run db:preflight
 

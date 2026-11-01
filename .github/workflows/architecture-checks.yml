@@ -37,7 +37,7 @@ jobs:
     env:
       JWT_SECRET: ci-only-secret-not-for-production
       TEST_DATABASE_URL: postgresql://postgres:test-only-password@127.0.0.1:5432/coderank_test
-      DATABASE_URL: postgresql://postgres:test-only-password@127.0.0.1:5432/coderank_test
+      DATABASE_URL: postgresql://placeholder:placeholder@localhost/placeholder
       NEXT_TELEMETRY_DISABLED: '1'
       PG_DUMP_BIN: /usr/lib/postgresql/16/bin/pg_dump
       PG_RESTORE_BIN: /usr/lib/postgresql/16/bin/pg_restore
@@ -56,9 +56,6 @@ jobs:
 
       - name: Lint critical paths
         run: npm run lint:critical
-
-      - name: Verify database preflight and schema integrity
-        run: npm run db:preflight
 
       - name: Run unit tests
         run: npm test
