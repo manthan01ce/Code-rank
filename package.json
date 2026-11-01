@@ -21,6 +21,7 @@
     "k6:all": "powershell -ExecutionPolicy Bypass -File ./load-tests/run-k6.ps1 -Test all",
     "test": "node scripts/ci/run-tests.mjs unit",
     "db:migrate": "node database/run-migration.js",
+    "db:seed": "node database/seed.js",
     "test:redis": "node --test tests/integration/queue.test.mjs tests/integration/realtime.test.mjs tests/integration/worker-readiness.test.mjs tests/integration/worker-recovery.test.mjs",
     "test:postgres": "node --test tests/integration/postgres.test.mjs",
     "test:docker": "node scripts/ci/run-tests.mjs docker",

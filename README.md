@@ -18,32 +18,77 @@ See [architecture](ARCHITECTURE.md), [repair plan](docs/REPAIR_PLAN.md) and
 [implementation report](docs/IMPLEMENTATION_REPORT.md). The old `frontend/` and `backend/` copies have been retired. The top-level
 `runner/` is a legacy copy; `infrastructure` defines the active sandbox image.
 
-## Local setup
+## Quick Start (Docker Compose + Local Dataset)
 
-Use Node 24, npm, Docker and a configured Neon database. Copy `.env.example` to
-`.env`, provide your database URL and a strong JWT secret. Never commit credentials.
+The fastest way to get CodeRank running locally with the complete pre-seeded dataset (courses, practicals, test accounts):
 
+### 1. Prerequisites
+- **Node.js 24+** and **npm**
+- **Docker Desktop** (or Docker Engine on Linux)
+
+### 2. Environment Setup
+Copy the template to your local environment file:
 ```sh
-npm ci
-# Review schema/duplicates and back up an existing database before migration.
-npm run db:preflight
-# Preflight reports missing columns that the pending migrations will add.
-npm run db:migrate
-docker compose -f infrastructure/docker-compose.yml --profile build-image build runner-image
-docker compose -f infrastructure/docker-compose.yml up -d redis
-npm run worker
-# In another terminal:
-npm run web
+cp .env.example .env
+```
+*(The default `.env` is already configured for local PostgreSQL and Redis with production performance parameters).*
+
+### 3. Start Database & Redis (Auto-Seeded)
+Start PostgreSQL and Redis in the background:
+```sh
+docker compose up -d
+```
+> **Automatic Dataset Initialization:** When PostgreSQL boots up, `database/init.sql` automatically populates the database with all 91 users, 3 courses, 10 practicals, test cases, and department mappings.
+> 
+> *Manual Seed Alternative:* You can also run `npm run db:seed` at any time to re-populate or reset the local dataset.
+
+### 4. Build Runner Sandbox Image
+Build the execution sandbox used to run student code:
+```sh
+docker compose build runner-image
 ```
 
-Alternatively use `start-lab.sh` or `start-lab.bat` after configuration and database
-migration. The optional local PostgreSQL Compose profile does not replace Neon's
-HTTP driver automatically; use a compatible local adapter/proxy if choosing it.
+### 5. Start Worker & Web Services
+In Terminal 1 (Execution Worker):
+```sh
+npm ci
+npm run worker
+```
 
-For a containerized worker, build the runner image first, then enable the
-`container-worker` profile. Only the trusted worker receives the Docker socket.
-Set `REALTIME_URL` to the persistent web/realtime server and configure
-`ALLOWED_ORIGIN`. Never expose Redis publicly.
+In Terminal 2 (Web Platform):
+```sh
+npm run web
+```
+Open **[http://localhost:3000](http://localhost:3000)** in your browser.
+
+---
+
+## Default Login Credentials (Pre-seeded)
+
+All pre-seeded test accounts use the standard local password: `LoadTest@2024` (or fallback `adminpassword123`).
+
+| Role | Email | Password | Access / Scope |
+|---|---|---|---|
+| **Admin** | `admin@example.com` | `adminpassword123` | Full administrative control, system metrics, users, courses |
+| **Faculty** | `hardi.agola@charusat.ac.in` | `LoadTest@2024` | Course 5 coordinator, practical creation, grade inspection |
+| **Student** | `26ce001@charusat.edu.in` | `LoadTest@2024` | Lab practicals, code workspace, test execution & submission |
+| **Student** | `26ce002@charusat.edu.in` ... `26ce074@charusat.edu.in` | `LoadTest@2024` | 73 additional pre-configured lab student accounts |
+
+---
+
+## Alternative Setup & Neon Cloud DB
+
+If choosing a cloud database rather than the local pre-seeded container:
+1. In `.env`, set `DATABASE_DRIVER=neon` and supply your Neon connection string.
+2. Run database migrations and validation:
+   ```sh
+   npm run db:preflight
+   npm run db:migrate
+   ```
+3. Start Redis: `docker compose up -d redis`
+4. Run `npm run worker` and `npm run web`.
+
+For a fully containerized worker, build the runner image first, then enable the `container-worker` profile with Docker socket access. Never expose Redis publicly.
 
 ## Verification
 
