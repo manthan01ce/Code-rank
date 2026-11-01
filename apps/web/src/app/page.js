@@ -89,6 +89,14 @@ export default function HomePage() {
         </div>
 
           <div className={styles.studio}>
+            <svg className={styles.studioOrbit} viewBox="0 0 600 600" fill="none" aria-hidden="true">
+              <circle cx="300" cy="300" r="258" />
+              <circle cx="300" cy="300" r="218" strokeDasharray="3 12" />
+              <ellipse cx="300" cy="300" rx="285" ry="155" transform="rotate(-35 300 300)" />
+              <circle className={styles.orbitNode} cx="112" cy="123" r="9" />
+              <circle className={styles.orbitNode} cx="548" cy="371" r="6" />
+              <circle className={styles.orbitNode} cx="204" cy="540" r="5" />
+            </svg>
             <div className={styles.studioHeading}><span className={styles.studioIcon} aria-hidden="true">{'</>'}</span><div><strong>A little practice. A little progress.</strong><span>Your coding journey, in one place.</span></div><span className={styles.previewBadge}>PREVIEW</span></div>
             <div className={styles.studioTask}><div><span className={styles.taskLabel}>THE NEXT STEP</span><h2>Turn a concept into code.</h2><p>Choose your language. Explore your approach.</p></div><span className={styles.taskArrow} aria-hidden="true">↗</span></div>
             <div className={styles.editor}>
