@@ -233,7 +233,7 @@ export default function ProfilePage() {
         <div className={styles.errorBox}>
           <span>⚠️</span>
           <p>{error}</p>
-          <button onClick={() => router.back()}>← Go Back</button>
+          <Link href="/">← Back to CodeRank</Link>
         </div>
       </div>
     );

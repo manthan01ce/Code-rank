@@ -1,11 +1,12 @@
 'use client';
+import WorkspaceReturn from '@/components/WorkspaceReturn';
 
 import { waitForJob } from '@/lib/wait-for-job';
 import { useState, useEffect, useRef, useCallback } from 'react';
 import { Panel, Group as PanelGroup, Separator as PanelResizeHandle } from 'react-resizable-panels';
 import PythonEditor from './PythonEditor';
 import PythonOutput from './PythonOutput';
-import { Code2, ArrowLeft, RotateCcw } from 'lucide-react';
+import { Code2, RotateCcw } from 'lucide-react';
 
 const DEFAULT_CODE = `'''
 
@@ -108,12 +109,7 @@ export default function PythonDashboard() {
       {/* Top Navigation Bar */}
       <div className="h-12 bg-[#252525] border-b border-[#3e3e42] flex items-center justify-between px-4 shrink-0 z-10 select-none">
         <div className="flex items-center gap-4">
-          <a
-            href="/admin"
-            className="flex items-center gap-2 text-gray-400 hover:text-white transition-colors bg-[#3e3e42] hover:bg-[#4a4a4f] px-3 py-1 rounded-md text-sm font-medium"
-          >
-            <ArrowLeft size={14} /> Back
-          </a>
+          <WorkspaceReturn compact />
           <div className="flex items-center gap-2 pl-4 border-l border-[#3e3e42]">
             <Code2 size={16} className="text-[#2cbb5d]" />
             <span className="text-white font-semibold text-sm tracking-wide">Python Compiler</span>

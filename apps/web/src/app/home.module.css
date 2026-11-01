@@ -244,3 +244,62 @@
   .heroWaves *,.studioHeading,.studioSteps,.code>div { animation:none!important; }
   .languageTabs .selectedLanguage { transform:none; }
 }
+
+/* Connected feature journey. Scoped to this section; footer remains unchanged. */
+.experience .learningPath { display:block; padding:12px; border:1px solid #e4e0f5; border-radius:30px; background:linear-gradient(130deg,#f8f7ff,#f1f4ff); }
+.experience .pathNavigation { position:relative; display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); gap:12px; padding:12px 12px 24px; }
+.experience .pathNavigation::before { content:''; position:absolute; top:52px; left:12%; right:12%; height:1px; background:#d7d0f3; }
+.experience .pathNavigation button { position:relative; display:flex; flex-direction:column; align-items:flex-start; gap:14px; padding:20px; background:#f8f7ff; border:1px solid transparent; border-radius:18px; min-height:152px; transition:background .25s,box-shadow .25s,transform .25s; }
+.experience .pathNavigation button[aria-pressed=true] { background:#fff; border-color:#d8cff7; box-shadow:0 12px 28px #4f46e510; transform:translateY(-3px); }
+.experience .pathNumber { display:grid; place-items:center; width:40px; height:40px; border-radius:50%; background:#eeeaff; color:#8a79c9; font:500 15px/1 monospace; letter-spacing:0; }
+.experience .pathNavigation button[aria-pressed=true] .pathNumber { background:var(--accent); color:white; box-shadow:0 0 0 6px #f0edff; }
+.experience .pathNavigation strong { font-size:23px; }
+.experience .pathNavigation small { font-size:11px; line-height:1.5; }
+.experience .pathNavigation button>span:last-child { position:absolute; right:20px; top:28px; }
+.experience .pathDetail { background:#fff; color:var(--ink); border-color:#e3dff5; border-radius:22px; padding:36px; box-shadow:0 8px 24px #4f46e507; }
+.experience .pathDetail::after { display:none; }
+.experience .pathDetailContent { display:grid; grid-template-columns:minmax(0,1fr) minmax(0,1.2fr); column-gap:44px; align-items:start; }
+.experience .pathKicker { grid-column:1/-1; color:#7a6aaf; margin-bottom:30px; font-size:9px; }
+.experience .pathDetail h3,.experience .pathDetail p,.experience .pathFlow,.experience .pathDetail a { grid-column:2; }
+.experience .pathDetail h3 { font-size:clamp(26px,3vw,38px); }
+.experience .pathDetail p { color:var(--muted); }
+.experience .pathFlow { color:#7462aa; border-color:#ebe6f8; }
+.experience .pathDetail a { color:var(--accent); border-top:1px solid #ebe6f8; min-height:44px; }
+.featureIllustration { grid-column:1; grid-row:2/6; position:relative; isolation:isolate; min-height:285px; display:grid; place-items:center; border-radius:18px; background:radial-gradient(ellipse at center,#e7e1ff,transparent 70%),#f8f7ff; overflow:hidden; }
+.featureHalo { position:absolute; width:230px; height:230px; border:1px solid #d6ccf2; border-radius:50%; box-shadow:0 0 0 24px #e9e3fa55,0 0 0 48px #eee9fb55; animation:featureBloom 1s ease-out both; }
+.featureWindow { position:relative; width:64%; padding:16px; border:1px solid #d9d0f0; border-radius:14px; background:#ffffffed; box-shadow:12px 16px 0 #dcd4f655,0 18px 28px #6e57aa18; transform:rotate(-5deg); animation:featureWindowIn .8s ease-out both; }
+.featureWindowBar { display:flex; gap:4px; border-bottom:1px solid #eee9f9; padding-bottom:10px; }
+.featureWindowBar i { width:5px; height:5px; border-radius:50%; background:#d5c9f1; }
+.featureGlyph { display:block; color:var(--accent); font:36px/1.6 monospace; }
+.featureLines { display:grid; gap:9px; }
+.featureLines i { display:block; height:6px; width:80%; border-radius:4px; background:#d5ccf1; transform-origin:left; animation:featureLineIn .6s ease-out both; animation-delay:calc(.2s + var(--step) * .12s); }
+.featureLines i:nth-child(2n) { width:55%; background:#a99ae1; }
+.featureSatellite { position:absolute; right:8%; bottom:12%; display:grid; place-items:center; width:60px; height:60px; border-radius:16px; background:var(--accent); color:white; box-shadow:0 10px 22px #4f46e526; font:24px monospace; animation:featureWindowIn 1s ease-out both; }
+.featureConnector { position:absolute; inset:0; z-index:-1; width:100%; height:100%; fill:#b7a6e5; stroke:#ad99df; stroke-width:1.5; }
+.featureConnector path { fill:none; stroke-dasharray:440; animation:featureConnect 1.3s ease-out both; }
+.featureIllustration[data-feature="1"] .featureLines { grid-template-columns:1fr 1fr; gap:10px; }
+.featureIllustration[data-feature="1"] .featureLines i { width:100%; height:24px; border:1px solid #d6cdf2; background:linear-gradient(100deg,#e2dcf8,#f7f5ff); }
+.featureIllustration[data-feature="2"] .featureWindow { border-radius:50%; width:150px; height:150px; text-align:center; transform:none; }
+.featureIllustration[data-feature="2"] .featureWindowBar,.featureIllustration[data-feature="2"] .featureLines { display:none; }
+.featureIllustration[data-feature="2"] .featureGlyph { font-size:65px; }
+@keyframes featureBloom { from { opacity:0; transform:scale(.7); } to { opacity:1; transform:scale(1); } }
+@keyframes featureWindowIn { from { opacity:0; translate:0 18px; } to { opacity:1; translate:0 0; } }
+@keyframes featureLineIn { from { transform:scaleX(.1); opacity:0; } to { transform:scaleX(1); opacity:1; } }
+@keyframes featureConnect { from { stroke-dashoffset:440; } to { stroke-dashoffset:0; } }
+@media(max-width:760px) {
+ .experience .learningPath { padding:8px; border-radius:22px; }
+ .experience .pathNavigation { padding:6px 0 14px; gap:5px; }
+ .experience .pathNavigation button { padding:12px 8px; gap:12px; min-height:135px; align-items:center; text-align:center; }
+ .experience .pathNavigation::before { top:38px; }
+ .experience .pathNavigation strong { font-size:14px; }
+ .experience .pathNavigation small { display:block; font-size:9px; }
+ .experience .pathNavigation button>span:last-child { display:none; }
+ .experience .pathNumber { display:grid; width:34px; height:34px; font-size:12px; }
+ .experience .pathDetail { padding:22px 18px; }
+ .experience .pathDetailContent { grid-template-columns:minmax(0,1fr); gap:0; }
+ .experience .pathKicker { font-size:7px; margin-bottom:18px; }
+ .featureIllustration { grid-column:1; grid-row:auto; min-height:225px; margin-bottom:24px; }
+ .featureWindow { width:60%; max-width:220px; }
+ .experience .pathDetail h3,.experience .pathDetail p,.experience .pathFlow,.experience .pathDetail a { grid-column:1; }
+}
+@media(prefers-reduced-motion:reduce) { .featureIllustration * { animation:none!important; } .experience .pathNavigation button { transition:none; } }

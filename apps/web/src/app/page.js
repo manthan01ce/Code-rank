@@ -107,7 +107,16 @@ export default function HomePage() {
           <div className={styles.sectionHeading}><div><p className={styles.eyebrow}>FROM FIRST LINE TO FINISHED PRACTICAL</p><h2>A little less friction.<br />A lot more <em>forward.</em></h2></div><p>Everything a coding lab needs to keep learning moving. All in one thoughtful workspace.</p></div>
           <div className={styles.learningPath}>
             <div className={styles.pathNavigation} role="group" aria-label="Explore platform features">{featureJourney.map((item, index) => <button key={item.name} aria-pressed={feature === index} aria-controls="feature-detail" onClick={() => setFeature(index)}><span className={styles.pathNumber}>0{index + 1}</span><span><strong>{item.name}</strong><small>{item.label}</small></span><span aria-hidden="true">↗</span></button>)}</div>
-            <div id="feature-detail" className={styles.pathDetail} aria-live="polite"><div key={feature} className={styles.pathDetailContent}><div className={styles.pathKicker}><span>THE CODERANK EXPERIENCE</span><span>0{feature + 1} / 03</span></div><div className={styles.pathSymbol} aria-hidden="true">{featureJourney[feature].icon}</div><h3>{featureJourney[feature].title}</h3><p>{featureJourney[feature].description}</p><div className={styles.pathFlow}>{featureJourney[feature].detail}</div><Link href={user ? dashboard : '/login'}>{featureJourney[feature].action} <span aria-hidden="true">↗</span></Link></div></div>
+            <div id="feature-detail" className={styles.pathDetail} aria-live="polite"><div key={feature} className={styles.pathDetailContent}><div className={styles.pathKicker}><span>THE CODERANK EXPERIENCE</span><span>0{feature + 1} / 03</span></div><div className={styles.featureIllustration} data-feature={feature} aria-hidden="true">
+              <div className={styles.featureHalo} />
+              <div className={styles.featureWindow}>
+                <div className={styles.featureWindowBar}><i /><i /><i /></div>
+                <span className={styles.featureGlyph}>{featureJourney[feature].icon}</span>
+                <div className={styles.featureLines}>{[0, 1, 2, 3].map(line => <i key={line} style={{ '--step': line }} />)}</div>
+              </div>
+              <div className={styles.featureSatellite}><span>{feature === 0 ? '</>' : feature === 1 ? '✓' : '◎'}</span></div>
+              <svg viewBox="0 0 320 260" className={styles.featureConnector}><path d="M40 190 H95 Q110 190 110 175 V85 Q110 70 125 70 H265" /><circle cx="40" cy="190" r="5"/><circle cx="265" cy="70" r="5"/></svg>
+            </div><h3>{featureJourney[feature].title}</h3><p>{featureJourney[feature].description}</p><div className={styles.pathFlow}>{featureJourney[feature].detail}</div><Link href={user ? dashboard : '/login'}>{featureJourney[feature].action} <span aria-hidden="true">↗</span></Link></div></div>
           </div>
         </section>
         <section id="roles" className={styles.roles}>

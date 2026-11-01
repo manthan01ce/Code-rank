@@ -1,4 +1,5 @@
 'use client';
+import WorkspaceReturn from '@/components/WorkspaceReturn';
 import styles from './overview.module.css';
 import { useAccountIdentity } from '@/hooks/useAccountIdentity';
 import { StudentThemeToggle } from '@/components/student/StudentTheme';
@@ -154,6 +155,7 @@ export default function StudentDashboard() {
         <button type="button" onClick={() => window.location.reload()}>Retry loading</button>
       </div>}
       
+      <WorkspaceReturn />
       {/* Top Navbar */}
       <div className={`student-dashboard-header ${styles.toolbar}`} style={{
         height: '70px', backgroundColor: 'var(--student-ui-bg-ffffff, white)', borderBottom: '1px solid var(--border-color)',

@@ -1,4 +1,5 @@
 'use client';
+import WorkspaceReturn from '@/components/WorkspaceReturn';
 
 /**
  * PURPOSE OF THIS FILE:
@@ -765,17 +766,7 @@ export default function WorkspaceLayout({ problem }) {
       <div style={{ height: '64px', background: 'var(--student-code-bg-000000, #000000)', borderBottom: '1px solid var(--student-code-border-262626, #262626)', display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '0 24px', flexShrink: 0 }}>
         {/* Left: Brand + Problem List Dropdown */}
         <div style={{ display: 'flex', alignItems: 'center', gap: '24px' }}>
-          {/* Logo and Wordmark */}
-          <div 
-            onClick={() => router.push('/student')}
-            style={{ display: 'flex', alignItems: 'center', gap: '12px', cursor: 'pointer' }}
-            title="Go to Student Dashboard"
-          >
-            <div style={{ width: '28px', height: '28px', borderRadius: '50%', background: 'var(--student-code-bg-ffffff, #ffffff)', overflow: 'hidden', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
-              <img src="/coderank-logo.jpg" alt="CodeRank Logo" onError={(e) => { e.target.style.display = 'none'; }} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
-            </div>
-            <span style={{ color: 'var(--student-code-text-ffffff, #ffffff)', fontWeight: 700, fontSize: '16px', letterSpacing: '1px', textTransform: 'uppercase' }}>CodeRank</span>
-          </div>
+          <WorkspaceReturn compact />
           
           {/* Switch course dropdown has been removed here */}
 

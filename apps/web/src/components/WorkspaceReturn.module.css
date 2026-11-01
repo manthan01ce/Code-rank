@@ -1,0 +1,7 @@
+.trail { display:flex; flex-wrap:wrap; align-items:center; gap:12px; padding:12px 20px; color:var(--student-ui-text-475569,#475569); }
+.compact { display:flex; align-items:center; flex-shrink:0; }
+.back { display:inline-flex; align-items:center; justify-content:center; gap:8px; min-height:44px; padding:8px 14px; border:1px solid var(--student-ui-border-e2e8f0,#ddd9fa); border-radius:10px; background:var(--student-ui-bg-ffffff,#f5f3ff); color:var(--student-ui-text-475569,#4338ca); font:600 13px/1.4 Inter,system-ui,sans-serif; text-decoration:none; white-space:nowrap; }
+.back:hover { box-shadow:0 3px 12px #4f46e51a; }
+.home { min-height:44px; display:inline-flex; align-items:center; padding:8px; font:500 12px/1.4 Inter,system-ui,sans-serif; color:inherit; text-decoration:underline; text-underline-offset:4px; }
+.back:focus-visible,.home:focus-visible { outline:3px solid #818cf8; outline-offset:3px; }
+@media(max-width:600px) { .trail { padding:10px 16px; } .back { padding:8px 10px; font-size:12px; } }

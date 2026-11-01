@@ -1,4 +1,5 @@
 'use client';
+import WorkspaceReturn from '@/components/WorkspaceReturn';
 import styles from '../overview.module.css';
 import { StudentThemeToggle, useStudentTheme } from '@/components/student/StudentTheme';
 import { usePracticalPage } from '@/hooks/usePracticalPage';
@@ -541,7 +542,7 @@ int main() {
   if (!selectedCourse) {
     return (
       <div className={styles.surface}><div className={styles.content}>
-        {renderStudentHeader()}
+        <WorkspaceReturn />{renderStudentHeader()}
         <div className={styles.intro}>
           <p className={styles.eyebrow}>YOUR COURSES</p>
           <h2 style={{ fontSize: '22px', fontWeight: 700, marginBottom: '8px' }}>Select Course / Subject</h2>
@@ -580,7 +581,7 @@ int main() {
   // Render list of active practicals
   return (
     <div className={styles.surface}><div className={styles.content}>
-      {renderStudentHeader()}
+      <WorkspaceReturn />{renderStudentHeader()}
       <div className={styles.selectionTitle} style={{ marginBottom: '25px', marginTop: '15px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
         <div>
           <span style={{ fontSize: '12px', fontWeight: 700, color: 'var(--primary)', textTransform: 'uppercase' }}>
