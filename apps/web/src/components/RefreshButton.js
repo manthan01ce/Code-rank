@@ -3,7 +3,7 @@
 import { useEffect, useRef, useState } from 'react';
 import styles from './RefreshButton.module.css';
 
-export default function RefreshButton({ onRefresh, children = 'Refresh', disabled = false, className = '', ...props }) {
+export default function RefreshButton({ onRefresh, children = 'Refresh', disabled = false, className = '', lastUpdated, label, variant, ...props }) {
   const [busy, setBusy] = useState(false);
   const [failed, setFailed] = useState(false);
   const running = useRef(false);
