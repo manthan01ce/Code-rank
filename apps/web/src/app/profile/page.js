@@ -12,6 +12,10 @@ export default function ProfileRedirect() {
       const stored = localStorage.getItem('user');
       if (stored) {
         const user = JSON.parse(stored);
+        if (user?.role === 'admin') {
+          router.replace('/admin/profile');
+          return;
+        }
         const handle = user?.email ? user.email.split('@')[0] : '';
         if (handle) {
           router.replace(`/profile/${handle}`);

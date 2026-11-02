@@ -8,7 +8,6 @@ import styles from './profile.module.css';
 import { profilePracticals } from '@/lib/progress-updates';
 import { useProgressRefresh } from '@/hooks/useProgressRefresh';
 import { usePolling } from '@/hooks/usePolling';
-import AdminProfileOverview from './AdminProfileOverview';
 
 /* ── helpers ───────────────────────────────── */
 function getInitials(name) {
@@ -44,11 +43,6 @@ function sortTasks(tasks) {
 /* ── Edit Modal ─────────────────────────────── */
 function EditModal({ user, onClose, onSave }) {
   const [name, setName] = useState(user.name || '');
-  // Password fields
-  const [currentPassword, setCurrentPassword] = useState('');
-  const [newPassword, setNewPassword] = useState('');
-  const [confirmPassword, setConfirmPassword] = useState('');
-
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState('');
 
@@ -58,10 +52,6 @@ function EditModal({ user, onClose, onSave }) {
   const handleSave = async () => {
     if (saving) return;
     if (!name.trim() || name.length > 300) { setError('Enter a name of 1–300 characters.'); return; }
-    if (newPassword && newPassword !== confirmPassword) {
-      setError('New passwords do not match');
-      return;
-    }
 
     setSaving(true);
     setError('');
@@ -76,8 +66,6 @@ function EditModal({ user, onClose, onSave }) {
         },
         body: JSON.stringify({
           name: name.trim(),
-          currentPassword: currentPassword || undefined,
-          newPassword: newPassword || undefined
         }),
       });
 
@@ -93,9 +81,6 @@ function EditModal({ user, onClose, onSave }) {
         throw new Error(d.error || `Save failed (${res.status})`);
       }
 
-      if (d.token) {
-        localStorage.setItem('token', d.token);
-      }
       try {
         const stored = JSON.parse(localStorage.getItem('user') || '{}');
         if (stored && typeof stored === 'object') {
@@ -127,19 +112,6 @@ function EditModal({ user, onClose, onSave }) {
         <div className={styles.formGroup}>
           <label htmlFor="profile-name">Full Name</label>
           <input id="profile-name" maxLength={300} autoComplete="name" value={name} onChange={(e) => setName(e.target.value)} />
-        </div>
-
-        <div className={styles.formGroup}>
-          <label htmlFor="profile-current-password">Current Password (required only to change password)</label>
-          <input id="profile-current-password" autoComplete="current-password" type="password" value={currentPassword} onChange={(e) => setCurrentPassword(e.target.value)} placeholder="Enter current password..." />
-        </div>
-        <div className={styles.formGroup}>
-          <label htmlFor="profile-new-password">New Password</label>
-          <input id="profile-new-password" autoComplete="new-password" type="password" value={newPassword} onChange={(e) => setNewPassword(e.target.value)} placeholder="Enter new password..." />
-        </div>
-        <div className={styles.formGroup}>
-          <label htmlFor="profile-confirm-password">Confirm New Password</label>
-          <input id="profile-confirm-password" autoComplete="new-password" type="password" value={confirmPassword} onChange={(e) => setConfirmPassword(e.target.value)} placeholder="Confirm new password..." />
         </div>
 
         <div className={styles.modalFooter}>
@@ -194,6 +166,10 @@ export default function ProfilePage() {
     const controller = new AbortController();
     fetchProfile(controller.signal).then(result => {
       if (controller.signal.aborted || !result) return;
+      if (result.ownsProfile && result.profile.user.role === 'admin') {
+        router.replace('/admin/profile');
+        return;
+      }
       setIsOwnProfile(result.ownsProfile);
       setProfileData(result.profile);
       setError('');
@@ -337,7 +313,6 @@ export default function ProfilePage() {
         </div>
 
         {/* ── 2. Practicals Tracker (own profile only) ── */}
-        {isOwnProfile && user.role === 'admin' && <AdminProfileOverview onEdit={() => setShowEdit(true)} />}
         {isOwnProfile && user.role !== 'admin' && (
           <div className={styles.trackerSection}>
             <div className={styles.trackerHeader}>

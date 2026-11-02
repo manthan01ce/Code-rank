@@ -16,6 +16,7 @@
     "@socket.io/redis-adapter": "8.3.0",
     "@tabler/icons-react": "^3.49.0",
     "@tailwindcss/postcss": "^4.3.3",
+    "@tanstack/react-table": "^8.21.3",
     "bcryptjs": "^3.0.3",
     "bullmq": "^6.3.4",
     "clsx": "^2.1.1",
