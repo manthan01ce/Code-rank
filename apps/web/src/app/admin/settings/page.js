@@ -137,10 +137,6 @@ export default function AdminSettingsPage() {
       {/* Page Header — Standard CodeRank Pattern */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-5 border-b border-[#e2e8f0]">
         <div>
-          <div className="text-[10px] font-bold tracking-[1.5px] text-[#4f46e5] uppercase mb-1 flex items-center gap-1.5">
-            <span className="w-1.5 h-1.5 rounded-full bg-[#4f46e5] inline-block animate-pulse" />
-            ACCOUNT PREFERENCES
-          </div>
           <h1 className="text-2xl font-bold tracking-tight text-[#0f172a]">Settings</h1>
           <p className="text-xs text-[#64748b] mt-0.5">Manage your security and application preferences.</p>
         </div>

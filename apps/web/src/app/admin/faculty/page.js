@@ -92,7 +92,9 @@ export default function FacultyManagement() {
     password: '',
   });
 
-  const token = useCallback(() => authToken, [authToken]);
+  const token = useCallback(() => {
+    return (typeof window !== 'undefined' ? localStorage.getItem('token') : null) || authToken || '';
+  }, [authToken]);
 
   const showToast = useCallback((type, msg) => {
     setToast({ type, msg });
@@ -385,9 +387,14 @@ export default function FacultyManagement() {
     if (!confirm(`Deactivate ${f.name}? This will mark the account as inactive.`)) return;
     setProcessing(true);
     try {
+      const activeToken = token();
+      if (!activeToken) {
+        showToast('error', 'Authentication expired. Please log in again.');
+        return;
+      }
       const res = await fetch(`/api/users/${f.id}`, {
         method: 'DELETE',
-        headers: { Authorization: `Bearer ${token()}` },
+        headers: { Authorization: `Bearer ${activeToken}` },
       });
       const data = await res.json();
       if (!res.ok) {
@@ -413,9 +420,14 @@ export default function FacultyManagement() {
     if (!confirm(`Reactivate ${f.name}? This will restore the account.`)) return;
     setProcessing(true);
     try {
+      const activeToken = token();
+      if (!activeToken) {
+        showToast('error', 'Authentication expired. Please log in again.');
+        return;
+      }
       const res = await fetch(`/api/users/${f.id}`, {
         method: 'PUT',
-        headers: { Authorization: `Bearer ${token()}`, 'Content-Type': 'application/json' },
+        headers: { Authorization: `Bearer ${activeToken}`, 'Content-Type': 'application/json' },
         body: JSON.stringify({ status: 'active' }),
       });
       const data = await res.json();
@@ -616,10 +628,6 @@ export default function FacultyManagement() {
       {/* Page Header — Clean, balanced proportions matching Admin Dashboard */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-5 border-b border-[#e2e8f0]">
         <div>
-          <div className="text-[10px] font-bold tracking-[1.5px] text-[#4f46e5] uppercase mb-1 flex items-center gap-1.5">
-            <span className="w-1.5 h-1.5 rounded-full bg-[#4f46e5] inline-block animate-pulse"></span>
-            Faculty Directory
-          </div>
           <h1 className="text-2xl sm:text-[26px] font-bold tracking-tight text-[#0f172a] leading-tight">
             Faculty Master
           </h1>

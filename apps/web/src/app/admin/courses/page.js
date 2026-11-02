@@ -235,10 +235,6 @@ export default function CoursesManagement() {
       {/* Page Header */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-6 border-b border-[#e2e8f0]">
         <div>
-          <div className="text-[10px] font-bold tracking-[1.5px] text-[#4f46e5] uppercase mb-1.5 flex items-center gap-1.5">
-            <IconBook size={14} />
-            Academic Catalog
-          </div>
           <h1 className="text-2xl sm:text-[28px] font-bold tracking-tight text-[#0f172a] leading-tight">
             Courses Catalog
           </h1>

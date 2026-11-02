@@ -1,6 +1,6 @@
 'use client';
 
-import { useRef, useState, useSyncExternalStore } from 'react';
+import { useRef, useState } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
 import TextType from '@/components/ui/TextType';
@@ -25,28 +25,12 @@ const roles = {
   admin: { label: 'For administrators', title: 'A connected lab starts here.', text: 'Give your department a shared foundation for practical learning, with organized courses, people, and access.', items: ['Manage students and faculty', 'Organize departments and courses', 'Review activity through audit logs'], action: 'Open admin workspace', number: '03', word: 'Connect', detail: 'One department. One shared workspace.' },
 };
 
-function subscribeToSession(callback) {
-  window.addEventListener('storage', callback);
-  return () => window.removeEventListener('storage', callback);
-}
-function readSession() {
-  try { return localStorage.getItem('token') ? localStorage.getItem('user') : null; }
-  catch { return null; }
-}
-
 export default function HomePage() {
-  const savedSession = useSyncExternalStore(subscribeToSession, readSession, () => null);
-  let user = null;
-  try {
-    const parsed = JSON.parse(savedSession);
-    if (parsed && Object.hasOwn(roles, parsed.role)) user = parsed;
-  } catch { /* Invalid sessions fall back to sign in. */ }
   const [language, setLanguage] = useState('Python');
   const [role, setRole] = useState('student');
   const [menuOpen, setMenuOpen] = useState(false);
   const [feature, setFeature] = useState(0);
   const tabs = useRef([]);
-  const dashboard = user?.role === 'admin' ? '/admin' : user?.role === 'faculty' ? '/faculty' : '/student';
   const current = roles[role];
   function changeTab(event, index) {
     const keys = Object.keys(roles);
@@ -66,7 +50,7 @@ export default function HomePage() {
         <nav id="home-navigation" aria-label="Main navigation" className={`${styles.nav} ${menuOpen ? styles.navOpen : ''}`} onClick={() => setMenuOpen(false)}>
           <a href="#experience">The experience</a><a href="#roles">Built for you</a>
         </nav>
-        <Link className={styles.headerAction} href={user ? dashboard : '/login'}>{user ? 'My workspace' : 'Sign in'} <span aria-hidden="true">↗</span></Link>
+        <Link className={styles.headerAction} href="/login">Sign in <span aria-hidden="true">↗</span></Link>
       </header>
       <main id="main">
         <section className={styles.hero}>
@@ -81,7 +65,7 @@ export default function HomePage() {
             Streamlined for university computer science departments. Conduct automated practicals in C, C++, Java, and Python with live socket streaming, instant batch grading, anti-plagiarism guards, and faculty controls.
           </p>
           <div className={styles.heroActions}>
-            <Link href={user ? dashboard : '/login'} className={styles.primary}>Get Started with CodeRank <span aria-hidden="true">↗</span></Link>
+            <Link href="/login" className={styles.primary}>Get Started with CodeRank <span aria-hidden="true">↗</span></Link>
             <a href="#experience" className={styles.heroExplore}>Explore the platform <span aria-hidden="true">↓</span></a>
           </div>
           <div className={styles.heroFootnote}><span aria-hidden="true">{'</>'}</span> Built for your next breakthrough.</div>
@@ -116,20 +100,19 @@ export default function HomePage() {
               </div>
               <div className={styles.featureSatellite}><span>{feature === 0 ? '</>' : feature === 1 ? '✓' : '◎'}</span></div>
               <svg viewBox="0 0 320 260" className={styles.featureConnector}><path d="M40 190 H95 Q110 190 110 175 V85 Q110 70 125 70 H265" /><circle cx="40" cy="190" r="5"/><circle cx="265" cy="70" r="5"/></svg>
-            </div><h3>{featureJourney[feature].title}</h3><p>{featureJourney[feature].description}</p><div className={styles.pathFlow}>{featureJourney[feature].detail}</div><Link href={user ? dashboard : '/login'}>{featureJourney[feature].action} <span aria-hidden="true">↗</span></Link></div></div>
+            </div><h3>{featureJourney[feature].title}</h3><p>{featureJourney[feature].description}</p><div className={styles.pathFlow}>{featureJourney[feature].detail}</div><Link href="/login">{featureJourney[feature].action} <span aria-hidden="true">↗</span></Link></div></div>
           </div>
         </section>
         <section id="roles" className={styles.roles}>
           <div className={styles.roleIntro}><p className={styles.eyebrow}>DIFFERENT ROLES. SHARED AMBITION.</p><h2>Your place in<br />the <em>possibility.</em></h2><div className={styles.roleTabs} role="tablist" aria-label="Explore workspaces">{Object.entries(roles).map(([key, item], i) => <button ref={el => { tabs.current[i] = el; }} key={key} id={`tab-${key}`} role="tab" aria-selected={role === key} aria-controls="role-panel" tabIndex={role === key ? 0 : -1} onKeyDown={event => changeTab(event, i)} onClick={() => setRole(key)}>{item.label}<span aria-hidden="true">↗</span></button>)}</div></div>
-          <div id="role-panel" role="tabpanel" aria-labelledby={`tab-${role}`} tabIndex={0} className={styles.rolePanel}><div key={role} className={styles.roleContent}><div className={styles.roleVisual} aria-hidden="true"><span>{current.number}</span><strong>{current.word}<i>↗</i></strong><small>{current.detail}</small></div><h3>{current.title}</h3><p>{current.text}</p><ul>{current.items.map(item => <li key={item}><span aria-hidden="true">✓</span>{item}</li>)}</ul><Link href={user?.role === role ? dashboard : '/login'}>{current.action} <span aria-hidden="true">↗</span></Link></div></div>
+          <div id="role-panel" role="tabpanel" aria-labelledby={`tab-${role}`} tabIndex={0} className={styles.rolePanel}><div key={role} className={styles.roleContent}><div className={styles.roleVisual} aria-hidden="true"><span>{current.number}</span><strong>{current.word}<i>↗</i></strong><small>{current.detail}</small></div><h3>{current.title}</h3><p>{current.text}</p><ul>{current.items.map(item => <li key={item}><span aria-hidden="true">✓</span>{item}</li>)}</ul><Link href="/login">{current.action} <span aria-hidden="true">↗</span></Link></div></div>
         </section>
-        <section className={styles.finalCta}><p className={styles.eyebrow}>YOUR NEXT CHAPTER STARTS WITH A LINE OF CODE.</p><h2>Ready to find your<br /><em>next breakthrough?</em></h2><div className={styles.actions}><Link className={styles.primary} href={user ? dashboard : '/login'}>Let’s get coding <span aria-hidden="true">↗</span></Link></div><span className={styles.ctaBracket} aria-hidden="true">{'{ }'}</span></section>
+        <section className={styles.finalCta}><p className={styles.eyebrow}>YOUR NEXT CHAPTER STARTS WITH A LINE OF CODE.</p><h2>Ready to find your<br /><em>next breakthrough?</em></h2><div className={styles.actions}><Link className={styles.primary} href="/login">Let’s get coding <span aria-hidden="true">↗</span></Link></div><span className={styles.ctaBracket} aria-hidden="true">{'{ }'}</span></section>
       </main>
       <footer className={`${styles.footer} ${styles.refinedFooter}`}>
         <div className={styles.footerColumns}>
           <div className={styles.footerAbout}><Link href="/" className={styles.footerLogo}><Image src="/coderank-logo.jpg" alt="" width={36} height={36}/><span>Code<strong>Rank</strong></span></Link><p>Practice with purpose.<br/>Progress with confidence.</p><small>A connected space for university<br/>coding labs and practical learning.</small></div>
           <nav aria-label="Footer platform navigation"><h3>Explore CodeRank</h3><a href="#experience">The learning experience</a><a href="#roles">Student & faculty workspaces</a><Link href="/login">Sign in to your workspace ↗</Link></nav>
-          <div className={styles.footerPurpose}><span aria-hidden="true">{'</>'}</span><h3>Learn by doing.<br/>Grow by building.</h3><p>C · C++ · Java · Python</p></div>
         </div>
         <div className={styles.footerLegal}><span>© {new Date().getFullYear()} CodeRank</span><span>Built for the university coding lab.</span><a href="#main">Back to top ↑</a></div>
       </footer>

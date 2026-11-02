@@ -46,7 +46,9 @@ export default function DepartmentMaster() {
   const [lastUpdated, setLastUpdated] = useState(null);
 
   const { token: authToken, isReady } = useAdminAuth();
-  const token = useCallback(() => authToken, [authToken]);
+  const token = useCallback(() => {
+    return (typeof window !== 'undefined' ? localStorage.getItem('token') : null) || authToken || '';
+  }, [authToken]);
 
   const showToast = useCallback((type, msg) => {
     setToast({ type, msg });
@@ -365,10 +367,6 @@ export default function DepartmentMaster() {
       {/* Page Header */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-5 border-b border-[#e2e8f0]">
         <div>
-          <div className="text-[10px] font-bold tracking-[1.5px] text-[#4f46e5] uppercase mb-1 flex items-center gap-1.5">
-            <span className="w-1.5 h-1.5 rounded-full bg-[#4f46e5] inline-block animate-pulse"></span>
-            University Structure
-          </div>
           <h1 className="text-2xl sm:text-[26px] font-bold tracking-tight text-[#0f172a] leading-tight">
             Department Master
           </h1>

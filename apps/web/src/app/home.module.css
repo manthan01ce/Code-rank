@@ -180,7 +180,7 @@
 }
 @media(prefers-reduced-motion:reduce) { .home *,.home *::before,.home *::after { animation:none!important; transition:none!important; } .editor,.editor:hover { transform:none; } }
 .refinedFooter { display: block; padding: 48px 48px 24px; }
-.footerColumns { display: grid; grid-template-columns: 1.3fr 1fr 1fr; gap: 50px; padding-bottom: 38px; }
+.footerColumns { display: grid; grid-template-columns: 1.5fr 1fr; gap: 50px; padding-bottom: 38px; }
 .footerLogo { display: flex; align-items: center; gap: 10px; font-size: 23px; color: #0f172a !important; font-weight: 700; letter-spacing: -.8px; }
 .footerLogo img { border-radius: 50%; }
 .footerLogo strong { color: #4f46e5; }
