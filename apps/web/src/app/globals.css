@@ -27,6 +27,13 @@
   --danger: #1F2937;
 }
 
+/* Preserve the existing reset outside the admin utility layout. */
+*:not(:where(.admin-shell, .admin-shell *)) {
+  box-sizing: border-box;
+  padding: 0;
+  margin: 0;
+}
+
 body {
   font-family: 'Inter', system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
   background-color: var(--bg-color);
