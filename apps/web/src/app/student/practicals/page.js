@@ -544,7 +544,7 @@ int main() {
       <div className={styles.surface}><div className={styles.content}>
         <WorkspaceReturn />{renderStudentHeader()}
         <div className={styles.intro}>
-          <p className={styles.eyebrow}>YOUR COURSES</p>
+          
           <h2 style={{ fontSize: '22px', fontWeight: 700, marginBottom: '8px' }}>Select Course / Subject</h2>
           <p style={{ color: 'var(--text-muted)', fontSize: '14px', marginBottom: '25px' }}>Select an assigned course to view its active coding practicals and workspace.</p>
         </div>

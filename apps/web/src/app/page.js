@@ -57,7 +57,7 @@ export default function HomePage() {
         <div className={styles.originalHero}>
           <p className={styles.heroBrand}>Code<span>Rank</span></p>
 
-          <p className={styles.heroEyebrow}><span /> THE UNIVERSITY CODING WORKSPACE</p>
+          
           <h1 className={styles.heroTitle}>
             <TextType text={["RANK UP CODING"]} typingSpeed={75} pauseDuration={1500} deletingSpeed={50} cursorColor="currentColor" prefixColor="currentColor" />
           </h1>
@@ -76,7 +76,7 @@ export default function HomePage() {
           <div className={styles.studio}>
             <HeroWaves />
             <div className={styles.studioHeading}><span className={styles.studioIcon} aria-hidden="true">{'</>'}</span><div><strong>A little practice. A little progress.</strong><span>Your coding journey, in one place.</span></div><span className={styles.previewBadge}>PREVIEW</span></div>
-            <div className={styles.studioTask}><div><span className={styles.taskLabel}>THE NEXT STEP</span><h2>Turn a concept into code.</h2><p>Choose your language. Explore your approach.</p></div><span className={styles.taskArrow} aria-hidden="true">↗</span></div>
+            <div className={styles.studioTask}><div><h2>Turn a concept into code.</h2><p>Choose your language. Explore your approach.</p></div><span className={styles.taskArrow} aria-hidden="true">↗</span></div>
             <div className={styles.editor}>
               <div className={styles.editorTop}><span className={styles.editorMark} aria-hidden="true">{'{ }'}</span><span className={styles.editorFilename}>{language === 'Python' ? 'practice.py' : language === 'Java' ? 'CodeRank.java' : language === 'C++' ? 'practice.cpp' : 'practice.c'}</span><span className={styles.editorDots} aria-hidden="true"><i /><i /><i /></span></div>
               <div className={styles.languageTabs} aria-label="Preview language">{Object.keys(samples).map(item => <button key={item} aria-pressed={language === item} onClick={() => setLanguage(item)} className={language === item ? styles.selectedLanguage : ''}>{item}</button>)}</div>
@@ -88,10 +88,10 @@ export default function HomePage() {
         </section>
         <div className={styles.languageStrip}><span>FOUR LANGUAGES. ENDLESS POSSIBILITIES.</span><div>{['C', 'C++', 'Java', 'Python'].map((item, i) => <span key={item}><small aria-hidden="true">0{i + 1}</small>{item}</span>)}</div></div>
         <section id="experience" className={styles.experience}>
-          <div className={styles.sectionHeading}><div><p className={styles.eyebrow}>FROM FIRST LINE TO FINISHED PRACTICAL</p><h2>A little less friction.<br />A lot more <em>forward.</em></h2></div><p>Everything a coding lab needs to keep learning moving. All in one thoughtful workspace.</p></div>
+          <div className={styles.sectionHeading}><div><h2>A little less friction.<br />A lot more <em>forward.</em></h2></div><p>Everything a coding lab needs to keep learning moving. All in one thoughtful workspace.</p></div>
           <div className={styles.learningPath}>
             <div className={styles.pathNavigation} role="group" aria-label="Explore platform features">{featureJourney.map((item, index) => <button key={item.name} aria-pressed={feature === index} aria-controls="feature-detail" onClick={() => setFeature(index)}><span className={styles.pathNumber}>0{index + 1}</span><span><strong>{item.name}</strong><small>{item.label}</small></span><span aria-hidden="true">↗</span></button>)}</div>
-            <div id="feature-detail" className={styles.pathDetail} aria-live="polite"><div key={feature} className={styles.pathDetailContent}><div className={styles.pathKicker}><span>THE CODERANK EXPERIENCE</span><span>0{feature + 1} / 03</span></div><div className={styles.featureIllustration} data-feature={feature} aria-hidden="true">
+            <div id="feature-detail" className={styles.pathDetail} aria-live="polite"><div key={feature} className={styles.pathDetailContent}><div className={styles.pathKicker}><span>0{feature + 1} / 03</span></div><div className={styles.featureIllustration} data-feature={feature} aria-hidden="true">
               <div className={styles.featureHalo} />
               <div className={styles.featureWindow}>
                 <div className={styles.featureWindowBar}><i /><i /><i /></div>
@@ -104,10 +104,10 @@ export default function HomePage() {
           </div>
         </section>
         <section id="roles" className={styles.roles}>
-          <div className={styles.roleIntro}><p className={styles.eyebrow}>DIFFERENT ROLES. SHARED AMBITION.</p><h2>Your place in<br />the <em>possibility.</em></h2><div className={styles.roleTabs} role="tablist" aria-label="Explore workspaces">{Object.entries(roles).map(([key, item], i) => <button ref={el => { tabs.current[i] = el; }} key={key} id={`tab-${key}`} role="tab" aria-selected={role === key} aria-controls="role-panel" tabIndex={role === key ? 0 : -1} onKeyDown={event => changeTab(event, i)} onClick={() => setRole(key)}>{item.label}<span aria-hidden="true">↗</span></button>)}</div></div>
+          <div className={styles.roleIntro}><h2>Your place in<br />the <em>possibility.</em></h2><div className={styles.roleTabs} role="tablist" aria-label="Explore workspaces">{Object.entries(roles).map(([key, item], i) => <button ref={el => { tabs.current[i] = el; }} key={key} id={`tab-${key}`} role="tab" aria-selected={role === key} aria-controls="role-panel" tabIndex={role === key ? 0 : -1} onKeyDown={event => changeTab(event, i)} onClick={() => setRole(key)}>{item.label}<span aria-hidden="true">↗</span></button>)}</div></div>
           <div id="role-panel" role="tabpanel" aria-labelledby={`tab-${role}`} tabIndex={0} className={styles.rolePanel}><div key={role} className={styles.roleContent}><div className={styles.roleVisual} aria-hidden="true"><span>{current.number}</span><strong>{current.word}<i>↗</i></strong><small>{current.detail}</small></div><h3>{current.title}</h3><p>{current.text}</p><ul>{current.items.map(item => <li key={item}><span aria-hidden="true">✓</span>{item}</li>)}</ul><Link href="/login">{current.action} <span aria-hidden="true">↗</span></Link></div></div>
         </section>
-        <section className={styles.finalCta}><p className={styles.eyebrow}>YOUR NEXT CHAPTER STARTS WITH A LINE OF CODE.</p><h2>Ready to find your<br /><em>next breakthrough?</em></h2><div className={styles.actions}><Link className={styles.primary} href="/login">Let’s get coding <span aria-hidden="true">↗</span></Link></div><span className={styles.ctaBracket} aria-hidden="true">{'{ }'}</span></section>
+        <section className={styles.finalCta}><h2>Ready to find your<br /><em>next breakthrough?</em></h2><div className={styles.actions}><Link className={styles.primary} href="/login">Let’s get coding <span aria-hidden="true">↗</span></Link></div><span className={styles.ctaBracket} aria-hidden="true">{'{ }'}</span></section>
       </main>
       <footer className={`${styles.footer} ${styles.refinedFooter}`}>
         <div className={styles.footerColumns}>

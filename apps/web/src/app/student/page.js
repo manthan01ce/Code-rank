@@ -222,7 +222,7 @@ export default function StudentDashboard() {
 
       <div className={styles.content}>
         <div className={styles.intro}>
-          <p className={styles.eyebrow}>YOUR LEARNING, IN FOCUS</p>
+          
           <h1 style={{ fontSize: '28px', fontWeight: 700, color: 'var(--student-ui-text-1e293b, #1e293b)', marginBottom: '8px' }}>My learning workspace</h1>
           <p style={{ color: 'var(--student-ui-text-64748b, #64748b)', fontSize: '15px' }}>
             View practicals assigned by your faculty{semester ? ` for Semester ${semester}` : ''}. Choose a practical to continue learning.

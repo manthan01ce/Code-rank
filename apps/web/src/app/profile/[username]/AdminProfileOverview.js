@@ -49,7 +49,7 @@ export default function AdminProfileOverview({ onEdit }) {
 
   return <div className={styles.adminOverview}>
     <section className={styles.adminSection} aria-labelledby="institution-heading" aria-busy={loading}>
-      <div className={styles.adminHeading}><div><p className={styles.adminEyebrow}>ADMINISTRATOR WORKSPACE</p><h2 id="institution-heading">Institution overview</h2></div><RefreshButton onRefresh={refresh} disabled={loading}>Refresh</RefreshButton></div>
+      <div className={styles.adminHeading}><div><h2 id="institution-heading">Institution overview</h2></div><RefreshButton onRefresh={refresh} disabled={loading}>Refresh</RefreshButton></div>
       <p>Manage your institution and account from one place.</p>
       {error ? <p role="alert" className={styles.adminError}>{error}</p> : <div className={styles.adminStats}>{[['students', 'Students', '/admin/students'], ['faculty', 'Faculty', '/admin/faculty'], ['courses', 'Courses', '/admin/courses']].map(([key, label, href]) => <Link key={key} href={href}><strong>{stats ? Number(stats[key]).toLocaleString() : '—'}</strong><span>{label} ↗</span></Link>)}</div>}
       <Link className={styles.adminTextLink} href="/admin">Open full dashboard →</Link>

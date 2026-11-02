@@ -11,7 +11,7 @@ export function SignInPage({ title = "Welcome back", description = "Sign in to c
   return <main className="auth-shell auth-refined auth-split">
     <section className="auth-form">
       <Link href="/" className="auth-brand"><Image src="/coderank-logo.jpg" width={38} height={38} alt=""/><span>Code<span className="auth-brand-accent">Rank</span></span></Link>
-      <div><p className="auth-eyebrow">YOUR CODING WORKSPACE</p><h1>{title}</h1><p className="auth-description">{description}</p></div>
+      <div><h1>{title}</h1><p className="auth-description">{description}</p></div>
       <form onSubmit={onSignIn} aria-busy={loading}>
         <div><label htmlFor="login-email">Username or email</label><input id="login-email" name="email" required autoComplete="username" maxLength={254} placeholder="Enter your username or email"/></div>
         <div><label htmlFor="login-password">Password</label><div className="password-field"><input id="login-password" name="password" type={showPassword ? 'text' : 'password'} required autoComplete="current-password" maxLength={1024} placeholder="Enter your password"/><button type="button" aria-label={showPassword ? 'Hide password' : 'Show password'} aria-pressed={showPassword} onClick={() => setShowPassword(value => !value)}>{showPassword ? <EyeOff size={18}/> : <Eye size={18}/>}</button></div></div>
@@ -24,7 +24,7 @@ export function SignInPage({ title = "Welcome back", description = "Sign in to c
 
     <section className="auth-campus" aria-labelledby="practical-motivation">
       <Image src="/images/coderank-workspace.webp" alt="A light-theme coding workstation with an algorithm notebook in a bright university lab" fill sizes="(max-width: 767px) 100vw, 52vw" priority />
-      <div className="auth-campus-caption"><p className="auth-eyebrow">YOUR NEXT BREAKTHROUGH STARTS HERE</p><h2 id="practical-motivation">Turn what you learn<br/>into what you can build.</h2><p>Practice with purpose. Take on your next coding practical with CodeRank.</p><span>C · C++ · Java · Python</span></div>
+      <div className="auth-campus-caption"><h2 id="practical-motivation">Turn what you learn<br/>into what you can build.</h2><p>Practice with purpose. Take on your next coding practical with CodeRank.</p><span>C · C++ · Java · Python</span></div>
     </section>
   </main>;
 }
