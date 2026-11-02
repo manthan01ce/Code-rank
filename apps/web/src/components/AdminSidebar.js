@@ -1,16 +1,154 @@
 "use client";
-import {useRouter,usePathname} from 'next/navigation';
-import {useState,useEffect} from 'react';
-import {IconLayoutDashboard,IconBuilding,IconUsers,IconSchool,IconBook,IconArrowsShuffle,IconHistory,IconSettings,IconLogout,IconUser,IconKey} from '@tabler/icons-react';
-import {Sidebar,SidebarBody,SidebarLink} from '@/components/ui/sidebar';
-import { useAccountIdentity } from '@/hooks/useAccountIdentity';
-import ChangePasswordModal from './ChangePasswordModal';
-import LogoutConfirmModal from './LogoutConfirmModal';
-// Preserve the exact existing admin destinations and labels.
-const links=[['Dashboard','/admin',IconLayoutDashboard],['Department Master','/admin/departments',IconBuilding],['Faculty Master','/admin/faculty',IconUsers],['Student Master','/admin/students',IconSchool],['Courses','/admin/courses',IconBook],['Course Mapping','/admin/mapping',IconArrowsShuffle],['Activity Logs','/admin/logs',IconHistory],['Settings','/admin/settings',IconSettings]];
-export default function AdminSidebar(){const router=useRouter(),pathname=usePathname();const user=useAccountIdentity();const [passwordOpen,setPasswordOpen]=useState(false),[logoutOpen,setLogoutOpen]=useState(false);
 
- useEffect(()=>{if(user && user.role!=='admin')router.replace('/login');},[user,router]);
- const logout=()=>{localStorage.removeItem('token');localStorage.removeItem('user');router.push('/');};
- return <Sidebar><SidebarBody><a aria-label="CodeRank Admin Panel" className="admin-brand" href="/admin"><img src="/coderank-logo.jpg" alt=""/><span>CodeRank<small>Admin Panel</small></span></a><nav aria-label="Administration">{links.map(([label,href,Icon])=><SidebarLink key={href} href={href} label={label} icon={<Icon size={22}/>} active={pathname===href}/>)}</nav><div className="admin-account"><div className="admin-identity"><b aria-hidden="true">{user?.name?.charAt(0).toUpperCase()||'A'}</b><span>{user?.name||'Admin'}<small>ADMIN</small></span></div><SidebarLink href={`/profile/${user?.email?.split('@')[0]||'admin'}`} label="Profile" icon={<IconUser size={22}/>}/><button aria-label="Change Password" onClick={()=>setPasswordOpen(true)}><IconKey size={22}/><span>Change Password</span></button><button aria-label="Logout" onClick={()=>setLogoutOpen(true)}><IconLogout size={22}/><span>Logout</span></button></div></SidebarBody><ChangePasswordModal isOpen={passwordOpen} onClose={()=>setPasswordOpen(false)}/><LogoutConfirmModal isOpen={logoutOpen} onConfirm={logout} onCancel={()=>setLogoutOpen(false)}/></Sidebar>;
+import { useRouter, usePathname } from 'next/navigation';
+import { useState, useEffect } from 'react';
+import Link from 'next/link';
+import {
+  IconLayoutDashboard,
+  IconBuilding,
+  IconUsers,
+  IconSchool,
+  IconBook,
+  IconArrowsShuffle,
+  IconHistory,
+  IconSettings,
+  IconLogout,
+  IconUser,
+} from '@tabler/icons-react';
+import { Sidebar, SidebarBody, SidebarLink, useSidebar } from '@/components/ui/sidebar';
+import { useAccountIdentity } from '@/hooks/useAccountIdentity';
+import LogoutConfirmModal from './LogoutConfirmModal';
+
+// Preserving the exact existing admin destinations and labels
+const links = [
+  ['Dashboard', '/admin', IconLayoutDashboard],
+  ['Department Master', '/admin/departments', IconBuilding],
+  ['Faculty Master', '/admin/faculty', IconUsers],
+  ['Student Master', '/admin/students', IconSchool],
+  ['Courses', '/admin/courses', IconBook],
+  ['Course Mapping', '/admin/mapping', IconArrowsShuffle],
+  ['Activity Logs', '/admin/logs', IconHistory],
+  ['Settings', '/admin/settings', IconSettings],
+];
+
+function AdminSidebarInner() {
+  const router = useRouter();
+  const pathname = usePathname();
+  const user = useAccountIdentity();
+  const { collapseOnNav } = useSidebar();
+  const [logoutOpen, setLogoutOpen] = useState(false);
+
+  useEffect(() => {
+    if (user && user.role !== 'admin') {
+      router.replace('/login');
+    }
+  }, [user, router]);
+
+  const logout = () => {
+    localStorage.removeItem('token');
+    localStorage.removeItem('user');
+    router.push('/');
+  };
+
+  const userInitial = user?.name?.charAt(0).toUpperCase() || 'A';
+  const userName = user?.name || 'Admin';
+
+  return (
+    <>
+      <SidebarBody>
+        {/* Brand Header */}
+        <Link
+          href="/admin"
+          aria-label="CodeRank Admin Panel"
+          className="admin-brand"
+          onClick={(e) => {
+            e.currentTarget?.blur?.();
+            collapseOnNav(e);
+          }}
+        >
+          <img
+            src="/coderank-logo.jpg"
+            alt="CodeRank"
+            className="w-8 h-8 rounded-full object-cover shrink-0 border border-[#e2e8f0]"
+          />
+          <div className="admin-brand-text">
+            <span className="font-bold text-[#0f172a] text-sm leading-tight tracking-tight">CodeRank</span>
+            <span className="text-[10px] text-[#64748b] font-semibold uppercase tracking-wider">Admin Panel</span>
+          </div>
+        </Link>
+
+        {/* Navigation */}
+        <nav aria-label="Administration">
+          {links.map(([label, href, Icon]) => (
+            <SidebarLink
+              key={href}
+              href={href}
+              label={label}
+              icon={<Icon size={19} />}
+              active={pathname === href}
+            />
+          ))}
+        </nav>
+
+        {/* Account Section: Identity, Profile, Logout */}
+        <div className="admin-account">
+          {/* Identity */}
+          <div className="admin-nav-item">
+            <div className="admin-identity">
+              <span className="admin-identity-badge" aria-hidden="true">
+                {userInitial}
+              </span>
+              <div className="admin-identity-info">
+                <span className="text-xs font-semibold text-[#0f172a] truncate">{userName}</span>
+                <span className="text-[9px] text-[#64748b] font-medium tracking-wide">ADMIN</span>
+              </div>
+            </div>
+            <div role="tooltip" className="admin-sidebar-tooltip">
+              {userName} (Admin)
+            </div>
+          </div>
+
+          {/* Profile */}
+          <SidebarLink
+            href="/admin/profile"
+            label="Profile"
+            icon={<IconUser size={19} />}
+            active={pathname === '/admin/profile' || pathname.startsWith('/profile/')}
+          />
+
+          {/* Logout */}
+          <div className="admin-nav-item">
+            <button
+              type="button"
+              aria-label="Logout"
+              onClick={(e) => {
+                e.currentTarget?.blur?.();
+                collapseOnNav(e);
+                setLogoutOpen(true);
+              }}
+              className="admin-account-btn btn-logout"
+            >
+              <span className="admin-nav-icon text-[#dc2626]">
+                <IconLogout size={19} />
+              </span>
+              <span className="admin-sidebar-label">Logout</span>
+            </button>
+            <div role="tooltip" className="admin-sidebar-tooltip">
+              Logout
+            </div>
+          </div>
+        </div>
+      </SidebarBody>
+
+      <LogoutConfirmModal isOpen={logoutOpen} onConfirm={logout} onCancel={() => setLogoutOpen(false)} />
+    </>
+  );
+}
+
+export default function AdminSidebar() {
+  return (
+    <Sidebar>
+      <AdminSidebarInner />
+    </Sidebar>
+  );
 }
