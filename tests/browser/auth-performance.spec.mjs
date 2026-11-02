@@ -82,7 +82,7 @@ test('measure 20 real account creations and visible confirmation per browser con
     const downloadPromise=page.waitForEvent('download');
     const start=performance.now();await page.getByRole('button',{name:'Create Student',exact:true}).click();
     const res=await responsePromise;expect(res.status()).toBe(200);await res.json();const responseMs=elapsed(start);
-    await downloadPromise;await expect(page.getByText(/^Timing created! (?:Password )?PDF downloaded\.$/,{exact:true})).toBeVisible();
+    await downloadPromise;await expect(page.getByText('Timing created! Password PDF downloaded.',{exact:true}).or(page.getByText('Timing created! PDF downloaded.',{exact:true}))).toBeVisible();
     samples.push({condition,index:i+1,responseMs,confirmationMs:elapsed(start),server:parseTiming(res.headers()['server-timing'])});
     await page.close();if(condition==='fresh-context'){await context.close();context=null;}
    }
