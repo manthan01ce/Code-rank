@@ -1,11 +1,24 @@
 'use client';
-import RefreshButton from '@/components/RefreshButton';
-import { fetchCollection } from '@/lib/fetch-collection';
 
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useRef, useMemo, useCallback } from 'react';
+import { fetchCollection } from '@/lib/fetch-collection';
 import LoadingOverlay from '@/components/LoadingOverlay';
 import { useAdminAuth } from '@/hooks/useAdminAuth';
 import { usePolling } from '@/hooks/usePolling';
+import RefreshButton from '@/components/admin/RefreshButton';
+import { AdminDataTable, DataTableColumnHeader, StatusBadge } from '@/components/ui/data-table';
+import {
+  IconSearch,
+  IconPlus,
+  IconUpload,
+  IconEdit,
+  IconBan,
+  IconCheck,
+  IconDownload,
+  IconId,
+  IconX,
+  IconChevronDown,
+} from '@tabler/icons-react';
 
 // ─── PDF Generator ────────────────────────────────────────────────────────────
 async function downloadCredentialsPDF(users) {
@@ -14,7 +27,7 @@ async function downloadCredentialsPDF(users) {
 
   const doc = new jsPDF();
   doc.setFontSize(18);
-  doc.setTextColor(90, 106, 252);
+  doc.setTextColor(79, 70, 229);
   doc.text('CodeRank — Faculty Credentials', 14, 20);
 
   doc.setFontSize(10);
@@ -24,7 +37,7 @@ async function downloadCredentialsPDF(users) {
   autoTable(doc, {
     startY: 35,
     head: [['Name', 'Email', 'Department', 'Designation', 'Password']],
-    body: users.map(u => [
+    body: users.map((u) => [
       u.name,
       u.email,
       u.extra_info?.department || '-',
@@ -33,107 +46,184 @@ async function downloadCredentialsPDF(users) {
     ]),
     theme: 'grid',
     styles: { fontSize: 9, cellPadding: 4 },
-    headStyles: { fillColor: [90, 106, 252], textColor: 255, fontStyle: 'bold' },
+    headStyles: { fillColor: [79, 70, 229], textColor: 255, fontStyle: 'bold' },
     alternateRowStyles: { fillColor: [245, 247, 255] },
   });
 
   doc.save(`CodeRank_Faculty_${Date.now()}.pdf`);
 }
 
-// ─── File parser ──────────────────────────────────────────────────────────────
-async function parseFile(file) {
-  if (file.name.endsWith('.csv')) {
-    const text = await file.text();
-    const lines = text.trim().split('\n');
-    const headers = lines[0].split(',').map(h => h.trim().replace(/^"|"$/g, ''));
-    return lines.slice(1).map(line => {
-      const cols = line.split(',').map(c => c.trim().replace(/^"|"$/g, ''));
-      const obj = {};
-      headers.forEach((h, i) => { obj[h] = cols[i] || ''; });
-      return obj;
-    }).filter(r => r.Name || r.name);
-  } else {
-    // Excel files: client-side parsing removed (xlsx had critical CVEs, no safe browser alternative).
-    // The file is uploaded directly to the server API which parses it with ExcelJS.
-    // Return null to signal the upload handler to skip preview and go straight to upload.
-    return null;
-  }
-}
-
-// ─── Component ────────────────────────────────────────────────────────────────
 export default function FacultyManagement() {
   const { token: authToken, isReady } = useAdminAuth();
 
-  const [faculty, setFaculty]         = useState([]);
+  const [faculty, setFaculty] = useState([]);
   const [pageCursor, setPageCursor] = useState(null);
   const [nextCursor, setNextCursor] = useState(null);
+  const [cursorHistory, setCursorHistory] = useState([null]); // track cursor stack for back navigation
+  const [currentPage, setCurrentPage] = useState(1);
   const requestVersion = useRef(0);
+  const activeAbortController = useRef(null);
+
   const [departmentsList, setDepartmentsList] = useState([]);
-  const [loading, setLoading]         = useState(true);
-  const [processing, setProcessing]   = useState(false);
-  const [search, setSearch]           = useState('');
-  const [statusFilter, setStatusFilter] = useState('all'); // Show all users by default
-  const [showModal, setShowModal]     = useState(false);
-  const [editTarget, setEditTarget]   = useState(null);
-  const [toast, setToast]             = useState(null);
-  const fileRef                       = useRef();
+  const [initialLoading, setInitialLoading] = useState(true);
+  const [fetching, setFetching] = useState(false);
+  const [processing, setProcessing] = useState(false);
 
-  const [form, setForm] = useState({ facultyId: '', firstName: '', lastName: '', emailPrefix: '', department: '', designation: '', password: '' });
+  // Search input state (immediate UI typing) vs applied search (debounced server query)
+  const [searchInput, setSearchInput] = useState('');
+  const [debouncedSearch, setDebouncedSearch] = useState('');
+  const [statusFilter, setStatusFilter] = useState('all');
 
-  const token = () => authToken;
+  const [showModal, setShowModal] = useState(false);
+  const [editTarget, setEditTarget] = useState(null);
+  const [formErrors, setFormErrors] = useState({});
+  const [toast, setToast] = useState(null);
+  const [lastUpdated, setLastUpdated] = useState(null);
+  const fileRef = useRef(null);
 
-  const showToast = (type, msg) => {
+  const [form, setForm] = useState({
+    facultyId: '',
+    firstName: '',
+    lastName: '',
+    emailPrefix: '',
+    department: '',
+    designation: '',
+    password: '',
+  });
+
+  const token = useCallback(() => authToken, [authToken]);
+
+  const showToast = useCallback((type, msg) => {
     setToast({ type, msg });
     setTimeout(() => setToast(null), 5000);
-  };
+  }, []);
 
-  // ── Fetch ──
-  const fetchFaculty = async (cursor = pageCursor) => {
-    const version = ++requestVersion.current;
-    setLoading(true);
-    try {
-      let url = `/api/users?role=faculty&status=${statusFilter}`;
-      if (search) url += `&search=${encodeURIComponent(search)}`;
-      if (cursor) url += `&cursor=${cursor}`;
-      const res = await fetch(url, { headers: { Authorization: `Bearer ${token()}` } });
-      if (res.ok) {
-        const data = await res.json();
-        if (version !== requestVersion.current) return;
-        setPageCursor(cursor);
-        setNextCursor(res.headers.get('X-Next-Cursor') || null);
-        setFaculty(Array.isArray(data) ? data : []);
-      } else {
-        console.error('Failed to fetch faculty:', res.status);
-        setFaculty([]);
+  // ── Debounce search input (300ms) ──
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setDebouncedSearch(searchInput.trim());
+    }, 300);
+    return () => clearTimeout(timer);
+  }, [searchInput]);
+
+  // ── Fetch Faculty Data ──
+  const fetchFaculty = useCallback(
+    async (cursor = null, isPageReset = false) => {
+      if (!authToken) return;
+
+      if (activeAbortController.current) {
+        activeAbortController.current.abort();
       }
-    } catch (e) {
-      console.error('Fetch faculty error:', e);
-      setFaculty([]);
-    }
-    finally { setLoading(false); }
-  };
+      const controller = new AbortController();
+      activeAbortController.current = controller;
 
-  const fetchDepartments = async () => {
+      const version = ++requestVersion.current;
+      setFetching(true);
+
+      try {
+        let url = `/api/users?role=faculty&status=${statusFilter}`;
+        if (debouncedSearch) url += `&search=${encodeURIComponent(debouncedSearch)}`;
+        if (cursor) url += `&cursor=${cursor}`;
+
+        const res = await fetch(url, {
+          headers: { Authorization: `Bearer ${authToken}` },
+          signal: controller.signal,
+        });
+
+        if (res.ok) {
+          const data = await res.json();
+          if (version !== requestVersion.current) return;
+
+          setFaculty(Array.isArray(data) ? data : []);
+          setPageCursor(cursor);
+          setNextCursor(res.headers.get('X-Next-Cursor') || null);
+          setLastUpdated(new Date());
+
+          if (isPageReset) {
+            setCursorHistory([null]);
+            setCurrentPage(1);
+          }
+        } else {
+          if (version === requestVersion.current) {
+            console.error('Failed to fetch faculty:', res.status);
+            showToast('error', 'Unable to fetch faculty records');
+          }
+        }
+      } catch (e) {
+        if (e.name !== 'AbortError' && version === requestVersion.current) {
+          console.error('Fetch faculty error:', e);
+          showToast('error', 'Network error fetching faculty');
+        }
+      } finally {
+        if (version === requestVersion.current) {
+          setFetching(false);
+          setInitialLoading(false);
+        }
+      }
+    },
+    [authToken, debouncedSearch, statusFilter, showToast]
+  );
+
+  // Pagination navigation helpers
+  const handleNextPage = useCallback(
+    (cursor) => {
+      if (!cursor) return;
+      setCursorHistory((prev) => [...prev, cursor]);
+      setCurrentPage((prev) => prev + 1);
+      fetchFaculty(cursor, false);
+    },
+    [fetchFaculty]
+  );
+
+  const handleFirstPage = useCallback(() => {
+    setCursorHistory([null]);
+    setCurrentPage(1);
+    fetchFaculty(null, false);
+  }, [fetchFaculty]);
+
+  // Preserve master's polling and pause background refresh while editing.
+  usePolling(() => { if (!showModal) return fetchFaculty(pageCursor, false); }, 15_000, isReady);
+
+  const fetchDepartments = useCallback(async () => {
     try {
-      setDepartmentsList(await fetchCollection('/api/departments', { headers: { Authorization: `Bearer ${token()}` } }));
-    } catch (e) { console.error(e); }
-  };
+      setDepartmentsList(
+        await fetchCollection('/api/departments', { headers: { Authorization: `Bearer ${token()}` } })
+      );
+    } catch (e) {
+      console.error(e);
+    }
+  }, [token]);
 
-  useEffect(() => { if (isReady) { fetchFaculty(null); } }, [search, statusFilter, isReady]);
-  useEffect(() => { if (isReady) fetchDepartments(); }, [isReady]);
+  // Fetch when search or filter changes (resets pagination to first page)
+  useEffect(() => {
+    if (isReady) {
+      fetchFaculty(null, true);
+    }
+  }, [debouncedSearch, statusFilter, isReady, fetchFaculty]);
 
-  // Auto-refresh faculty list every 15s (pauses while modal is open)
-  usePolling(() => { if (!showModal) fetchFaculty(); }, 15_000, isReady);
+  useEffect(() => {
+    if (isReady) fetchDepartments();
+  }, [isReady, fetchDepartments]);
 
-  // ── Open modal ──
+  // ── Modal Actions ──
   const openAdd = () => {
     setEditTarget(null);
-    setForm({ facultyId: '', firstName: '', lastName: '', emailPrefix: '', department: '', designation: '', password: '' });
+    setFormErrors({});
+    setForm({
+      facultyId: '',
+      firstName: '',
+      lastName: '',
+      emailPrefix: '',
+      department: '',
+      designation: '',
+      password: '',
+    });
     setShowModal(true);
   };
 
   const openEdit = (f) => {
     setEditTarget(f);
+    setFormErrors({});
     setForm({
       facultyId: f.extra_info?.facultyId || '',
       firstName: f.first_name || f.name?.split(' ')[0] || '',
@@ -146,72 +236,131 @@ export default function FacultyManagement() {
     setShowModal(true);
   };
 
+  // Keyboard accessibility for modal (Escape closes)
+  useEffect(() => {
+    if (!showModal) return;
+    const handleKeyDown = (e) => {
+      if (e.key === 'Escape' && !processing) {
+        setShowModal(false);
+      }
+    };
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [showModal, processing]);
+
+  // ── Form Validation ──
+  const validateForm = () => {
+    const errors = {};
+    if (!form.facultyId || !form.facultyId.trim()) {
+      errors.facultyId = 'Faculty ID is required';
+    } else if (!/^\d{1,5}$/.test(form.facultyId.trim())) {
+      errors.facultyId = 'Faculty ID must be 1 to 5 digits';
+    }
+
+    if (!form.firstName || !form.firstName.trim()) {
+      errors.firstName = 'First name is required';
+    }
+
+    if (!form.lastName || !form.lastName.trim()) {
+      errors.lastName = 'Last name is required';
+    }
+
+    if (!editTarget) {
+      if (!form.emailPrefix || !form.emailPrefix.trim()) {
+        errors.emailPrefix = 'Email prefix is required';
+      } else if (!/^[a-zA-Z0-9.\-_]+$/.test(form.emailPrefix.trim())) {
+        errors.emailPrefix = 'Invalid characters in email prefix';
+      }
+    }
+
+    if (!form.department || !form.department.trim()) {
+      errors.department = 'Department selection is required';
+    }
+
+    if (editTarget && form.password && form.password.length < 8) {
+      errors.password = 'Password must be at least 8 characters';
+    }
+
+    setFormErrors(errors);
+    return Object.keys(errors).length === 0;
+  };
+
   // ── Submit ──
   const handleSubmit = async (e) => {
     e.preventDefault();
+    if (!validateForm()) return;
+
     setProcessing(true);
     try {
-      const email = `${form.emailPrefix}@charusat.ac.in`;
+      const email = `${form.emailPrefix.trim()}@charusat.ac.in`;
       if (editTarget) {
         // EDIT
         const res = await fetch(`/api/users/${editTarget.id}`, {
           method: 'PUT',
           headers: { Authorization: `Bearer ${token()}`, 'Content-Type': 'application/json' },
           body: JSON.stringify({
-            first_name: form.firstName,
-            last_name: form.lastName,
+            first_name: form.firstName.trim(),
+            last_name: form.lastName.trim(),
             email: email,
             role: 'faculty',
             status: editTarget.status,
-            extra_info: { facultyId: form.facultyId, department: form.department, designation: form.designation },
+            extra_info: {
+              facultyId: form.facultyId.trim(),
+              department: form.department,
+              designation: form.designation.trim() || undefined,
+            },
             password: form.password || undefined,
           }),
         });
         const data = await res.json();
-        if (!res.ok) { showToast('error', data.error || 'Update failed'); return; }
+        if (!res.ok) {
+          showToast('error', data.error || 'Update failed');
+          return;
+        }
 
-        // Live update with returned user data
-        setFaculty(prev => prev.map(f =>
-          f.id === editTarget.id ? data.user : f
-        ));
+        setFaculty((prev) => prev.map((f) => (f.id === editTarget.id ? data.user : f)));
         showToast('success', `${form.firstName} updated successfully`);
         setShowModal(false);
-
       } else {
         // CREATE
         const res = await fetch('/api/users', {
           method: 'POST',
           headers: { Authorization: `Bearer ${token()}`, 'Content-Type': 'application/json' },
           body: JSON.stringify({
-            first_name: form.firstName,
-            last_name: form.lastName,
+            first_name: form.firstName.trim(),
+            last_name: form.lastName.trim(),
             email: email,
             role: 'faculty',
-            extra_info: { facultyId: form.facultyId, department: form.department, designation: form.designation },
+            extra_info: {
+              facultyId: form.facultyId.trim(),
+              department: form.department,
+              designation: form.designation.trim() || undefined,
+            },
           }),
         });
         const data = await res.json();
-        if (!res.ok) { showToast('error', data.error || 'Create failed'); return; }
+        if (!res.ok) {
+          showToast('error', data.error || 'Create failed');
+          return;
+        }
 
-        // Live update with returned user data
         const newFaculty = {
           ...data.user,
           status: 'active',
         };
-        setFaculty(prev => [newFaculty, ...prev]);
+        setFaculty((prev) => [newFaculty, ...prev]);
         await downloadCredentialsPDF([{ ...newFaculty, rawPassword: data.rawPassword }]);
-        showToast('success', `${form.firstName} created! PDF downloaded.`);
+        showToast('success', `${form.firstName} created! Credentials PDF downloaded.`);
         setShowModal(false);
       }
     } catch (err) {
       showToast('error', 'Network error — please try again');
     } finally {
       setProcessing(false);
-      setForm({ facultyId: '', firstName: '', lastName: '', emailPrefix: '', department: '', designation: '' });
     }
   };
 
-  // ── Delete (Deactivate) ──
+  // ── Deactivate ──
   const handleDelete = async (f) => {
     if (!confirm(`Deactivate ${f.name}? This will mark the account as inactive.`)) return;
     setProcessing(true);
@@ -221,16 +370,22 @@ export default function FacultyManagement() {
         headers: { Authorization: `Bearer ${token()}` },
       });
       const data = await res.json();
-      if (!res.ok) { showToast('error', data.error || 'Deactivation failed'); return; }
+      if (!res.ok) {
+        showToast('error', data.error || 'Deactivation failed');
+        return;
+      }
 
-      // Update the faculty status in the list (keep in same list, just change status)
-      setFaculty(prev => prev.map(faculty =>
-        faculty.id === f.id ? { ...faculty, status: 'inactive' } : faculty
-      ));
-      showToast('success', `${f.name} deactivated and moved to inactive status`);
+      setFaculty((prev) =>
+        prev.map((facultyMember) =>
+          facultyMember.id === f.id ? { ...facultyMember, status: 'inactive' } : facultyMember
+        )
+      );
+      showToast('success', `${f.name} marked as inactive`);
     } catch (e) {
       showToast('error', 'Network error');
-    } finally { setProcessing(false); }
+    } finally {
+      setProcessing(false);
+    }
   };
 
   // ── Reactivate ──
@@ -244,23 +399,27 @@ export default function FacultyManagement() {
         body: JSON.stringify({ status: 'active' }),
       });
       const data = await res.json();
-      if (!res.ok) { showToast('error', data.error || 'Reactivation failed'); return; }
+      if (!res.ok) {
+        showToast('error', data.error || 'Reactivation failed');
+        return;
+      }
 
-      // Update the faculty status in the list (keep in same list, just change status)
-      setFaculty(prev => prev.map(faculty =>
-        faculty.id === f.id ? data.user : faculty
-      ));
-      showToast('success', `${f.name} reactivated and moved to active status`);
+      setFaculty((prev) =>
+        prev.map((facultyMember) => (facultyMember.id === f.id ? data.user : facultyMember))
+      );
+      showToast('success', `${f.name} reactivated successfully`);
     } catch (e) {
       showToast('error', 'Network error');
-    } finally { setProcessing(false); }
+    } finally {
+      setProcessing(false);
+    }
   };
 
   // ── Bulk Upload ──
   const handleBulkUpload = async (e) => {
-    const file = e.target.files[0];
+    const file = e.target.files?.[0];
     if (!file) return;
-    e.target.value = null;
+    e.target.value = '';
     setProcessing(true);
     try {
       const formData = new FormData();
@@ -283,44 +442,23 @@ export default function FacultyManagement() {
       const { created = [], updated = [], errors = [], summary = {}, skipped = [], skippedCount = 0 } = data;
 
       if (created.length > 0) {
-        const newFaculty = created.map(u => ({ ...u, status: 'active' }));
-        setFaculty(prev => [...newFaculty, ...prev]);
-      }
-
-      if (updated.length > 0) {
-        setFaculty(prev => prev.map(f => {
-          const match = updated.find(u => u.id === f.id);
-          return match ? { ...match, status: 'active' } : f;
-        }));
-      }
-
-      if (created.length > 0) {
         await downloadCredentialsPDF(created);
       }
+
+      // Smooth background refetch to reflect exact database state
+      await fetchFaculty(pageCursor, false);
 
       const parts = [];
       if (created.length > 0) parts.push(`${created.length} created`);
       if (updated.length > 0) parts.push(`${updated.length} updated`);
-      if (skippedCount > 0)  parts.push(`${skippedCount} skipped`);
-      if (errors.length > 0)  parts.push(`${errors.length} failed`);
+      if (skippedCount > 0) parts.push(`${skippedCount} skipped`);
+      if (errors.length > 0) parts.push(`${errors.length} failed`);
 
       const msg = `${summary.total || 0} rows processed: ${parts.join(', ')}.${created.length > 0 ? ' PDF downloaded!' : ''}`;
 
-      // Show detailed skipped users in console and alert
       if (skipped.length > 0) {
-        console.group(' Skipped Users Details:');
-        skipped.forEach((skip, idx) => {
-          console.log(`${idx + 1}. ${skip.name} (${skip.email})`);
-          console.log(`   Reason: ${skip.reason}`);
-        });
-        console.groupEnd();
-
-        // Show detailed modal with skipped users
-        const skippedDetails = skipped.map((s, i) =>
-          `${i + 1}. ${s.name} (${s.email})\n   → ${s.reason}`
-        ).join('\n\n');
-
-        alert(` ${skippedCount} user(s) were skipped:\n\n${skippedDetails}\n\nCheck console for full details.`);
+        const skippedDetails = skipped.map((s, i) => `${i + 1}. ${s.name} (${s.email})\n   → ${s.reason}`).join('\n\n');
+        alert(`${skippedCount} user(s) were skipped:\n\n${skippedDetails}`);
       }
 
       if (errors.length > 0 && created.length === 0 && updated.length === 0) {
@@ -328,9 +466,6 @@ export default function FacultyManagement() {
       } else {
         showToast('success', msg);
       }
-
-      if (errors.length > 0) console.warn('Bulk upload errors:', errors);
-
     } catch (err) {
       console.error(err);
       showToast('error', 'Error processing bulk upload — ' + err.message);
@@ -339,186 +474,431 @@ export default function FacultyManagement() {
     }
   };
 
+  // ── TanStack Columns ──
+  const columns = [
+      {
+        id: 'facultyId',
+        accessorFn: (row) => row.extra_info?.facultyId || '—',
+        header: ({ column }) => <DataTableColumnHeader column={column} title="Faculty ID" />,
+        cell: ({ getValue }) => (
+          <span className="font-semibold text-[#4f46e5] text-xs flex items-center gap-1.5 whitespace-nowrap">
+            <IconId size={14} className="text-[#818cf8]" />
+            {getValue()}
+          </span>
+        ),
+      },
+      {
+        accessorKey: 'name',
+        header: ({ column }) => <DataTableColumnHeader column={column} title="Name" />,
+        cell: ({ row }) => (
+          <div className="font-semibold text-[#0f172a] text-xs sm:text-[13px]">
+            {row.original.name}
+          </div>
+        ),
+      },
+      {
+        accessorKey: 'email',
+        header: ({ column }) => <DataTableColumnHeader column={column} title="Email" />,
+        cell: ({ getValue }) => (
+          <span className="text-[#64748b] font-mono text-[11px] select-all">
+            {getValue()}
+          </span>
+        ),
+      },
+      {
+        id: 'department',
+        accessorFn: (row) => row.extra_info?.department || '—',
+        header: ({ column }) => <DataTableColumnHeader column={column} title="Department" />,
+        cell: ({ getValue }) => <span className="text-[#334155] text-xs font-medium">{getValue()}</span>,
+      },
+      {
+        id: 'designation',
+        accessorFn: (row) => row.extra_info?.designation || '',
+        header: ({ column }) => <DataTableColumnHeader column={column} title="Designation" />,
+        cell: ({ getValue }) => {
+          const val = getValue();
+          if (!val || val === '—' || val === '-') {
+            return <span className="text-[#94a3b8]">—</span>;
+          }
+          return <span className="text-[#475569] text-xs font-medium">{val}</span>;
+        },
+      },
+      {
+        accessorKey: 'status',
+        header: ({ column }) => <DataTableColumnHeader column={column} title="Status" />,
+        cell: ({ getValue }) => <StatusBadge status={getValue()} />,
+      },
+      {
+        id: 'actions',
+        header: () => <span className="text-[10px] uppercase font-bold tracking-wider text-[#64748b]">Actions</span>,
+        cell: ({ row }) => {
+          const f = row.original;
+          return (
+            <div className="flex items-center gap-2">
+              <button
+                type="button"
+                onClick={() => openEdit(f)}
+                className="inline-flex items-center gap-1 px-2.5 py-1 text-xs font-semibold rounded-md border border-[#c7d2fe] bg-[#eff1ff] text-[#4338ca] hover:bg-[#e0e7ff] transition-colors cursor-pointer focus:outline-none focus:ring-2 focus:ring-[#4f46e5]"
+                title="Edit Faculty Details"
+              >
+                <IconEdit size={13} />
+                <span>Edit</span>
+              </button>
+
+              {f.status === 'active' ? (
+                <button
+                  type="button"
+                  onClick={() => handleDelete(f)}
+                  className="inline-flex items-center gap-1 px-2.5 py-1 text-xs font-semibold rounded-md border border-[#fecaca] bg-white text-[#991b1b] hover:bg-[#fef2f2] transition-colors cursor-pointer focus:outline-none focus:ring-2 focus:ring-red-500"
+                  title="Deactivate Faculty"
+                >
+                  <IconBan size={13} />
+                  <span>Deactivate</span>
+                </button>
+              ) : (
+                <button
+                  type="button"
+                  onClick={() => handleReactivate(f)}
+                  className="inline-flex items-center gap-1 px-2.5 py-1 text-xs font-semibold rounded-md border border-[#bbf7d0] bg-white text-[#15803d] hover:bg-[#f0fdf4] transition-colors cursor-pointer focus:outline-none focus:ring-2 focus:ring-emerald-500"
+                  title="Reactivate Faculty"
+                >
+                  <IconCheck size={13} />
+                  <span>Reactivate</span>
+                </button>
+              )}
+            </div>
+          );
+        },
+      },
+    ];
+
   return (
-    <div style={{ position: 'relative' }}>
+    <div className="space-y-6 max-w-[1440px] mx-auto">
       {processing && <LoadingOverlay />}
 
-      {/* Toast */}
+      {/* Toast Feedback */}
       {toast && (
-        <div style={{
-          position: 'fixed', top: '20px', right: '20px', zIndex: 9999,
-          padding: '14px 20px', borderRadius: '10px', fontWeight: 600, fontSize: '14px',
-          backgroundColor: toast.type === 'success' ? '#eff1ff' : '#fef2f2',
-          color: toast.type === 'success' ? '#4338ca' : '#991b1b',
-          border: `1px solid ${toast.type === 'success' ? '#c7d2fe' : '#fca5a5'}`,
-          boxShadow: '0 4px 20px rgba(0,0,0,0.12)',
-          maxWidth: '360px',
-        }}>
-          {toast.type === 'success' ? ' ' : ' '}{toast.msg}
+        <div
+          role="status"
+          className={`fixed top-5 right-5 z-50 px-4 py-3 rounded-lg shadow-lg text-xs font-semibold flex items-center gap-2 border transition-all ${
+            toast.type === 'success'
+              ? 'bg-[#eff1ff] text-[#4338ca] border-[#c7d2fe]'
+              : 'bg-red-50 text-red-800 border-red-200'
+          }`}
+        >
+          <span>{toast.msg}</span>
         </div>
       )}
 
-      {/* Header */}
-      <div className="header">
+      {/* Page Header — Clean, balanced proportions matching Admin Dashboard */}
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-5 border-b border-[#e2e8f0]">
         <div>
-          <h2 style={{ fontSize: '22px', fontWeight: 700 }}>Faculty Master</h2>
-          <p style={{ color: 'var(--text-muted)', fontSize: '13px' }}>
-            {loading ? 'Loading...' : `${faculty.length} faculty member${faculty.length !== 1 ? 's' : ''} on this page`}
-          </p>
+          <div className="text-[10px] font-bold tracking-[1.5px] text-[#4f46e5] uppercase mb-1 flex items-center gap-1.5">
+            <span className="w-1.5 h-1.5 rounded-full bg-[#4f46e5] inline-block animate-pulse"></span>
+            Faculty Directory
+          </div>
+          <h1 className="text-2xl sm:text-[26px] font-bold tracking-tight text-[#0f172a] leading-tight">
+            Faculty Master
+          </h1>
         </div>
-        <div style={{ display: 'flex', gap: '12px', alignItems: 'center' }}>
-          <select
-            value={statusFilter}
-            onChange={e => setStatusFilter(e.target.value)}
-            style={{
-              padding: '8px 12px', borderRadius: '6px', border: '1px solid var(--border-color)',
-              backgroundColor: 'white', fontSize: '14px', minWidth: '120px'
-            }}
+
+        {/* Primary Action Buttons — Natural content width, aligned heights */}
+        <div className="flex flex-wrap items-center gap-2.5 sm:gap-3 shrink-0">
+          <button
+            type="button"
+            className="inline-flex items-center justify-center gap-1.5 px-4 py-2 text-xs font-semibold rounded-lg bg-[#4f46e5] hover:bg-[#4338ca] text-white shadow-xs transition-colors cursor-pointer w-auto"
+            onClick={openAdd}
           >
-            <option value="all">All Faculty</option>
-            <option value="active">Active Only</option>
-            <option value="inactive">Inactive Only</option>
-          </select>
-          <input
-            type="text"
-            className="search-bar"
-            aria-label="Search name or email..." placeholder="Search name or email..."
-            value={search}
-            onChange={e => setSearch(e.target.value)}
+            <IconPlus size={15} />
+            <span>Add Faculty Member</span>
+          </button>
+
+          <label className="inline-flex items-center justify-center gap-1.5 px-3.5 py-2 text-xs font-semibold rounded-lg border border-[#dbe1ea] bg-white text-[#475569] hover:bg-[#f1f5f9] hover:border-[#cbd5e1] cursor-pointer shadow-xs transition-colors w-auto">
+            <IconUpload size={15} className="text-[#4f46e5]" />
+            <span>Bulk Upload (Excel/CSV)</span>
+            <input
+              ref={fileRef}
+              type="file"
+              accept=".xlsx,.xls,.csv"
+              className="sr-only"
+              aria-label="Upload faculty spreadsheet"
+              onChange={handleBulkUpload}
+            />
+          </label>
+
+          <RefreshButton
+            onRefresh={() => fetchFaculty(pageCursor, false)}
+            lastUpdated={lastUpdated}
+            label="Refresh"
+            variant="default"
           />
         </div>
       </div>
 
-      {/* Actions */}
-      <div style={{ marginBottom: '20px', display: 'flex', gap: '12px', flexWrap: 'wrap' }}>
-        <button className="btn-primary" style={{ width: 'auto', padding: '10px 22px', margin: 0 }} onClick={openAdd}>
-          + Add Faculty Member
-        </button>
+      {/* Integrated Filter Toolbar — Single clean toolbar above the table */}
+      <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3 p-3 bg-white border border-[#e2e8f0] rounded-xl shadow-xs">
+        <div className="relative flex flex-1 items-center max-w-md bg-[#f8fafc] border border-[#dbe1ea] rounded-lg px-3 py-2 focus-within:border-[#4f46e5] focus-within:ring-2 focus-within:ring-[#c7d2fe] transition-all">
+          <IconSearch size={16} className="text-[#94a3b8] shrink-0 mr-2" />
+          <input
+            type="text"
+            className="w-full bg-transparent border-0 p-0 text-xs text-[#0f172a] placeholder-[#94a3b8] focus:outline-none"
+            aria-label="Search faculty by name, ID, or email"
+            placeholder="Search faculty by name, ID, or email…"
+            value={searchInput}
+            onChange={(e) => setSearchInput(e.target.value)}
+          />
+          {searchInput && (
+            <button
+              type="button"
+              onClick={() => setSearchInput('')}
+              className="text-[#94a3b8] hover:text-[#0f172a] p-0.5 rounded transition-colors focus:outline-none"
+              aria-label="Clear search"
+            >
+              <IconX size={14} />
+            </button>
+          )}
+        </div>
 
-        <label className="admin-upload" style={{
-          display: 'inline-flex', alignItems: 'center', gap: '8px',
-          padding: '10px 22px', borderRadius: '8px', cursor: 'pointer',
-          backgroundColor: '#4f46e5', color: 'white', fontWeight: 600, fontSize: '14px',
-        }}>
-          ⬆ Bulk Upload (Excel/CSV)
-          <input ref={fileRef} type="file" accept=".xlsx,.xls,.csv" className="admin-file-input" aria-label="Upload enrollment spreadsheet" onChange={handleBulkUpload} />
-        </label>
-
-        <RefreshButton
-          onRefresh={() => fetchFaculty()}
-          style={{
-            padding: '10px 16px', borderRadius: '8px', border: '1px solid var(--border-color)',
-            background: 'transparent', cursor: 'pointer', fontSize: '13px', color: 'var(--text-muted)',
-          }}
-        >
-          Refresh
-        </RefreshButton>
+        <div className="relative inline-block shrink-0">
+          <select
+            value={statusFilter}
+            onChange={(e) => setStatusFilter(e.target.value)}
+            className="appearance-none text-xs border border-[#dbe1ea] rounded-lg bg-white pl-3.5 pr-8 py-2 text-[#334155] font-medium focus:outline-none focus:border-[#4f46e5] focus:ring-2 focus:ring-[#c7d2fe] cursor-pointer"
+            aria-label="Filter by account status"
+          >
+            <option value="all">All Faculty</option>
+            <option value="active">Active</option>
+            <option value="inactive">Inactive</option>
+          </select>
+          <IconChevronDown
+            size={14}
+            className="absolute right-2.5 top-1/2 -translate-y-1/2 text-[#64748b] pointer-events-none"
+          />
+        </div>
       </div>
 
-      <p style={{ fontSize: '12px', color: '#94a3b8', marginBottom: '16px' }}>
-        Bulk Upload expects columns: <strong>Name, Email, Department, Designation</strong>. Passwords are auto-generated and included in the downloaded PDF.
-      </p>
+      {/* Reusable Data Table — With subtle background updating without page reset */}
+      <AdminDataTable
+        columns={columns}
+        data={faculty}
+        loading={initialLoading || fetching}
+        serverPagination={{
+          pageCursor,
+          nextCursor,
+          onFirstPage: handleFirstPage,
+          onNextPage: handleNextPage,
+          itemCount: faculty.length,
+          loading: fetching,
+        }}
+        emptyTitle="No faculty members found"
+        emptyDescription={
+          debouncedSearch
+            ? 'No faculty members match your search criteria.'
+            : 'No faculty members registered for the selected filter.'
+        }
+      />
 
-      {/* Modal */}
+      {/* Add / Edit Modal */}
       {showModal && (
-        <div style={{
-          position: 'fixed', inset: 0, backgroundColor: 'rgba(0,0,0,0.45)',
-          display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 1000,
-        }}>
-          <div style={{
-            background: 'white', borderRadius: '16px', padding: '32px',
-            width: '100%', maxWidth: '500px', boxShadow: '0 20px 60px rgba(0,0,0,0.2)',
-          }}>
-            <h3 style={{ marginBottom: '20px', fontSize: '20px', fontWeight: 700 }}>
-              {editTarget ? `Edit ${editTarget.name}` : 'Add New Faculty Member'}
-            </h3>
-            <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
-              <input
-                className="input-field"
-                type="number"
-                aria-label="Faculty ID (Max 5 digits) *" placeholder="Faculty ID (Max 5 digits) *"
-                value={form.facultyId}
-                onChange={e => e.target.value.length <= 5 && setForm(f => ({ ...f, facultyId: e.target.value }))}
-                required
-              />
-              <div style={{ display: 'flex', gap: '10px' }}>
-                <input
-                  className="input-field"
-                  aria-label="First Name *" placeholder="First Name *"
-                  value={form.firstName}
-                  onChange={e => setForm(f => ({ ...f, firstName: e.target.value.replace(/[^A-Za-z\s]/g, '') }))}
-                  required
-                  style={{ flex: 1 }}
-                />
-                <input
-                  className="input-field"
-                  aria-label="Last Name *" placeholder="Last Name *"
-                  value={form.lastName}
-                  onChange={e => setForm(f => ({ ...f, lastName: e.target.value.replace(/[^A-Za-z\s]/g, '') }))}
-                  required
-                  style={{ flex: 1 }}
-                />
+        <div
+          className="fixed inset-0 bg-[#0f172a]/45 backdrop-blur-xs flex items-center justify-center z-50 p-4"
+          onClick={() => !processing && setShowModal(false)}
+        >
+          <div
+            className="bg-white rounded-2xl p-6 sm:p-7 w-full max-w-lg shadow-2xl border border-[#e2e8f0] max-h-[90vh] overflow-y-auto"
+            onClick={(e) => e.stopPropagation()}
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="modal-title"
+          >
+            <div className="flex items-start justify-between mb-4 pb-3 border-b border-[#f1f5f9]">
+              <div>
+                <h2 id="modal-title" className="text-lg font-bold text-[#0f172a] leading-snug">
+                  {editTarget ? `Edit ${editTarget.name}` : 'Add New Faculty Member'}
+                </h2>
+                <p className="text-xs text-[#64748b] mt-0.5">
+                  {editTarget
+                    ? 'Update faculty credentials and institutional details.'
+                    : 'Enter faculty details. Credentials will be securely generated.'}
+                </p>
               </div>
-              <div style={{ display: 'flex', alignItems: 'center', border: '1px solid var(--border-color)', borderRadius: '6px', overflow: 'hidden' }}>
+              <button
+                type="button"
+                onClick={() => setShowModal(false)}
+                className="text-[#94a3b8] hover:text-[#0f172a] p-1 rounded-lg hover:bg-[#f1f5f9] transition-colors"
+                aria-label="Close modal"
+              >
+                <IconX size={18} />
+              </button>
+            </div>
+
+            <form onSubmit={handleSubmit} className="space-y-4">
+              <div>
+                <label className="block text-xs font-semibold text-[#334155] mb-1">
+                  Faculty ID (Max 5 digits) <span className="text-red-500">*</span>
+                </label>
                 <input
-                  className="input-field"
-                  aria-label="Email Prefix *" placeholder="Email Prefix *"
-                  value={form.emailPrefix}
-                  onChange={e => setForm(f => ({ ...f, emailPrefix: e.target.value.replace(/[^a-zA-Z0-9.\-_]/g, '') }))}
-                  required
-                  disabled={!!editTarget}
-                  style={{ flex: 1, border: 'none', borderRadius: 0, ...(editTarget ? { opacity: 0.5, cursor: 'not-allowed', backgroundColor: '#f8fafc' } : {}) }}
+                  type="text"
+                  maxLength={5}
+                  placeholder="e.g. 1042"
+                  value={form.facultyId}
+                  onChange={(e) => {
+                    const val = e.target.value.replace(/\D/g, '').slice(0, 5);
+                    setForm((f) => ({ ...f, facultyId: val }));
+                    if (formErrors.facultyId) setFormErrors((err) => ({ ...err, facultyId: null }));
+                  }}
+                  className={`w-full text-xs border rounded-lg px-3 py-2 focus:outline-none focus:ring-2 ${
+                    formErrors.facultyId ? 'border-red-400 focus:ring-red-200' : 'border-[#dbe1ea] focus:ring-[#c7d2fe]'
+                  }`}
                 />
-                <span style={{ padding: '0 15px', backgroundColor: '#f1f5f9', color: '#64748b', fontSize: '14px', borderLeft: '1px solid var(--border-color)', height: '100%', display: 'flex', alignItems: 'center', minHeight: '44px' }}>
-                  @charusat.ac.in
-                </span>
+                {formErrors.facultyId && <p className="text-[11px] text-red-600 mt-1">{formErrors.facultyId}</p>}
               </div>
-              <div style={{ display: 'flex', gap: '10px' }}>
-                <select
-                  className="input-field"
-                  value={form.department}
-                  onChange={e => setForm(f => ({ ...f, department: e.target.value }))}
-                  required
-                  style={{ flex: 1 }}
+
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                <div>
+                  <label className="block text-xs font-semibold text-[#334155] mb-1">
+                    First Name <span className="text-red-500">*</span>
+                  </label>
+                  <input
+                    type="text"
+                    placeholder="e.g. Ramesh"
+                    value={form.firstName}
+                    onChange={(e) => {
+                      setForm((f) => ({ ...f, firstName: e.target.value.replace(/[^A-Za-z\s]/g, '') }));
+                      if (formErrors.firstName) setFormErrors((err) => ({ ...err, firstName: null }));
+                    }}
+                    className={`w-full text-xs border rounded-lg px-3 py-2 focus:outline-none focus:ring-2 ${
+                      formErrors.firstName ? 'border-red-400 focus:ring-red-200' : 'border-[#dbe1ea] focus:ring-[#c7d2fe]'
+                    }`}
+                  />
+                  {formErrors.firstName && <p className="text-[11px] text-red-600 mt-1">{formErrors.firstName}</p>}
+                </div>
+
+                <div>
+                  <label className="block text-xs font-semibold text-[#334155] mb-1">
+                    Last Name <span className="text-red-500">*</span>
+                  </label>
+                  <input
+                    type="text"
+                    placeholder="e.g. Patel"
+                    value={form.lastName}
+                    onChange={(e) => {
+                      setForm((f) => ({ ...f, lastName: e.target.value.replace(/[^A-Za-z\s]/g, '') }));
+                      if (formErrors.lastName) setFormErrors((err) => ({ ...err, lastName: null }));
+                    }}
+                    className={`w-full text-xs border rounded-lg px-3 py-2 focus:outline-none focus:ring-2 ${
+                      formErrors.lastName ? 'border-red-400 focus:ring-red-200' : 'border-[#dbe1ea] focus:ring-[#c7d2fe]'
+                    }`}
+                  />
+                  {formErrors.lastName && <p className="text-[11px] text-red-600 mt-1">{formErrors.lastName}</p>}
+                </div>
+              </div>
+
+              <div>
+                <label className="block text-xs font-semibold text-[#334155] mb-1">
+                  Institutional Email <span className="text-red-500">*</span>
+                </label>
+                <div
+                  className={`flex items-center border rounded-lg overflow-hidden bg-white focus-within:ring-2 ${
+                    formErrors.emailPrefix ? 'border-red-400 focus-within:ring-red-200' : 'border-[#dbe1ea] focus-within:ring-[#c7d2fe]'
+                  }`}
                 >
-                  <option value="" disabled>Select Department *</option>
-                  {departmentsList.map(d => (
-                    <option key={d.id} value={d.name}>{d.name} ({d.institute_name})</option>
-                  ))}
-                </select>
-                <input
-                  className="input-field"
-                  aria-label="Designation (Optional)" placeholder="Designation (Optional)"
-                  value={form.designation}
-                  onChange={e => setForm(f => ({ ...f, designation: e.target.value }))}
-                  style={{ flex: 1 }}
-                />
+                  <input
+                    type="text"
+                    placeholder="ramesh.patel"
+                    value={form.emailPrefix}
+                    onChange={(e) => {
+                      setForm((f) => ({ ...f, emailPrefix: e.target.value.replace(/[^a-zA-Z0-9.\-_]/g, '') }));
+                      if (formErrors.emailPrefix) setFormErrors((err) => ({ ...err, emailPrefix: null }));
+                    }}
+                    disabled={!!editTarget}
+                    className="flex-1 border-0 px-3 py-2 text-xs focus:outline-none"
+                    style={editTarget ? { opacity: 0.6, cursor: 'not-allowed', backgroundColor: '#f8fafc' } : {}}
+                  />
+                  <span className="px-3 py-2 bg-[#f1f5f9] text-[#64748b] text-xs font-mono border-l border-[#dbe1ea] select-none">
+                    @charusat.ac.in
+                  </span>
+                </div>
+                {formErrors.emailPrefix && <p className="text-[11px] text-red-600 mt-1">{formErrors.emailPrefix}</p>}
+              </div>
+
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                <div>
+                  <label className="block text-xs font-semibold text-[#334155] mb-1">
+                    Department <span className="text-red-500">*</span>
+                  </label>
+                  <select
+                    value={form.department}
+                    onChange={(e) => {
+                      setForm((f) => ({ ...f, department: e.target.value }));
+                      if (formErrors.department) setFormErrors((err) => ({ ...err, department: null }));
+                    }}
+                    className={`w-full text-xs border rounded-lg px-3 py-2 bg-white text-[#334155] focus:outline-none focus:ring-2 ${
+                      formErrors.department ? 'border-red-400 focus:ring-red-200' : 'border-[#dbe1ea] focus:ring-[#c7d2fe]'
+                    }`}
+                  >
+                    <option value="" disabled>Select Department</option>
+                    {departmentsList.map((d) => (
+                      <option key={d.id} value={d.name}>
+                        {d.name} ({d.institute_name})
+                      </option>
+                    ))}
+                  </select>
+                  {formErrors.department && <p className="text-[11px] text-red-600 mt-1">{formErrors.department}</p>}
+                </div>
+
+                <div>
+                  <label className="block text-xs font-semibold text-[#334155] mb-1">Designation</label>
+                  <input
+                    type="text"
+                    placeholder="e.g. Assistant Professor"
+                    value={form.designation}
+                    onChange={(e) => setForm((f) => ({ ...f, designation: e.target.value }))}
+                    className="w-full text-xs border border-[#dbe1ea] rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-[#c7d2fe]"
+                  />
+                </div>
               </div>
 
               {editTarget && (
-                <input
-                  type="password"
-                  className="input-field"
-                  aria-label="New Password (leave blank to keep unchanged)" placeholder="New Password (leave blank to keep unchanged)"
-                  value={form.password}
-                  onChange={e => setForm(f => ({ ...f, password: e.target.value }))}
-                />
+                <div>
+                  <label className="block text-xs font-semibold text-[#334155] mb-1">
+                    New Password (leave blank to keep unchanged)
+                  </label>
+                  <input
+                    type="password"
+                    placeholder="••••••••"
+                    value={form.password}
+                    onChange={(e) => {
+                      setForm((f) => ({ ...f, password: e.target.value }));
+                      if (formErrors.password) setFormErrors((err) => ({ ...err, password: null }));
+                    }}
+                    className={`w-full text-xs border rounded-lg px-3 py-2 focus:outline-none focus:ring-2 ${
+                      formErrors.password ? 'border-red-400 focus:ring-red-200' : 'border-[#dbe1ea] focus:ring-[#c7d2fe]'
+                    }`}
+                  />
+                  {formErrors.password && <p className="text-[11px] text-red-600 mt-1">{formErrors.password}</p>}
+                </div>
               )}
 
               {!editTarget && (
-                <p style={{ fontSize: '12px', color: '#64748b', background: '#f8fafc', padding: '10px', borderRadius: '8px' }}>
-                  🔐 A secure password will be auto-generated and a PDF will be downloaded immediately.
-                </p>
+                <div className="p-3 bg-[#eff1ff]/60 border border-[#c7d2fe] rounded-lg text-xs text-[#4338ca] flex items-center gap-2">
+                  <IconDownload size={16} className="text-[#4f46e5] shrink-0" />
+                  <span>A secure random password will be generated and saved to a PDF credential sheet upon creation.</span>
+                </div>
               )}
 
-              <div style={{ display: 'flex', gap: '10px', marginTop: '8px' }}>
-                <button type="submit" className="btn-primary" style={{ flex: 1, margin: 0 }} disabled={processing}>
-                  {processing ? 'Saving...' : editTarget ? '💾 Save Changes' : ' Create Faculty'}
+              <div className="flex items-center gap-3 pt-3">
+                <button
+                  type="submit"
+                  className="flex-1 py-2 px-4 text-xs font-semibold rounded-lg bg-[#4f46e5] hover:bg-[#4338ca] text-white shadow-xs cursor-pointer disabled:opacity-50 transition-colors"
+                  disabled={processing}
+                >
+                  {processing ? 'Saving…' : editTarget ? 'Save Changes' : 'Create Faculty'}
                 </button>
                 <button
                   type="button"
                   onClick={() => setShowModal(false)}
-                  style={{ flex: 1, padding: '12px', border: '1px solid var(--border-color)', borderRadius: '8px', background: 'transparent', cursor: 'pointer', fontWeight: 600 }}
+                  className="flex-1 py-2 px-4 text-xs font-semibold rounded-lg border border-[#dbe1ea] bg-white text-[#475569] hover:bg-[#f1f5f9] cursor-pointer transition-colors"
                 >
                   Cancel
                 </button>
@@ -527,96 +907,7 @@ export default function FacultyManagement() {
           </div>
         </div>
       )}
-
-      {/* Table */}
-      <div className="table-container">
-        {loading ? (
-          <p style={{ textAlign: 'center', padding: '40px', color: 'var(--text-muted)' }}>Loading faculty...</p>
-        ) : (
-          <>
-          <table>
-            <thead>
-              <tr>
-                <th scope="col">Faculty ID</th>
-                <th scope="col">Name</th>
-                <th scope="col">Email</th>
-                <th scope="col">Department</th>
-                <th scope="col">Designation</th>
-                <th scope="col">Status</th>
-                <th scope="col">Actions</th>
-              </tr>
-            </thead>
-            <tbody>
-              {faculty.map(f => {
-                const info = f.extra_info || {};
-                return (
-                  <tr key={f.id}>
-                    <td style={{ fontWeight: 600, color: 'var(--primary)' }}>{info.facultyId || '—'}</td>
-                    <td style={{ fontWeight: 500 }}>{f.name}</td>
-                    <td style={{ color: '#64748b' }}>{f.email}</td>
-                    <td>{info.department || '—'}</td>
-                    <td>
-                      <span style={{
-                        padding: '3px 10px', borderRadius: '20px', fontSize: '12px', fontWeight: 600,
-                        backgroundColor: '#eff1ff', color: '#4338ca',
-                      }}>
-                        {info.designation || '—'}
-                      </span>
-                    </td>
-                    <td>
-                      <span style={{
-                        padding: '4px 12px', borderRadius: '20px', fontSize: '12px', fontWeight: 600,
-                        backgroundColor: f.status === 'active' ? '#eff1ff' : '#fef2f2',
-                        color: f.status === 'active' ? '#4338ca' : '#991b1b',
-                      }}>
-                        {f.status.toUpperCase()}
-                      </span>
-                    </td>
-                    <td>
-                      <div style={{ display: 'flex', gap: '8px' }}>
-                        <button
-                          onClick={() => openEdit(f)}
-                          style={{ padding: '6px 14px', borderRadius: '6px', border: 'none', backgroundColor: '#4F46E5', color: 'white', cursor: 'pointer', fontWeight: 600, fontSize: '12px' }}
-                        >
-                          ✏️ Edit
-                        </button>
-                        {f.status === 'active' ? (
-                          <button
-                            onClick={() => handleDelete(f)}
-                            style={{ padding: '6px 14px', borderRadius: '6px', border: 'none', backgroundColor: '#1F2937', color: 'white', cursor: 'pointer', fontWeight: 600, fontSize: '12px' }}
-                          >
-                            🚫 Deactivate
-                          </button>
-                        ) : (
-                          <button
-                            onClick={() => handleReactivate(f)}
-                            style={{ padding: '6px 14px', borderRadius: '6px', border: 'none', backgroundColor: '#4f46e5', color: 'white', cursor: 'pointer', fontWeight: 600, fontSize: '12px' }}
-                          >
-                             Reactivate
-                          </button>
-                        )}
-                      </div>
-                    </td>
-                  </tr>
-                );
-              })}
-              {!loading && faculty.length === 0 && (
-                <tr>
-                  <td colSpan={7} style={{ textAlign: 'center', color: '#94a3b8', padding: '40px' }}>
-                    No faculty members found for the selected filter.
-                  </td>
-                </tr>
-              )}
-            </tbody>
-          </table>
-          <div style={{display: 'flex', gap: 12, padding: 16}}>
-            <button disabled={loading || !pageCursor} onClick={() => fetchFaculty(null)}>First page</button>
-            <span>{faculty.length} shown on this page</span>
-            <button disabled={loading || !nextCursor} onClick={() => fetchFaculty(nextCursor)}>Next page</button>
-          </div>
-          </>
-        )}
-      </div>
     </div>
   );
 }
+
