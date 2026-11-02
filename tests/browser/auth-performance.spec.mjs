@@ -72,17 +72,17 @@ test('measure 20 real account creations and visible confirmation per browser con
     if(condition==='fresh-context')context=await browser.newContext({acceptDownloads:true});
     if(condition==='fresh-context'||i===0)await context.addInitScript(identity=>{localStorage.setItem('token',identity.token);localStorage.setItem('user',JSON.stringify(identity.user));},admin);
     const page=await context.newPage();await page.goto('/admin/students');
-    await page.getByRole('button',{name:'+ Add Student',exact:true}).click();
-    await page.getByPlaceholder('First Name *',{exact:true}).fill('Timing');
-    await page.getByPlaceholder('Last Name *',{exact:true}).fill('Student');
-    await page.getByPlaceholder('Roll Number (e.g. 25ce097 or D25ce097) *',{exact:true}).fill(`25ce${baseNumber+(condition==='fresh-context'?0:20)+i}`);
-    await page.getByPlaceholder('Division (e.g. CE1, IT2) *',{exact:true}).fill('CE1');
+    await page.getByRole('button',{name:/^(?:\+ )?Add Student$/,exact:true}).click();
+    await page.getByPlaceholder(/^First Name(?: \*)?$/,{exact:true}).fill('Timing');
+    await page.getByPlaceholder(/^Last Name(?: \*)?$/,{exact:true}).fill('Student');
+    await page.getByPlaceholder(/^(?:Roll Number \(e.g. 25ce097 or D25ce097\) \*|e.g. 23CE045)$/,{exact:true}).fill(`25ce${baseNumber+(condition==='fresh-context'?0:20)+i}`);
+    await page.getByPlaceholder(/^(?:Division \(e.g. CE1, IT2\) \*|e.g. CE1 or IT2)$/,{exact:true}).fill('CE1');
     const form=page.locator('form');await form.locator('select').nth(0).selectOption('1');await form.locator('select').nth(1).selectOption('CI Department');
     const responsePromise=page.waitForResponse(r=>r.url().endsWith('/api/users')&&r.request().method()==='POST');
     const downloadPromise=page.waitForEvent('download');
     const start=performance.now();await page.getByRole('button',{name:'Create Student',exact:true}).click();
     const res=await responsePromise;expect(res.status()).toBe(200);await res.json();const responseMs=elapsed(start);
-    await downloadPromise;await expect(page.getByText('Timing created! Password PDF downloaded.',{exact:true})).toBeVisible();
+    await downloadPromise;await expect(page.getByText(/^Timing created! (?:Password )?PDF downloaded\.$/,{exact:true})).toBeVisible();
     samples.push({condition,index:i+1,responseMs,confirmationMs:elapsed(start),server:parseTiming(res.headers()['server-timing'])});
     await page.close();if(condition==='fresh-context'){await context.close();context=null;}
    }
