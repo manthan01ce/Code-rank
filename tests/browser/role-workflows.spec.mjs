@@ -301,7 +301,11 @@ test('administrator downloads a readable credential PDF through the real student
   expect(pdf.startsWith('%PDF')).toBe(true);
   expect(pdf.includes('Student Credentials')).toBe(true);
   expect(pdf.includes('Synthetic')).toBe(true);
-  expect(pdf.includes('25ce999@charusat.edu.in')).toBe(true);
+  // AutoTable wraps narrow cells across PDF text operators. Check the displayed
+  // text in order rather than requiring one unbroken binary substring.
+  const text = [...pdf.matchAll(/\(((?:\\.|[^\\)])*)\)\s*Tj/g)]
+    .map(match => match[1].replace(/\\([\\()])/g, '$1')).join('');
+  expect(text.includes('25ce999@charusat.edu.in')).toBe(true);
   await expect(page.getByText('Synthetic created! Password PDF downloaded.', { exact: true })).toBeVisible();
   assertNoErrors();
 });
