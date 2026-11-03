@@ -18,12 +18,15 @@ See [architecture](ARCHITECTURE.md), [repair plan](docs/REPAIR_PLAN.md) and
 [implementation report](docs/IMPLEMENTATION_REPORT.md). The old `frontend/` and `backend/` copies have been retired. The top-level
 `runner/` is a legacy copy; `infrastructure` defines the active sandbox image.
 
-## Quick Start (Docker Compose + Local Dataset)
+## Quick Start
+
+For full onboarding, prerequisites, configuration, and troubleshooting details, see the authoritative guide:
+📖 **[Getting Started Guide](docs/getting-started.md)**
 
 The fastest way to get CodeRank running locally with the complete pre-seeded dataset (courses, practicals, test accounts):
 
 ### 1. Prerequisites
-- **Node.js 24+** and **npm**
+- **Node.js 24+** and **npm 11+**
 - **Docker Desktop** (or Docker Engine on Linux)
 
 ### 2. Environment Setup
@@ -31,16 +34,16 @@ Copy the template to your local environment file:
 ```sh
 cp .env.example .env
 ```
-*(The default `.env` is already configured for local PostgreSQL and Redis with production performance parameters).*
+*(The default `.env` is configured for local PostgreSQL and Redis on port 3000).*
 
 ### 3. Start Database & Redis (Auto-Seeded)
 Start PostgreSQL and Redis in the background:
 ```sh
 npm run infra:up
 ```
-> **Automatic Dataset Initialization:** When PostgreSQL boots up, `database/init.sql` automatically populates the database with all 91 users, 3 courses, 10 practicals, test cases, and department mappings.
+> **Automatic Dataset Initialization:** When PostgreSQL boots up with an empty volume, `database/init.sql` automatically populates the database with all 91 users, 3 courses, 10 practicals, test cases, and department mappings.
 > 
-> *Manual Seed Alternative:* You can also run `npm run db:seed` at any time to re-populate or reset the local dataset.
+> *Manual Seed Alternative:* You can also run `npm run db:seed` at any time to re-populate the local dataset.
 
 ### 4. Build Runner Sandbox Image
 Build the execution sandbox used to run student code:
@@ -59,6 +62,8 @@ In Terminal 2 (Web Platform):
 ```sh
 npm run web
 ```
+> *Note:* `npm run web` runs the development server (`next dev`). Clustered multi-process serving (`apps/web/cluster.js`) is reserved for production environments.
+
 Open **[http://localhost:3000](http://localhost:3000)** in your browser.
 
 ---

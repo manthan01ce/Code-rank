@@ -1,6 +1,15 @@
-# 🚀 CodeRank - Quick Start Guide
+> **HISTORICAL ARCHIVE NOTICE (October 2026)**
+>
+> This document records historical benchmarking notes and manual validation procedures from October 2026.
+> For the **current, authoritative developer setup, onboarding guide, and canonical commands**, please refer to:
+>
+> ➡️ **[docs/getting-started.md](getting-started.md)** (or the root **[README.md](../README.md)**)
+>
+> *Note*: Several commands in this document reference retired directories (such as `runner/docker-compose.yml`) or unhardened daemon workflows. Use the canonical `npm run infra:*` wrappers described in the getting started guide instead.
 
-## ✅ Current Status: OPTIMIZED & READY
+---
+
+# 🚀 CodeRank - Quick Start Guide (Historical Benchmarking & Optimization Notes)
 
 Your CodeRank platform is **fully operational and performance-optimized**!
 
@@ -48,7 +57,7 @@ QUICK_START_OPTIMIZED.md
 ### Test WebSocket Connection
 Open this file in your browser:
 ```
-c:\Users\Manthan\Desktop\Code-rank\test-websocket.html
+test-websocket.html
 ```
 
 ---
