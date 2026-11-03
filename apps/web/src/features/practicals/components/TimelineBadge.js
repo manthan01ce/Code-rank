@@ -5,9 +5,9 @@
  * @param {Object} props
  * @param {string|null} props.startTime
  * @param {string|null} props.endTime
- * @param {number} [props.currentTime]
+ * @param {number} props.currentTime Parent-owned clock shared by all practical views
  */
-export function TimelineBadge({ startTime, endTime, currentTime = Date.now() }) {
+export function TimelineBadge({ startTime, endTime, currentTime }) {
   if (!startTime && !endTime) {
     return <span style={{ color: '#94a3b8', fontSize: '11px', fontStyle: 'italic' }}>No time limit</span>;
   }

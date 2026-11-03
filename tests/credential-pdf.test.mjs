@@ -2,6 +2,7 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import fs from 'node:fs';
 import path from 'node:path';
+import { tmpdir } from 'node:os';
 import {
   generateUserCredentialsPDF,
   downloadFacultyCredentialsPDF,
@@ -42,13 +43,16 @@ test('credential PDF facade re-exports all feature methods', () => {
 });
 
 test('credential PDF generation constructs valid document with synthetic non-sensitive data', async () => {
+  const originalWindow = globalThis.window;
   globalThis.window = {
     atob: globalThis.atob.bind(globalThis),
     btoa: globalThis.btoa.bind(globalThis),
     document: {},
   };
 
-  const createdFiles = [];
+  const originalCwd = process.cwd();
+  const outputDir = fs.mkdtempSync(path.join(tmpdir(), 'coderank-pdf-'));
+  process.chdir(outputDir);
 
   try {
     const syntheticUsers = [
@@ -100,14 +104,9 @@ test('credential PDF generation constructs valid document with synthetic non-sen
     assert.ok(studentPdf.includes('Student Credentials'), 'PDF should include Student Credentials title');
     assert.ok(studentPdf.includes('CE1'), 'PDF should include division');
   } finally {
-    delete globalThis.window;
-
-    // Clean up any generated PDF files in cwd
-    const rootFiles = fs.readdirSync(process.cwd());
-    for (const f of rootFiles) {
-      if (f.startsWith('CodeRank_') && f.endsWith('.pdf')) {
-        fs.unlinkSync(path.join(process.cwd(), f));
-      }
-    }
+    if (originalWindow === undefined) delete globalThis.window;
+    else globalThis.window = originalWindow;
+    process.chdir(originalCwd);
+    fs.rmSync(outputDir, { recursive: true, force: true });
   }
 });

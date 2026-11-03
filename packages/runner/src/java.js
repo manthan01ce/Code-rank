@@ -1,3 +1,4 @@
+/* eslint-disable no-useless-escape -- preserve reviewed escaping in generated Java JSON encoder */
 import { Sandbox } from './Sandbox.js';
 import { dockerCommand } from './docker.js';
 import crypto from 'crypto';

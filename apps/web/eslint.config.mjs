@@ -14,10 +14,11 @@ export default defineConfig([
     rules: {
       '@next/next/no-html-link-for-pages': ['error', fileURLToPath(new URL('./src/app', import.meta.url))],
       'react-hooks/immutability': 'warn',
-      'react-hooks/preserve-manual-memoization': 'warn',
+      'react-hooks/preserve-manual-memoization': 'error',
       'react-hooks/refs': 'warn',
       'react-hooks/set-state-in-effect': 'warn',
       'react/no-unescaped-entities': 'warn',
     },
   },
 ]);
+

@@ -1,5 +1,7 @@
 import { fileURLToPath } from 'node:url';
 import { defineConfig, globalIgnores } from 'eslint/config';
+import js from '@eslint/js';
+import globals from 'globals';
 import nextCoreWebVitals from 'eslint-config-next/core-web-vitals';
 
 export const baseIgnores = [
@@ -44,16 +46,23 @@ const webScopedNext = nextCoreWebVitals.map((config) => {
 
 export default defineConfig([
   ...baseConfig,
+  {
+    files: ['packages/**/*.js', 'apps/worker/**/*.js', 'scripts/**/*.{js,mjs}', 'load-tests/**/*.mjs'],
+    languageOptions: { globals: { ...globals.node, ...globals.browser } },
+    // Existing code does not enforce unused bindings; keep that separate from correctness.
+    rules: { ...js.configs.recommended.rules, 'no-unused-vars': 'off', 'no-empty': ['error', { allowEmptyCatch: true }] },
+  },
   ...webScopedNext,
   {
     files: ['apps/web/**/*.{js,jsx,mjs,ts,tsx}'],
     rules: {
       '@next/next/no-html-link-for-pages': ['error', fileURLToPath(new URL('../apps/web/src/app', import.meta.url))],
       'react-hooks/immutability': 'warn',
-      'react-hooks/preserve-manual-memoization': 'warn',
+      'react-hooks/preserve-manual-memoization': 'error',
       'react-hooks/refs': 'warn',
       'react-hooks/set-state-in-effect': 'warn',
       'react/no-unescaped-entities': 'warn',
     },
   },
 ]);
+
