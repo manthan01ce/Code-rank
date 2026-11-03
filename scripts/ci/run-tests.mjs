@@ -7,8 +7,14 @@ import { verifyTap } from './verify-tap.mjs';
 const root = fileURLToPath(new URL('../../', import.meta.url));
 export async function testConfiguration(mode) {
   const integration = ['queue', 'realtime', 'worker-readiness', 'worker-recovery', 'postgres'].map(name => `tests/integration/${name}.test.mjs`);
+  // Quarantined from unit lane (explicit named exclusion with reason):
+  //   tests/batch-execution.test.js — requires a live Docker daemon; exercises
+  //   the Executor sandbox integration. Belongs in the docker lane (test:docker).
+  //   Restoration condition: move to tests/integration/batch-execution.test.mjs
+  //   once the docker lane runs reliably in every required environment.
+  const UNIT_QUARANTINE = new Set(['batch-execution.test.js']);
   const modes = {
-    unit: { files: (await readdir(resolve(root, 'tests'))).filter(name => name.endsWith('.test.mjs')).sort().map(name => `tests/${name}`), timeoutMs: 300000 },
+    unit: { files: (await readdir(resolve(root, 'tests'))).filter(name => (name.endsWith('.test.mjs') || name.endsWith('.test.js')) && !UNIT_QUARANTINE.has(name)).sort().map(name => `tests/${name}`), timeoutMs: 300000 },
     integration: { files: integration, timeoutMs: 300000 },
     docker: { files: ['tests/integration/sandbox.test.mjs'], timeoutMs: 300000 },
   };

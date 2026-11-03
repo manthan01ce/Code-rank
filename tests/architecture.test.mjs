@@ -263,3 +263,24 @@ test('student coding page never serializes private practical content before bear
   assert.doesNotMatch(source,/lib\/db|@coderank\/core\/db|\bsql\b|SELECT|generateMetadata/);
   assert.match(source,/practicalId=/);
 });
+
+test('unit test discovery includes both .test.mjs and .test.js files and respects explicit quarantine', async () => {
+  const { testConfiguration } = await import('../scripts/ci/run-tests.mjs');
+  const config = await testConfiguration('unit');
+  // Both extensions must be represented — the intent is deliberate dual-extension support
+  const mjs = config.files.filter(f => f.endsWith('.test.mjs'));
+  const js  = config.files.filter(f => f.endsWith('.test.js'));
+  assert.ok(mjs.length > 0, 'unit lane must discover at least one .test.mjs file');
+  assert.ok(js.length > 0,  'unit lane must discover at least one .test.js file');
+  // The quarantined Docker test must not appear in the unit lane
+  assert.ok(!config.files.includes('tests/batch-execution.test.js'), 'batch-execution.test.js must be quarantined from unit lane');
+  // The job-lifecycle test must appear in the unit lane
+  assert.ok(config.files.includes('tests/job-lifecycle.test.js'), 'job-lifecycle.test.js must be in unit lane');
+  // No fixture or non-test helper scripts should appear
+  for (const file of config.files) {
+    assert.match(file, /\.test\.[cm]?js$/, `Unexpected non-test file in unit lane: ${file}`);
+    assert.doesNotMatch(file, /\/fixtures\//, `Fixture file must not appear in unit lane: ${file}`);
+    assert.doesNotMatch(file, /\/integration\//, `Integration file must not appear in unit lane: ${file}`);
+    assert.doesNotMatch(file, /\/browser\//, `Browser spec must not appear in unit lane: ${file}`);
+  }
+});
