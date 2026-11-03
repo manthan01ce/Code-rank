@@ -33,7 +33,7 @@ services:
     healthcheck:
       test:
       - CMD-SHELL
-      - pg_isready -U postgres -d coderank_local
+      - pg_isready -U "$POSTGRES_USER" -d "$POSTGRES_DB"
       interval: 5s
       timeout: 3s
       retries: 5
@@ -108,5 +108,9 @@ services:
     - build-image
 
 volumes:
-  redis_data: null
-  postgres_data: null
+  # Preserve the former infrastructure project defaults independently of cwd.
+  # Existing root-Compose users must select their actual old volume names first.
+  redis_data:
+    name: ${CODERANK_REDIS_VOLUME:-infrastructure_redis_data}
+  postgres_data:
+    name: ${CODERANK_POSTGRES_VOLUME:-infrastructure_postgres_data}

@@ -85,8 +85,28 @@ If choosing a cloud database rather than the local pre-seeded container:
    npm run db:preflight
    npm run db:migrate
    ```
-8. Start Redis: `docker compose -f infrastructure/docker-compose.yml up -d redis` (or `npm run infra:up`)
+3. Start Redis: `docker compose -f infrastructure/docker-compose.yml up -d redis` (or `npm run infra:up`)
 4. Run `npm run worker` and `npm run web`.
+
+### Existing installations: preserve the actual volume identity
+
+Run the npm infrastructure commands from the repository root after copying/configuring `.env`; the wrappers explicitly use that file. The canonical file is `infrastructure/docker-compose.yml`.
+
+The former root and infrastructure Compose files could create DIFFERENT project-prefixed named volumes. Keeping the YAML keys `redis_data` and `postgres_data` alone does not preserve that identity. The canonical defaults now explicitly use `infrastructure_redis_data` and `infrastructure_postgres_data` for users of the old infrastructure stack.
+
+**Before starting an existing root-Compose installation with the new configuration**, record the running containers' actual mount names (or inspect the old volumes if containers are stopped):
+
+```sh
+docker inspect coderank-postgres --format '{{range .Mounts}}{{println .Name .Destination}}{{end}}'
+docker inspect coderank-redis --format '{{range .Mounts}}{{println .Name .Destination}}{{end}}'
+docker volume ls
+```
+
+Set `CODERANK_POSTGRES_VOLUME` and `CODERANK_REDIS_VOLUME` in your root `.env` to those EXISTING names; do not guess a name from the repository folder. Confirm each chosen name exists with `docker volume inspect <actual-name>` before startup. If mounts are bind mounts, the old project uses custom names, or both stacks contain data, stop and reconcile that installation rather than selecting a new empty volume. After startup verify the same mount names and expected records. Never use `down -v`, `volume rm` or pruning as migration/rollback.
+
+First-run `database/init.sql` runs only on an empty PostgreSQL data directory. It is not an upgrade mechanism for existing volumes. Run ledger-managed migrations explicitly using the documented root database commands; health checks never run migrations. The PostgreSQL healthcheck uses the configured container user/database.
+
+Ordinary service container names are temporarily retained for existing lab/operator integrations, including the mount-inspection commands above. Language daemon names remain required by `Sandbox.js`. No API service is introduced in this issue.
 
 To tear down services while preserving persistent data volumes, run:
 ```sh
@@ -95,8 +115,10 @@ npm run infra:down
 
 To run with warm execution daemons for interactive development (note: does not provide per-job isolation):
 ```sh
-docker compose -f infrastructure/docker-compose.yml -f infrastructure/compose.warm-daemons.yaml up -d
+docker compose --env-file .env -f infrastructure/docker-compose.yml -f infrastructure/compose.warm-daemons.yaml --profile local-database up -d
 ```
+
+Set `USE_WARM_DAEMONS=true` in the environment of the host worker when using the warm overlay; starting daemons alone does not switch execution mode. Warm daemons share state and must not be treated as per-job isolation.
 
 For a fully containerized worker, build the runner image first, then enable the `container-worker` profile with Docker socket access. Never expose Redis publicly.
 
