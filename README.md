@@ -43,7 +43,7 @@ npm run infra:up
 ```
 > **Automatic Dataset Initialization:** When PostgreSQL boots up with an empty volume, `database/init.sql` automatically populates the database with all 91 users, 3 courses, 10 practicals, test cases, and department mappings.
 > 
-> *Manual Seed Alternative:* You can also run `npm run db:seed` at any time to re-populate the local dataset.
+> **Destructive development fixture restore:** `db:seed` executes SQL that drops/recreates tables and the migration ledger. It refuses without `npm run db:seed -- --allow-destructive-reset`. Use only against an explicitly selected disposable database after backup; never use it to update an existing lab database. Normal upgrades use `npm run db:migrate`. See the [setup guide](docs/getting-started.md#initial-data--schema).
 
 ### 4. Build Runner Sandbox Image
 Build the execution sandbox used to run student code:

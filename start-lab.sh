@@ -14,6 +14,21 @@ echo "    CodeRank Educational Platform - Linux Lab Server"
 echo "========================================================"
 echo ""
 
+# 2. Verify Node.js
+if ! command -v node >/dev/null 2>&1; then
+    echo "❌ Error: Node.js is not installed."
+    echo "   Install Node.js (v24+) with:"
+    echo "   curl -fsSL https://deb.nodesource.com/setup_24.x | sudo -E bash -"
+    echo "   sudo apt-get install -y nodejs"
+    exit 1
+fi
+
+# Resolve dotenv settings before shell defaults or startup displays.
+# Re-enter once with an inherited allowlist; never source/eval .env as shell code.
+if [ "${1:-}" != "--resolved-env" ]; then
+    exec node scripts/dev/lab-launcher.mjs
+fi
+
 # 1. Detect Host LAN IP
 HOST_IP=$(hostname -I 2>/dev/null | awk '{print $1}')
 if [ -z "$HOST_IP" ]; then
@@ -45,15 +60,6 @@ echo "    via Ethernet to avoid Wi-Fi Client Isolation."
 echo "========================================================"
 echo ""
 
-# 2. Verify Node.js
-if ! command -v node >/dev/null 2>&1; then
-    echo "❌ Error: Node.js is not installed."
-    echo "   Install Node.js (v24+) with:"
-    echo "   curl -fsSL https://deb.nodesource.com/setup_24.x | sudo -E bash -"
-    echo "   sudo apt-get install -y nodejs"
-    exit 1
-fi
-
 # 3. Verify Docker & Docker Compose
 if docker compose version >/dev/null 2>&1; then
     COMPOSE_CMD="docker compose"
@@ -80,7 +86,7 @@ fi
 
 # Active workspaces load the root environment through packages/core/config.
 if [ ! -f .env ] && [ ! -f .env.local ]; then
-    echo "Create .env from .env.example and configure Neon and JWT_SECRET first."
+    echo "Create .env from .env.example and configure DATABASE_URL and JWT_SECRET first."
     exit 1
 fi
 if [ ! -d node_modules ]; then npm ci --no-audit --no-fund; fi

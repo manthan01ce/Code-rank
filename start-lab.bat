@@ -7,6 +7,18 @@ echo     CodeRank Educational Platform - Local Lab Server
 echo ========================================================
 echo.
 
+:: Resolve dotenv settings before defaults/firewall setup. The Node bridge
+:: re-enters this script once with the selected environment; no .env evaluation.
+if /I "%~1"=="--resolved-env" goto resolved_env
+where node >nul 2>&1
+if errorlevel 1 (
+    echo [ERROR] Install Node.js 24 or newer before running the launcher.
+    exit /b 1
+)
+node scripts\dev\lab-launcher.mjs
+exit /b %errorlevel%
+:resolved_env
+
 :: Detect local IPv4 address
 for /f "tokens=4" %%a in ('route print ^| findstr 0.0.0.0 ^| findstr /v "0.0.0.0 "') do (
     if not defined HOST_IP set HOST_IP=%%a
@@ -43,7 +55,7 @@ echo.
 
 :: Active workspaces load the root environment.
 if not exist ".env" if not exist ".env.local" (
-    echo [ERROR] Create .env from .env.example and configure Neon and JWT_SECRET.
+    echo [ERROR] Create .env from .env.example and configure DATABASE_URL and JWT_SECRET.
     exit /b 1
 )
 if not exist "node_modules" (

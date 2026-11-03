@@ -2,7 +2,7 @@
 
 **Issue:** CR-ARCH-23
 **Last updated:** 2026-11-03
-**Inventory source revision:** `27a657611e04b04bebc800f2f299e4fedd21d2fa` (PR #37 source snapshot; counts describe files, not test assertions)
+**Inventory source revision:** master `ff9e0b8261af036d242b7a8322a38dc4735fd2b8` plus the two launcher/seed regression files in this correction. Counts describe files, not assertions.
 
 This document records the intended test file inventory, suite routing, tools, quarantine list, and the before/after change summary introduced by CR-ARCH-23. It is the authoritative reference for understanding which tests belong to which CI lane and why.
 
@@ -25,11 +25,11 @@ This document records the intended test file inventory, suite routing, tools, qu
 
 ## 2. Unit Lane — Intended File Inventory
 
-At the recorded source revision, 60 root `.test.mjs` files plus `job-lifecycle.test.js` give 61 discovered unit test files. `batch-execution.test.js` is the one explicitly quarantined root test; it is not counted as executed. This file count is separate from the number of assertions reported by TAP.
+At the recorded source revision plus this correction, 63 root `.test.mjs` files plus `job-lifecycle.test.js` give 64 discovered unit test files. `batch-execution.test.js` is the one explicitly quarantined root test; it is not counted as executed. This file count is separate from the number of assertions reported by TAP.
 
 Discovery rule: `tests/` root directory, `*.test.mjs` OR `*.test.js`, excluding files in `UNIT_QUARANTINE` (defined in `scripts/ci/run-tests.mjs`).
 
-### 2.1 `.test.mjs` files (60 files)
+### 2.1 `.test.mjs` files (63 files)
 
 | File | What it covers |
 |---|---|
@@ -45,6 +45,7 @@ Discovery rule: `tests/` root directory, `*.test.mjs` OR `*.test.js`, excluding 
 | `tests/bulk-users-api.test.mjs` | Bulk user import API contracts |
 | `tests/capacity.test.mjs` | Execution queue capacity gate |
 | `tests/certification.test.mjs` | CI certification artifact validation |
+| `tests/ci-summary.test.mjs` | Outcome-based CI summary and dynamic count reporting |
 | `tests/ci-tap.test.mjs` | TAP validator unit tests |
 | `tests/cluster-config.test.mjs` | Cluster/worker process config validation |
 | `tests/course-management-service.test.mjs` | Course management service logic |
@@ -63,6 +64,7 @@ Discovery rule: `tests/` root directory, `*.test.mjs` OR `*.test.js`, excluding 
 | `tests/grading.test.mjs` | Submission grading logic |
 | `tests/health.test.mjs` | Health endpoint logic |
 | `tests/job-wait.test.mjs` | Job polling wait utility |
+| `tests/lab-launcher-env.test.mjs` | Dotenv precedence, literal values, native launcher handoff and exit-code propagation |
 | `tests/load-result.test.mjs` | Load test result parsing |
 | `tests/migration-errors.test.mjs` | Migration error handling |
 | `tests/migrations.test.mjs` | Migration checksum and ordering |
@@ -72,16 +74,17 @@ Discovery rule: `tests/` root directory, `*.test.mjs` OR `*.test.js`, excluding 
 | `tests/profile-privacy.test.mjs` | Profile privacy and visibility rules |
 | `tests/progress-updates.test.mjs` | Progress update broadcasting |
 | `tests/rate-limit.test.mjs` | Rate limiter contracts |
-| `tests/realtime.test.mjs` | Realtime event handler unit contracts |
 | `tests/realtime-membership.test.mjs` | Room membership authorization |
 | `tests/realtime-revocation.test.mjs` | Session revocation on token expiry |
 | `tests/realtime-session.test.mjs` | Session guard timer and revalidation logic |
+| `tests/realtime.test.mjs` | Realtime event handler unit contracts |
 | `tests/request-revocation.test.mjs` | In-flight request revocation |
 | `tests/retention.test.mjs` | Data retention utility |
 | `tests/runner.test.mjs` | Runner language dispatch |
-| `tests/sandbox.test.mjs` | Sandbox lifetime bounds and isolation flags using an injected Docker command adapter |
 | `tests/sandbox-recovery.test.mjs` | Sandbox container recovery after crash |
+| `tests/sandbox.test.mjs` | Sandbox lifetime bounds and isolation flags using an injected Docker command adapter |
 | `tests/schema-readiness.test.mjs` | Schema readiness manifest validation |
+| `tests/seed-safety.test.mjs` | Destructive seed refusal before configuration or database connection |
 | `tests/selector-pagination.test.mjs` | Keyset pagination selector |
 | `tests/static-runners.test.mjs` | Static language runner contracts |
 | `tests/student-theme.test.mjs` | Student theme utility |

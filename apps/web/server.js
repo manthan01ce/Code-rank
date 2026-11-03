@@ -103,7 +103,7 @@ app.prepare().then(async () => {
 
   const io = new Server(server, {
     cors: {
-      origin: (process.env.ALLOWED_ORIGIN || 'http://localhost:3000').split(',').map(value => value.trim()),
+      origin: (process.env.ALLOWED_ORIGIN || `http://localhost:${port}`).split(',').map(value => value.trim()),
       methods: ['GET', 'POST']
     },
     // Performance optimizations for Socket.IO
