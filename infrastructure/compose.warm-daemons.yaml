@@ -1,8 +1,17 @@
+# Warm execution daemons overlay for local development and lab environments.
+# Extends infrastructure/docker-compose.yml.
+#
+# Usage:
+#   docker compose -f infrastructure/docker-compose.yml -f infrastructure/compose.warm-daemons.yaml up -d
+#
+# Note:
+#   Warm daemons reuse long-running containers per language (coderank-<lang>-daemon)
+#   for low latency under USE_WARM_DAEMONS=true. They DO NOT provide per-job filesystem
+#   or process isolation; use disposable sandboxes for untrusted multi-tenant execution.
+
 x-daemon-config: &daemon-config
-  build:
-    context: .
-    dockerfile: Dockerfile
   image: coderank-base:latest
+  command: ["tail", "-f", "/dev/null"]
   restart: unless-stopped
   network_mode: "none"
   mem_limit: 512m
@@ -19,13 +28,6 @@ x-daemon-config: &daemon-config
     - /tmp:rw,noexec,nosuid,nodev,size=64m,uid=1000,gid=1000,mode=1770
 
 services:
-  redis:
-    image: redis:alpine
-    container_name: coderank-redis
-    restart: unless-stopped
-    ports:
-      - "127.0.0.1:6379:6379"
-
   coderank-python-daemon:
     <<: *daemon-config
     container_name: coderank-python-daemon
@@ -45,3 +47,4 @@ services:
   coderank-javascript-daemon:
     <<: *daemon-config
     container_name: coderank-javascript-daemon
+

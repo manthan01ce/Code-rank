@@ -36,7 +36,7 @@ cp .env.example .env
 ### 3. Start Database & Redis (Auto-Seeded)
 Start PostgreSQL and Redis in the background:
 ```sh
-docker compose up -d
+npm run infra:up
 ```
 > **Automatic Dataset Initialization:** When PostgreSQL boots up, `database/init.sql` automatically populates the database with all 91 users, 3 courses, 10 practicals, test cases, and department mappings.
 > 
@@ -45,7 +45,7 @@ docker compose up -d
 ### 4. Build Runner Sandbox Image
 Build the execution sandbox used to run student code:
 ```sh
-docker compose build runner-image
+npm run infra:build:sandbox
 ```
 
 ### 5. Start Worker & Web Services
@@ -85,8 +85,18 @@ If choosing a cloud database rather than the local pre-seeded container:
    npm run db:preflight
    npm run db:migrate
    ```
-3. Start Redis: `docker compose up -d redis`
+8. Start Redis: `docker compose -f infrastructure/docker-compose.yml up -d redis` (or `npm run infra:up`)
 4. Run `npm run worker` and `npm run web`.
+
+To tear down services while preserving persistent data volumes, run:
+```sh
+npm run infra:down
+```
+
+To run with warm execution daemons for interactive development (note: does not provide per-job isolation):
+```sh
+docker compose -f infrastructure/docker-compose.yml -f infrastructure/compose.warm-daemons.yaml up -d
+```
 
 For a fully containerized worker, build the runner image first, then enable the `container-worker` profile with Docker socket access. Never expose Redis publicly.
 
