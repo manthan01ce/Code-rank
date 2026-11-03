@@ -233,6 +233,36 @@ test('core package contains no browser-only PDF generation utilities or exports'
   }
 });
 
+test('tooling package is resolved and critical lint uses tooling configuration', () => {
+  assert.equal(existsSync(fileURLToPath(new URL('packages/config', root))), false, 'packages/config must not exist on disk');
+
+  const lockfile = read('package-lock.json');
+  assert.ok(!lockfile.includes('@coderank/config'), 'package-lock.json must not reference @coderank/config');
+  assert.ok(!lockfile.includes('"packages/config"'), 'package-lock.json must not reference packages/config');
+
+  const packageJsonFiles = [
+    fileURLToPath(new URL('package.json', root)),
+    ...walk(fileURLToPath(new URL('apps/', root))).filter(f => f.endsWith('package.json')),
+    ...walk(fileURLToPath(new URL('packages/', root))).filter(f => f.endsWith('package.json')),
+  ];
+
+  for (const pkgFile of packageJsonFiles) {
+    const pkgJson = JSON.parse(readFileSync(pkgFile, 'utf8'));
+    const allDeps = {
+      ...pkgJson.dependencies,
+      ...pkgJson.devDependencies,
+      ...pkgJson.peerDependencies,
+    };
+    assert.equal(allDeps['@coderank/config'], undefined, `${pkgFile} must not reference @coderank/config`);
+    assert.notEqual(pkgJson.name, '@coderank/config', `${pkgFile} must not declare @coderank/config`);
+  }
+
+  assert.equal(existsSync(fileURLToPath(new URL('tooling/eslint.config.mjs', root))), true, 'tooling/eslint.config.mjs must exist');
+  const rootPkgJson = JSON.parse(read('package.json'));
+  assert.ok(rootPkgJson.scripts['lint:critical']?.includes('tooling/eslint.config.mjs'), 'lint:critical must reference tooling/eslint.config.mjs');
+  assert.ok(!rootPkgJson.scripts['lint:critical']?.includes('apps/web/eslint.config.mjs'), 'lint:critical must not borrow apps/web/eslint.config.mjs');
+});
+
 test('HTTP adapters delegate SQL and sandbox execution to packages', () => {
   for (const file of walk(fileURLToPath(new URL('apps/web/src/app/api/', root))).filter(file => file.endsWith('route.js'))) {
     const source = readFileSync(file, 'utf8');

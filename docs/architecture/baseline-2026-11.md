@@ -177,7 +177,7 @@ Negative tests were added directly to `tests/architecture.test.mjs`:
 ### 5.1 Monorepo Workspaces
 Declared in root `package.json`:
 - **App workspaces (2)**: `apps/web`, `apps/worker`
-- **Package workspaces (5)**: `packages/config`, `packages/core`, `packages/database`, `packages/queue`, `packages/runner`
+- **Package workspaces (4)**: `packages/core`, `packages/database`, `packages/queue`, `packages/runner` (`packages/config` was removed in CR-ARCH-08 and active lint configuration placed in `tooling/eslint.config.mjs`)
 
 ### 5.2 Internal Path Imports
 Current source files contain deep relative and non-exported paths that will require normalization in future package-boundary issues:
