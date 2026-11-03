@@ -4,21 +4,179 @@ import { readFileSync, readdirSync, existsSync } from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import ts from 'typescript';
+
 const root = new URL('../', import.meta.url);
 const read = p => readFileSync(new URL(p, root), 'utf8');
 
-test('all inventoried API paths and pages retain their HTTP methods and locations', () => {
-  const fixture = JSON.parse(read('tests/fixtures/routes.json'));
-  const actual = walk(fileURLToPath(new URL('apps/web/src/app/api/', root)))
+function walk(dir) {
+  return readdirSync(dir, { withFileTypes: true }).flatMap(entry =>
+    ['node_modules', '.next'].includes(entry.name) ? [] : entry.isDirectory() ? walk(path.join(dir, entry.name)) : [path.join(dir, entry.name)]
+  );
+}
+
+export function validateInventory(inventory, actualRoutes, actualPages) {
+  const allowedOwners = new Set([
+    'CR-ARCH-09',
+    'CR-ARCH-10A',
+    'CR-ARCH-10B',
+    'CR-ARCH-11A',
+    'CR-ARCH-11B',
+    'CR-ARCH-12A',
+    'CR-ARCH-12B',
+    'CR-ARCH-13'
+  ]);
+
+  if (!inventory || typeof inventory !== 'object') throw new Error('Inventory must be an object');
+  if (!Array.isArray(inventory.pages)) throw new Error('Inventory pages must be an array');
+  if (!Array.isArray(inventory.endpoints)) throw new Error('Inventory endpoints must be an array');
+
+  // Verify pages in both directions
+  const inventoriedPageFiles = inventory.pages.map(p => p.file);
+  const uniquePageFiles = new Set(inventoriedPageFiles);
+  if (uniquePageFiles.size !== inventoriedPageFiles.length) {
+    throw new Error('Duplicate page files in inventory');
+  }
+
+  const missingPages = actualPages.filter(f => !uniquePageFiles.has(f));
+  if (missingPages.length > 0) {
+    throw new Error(`Pages discovered in source but missing from inventory: ${missingPages.join(', ')}`);
+  }
+  const extraPages = inventoriedPageFiles.filter(f => !actualPages.includes(f));
+  if (extraPages.length > 0) {
+    throw new Error(`Pages present in inventory but missing from source: ${extraPages.join(', ')}`);
+  }
+
+  for (const page of inventory.pages) {
+    if (!page.owner) throw new Error(`Page ${page.file} has no assigned owner`);
+  }
+
+  // Verify endpoints in both directions
+  const inventoriedRouteFiles = inventory.endpoints.map(e => e.file);
+  const uniqueRouteFiles = new Set(inventoriedRouteFiles);
+  if (uniqueRouteFiles.size !== inventoriedRouteFiles.length) {
+    throw new Error('Duplicate endpoint files in inventory');
+  }
+
+  const missingRoutes = actualRoutes.filter(f => !uniqueRouteFiles.has(f));
+  if (missingRoutes.length > 0) {
+    throw new Error(`API routes discovered in source but missing from inventory: ${missingRoutes.join(', ')}`);
+  }
+  const extraRoutes = inventoriedRouteFiles.filter(f => !actualRoutes.includes(f));
+  if (extraRoutes.length > 0) {
+    throw new Error(`API routes present in inventory but missing from source: ${extraRoutes.join(', ')}`);
+  }
+
+  // Endpoint ownership checks
+  const arch09Routes = [];
+  for (const endpoint of inventory.endpoints) {
+    if (!endpoint.owner) {
+      throw new Error(`Endpoint ${endpoint.file} is unassigned`);
+    }
+    if (!allowedOwners.has(endpoint.owner)) {
+      throw new Error(`Endpoint ${endpoint.file} assigned to invalid owner: ${endpoint.owner}`);
+    }
+    if (endpoint.owner === 'CR-ARCH-09') {
+      arch09Routes.push(endpoint.file);
+    }
+  }
+
+  if (arch09Routes.length !== 1) {
+    throw new Error(`CR-ARCH-09 must have exactly one low-risk representative endpoint, found ${arch09Routes.length}`);
+  }
+
+  return true;
+}
+
+test('all inventoried API paths and pages retain their HTTP methods, locations, and migration allocations', () => {
+  const inventory = JSON.parse(read('docs/architecture/route-inventory.json'));
+  const actualRoutes = walk(fileURLToPath(new URL('apps/web/src/app/api/', root)))
     .filter(file => /[\\/]route\.[cm]?[jt]sx?$/.test(file))
     .map(file => path.relative(fileURLToPath(root), file).replaceAll('\\', '/')).sort();
-  assert.deepEqual(actual, Object.keys(fixture).filter(file => file.includes('/api/')).sort(), 'Every API route must be inventoried');
-  for (const [file, methods] of Object.entries(fixture)) {
-    const source = read(file);
-    if (methods[0] === 'PAGE') continue;
+  const actualPages = walk(fileURLToPath(new URL('apps/web/src/app/', root)))
+    .filter(file => /[\\/]page\.[cm]?[jt]sx?$/.test(file))
+    .map(file => path.relative(fileURLToPath(root), file).replaceAll('\\', '/')).sort();
+
+  validateInventory(inventory, actualRoutes, actualPages);
+
+  // Preserve HTTP method checks against actual source files
+  for (const endpoint of inventory.endpoints) {
+    const source = read(endpoint.file);
     const exports = [...source.matchAll(/export (?:async )?(?:function|const) (GET|POST|PUT|PATCH|DELETE|OPTIONS)/g)].map(x => x[1]).sort();
-    assert.deepEqual(exports, methods, file);
+    assert.deepEqual(exports, [...endpoint.methods].sort(), endpoint.file);
   }
+
+  // Verify legacy routes fixture synchronization
+  const legacyFixture = JSON.parse(read('tests/fixtures/routes.json'));
+  assert.deepEqual(
+    Object.keys(legacyFixture).filter(f => f.includes('/api/')).sort(),
+    actualRoutes,
+    'Legacy fixture routes must match actual routes'
+  );
+  assert.deepEqual(
+    Object.keys(legacyFixture).filter(f => !f.includes('/api/')).sort(),
+    actualPages,
+    'Legacy fixture pages must match actual pages'
+  );
+});
+
+test('route inventory rejects unassigned, duplicate, or invalid endpoint allocations (negative validation)', () => {
+  const inventory = JSON.parse(read('docs/architecture/route-inventory.json'));
+  const actualRoutes = walk(fileURLToPath(new URL('apps/web/src/app/api/', root)))
+    .filter(file => /[\\/]route\.[cm]?[jt]sx?$/.test(file))
+    .map(file => path.relative(fileURLToPath(root), file).replaceAll('\\', '/')).sort();
+  const actualPages = walk(fileURLToPath(new URL('apps/web/src/app/', root)))
+    .filter(file => /[\\/]page\.[cm]?[jt]sx?$/.test(file))
+    .map(file => path.relative(fileURLToPath(root), file).replaceAll('\\', '/')).sort();
+
+  // 1. Reject unassigned endpoint
+  assert.throws(() => {
+    const bad = JSON.parse(JSON.stringify(inventory));
+    bad.endpoints[0].owner = null;
+    validateInventory(bad, actualRoutes, actualPages);
+  }, /unassigned/);
+
+  // 2. Reject duplicate endpoint assignment
+  assert.throws(() => {
+    const bad = JSON.parse(JSON.stringify(inventory));
+    bad.endpoints.push({ ...bad.endpoints[0] });
+    validateInventory(bad, actualRoutes, actualPages);
+  }, /Duplicate endpoint files/);
+
+  // 3. Reject missing endpoint from inventory
+  assert.throws(() => {
+    const bad = JSON.parse(JSON.stringify(inventory));
+    bad.endpoints = bad.endpoints.slice(1);
+    validateInventory(bad, actualRoutes, actualPages);
+  }, /missing from inventory/);
+
+  // 4. Reject invalid owner
+  assert.throws(() => {
+    const bad = JSON.parse(JSON.stringify(inventory));
+    bad.endpoints[0].owner = 'CR-ARCH-99_INVALID';
+    validateInventory(bad, actualRoutes, actualPages);
+  }, /invalid owner/);
+
+  // 5. Reject duplicate CR-ARCH-09 allocation
+  assert.throws(() => {
+    const bad = JSON.parse(JSON.stringify(inventory));
+    const nonArch09 = bad.endpoints.find(e => e.owner !== 'CR-ARCH-09');
+    if (nonArch09) nonArch09.owner = 'CR-ARCH-09';
+    validateInventory(bad, actualRoutes, actualPages);
+  }, /CR-ARCH-09 must have exactly one/);
+
+  // 6. Reject missing page from inventory
+  assert.throws(() => {
+    const bad = JSON.parse(JSON.stringify(inventory));
+    bad.pages = bad.pages.slice(1);
+    validateInventory(bad, actualRoutes, actualPages);
+  }, /Pages discovered in source but missing/);
+
+  // 7. Reject extra page in inventory
+  assert.throws(() => {
+    const bad = JSON.parse(JSON.stringify(inventory));
+    bad.pages.push({ url: '/extra-page', file: 'apps/web/src/app/extra/page.js', owner: 'out-of-scope' });
+    validateInventory(bad, actualRoutes, actualPages);
+  }, /Pages present in inventory but missing/);
 });
 
 test('domain and infrastructure dependencies obey one-way package boundaries', () => {
@@ -55,9 +213,7 @@ test('HTTP adapters delegate SQL and sandbox execution to packages', () => {
     assert.doesNotMatch(source, /@coderank\/runner|node:child_process|from ['"]child_process|\bsql\s*(?:`|\.query\()/, file);
   }
 });
-function walk(dir) {
-  return readdirSync(dir, { withFileTypes: true }).flatMap(entry => ['node_modules', '.next'].includes(entry.name) ? [] : entry.isDirectory() ? walk(path.join(dir, entry.name)) : [path.join(dir, entry.name)]);
-}
+
 test('active JS/TS/TSX parses and local imports resolve', () => {
   for (const file of [...walk(fileURLToPath(new URL('apps/', root))), ...walk(fileURLToPath(new URL('packages/', root)))].filter(x => /\.(?:m?js|tsx?)$/.test(x))) {
     const source = readFileSync(file, 'utf8');
@@ -72,6 +228,7 @@ test('active JS/TS/TSX parses and local imports resolve', () => {
     }
   }
 });
+
 test('active lab launchers use the workspace and authoritative infrastructure', () => {
   for (const file of ['start-lab.sh', 'start-lab.bat']) {
     const source = read(file);

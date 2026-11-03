@@ -1,0 +1,1218 @@
+{
+  "baselineRevision": "e8cd0a5e7306befc8c441c249b0b50b524597dd9",
+  "generatedAt": "2026-11-03T12:08:22+05:30",
+  "summary": {
+    "totalPages": 19,
+    "totalEndpoints": 47,
+    "allocationCounts": {
+      "CR-ARCH-09": 1,
+      "CR-ARCH-10A": 3,
+      "CR-ARCH-10B": 5,
+      "CR-ARCH-11A": 5,
+      "CR-ARCH-11B": 9,
+      "CR-ARCH-12A": 9,
+      "CR-ARCH-12B": 8,
+      "CR-ARCH-13": 7
+    }
+  },
+  "pages": [
+    {
+      "url": "/",
+      "file": "apps/web/src/app/page.js",
+      "owner": "out-of-scope",
+      "description": "Public landing and marketing homepage"
+    },
+    {
+      "url": "/admin",
+      "file": "apps/web/src/app/admin/page.js",
+      "owner": "CR-ARCH-13",
+      "description": "Administrator overview dashboard and statistics display"
+    },
+    {
+      "url": "/admin/courses",
+      "file": "apps/web/src/app/admin/courses/page.js",
+      "owner": "CR-ARCH-11A",
+      "description": "Admin course catalog management"
+    },
+    {
+      "url": "/admin/departments",
+      "file": "apps/web/src/app/admin/departments/page.js",
+      "owner": "CR-ARCH-11A",
+      "description": "Admin department catalog management"
+    },
+    {
+      "url": "/admin/faculty",
+      "file": "apps/web/src/app/admin/faculty/page.js",
+      "owner": "CR-ARCH-10B",
+      "description": "Admin faculty user CRUD and bulk upload UI"
+    },
+    {
+      "url": "/admin/logs",
+      "file": "apps/web/src/app/admin/logs/page.js",
+      "owner": "CR-ARCH-13",
+      "description": "Admin system activity audit logs"
+    },
+    {
+      "url": "/admin/mapping",
+      "file": "apps/web/src/app/admin/mapping/page.js",
+      "owner": "CR-ARCH-11A",
+      "description": "Admin faculty-to-course mapping interface"
+    },
+    {
+      "url": "/admin/profile",
+      "file": "apps/web/src/app/admin/profile/page.js",
+      "owner": "CR-ARCH-10A",
+      "description": "Administrator account profile and identity settings"
+    },
+    {
+      "url": "/admin/settings",
+      "file": "apps/web/src/app/admin/settings/page.js",
+      "owner": "CR-ARCH-10B",
+      "description": "Admin system configuration and maintenance settings"
+    },
+    {
+      "url": "/admin/students",
+      "file": "apps/web/src/app/admin/students/page.js",
+      "owner": "CR-ARCH-10B",
+      "description": "Admin student user CRUD and bulk enrollment UI"
+    },
+    {
+      "url": "/code",
+      "file": "apps/web/src/app/code/page.js",
+      "owner": "CR-ARCH-12A",
+      "description": "Standalone coding playground and run execution UI"
+    },
+    {
+      "url": "/faculty",
+      "file": "apps/web/src/app/faculty/page.js",
+      "owner": "CR-ARCH-11B",
+      "description": "Faculty practical management and submissions review dashboard"
+    },
+    {
+      "url": "/login",
+      "file": "apps/web/src/app/login/page.js",
+      "owner": "CR-ARCH-10A",
+      "description": "User authentication login page"
+    },
+    {
+      "url": "/practice",
+      "file": "apps/web/src/app/practice/page.js",
+      "owner": "CR-ARCH-12A",
+      "description": "Practice problem coding and execution interface"
+    },
+    {
+      "url": "/profile/[username]",
+      "file": "apps/web/src/app/profile/[username]/page.js",
+      "owner": "CR-ARCH-13",
+      "description": "Public user profile and activity summary page"
+    },
+    {
+      "url": "/signup",
+      "file": "apps/web/src/app/signup/page.tsx",
+      "owner": "CR-ARCH-10A",
+      "description": "User account registration / signup page"
+    },
+    {
+      "url": "/student",
+      "file": "apps/web/src/app/student/page.js",
+      "owner": "CR-ARCH-11B",
+      "description": "Student overview and enrolled practical dashboard"
+    },
+    {
+      "url": "/student/code/[id]",
+      "file": "apps/web/src/app/student/code/[id]/page.js",
+      "owner": "CR-ARCH-12B",
+      "description": "Student practical workspace and code submission page"
+    },
+    {
+      "url": "/student/practicals",
+      "file": "apps/web/src/app/student/practicals/page.js",
+      "owner": "CR-ARCH-11B",
+      "description": "Student practical lab assignments list"
+    }
+  ],
+  "endpoints": [
+    {
+      "url": "/api/live",
+      "file": "apps/web/src/app/api/live/route.js",
+      "methods": [
+        "GET"
+      ],
+      "owner": "CR-ARCH-09",
+      "auth": "none",
+      "requestParsing": [],
+      "statusCodes": [
+        200
+      ],
+      "services": [],
+      "description": "Dependency-free liveness probe for load balancers and orchestrators. Selected as CR-ARCH-09 baseline extraction route because it carries zero database or queue coupling."
+    },
+    {
+      "url": "/api/auth/login",
+      "file": "apps/web/src/app/api/auth/login/route.js",
+      "methods": [
+        "POST"
+      ],
+      "owner": "CR-ARCH-10A",
+      "auth": "none",
+      "requestParsing": [
+        "json"
+      ],
+      "statusCodes": [
+        200,
+        400,
+        401,
+        429,
+        500,
+        503
+      ],
+      "services": [
+        "@coderank/core/services/UserService",
+        "@/lib/queue/rateLimiter"
+      ],
+      "description": "User login authentication issuing session token and JWT"
+    },
+    {
+      "url": "/api/auth/change-password",
+      "file": "apps/web/src/app/api/auth/change-password/route.js",
+      "methods": [
+        "POST"
+      ],
+      "owner": "CR-ARCH-10A",
+      "auth": "bearer",
+      "requestParsing": [
+        "json"
+      ],
+      "statusCodes": [
+        200,
+        400,
+        401,
+        500
+      ],
+      "services": [
+        "@coderank/core/services/UserService",
+        "@coderank/core/security/active-actor"
+      ],
+      "description": "Authenticated self-service account password change"
+    },
+    {
+      "url": "/api/auth/profile",
+      "file": "apps/web/src/app/api/auth/profile/route.js",
+      "methods": [
+        "GET",
+        "PUT"
+      ],
+      "owner": "CR-ARCH-10A",
+      "auth": "bearer",
+      "requestParsing": [
+        "json"
+      ],
+      "statusCodes": [
+        200,
+        400,
+        401,
+        500
+      ],
+      "services": [
+        "@coderank/core/services/UserService",
+        "@coderank/core/security/active-actor"
+      ],
+      "description": "Authenticated identity retrieval and self profile update"
+    },
+    {
+      "url": "/api/admin/bulk-upload",
+      "file": "apps/web/src/app/api/admin/bulk-upload/route.js",
+      "methods": [
+        "POST"
+      ],
+      "owner": "CR-ARCH-10B",
+      "auth": "admin",
+      "requestParsing": [
+        "formData"
+      ],
+      "statusCodes": [
+        200,
+        400,
+        401,
+        500
+      ],
+      "services": [
+        "@coderank/core/services/UserService",
+        "@coderank/core/security/active-actor"
+      ],
+      "description": "Admin CSV/Excel bulk user ingestion"
+    },
+    {
+      "url": "/api/admin/password",
+      "file": "apps/web/src/app/api/admin/password/route.js",
+      "methods": [
+        "POST"
+      ],
+      "owner": "CR-ARCH-10B",
+      "auth": "admin",
+      "requestParsing": [
+        "json"
+      ],
+      "statusCodes": [
+        200,
+        400,
+        401,
+        500
+      ],
+      "services": [
+        "@coderank/core/services/UserService",
+        "@coderank/core/security/active-actor"
+      ],
+      "description": "Admin-mediated password reset for users"
+    },
+    {
+      "url": "/api/users",
+      "file": "apps/web/src/app/api/users/route.js",
+      "methods": [
+        "DELETE",
+        "GET",
+        "POST",
+        "PUT"
+      ],
+      "owner": "CR-ARCH-10B",
+      "auth": "admin",
+      "requestParsing": [
+        "json",
+        "query"
+      ],
+      "statusCodes": [
+        200,
+        400,
+        401,
+        500
+      ],
+      "services": [
+        "@coderank/core/services/UserService",
+        "@coderank/core/security/active-actor"
+      ],
+      "description": "Admin user CRUD and keyset pagination"
+    },
+    {
+      "url": "/api/users/[id]",
+      "file": "apps/web/src/app/api/users/[id]/route.js",
+      "methods": [
+        "DELETE",
+        "PUT"
+      ],
+      "owner": "CR-ARCH-10B",
+      "auth": "admin",
+      "requestParsing": [
+        "json",
+        "params"
+      ],
+      "statusCodes": [
+        200,
+        400,
+        401,
+        404,
+        500
+      ],
+      "services": [
+        "@coderank/core/services/UserManagementService",
+        "@coderank/core/security/active-actor"
+      ],
+      "description": "Admin single-user deletion and role/status mutation"
+    },
+    {
+      "url": "/api/users/bulk",
+      "file": "apps/web/src/app/api/users/bulk/route.js",
+      "methods": [
+        "POST"
+      ],
+      "owner": "CR-ARCH-10B",
+      "auth": "admin",
+      "requestParsing": [
+        "formData"
+      ],
+      "statusCodes": [
+        200,
+        400,
+        401,
+        500
+      ],
+      "services": [
+        "@coderank/core/services/UserManagementService",
+        "@coderank/core/security/active-actor"
+      ],
+      "description": "Admin streaming user batch creation"
+    },
+    {
+      "url": "/api/courses",
+      "file": "apps/web/src/app/api/courses/route.js",
+      "methods": [
+        "GET",
+        "POST"
+      ],
+      "owner": "CR-ARCH-11A",
+      "auth": "bearer",
+      "requestParsing": [
+        "json",
+        "query"
+      ],
+      "statusCodes": [
+        200,
+        400,
+        401,
+        500
+      ],
+      "services": [
+        "@coderank/core/services/CourseService",
+        "@coderank/core/security/active-actor"
+      ],
+      "description": "List courses (authenticated) or create course (admin)"
+    },
+    {
+      "url": "/api/courses/[id]",
+      "file": "apps/web/src/app/api/courses/[id]/route.js",
+      "methods": [
+        "DELETE",
+        "PUT"
+      ],
+      "owner": "CR-ARCH-11A",
+      "auth": "admin",
+      "requestParsing": [
+        "json",
+        "params"
+      ],
+      "statusCodes": [
+        200,
+        400,
+        401,
+        404,
+        500
+      ],
+      "services": [
+        "@coderank/core/services/CourseService",
+        "@coderank/core/security/active-actor"
+      ],
+      "description": "Update or delete course by ID"
+    },
+    {
+      "url": "/api/departments",
+      "file": "apps/web/src/app/api/departments/route.js",
+      "methods": [
+        "GET",
+        "POST"
+      ],
+      "owner": "CR-ARCH-11A",
+      "auth": "bearer",
+      "requestParsing": [
+        "json"
+      ],
+      "statusCodes": [
+        200,
+        400,
+        401,
+        500
+      ],
+      "services": [
+        "@coderank/core/services/CourseService",
+        "@coderank/core/security/active-actor"
+      ],
+      "description": "List departments (authenticated) or create department (admin)"
+    },
+    {
+      "url": "/api/departments/[id]",
+      "file": "apps/web/src/app/api/departments/[id]/route.js",
+      "methods": [
+        "DELETE",
+        "PUT"
+      ],
+      "owner": "CR-ARCH-11A",
+      "auth": "admin",
+      "requestParsing": [
+        "json",
+        "params"
+      ],
+      "statusCodes": [
+        200,
+        400,
+        401,
+        404,
+        500
+      ],
+      "services": [
+        "@coderank/core/services/CourseService",
+        "@coderank/core/security/active-actor"
+      ],
+      "description": "Update or delete department by ID"
+    },
+    {
+      "url": "/api/mapping",
+      "file": "apps/web/src/app/api/mapping/route.js",
+      "methods": [
+        "GET",
+        "POST"
+      ],
+      "owner": "CR-ARCH-11A",
+      "auth": "admin",
+      "requestParsing": [
+        "json",
+        "query"
+      ],
+      "statusCodes": [
+        200,
+        400,
+        401,
+        500
+      ],
+      "services": [
+        "@coderank/core/services/MappingService",
+        "@coderank/core/security/active-actor"
+      ],
+      "description": "Admin faculty-to-course mapping assignment and lookup"
+    },
+    {
+      "url": "/api/faculty/batches",
+      "file": "apps/web/src/app/api/faculty/batches/route.js",
+      "methods": [
+        "GET"
+      ],
+      "owner": "CR-ARCH-11B",
+      "auth": "faculty",
+      "requestParsing": [],
+      "statusCodes": [
+        200,
+        401,
+        500
+      ],
+      "services": [
+        "@coderank/core/services/CourseService",
+        "@coderank/core/security/active-actor"
+      ],
+      "description": "List student divisions and batches for faculty assignment"
+    },
+    {
+      "url": "/api/faculty/courses",
+      "file": "apps/web/src/app/api/faculty/courses/route.js",
+      "methods": [
+        "GET"
+      ],
+      "owner": "CR-ARCH-11B",
+      "auth": "faculty",
+      "requestParsing": [],
+      "statusCodes": [
+        200,
+        401,
+        500
+      ],
+      "services": [
+        "@coderank/core/services/CourseService",
+        "@coderank/core/security/active-actor"
+      ],
+      "description": "List courses assigned to current faculty member"
+    },
+    {
+      "url": "/api/faculty/courses/[id]/stats",
+      "file": "apps/web/src/app/api/faculty/courses/[id]/stats/route.js",
+      "methods": [
+        "GET"
+      ],
+      "owner": "CR-ARCH-11B",
+      "auth": "faculty",
+      "requestParsing": [
+        "params"
+      ],
+      "statusCodes": [
+        200,
+        401,
+        404,
+        500
+      ],
+      "services": [
+        "@coderank/core/services/CourseReportService",
+        "@coderank/core/security/active-actor"
+      ],
+      "description": "Course performance and submission statistics reporting for faculty"
+    },
+    {
+      "url": "/api/faculty/practicals",
+      "file": "apps/web/src/app/api/faculty/practicals/route.js",
+      "methods": [
+        "GET",
+        "POST"
+      ],
+      "owner": "CR-ARCH-11B",
+      "auth": "faculty",
+      "requestParsing": [
+        "json",
+        "query"
+      ],
+      "statusCodes": [
+        200,
+        201,
+        400,
+        401,
+        500
+      ],
+      "services": [
+        "@coderank/core/services/PracticalManagementService",
+        "@coderank/core/security/active-actor"
+      ],
+      "description": "List or create practical assignments for faculty"
+    },
+    {
+      "url": "/api/faculty/practicals/[id]",
+      "file": "apps/web/src/app/api/faculty/practicals/[id]/route.js",
+      "methods": [
+        "DELETE",
+        "GET",
+        "PUT"
+      ],
+      "owner": "CR-ARCH-11B",
+      "auth": "faculty",
+      "requestParsing": [
+        "json",
+        "params"
+      ],
+      "statusCodes": [
+        200,
+        400,
+        401,
+        404,
+        500
+      ],
+      "services": [
+        "@coderank/core/services/PracticalManagementService",
+        "@coderank/core/security/active-actor"
+      ],
+      "description": "Fetch, update or delete practical assignment by ID"
+    },
+    {
+      "url": "/api/faculty/practicals/[id]/extra-time",
+      "file": "apps/web/src/app/api/faculty/practicals/[id]/extra-time/route.js",
+      "methods": [
+        "POST"
+      ],
+      "owner": "CR-ARCH-11B",
+      "auth": "faculty",
+      "requestParsing": [
+        "json",
+        "params"
+      ],
+      "statusCodes": [
+        200,
+        400,
+        401,
+        500
+      ],
+      "services": [
+        "@coderank/core/services/PracticalManagementService",
+        "@coderank/core/security/active-actor"
+      ],
+      "description": "Grant extra time extension to students for a practical"
+    },
+    {
+      "url": "/api/faculty/practicals/[id]/stats",
+      "file": "apps/web/src/app/api/faculty/practicals/[id]/stats/route.js",
+      "methods": [
+        "GET"
+      ],
+      "owner": "CR-ARCH-11B",
+      "auth": "faculty",
+      "requestParsing": [
+        "params"
+      ],
+      "statusCodes": [
+        200,
+        401,
+        404,
+        500
+      ],
+      "services": [
+        "@coderank/core/services/PracticalReportService",
+        "@coderank/core/security/active-actor"
+      ],
+      "description": "Practical-level submission statistics and score distribution"
+    },
+    {
+      "url": "/api/student/practicals",
+      "file": "apps/web/src/app/api/student/practicals/route.js",
+      "methods": [
+        "GET"
+      ],
+      "owner": "CR-ARCH-11B",
+      "auth": "student",
+      "requestParsing": [
+        "query"
+      ],
+      "statusCodes": [
+        200,
+        401,
+        500
+      ],
+      "services": [
+        "@coderank/core/services/StudentPracticalService",
+        "@coderank/core/security/active-actor"
+      ],
+      "description": "List accessible practical labs for authenticated student"
+    },
+    {
+      "url": "/api/student/practicals/[id]",
+      "file": "apps/web/src/app/api/student/practicals/[id]/route.js",
+      "methods": [
+        "GET"
+      ],
+      "owner": "CR-ARCH-11B",
+      "auth": "student",
+      "requestParsing": [
+        "params"
+      ],
+      "statusCodes": [
+        200,
+        401,
+        404,
+        500
+      ],
+      "services": [
+        "@coderank/core/services/StudentPracticalService",
+        "@coderank/core/security/active-actor"
+      ],
+      "description": "Get detailed practical instructions and configuration for student"
+    },
+    {
+      "url": "/api/c-run",
+      "file": "apps/web/src/app/api/c-run/route.js",
+      "methods": [
+        "POST"
+      ],
+      "owner": "CR-ARCH-12A",
+      "auth": "optional",
+      "requestParsing": [
+        "json"
+      ],
+      "statusCodes": [
+        202,
+        400,
+        429,
+        503
+      ],
+      "services": [
+        "@/lib/execution-api"
+      ],
+      "description": "Dedicated C language execution alias"
+    },
+    {
+      "url": "/api/cpp-run",
+      "file": "apps/web/src/app/api/cpp-run/route.js",
+      "methods": [
+        "POST"
+      ],
+      "owner": "CR-ARCH-12A",
+      "auth": "optional",
+      "requestParsing": [
+        "json"
+      ],
+      "statusCodes": [
+        202,
+        400,
+        429,
+        503
+      ],
+      "services": [
+        "@/lib/execution-api"
+      ],
+      "description": "Dedicated C++ language execution alias"
+    },
+    {
+      "url": "/api/java-run",
+      "file": "apps/web/src/app/api/java-run/route.js",
+      "methods": [
+        "POST"
+      ],
+      "owner": "CR-ARCH-12A",
+      "auth": "optional",
+      "requestParsing": [
+        "json"
+      ],
+      "statusCodes": [
+        202,
+        400,
+        429,
+        503
+      ],
+      "services": [
+        "@/lib/execution-api"
+      ],
+      "description": "Dedicated Java language execution alias"
+    },
+    {
+      "url": "/api/javascript-run",
+      "file": "apps/web/src/app/api/javascript-run/route.js",
+      "methods": [
+        "POST"
+      ],
+      "owner": "CR-ARCH-12A",
+      "auth": "optional",
+      "requestParsing": [
+        "json"
+      ],
+      "statusCodes": [
+        202,
+        400,
+        429,
+        503
+      ],
+      "services": [
+        "@/lib/execution-api"
+      ],
+      "description": "Dedicated JavaScript language execution alias"
+    },
+    {
+      "url": "/api/python-run",
+      "file": "apps/web/src/app/api/python-run/route.js",
+      "methods": [
+        "POST"
+      ],
+      "owner": "CR-ARCH-12A",
+      "auth": "optional",
+      "requestParsing": [
+        "json"
+      ],
+      "statusCodes": [
+        202,
+        400,
+        429,
+        503
+      ],
+      "services": [
+        "@/lib/execution-api"
+      ],
+      "description": "Dedicated Python language execution alias"
+    },
+    {
+      "url": "/api/run",
+      "file": "apps/web/src/app/api/run/route.js",
+      "methods": [
+        "POST"
+      ],
+      "owner": "CR-ARCH-12A",
+      "auth": "optional",
+      "requestParsing": [
+        "json"
+      ],
+      "statusCodes": [
+        202,
+        400,
+        429,
+        503
+      ],
+      "services": [
+        "@/lib/execution-api"
+      ],
+      "description": "Generic code execution endpoint"
+    },
+    {
+      "url": "/api/practice-run",
+      "file": "apps/web/src/app/api/practice-run/route.js",
+      "methods": [
+        "GET",
+        "POST"
+      ],
+      "owner": "CR-ARCH-12A",
+      "auth": "optional",
+      "requestParsing": [
+        "json"
+      ],
+      "statusCodes": [
+        200,
+        202,
+        400,
+        429,
+        503
+      ],
+      "services": [
+        "@/lib/execution-api"
+      ],
+      "description": "Practice problem definition retrieval and execution dispatch"
+    },
+    {
+      "url": "/api/execute",
+      "file": "apps/web/src/app/api/execute/route.js",
+      "methods": [
+        "GET",
+        "POST"
+      ],
+      "owner": "CR-ARCH-12A",
+      "auth": "optional",
+      "requestParsing": [
+        "json"
+      ],
+      "statusCodes": [
+        200,
+        202,
+        400,
+        429,
+        503
+      ],
+      "services": [
+        "@/lib/execution-api",
+        "@coderank/core/services/SubmissionService"
+      ],
+      "description": "Unified execution intake and execution service status"
+    },
+    {
+      "url": "/api/jobs/[jobId]",
+      "file": "apps/web/src/app/api/jobs/[jobId]/route.js",
+      "methods": [
+        "GET"
+      ],
+      "owner": "CR-ARCH-12A",
+      "auth": "optional",
+      "requestParsing": [
+        "params"
+      ],
+      "statusCodes": [
+        200,
+        401,
+        404,
+        500
+      ],
+      "services": [
+        "@coderank/core/services/SubmissionService",
+        "@coderank/core/security/active-actor"
+      ],
+      "description": "Polling endpoint for execution job status and completed result"
+    },
+    {
+      "url": "/api/submit",
+      "file": "apps/web/src/app/api/submit/route.js",
+      "methods": [
+        "POST"
+      ],
+      "owner": "CR-ARCH-12B",
+      "auth": "optional",
+      "requestParsing": [
+        "json"
+      ],
+      "statusCodes": [
+        202,
+        400,
+        401,
+        429,
+        503
+      ],
+      "services": [
+        "@/lib/execution-api"
+      ],
+      "description": "Practice and generic code submission handler"
+    },
+    {
+      "url": "/api/student/practicals/[id]/submit",
+      "file": "apps/web/src/app/api/student/practicals/[id]/submit/route.js",
+      "methods": [
+        "POST"
+      ],
+      "owner": "CR-ARCH-12B",
+      "auth": "student",
+      "requestParsing": [
+        "json",
+        "params"
+      ],
+      "statusCodes": [
+        202,
+        400,
+        401,
+        429,
+        503
+      ],
+      "services": [
+        "@/lib/execution-api"
+      ],
+      "description": "Student graded submission dispatch for assigned practical"
+    },
+    {
+      "url": "/api/student/submissions",
+      "file": "apps/web/src/app/api/student/submissions/route.js",
+      "methods": [
+        "GET"
+      ],
+      "owner": "CR-ARCH-12B",
+      "auth": "student",
+      "requestParsing": [
+        "query"
+      ],
+      "statusCodes": [
+        200,
+        400,
+        401,
+        500
+      ],
+      "services": [
+        "@coderank/core/services/SubmissionHistoryService",
+        "@coderank/core/security/active-actor"
+      ],
+      "description": "Student global submission history with pagination"
+    },
+    {
+      "url": "/api/student/practicals/[id]/submissions",
+      "file": "apps/web/src/app/api/student/practicals/[id]/submissions/route.js",
+      "methods": [
+        "GET"
+      ],
+      "owner": "CR-ARCH-12B",
+      "auth": "student",
+      "requestParsing": [
+        "query",
+        "params"
+      ],
+      "statusCodes": [
+        200,
+        400,
+        401,
+        500
+      ],
+      "services": [
+        "@coderank/core/services/SubmissionHistoryService",
+        "@coderank/core/security/active-actor"
+      ],
+      "description": "Student practical-specific submission attempts history"
+    },
+    {
+      "url": "/api/faculty/practicals/[id]/submissions",
+      "file": "apps/web/src/app/api/faculty/practicals/[id]/submissions/route.js",
+      "methods": [
+        "GET"
+      ],
+      "owner": "CR-ARCH-12B",
+      "auth": "faculty",
+      "requestParsing": [
+        "query",
+        "params"
+      ],
+      "statusCodes": [
+        200,
+        400,
+        401,
+        404,
+        500
+      ],
+      "services": [
+        "@coderank/core/services/SubmissionHistoryService",
+        "@coderank/core/security/active-actor"
+      ],
+      "description": "Faculty practical submissions review and grading audit"
+    },
+    {
+      "url": "/api/faculty/submissions/[id]",
+      "file": "apps/web/src/app/api/faculty/submissions/[id]/route.js",
+      "methods": [
+        "DELETE",
+        "GET"
+      ],
+      "owner": "CR-ARCH-12B",
+      "auth": "faculty",
+      "requestParsing": [
+        "params"
+      ],
+      "statusCodes": [
+        200,
+        401,
+        404,
+        500
+      ],
+      "services": [
+        "@coderank/core/services/SubmissionService",
+        "@coderank/core/security/active-actor"
+      ],
+      "description": "Faculty submission detail inspection (GET) and submission reset/deletion (DELETE)"
+    },
+    {
+      "url": "/api/student/workspaces/load",
+      "file": "apps/web/src/app/api/student/workspaces/load/route.js",
+      "methods": [
+        "GET"
+      ],
+      "owner": "CR-ARCH-12B",
+      "auth": "student",
+      "requestParsing": [
+        "query"
+      ],
+      "statusCodes": [
+        200,
+        401,
+        500
+      ],
+      "services": [
+        "@coderank/core/services/SubmissionService",
+        "@coderank/core/security/active-actor"
+      ],
+      "description": "Load saved student draft workspace code"
+    },
+    {
+      "url": "/api/student/workspaces/save",
+      "file": "apps/web/src/app/api/student/workspaces/save/route.js",
+      "methods": [
+        "POST"
+      ],
+      "owner": "CR-ARCH-12B",
+      "auth": "student",
+      "requestParsing": [
+        "json"
+      ],
+      "statusCodes": [
+        200,
+        401,
+        500
+      ],
+      "services": [
+        "@coderank/core/services/SubmissionService",
+        "@coderank/core/security/active-actor"
+      ],
+      "description": "Save active student draft workspace code"
+    },
+    {
+      "url": "/api/health",
+      "file": "apps/web/src/app/api/health/route.js",
+      "methods": [
+        "GET"
+      ],
+      "owner": "CR-ARCH-13",
+      "auth": "none",
+      "requestParsing": [],
+      "statusCodes": [
+        200,
+        500,
+        503
+      ],
+      "services": [
+        "@coderank/core/db",
+        "@coderank/core/db-readiness",
+        "@coderank/core/services/SubmissionService"
+      ],
+      "description": "Public health check with DB/queue readiness evaluation and in-memory cache"
+    },
+    {
+      "url": "/api/health/detailed",
+      "file": "apps/web/src/app/api/health/detailed/route.js",
+      "methods": [
+        "GET"
+      ],
+      "owner": "CR-ARCH-13",
+      "auth": "admin",
+      "requestParsing": [],
+      "statusCodes": [
+        200,
+        401,
+        500,
+        503
+      ],
+      "services": [
+        "@coderank/core/security/active-actor",
+        "@coderank/core/services/OperationsService"
+      ],
+      "description": "Privileged detailed health diagnostics for administrators"
+    },
+    {
+      "url": "/api/logs",
+      "file": "apps/web/src/app/api/logs/route.js",
+      "methods": [
+        "GET"
+      ],
+      "owner": "CR-ARCH-13",
+      "auth": "admin",
+      "requestParsing": [
+        "query"
+      ],
+      "statusCodes": [
+        200,
+        401,
+        500
+      ],
+      "services": [
+        "@coderank/core/services/OperationsService",
+        "@coderank/core/security/active-actor"
+      ],
+      "description": "Administrator audit and activity log retrieval"
+    },
+    {
+      "url": "/api/metrics",
+      "file": "apps/web/src/app/api/metrics/route.js",
+      "methods": [
+        "GET"
+      ],
+      "owner": "CR-ARCH-13",
+      "auth": "admin",
+      "requestParsing": [],
+      "statusCodes": [
+        200,
+        401,
+        500
+      ],
+      "services": [
+        "@coderank/core/services/OperationsService",
+        "@coderank/core/security/active-actor"
+      ],
+      "description": "System operational metrics and performance telemetries"
+    },
+    {
+      "url": "/api/queue/stats",
+      "file": "apps/web/src/app/api/queue/stats/route.js",
+      "methods": [
+        "GET"
+      ],
+      "owner": "CR-ARCH-13",
+      "auth": "none",
+      "requestParsing": [],
+      "statusCodes": [
+        200,
+        503
+      ],
+      "services": [
+        "@coderank/core/services/SubmissionService"
+      ],
+      "description": "Public execution queue depth and status check"
+    },
+    {
+      "url": "/api/stats",
+      "file": "apps/web/src/app/api/stats/route.js",
+      "methods": [
+        "GET"
+      ],
+      "owner": "CR-ARCH-13",
+      "auth": "admin",
+      "requestParsing": [],
+      "statusCodes": [
+        200,
+        401,
+        500
+      ],
+      "services": [
+        "@coderank/core/services/OperationsService",
+        "@coderank/core/security/active-actor"
+      ],
+      "description": "Administrator system and active user counters"
+    },
+    {
+      "url": "/api/profile/[username]",
+      "file": "apps/web/src/app/api/profile/[username]/route.js",
+      "methods": [
+        "GET",
+        "PUT"
+      ],
+      "owner": "CR-ARCH-13",
+      "auth": "bearer",
+      "requestParsing": [
+        "json",
+        "params"
+      ],
+      "statusCodes": [
+        200,
+        400,
+        401,
+        404,
+        500
+      ],
+      "services": [
+        "@coderank/core/services/UserService",
+        "@coderank/core/security/active-actor"
+      ],
+      "description": "Public username profile lookup and student biography update"
+    }
+  ]
+}
