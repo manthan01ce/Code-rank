@@ -339,7 +339,11 @@ The separated stack requires: a frontend host (Next.js, possibly edge/serverless
 ### 6.2 Constraints from source
 
 - `apps/worker` requires a Docker daemon to spawn sandbox containers. Only the worker needs this; neither web nor API may import from `packages/runner` or access Docker (confirmed: `packages/runner` is only in `apps/worker/package.json` dependencies).
-- Socket.IO requires a persistent TCP process. Vercel Serverless Functions and Netlify Functions cannot hold WebSocket connections (source: [Vercel docs — WebSockets](https://vercel.com/docs/functions/limitations), accessed 2026-11-03).
+- Socket.IO with a custom Node.js server has significant Vercel constraints. Vercel added native WebSocket support in a public beta announced June 22, 2026 and subsequently made it generally available (source: [Vercel WebSockets](https://examples.vercel.com/docs/functions/websockets), accessed 2026-11-03; [Vercel changelog](https://vercel.com/changelog/websocket-support-is-now-in-public-beta), accessed 2026-11-03). This support has hard constraints that affect the CodeRank topology:
+  - Connections are **duration-capped**: "WebSocket connections close when a Vercel Function reaches its maximum duration" (Vercel WebSockets docs). Duration limits are 300 seconds on Hobby; up to 1800 seconds on Pro/Enterprise extended beta (Vercel Functions limits, accessed 2026-11-03). Socket.IO client reconnection logic must handle forced closure.
+  - Connections are **instance-pinned**: "New WebSocket connections are not guaranteed to reach the same Vercel Function instance. If a client reconnects, it may connect to a different instance" (Vercel WebSockets docs). In-memory `global.io` state is therefore non-durable across reconnects.
+  - **Cross-instance fan-out requires Redis**: the Vercel WebSockets docs state "Store durable state, presence, counters, rooms, and pub/sub coordination in an external data store instead of relying on in-memory variables." The `@socket.io/redis-adapter` already provides this.
+  - **CodeRank's custom server is not compatible with Vercel's Function model**: Vercel runs Next.js via its own Function infrastructure (`next start` or `upgradeWebSocket()` from `@vercel/functions`), not via arbitrary `http.createServer` entrypoints. The Vercel WebSockets docs show that for Next.js, WebSocket support requires `upgradeWebSocket()` from `@vercel/functions` — not the `http.Server` + Socket.IO pattern used in `server.js`. The Next.js custom server docs confirm that standalone output mode and custom servers are mutually exclusive (source: [Next.js custom server docs](https://nextjs.org/docs/pages/building-your-application/configuring/custom-server), accessed 2026-11-03). Deploying `server.js` to Vercel as-is is not supported.
 - `apps/web/cluster.js` enforces that multi-worker mode **requires** `REALTIME_REDIS_ENABLED=true` (hard-coded `throw` on startup if not set).
 - `output: 'standalone'` is disabled in `next.config.mjs`; `apps/web` must be served by `node cluster.js` (which calls `server.js`).
 
@@ -375,15 +379,17 @@ Rollback: platform rollback to previous deployment version per service.
 
 #### Option C-3: Mixed — Vercel for web, persistent platform for API+realtime+worker
 
-`apps/web` deploys to Vercel (no custom server.js; requires switching to `next start` with `output: 'standalone'`). `apps/api` + `apps/web`'s Socket.IO process run on a persistent platform. `apps/worker` runs on Docker-capable host.
+`apps/web` deploys to Vercel (no custom server.js; requires switching to `next start` with `output: 'standalone'`). `apps/api` + Socket.IO process run on a persistent platform. `apps/worker` runs on Docker-capable host.
 
 **This option requires removing `server.js` and `cluster.js` from the web serving path**, enabling `output: 'standalone'`, and running `next start` instead. This is a prerequisite step, not part of this ADR's scope.
 
+Vercel added native WebSocket support (public beta June 22, 2026; GA later in 2026). However, Vercel's WebSocket support for Next.js requires `upgradeWebSocket()` from `@vercel/functions`, not the `http.createServer` + Socket.IO pattern used in `server.js`. Vercel runs Next.js via its Function infrastructure and does not execute arbitrary custom Node.js HTTP servers. If the owner wants Vercel for the web app, the Socket.IO server must move to a separate persistent host (`apps/api` or a new service), and `apps/web` must shed the custom server.
+
 Advantages: Vercel handles global CDN, edge caching, preview deploys for the Next.js app.
 
-Costs/risks: `output: 'standalone'` re-enablement requires verifying that all monorepo workspace imports resolve correctly in standalone mode (currently disabled specifically due to the custom server). Socket.IO cannot run on Vercel; a second persistent host is required. Two separate deployments to coordinate on every release.
+Costs/risks: `output: 'standalone'` re-enablement requires verifying that all monorepo workspace imports resolve correctly in standalone mode (currently disabled specifically due to the custom server). Socket.IO must run on a second persistent host. Two separate deployments to coordinate on every release. Vercel WebSocket connections have duration caps (300s Hobby, up to 1800s Pro); Socket.IO client reconnection logic must handle forced closure.
 
-**Note:** Neither Vercel config today (`vercel.json`, `infrastructure/vercel.json`) references `server.js`. If either config were deployed to Vercel as-is, Vercel would run Next.js without the Socket.IO server, breaking realtime. This is a current deployment hazard documented here for owner awareness.
+**Note:** Neither Vercel config today (`vercel.json`, `infrastructure/vercel.json`) references `server.js`. If either config were deployed to Vercel as-is, Vercel would run `next start` (not `node cluster.js`), the Socket.IO server would not be initialized, and realtime would be broken. This is a current deployment hazard documented here for owner awareness.
 
 #### Option C-4: Full Kubernetes / Docker Compose (self-hosted, multi-replica)
 
@@ -619,7 +625,7 @@ These items are preconditions that CR-ARCH-09 and CR-ARCH-14 implementation issu
 
 - [ ] `apps/api` directory created with its own `package.json` (no `packages/runner` dependency).
 - [ ] HTTP framework chosen (Decision A) and declared as a direct dependency of `apps/api`.
-- [ ] `/api/live` route returns `{ ok: true, ts: <ISO timestamp> }` with status 200.
+- [ ] `/api/live` route returns `{ status: 'ok', timestamp: <ISO timestamp> }` with status 200.
 - [ ] HTTP parity test: same status code, same `Content-Type`, same response shape as the current Next.js handler.
 - [ ] If Variant Y: cross-process Socket.IO publish smoke test from `apps/api` to `apps/web` Socket.IO server.
 - [ ] `apps/api` starts independently (`apps/web` not required for `/api/live`).
@@ -655,7 +661,10 @@ These items are preconditions that CR-ARCH-09 and CR-ARCH-14 implementation issu
 All URLs accessed 2026-11-03:
 
 - Next.js 16 App Router: https://nextjs.org/docs/app
-- Vercel WebSocket limitations: https://vercel.com/docs/functions/limitations
+- Next.js custom server: https://nextjs.org/docs/pages/building-your-application/configuring/custom-server
+- Vercel Functions limits: https://vercel.com/docs/functions/limitations
+- Vercel WebSockets (native support, GA 2026): https://examples.vercel.com/docs/functions/websockets
+- Vercel WebSocket public beta changelog (June 22, 2026): https://vercel.com/changelog/websocket-support-is-now-in-public-beta
 - Fastify v5 documentation: https://fastify.dev/docs/latest/
 - Hono documentation: https://hono.dev/docs/
 - Express 5 changelog: https://expressjs.com/en/changelog/5x.html
@@ -689,11 +698,20 @@ Decisions about `vercel.json` files (D-1, D-2) and `cluster.js` fate (D-4) shoul
 
 | Check | Result |
 |---|---|
-| `git diff --check` | Passed (whitespace clean) |
-| `git diff --name-only origin/master` | One file: `docs/architecture/decisions/0001-api-runtime-and-hosting.md` |
-| Source file references verified | All paths verified via file reads during branch preparation |
+| `git diff --check` | Passed (whitespace clean) — verified on current branch |
+| `git diff --name-status origin/master...HEAD` | One file added: `docs/architecture/decisions/0001-api-runtime-and-hosting.md` |
+| Source file references verified | All paths verified via file reads on current branch state |
+| `/api/live` response shape | Verified against `apps/web/src/app/api/live/route.js`: returns `{ status: 'ok', timestamp: <ISO> }` |
+| Vercel WebSocket claim | Verified against official Vercel docs (accessed 2026-11-03): public beta June 22, 2026; connections duration-capped and instance-pinned; Redis required for cross-instance state; Next.js requires `upgradeWebSocket()` from `@vercel/functions` for WebSocket — incompatible with the existing `http.createServer` + Socket.IO pattern |
+| Next.js custom server / Vercel compatibility | Verified: Vercel runs Next.js via Function infrastructure, not arbitrary Node HTTP servers. The Vercel WebSockets docs show the Next.js path requires `@vercel/functions upgradeWebSocket()`. Next.js custom server docs confirm standalone output and custom server are mutually exclusive. |
+| `global.io` claim | Verified: `apps/web/server.js` line 127 sets `global.io = io` |
+| `practical-events.js` timeout values | Verified: `timeout:1000` (Socket.IO handshake), `setTimeout(1500)` disconnect; `reconnection:false` |
+| Cluster guard | Verified: `apps/web/cluster.js` throws if `CLUSTER_ENABLED=true` and `REALTIME_REDIS_ENABLED !== 'true'` |
+| `output: 'standalone'` disabled | Verified: `apps/web/next.config.mjs` comment confirms incompatible with `server.js` |
+| Guest cookie SameSite | Verified: `execution-api.js` sets `sameSite: 'lax'` |
+| Service token structure | Verified: 5-minute HS256 JWT, `aud: 'coderank-realtime'`, `iss: 'coderank-worker'` |
 | No secret values in this document | Confirmed — no `.env` values, tokens, or credentials appear |
-| Runtime tests | **Not run** — this is a documentation-only PR. No application files were changed; running the test suite would test the unchanged application, not this document. |
+| Runtime tests | **Not run** — this is a documentation-only PR. No application files were changed. |
 | Build | **Not run** — same rationale; application code unchanged. |
 | lint:critical | **Not applicable** — `docs/` directory is not in the lint scope defined in `package.json`. |
 
