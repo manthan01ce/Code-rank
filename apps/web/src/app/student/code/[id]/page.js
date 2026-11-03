@@ -1,5 +1,5 @@
 import WorkspaceClientWrapper from './WorkspaceClientWrapper';
-import { STATIC_PROBLEMS } from '@/lib/problems';
+import { STATIC_PROBLEMS } from '@/features/practice/problems';
 
 // Tokens live in browser storage. Never serialize practical records into an
 // unauthenticated server-component response or into public page metadata.

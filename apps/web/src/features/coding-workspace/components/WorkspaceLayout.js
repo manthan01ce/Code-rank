@@ -24,7 +24,7 @@ import ConsolePanel from './ConsolePanel';
 import ConfirmAction from './ConfirmAction';
 import { Play, ChevronRight, Settings, User, List } from 'lucide-react';
 import { DEFAULT_LANGUAGE, LANGUAGES } from './LanguageConfig';
-import { STATIC_PROBLEMS } from '@/lib/problems';
+import { STATIC_PROBLEMS } from '@/features/practice/problems';
 import { useSocket } from '@/hooks/useSocket';
 import { useExecutionLifecycle } from '@/hooks/useExecutionLifecycle';
 import { boundedFetch, responseError, waitForJob } from '@/lib/job-lifecycle';
