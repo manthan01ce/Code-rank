@@ -18,7 +18,7 @@
     "@tailwindcss/postcss": "^4.3.3",
     "@tanstack/react-table": "^8.21.3",
     "bcryptjs": "^3.0.3",
-    "bullmq": "^6.3.4",
+    "bullmq": "6.3.10",
     "clsx": "^2.1.1",
     "compression": "^1.8.2",
     "csv-parse": "^6.2.1",

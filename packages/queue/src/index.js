@@ -2,7 +2,7 @@ export { readExecutionWorkers } from './worker-readiness.js';
 import { startOwnerIndexJanitor } from './owner-index.js';
 export { sweepOwnerIndexes } from './owner-index.js';
 import { Queue, createRedisBackend } from 'bullmq';
-import { addStandardJob } from 'bullmq/dist/cjs/scripts/addStandardJob-9.js';
+import { addStandardJob } from './bullmq-scripts.js';
 
 // This adapter is deliberately pinned to BullMQ 6.3.10. Capacity checks and
 // insertion execute in ONE Redis script; no leases or check-then-add window.
