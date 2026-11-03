@@ -9,6 +9,17 @@ import LoadingOverlay from '@/components/LoadingOverlay';
 import { useSocket } from '@/hooks/useSocket';
 import { usePolling } from '@/hooks/usePolling';
 import { useFacultyAuth } from '@/hooks/useFacultyAuth';
+import { PracticalList } from '@/features/practicals/components/PracticalList';
+import { PracticalEditor } from '@/features/practicals/components/PracticalEditor';
+import { PracticalDetailModal } from '@/features/practicals/components/PracticalDetailModal';
+import { ExtraTimeDialog } from '@/features/practicals/components/ExtraTimeDialog';
+import { usePracticalEditor } from '@/features/practicals/hooks/usePracticalEditor';
+import {
+  fetchCoursePracticals,
+  fetchPracticalDetails,
+  deletePractical as deletePracticalApi,
+  grantExtraTime as grantExtraTimeApi,
+} from '@/features/practicals/api/practicals-api';
 
 export default function FacultyDashboard() {
   return <Suspense fallback={<p>Loading faculty workspace…</p>}><FacultyWorkspace /></Suspense>;
@@ -52,34 +63,10 @@ function FacultyWorkspace() {
   // Practicals state
   const [practicals, setPracticals] = useState([]);
   const [loadingPracticals, setLoadingPracticals] = useState(false);
-  const [showPracticalModal, setShowPracticalModal] = useState(false);
-  const [editingPractical, setEditingPractical] = useState(null);
   const [viewingPractical, setViewingPractical] = useState(null);
   const [showViewPracticalModal, setShowViewPracticalModal] = useState(false);
   const [viewPracticalCodeLang, setViewPracticalCodeLang] = useState('python');
-
-  // Practical Form
-  const [pracTitle, setPracTitle] = useState('');
-  const [pracDesc, setPracDesc] = useState('');
-  const [pracTopics, setPracTopics] = useState('');
-  const [pracStartTime, setPracStartTime] = useState('');
-  const [pracEndTime, setPracEndTime] = useState('');
-  const [pracInst, setPracInst] = useState('');
-  const [pracDiff, setPracDiff] = useState('Easy');
-  const [pracIsChallenge, setPracIsChallenge] = useState(false);
-  const [pracInputFormat, setPracInputFormat] = useState('');
-  const [pracOutputFormat, setPracOutputFormat] = useState('');
-  const [pracConstraints, setPracConstraints] = useState('');
-  const [sampleTestCases, setSampleTestCases] = useState([{ input: '', expected: '' }]);
-  const [allowedLanguages, setAllowedLanguages] = useState(['python', 'cpp']);
-
-  // Starter code templates
-  const [pyTemplate, setPyTemplate] = useState('# Write your Python code here\n# Read inputs using input() or sys.stdin\n');
-  const [cppTemplate, setCppTemplate] = useState('#include <iostream>\nusing namespace std;\n\nint main() {\n    // Write your C++ code here\n    // Read from cin and write to cout\n    return 0;\n}');
-
-  // Test cases state
-  const [testCases, setTestCases] = useState([{ input: '', expected: '', marks: '5', is_hidden: false, label: '' }]);
-  const [hasSubmissions, setHasSubmissions] = useState(false);
+  const [extraTimePractical, setExtraTimePractical] = useState(null);
 
   // Submissions state
   const [selectedPracticalId, setSelectedPracticalId] = useState('');
@@ -94,9 +81,6 @@ function FacultyWorkspace() {
   const [submissionSortOrder, setSubmissionSortOrder] = useState('DESC');
   const [viewingSubmission, setViewingSubmission] = useState(null);
   const [showSubmissionModal, setShowSubmissionModal] = useState(false);
-  const [extraTimePractical, setExtraTimePractical] = useState(null);
-  const [extraMinutesInput, setExtraMinutesInput] = useState(15);
-  const [customEndTimeInput, setCustomEndTimeInput] = useState('');
   const [copyCodeSuccess, setCopyCodeSuccess] = useState(false);
 
   // Live timer tick for real-time countdown
@@ -194,26 +178,22 @@ function FacultyWorkspace() {
   const fetchPracticals = async (showLoading = true) => {
     if (showLoading) setLoadingPracticals(true);
     try {
-      const data = await fetchCollection(`/api/faculty/practicals?course_id=${selectedCourse}`, {
-        headers: { Authorization: `Bearer ${token()}` }
-      });
-      {
-        setPracticals(data);
-        if (data.length > 0) {
-          setSelectedPracticalId(prev => {
-            if (prev && data.some(p => p.id.toString() === prev.toString())) return prev;
-            return data[0].id.toString();
-          });
-          setSelectedMarksPracticalId(prev => {
-            if (prev && data.some(p => p.id.toString() === prev.toString())) return prev;
-            return data[0].id.toString();
-          });
-        } else {
-          setSelectedPracticalId('');
-          setSelectedMarksPracticalId('');
-          setSubmissions([]);
-          setStatsData(null);
-        }
+      const data = await fetchCoursePracticals(selectedCourse, token());
+      setPracticals(data);
+      if (data.length > 0) {
+        setSelectedPracticalId(prev => {
+          if (prev && data.some(p => p.id.toString() === prev.toString())) return prev;
+          return data[0].id.toString();
+        });
+        setSelectedMarksPracticalId(prev => {
+          if (prev && data.some(p => p.id.toString() === prev.toString())) return prev;
+          return data[0].id.toString();
+        });
+      } else {
+        setSelectedPracticalId('');
+        setSelectedMarksPracticalId('');
+        setSubmissions([]);
+        setStatsData(null);
       }
     } catch (e) {
       console.error(e);
@@ -221,6 +201,15 @@ function FacultyWorkspace() {
       if (showLoading) setLoadingPracticals(false);
     }
   };
+
+  const practicalEditor = usePracticalEditor({
+    selectedCourse,
+    token,
+    socket,
+    showToast,
+    onSaved: () => fetchPracticals(false),
+    setProcessing,
+  });
 
   // Load submissions
   useEffect(() => {
@@ -354,214 +343,27 @@ function FacultyWorkspace() {
     }
   }, 30_000, Boolean(selectedCourse));
 
-  const handleOpenAddPractical = () => {
-    setEditingPractical(null);
-    setPracTitle('');
-    setPracDesc('');
-    setPracTopics('');
-    setPracInst('');
-    setPracDiff('Easy');
-    setPracIsChallenge(true);
-    setPracInputFormat('');
-    setPracOutputFormat('');
-    setPracConstraints('');
-    setSampleTestCases([{ input: '', expected: '' }]);
-    setPracStartTime('');
-    setPracEndTime('');
-    setAllowedLanguages(['python', 'cpp']);
-    setPyTemplate('# Write your Python code here\n# Read inputs using input() or sys.stdin\n');
-    setCppTemplate('#include <iostream>\nusing namespace std;\n\nint main() {\n    // Write your C++ code here\n    // Read from cin and write to cout\n    return 0;\n}');
-    setTestCases([{ input: '', expected: '', marks: '5', is_hidden: false, label: '' }]);
-    setHasSubmissions(false);
-    setShowPracticalModal(true);
-  };
-
-  const handleOpenEditPractical = async (p) => {
-    setProcessing(true);
-    try {
-      const res = await fetch(`/api/faculty/practicals/${p.id}`, {
-        headers: { Authorization: `Bearer ${token()}` }
-      });
-      if (res.ok) {
-        const data = await res.json();
-        setEditingPractical(data);
-        setPracTitle(data.title || '');
-        setPracDesc(data.description || '');
-        setPracTopics(data.topics || '');
-        setPracInst(data.instructions || '');
-        setPracDiff(data.difficulty || 'Easy');
-        setPracIsChallenge(data.is_challenge || false);
-        setPracInputFormat(data.input_format || '');
-        setPracOutputFormat(data.output_format || '');
-        setPracConstraints(data.constraints || '');
-        try {
-          const parsed = JSON.parse(data.sample_input);
-          if (Array.isArray(parsed) && parsed.length > 0) {
-            setSampleTestCases(parsed);
-          } else {
-            setSampleTestCases([{ input: data.sample_input || '', expected: data.sample_output || '' }]);
-          }
-        } catch {
-          setSampleTestCases([{ input: data.sample_input || '', expected: data.sample_output || '' }]);
-        }
-
-        // Helper to format ISO string to datetime-local value (YYYY-MM-DDTHH:MM)
-        const formatLocalTime = (iso) => {
-          if (!iso) return '';
-          const d = new Date(iso);
-          const pad = (n) => n.toString().padStart(2, '0');
-          return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}T${pad(d.getHours())}:${pad(d.getMinutes())}`;
-        };
-        setPracStartTime(formatLocalTime(data.start_time));
-        setPracEndTime(formatLocalTime(data.end_time));
-
-        setAllowedLanguages(data.starter_code?.allowed_languages || ['python', 'cpp']);
-        setPyTemplate(data.starter_code?.python || 'class Solution:\n    def solution(self):\n        pass');
-        setCppTemplate(data.starter_code?.cpp || 'class Solution {\npublic:\n    void solution() {\n        \n    }\n};');
-        setTestCases(data.test_cases?.length > 0 ? data.test_cases.map(tc => ({
-          ...tc,
-          marks: tc.marks.toString()
-        })) : [{ input: '', expected: '', marks: '5', is_hidden: false, label: '' }]);
-        setHasSubmissions(data.submissions_count > 0);
-        setShowPracticalModal(true);
-      }
-    } catch (e) {
-      showToast('error', 'Failed to retrieve practical details.');
-    } finally {
-      setProcessing(false);
-    }
-  };
-
   const handleOpenViewPractical = async (p) => {
     setProcessing(true);
     try {
-      const res = await fetch(`/api/faculty/practicals/${p.id}`, {
-        headers: { Authorization: `Bearer ${token()}` }
-      });
-      if (res.ok) {
-        const data = await res.json();
-        let sampleCases = [];
-        try {
-          const parsed = JSON.parse(data.sample_input);
-          if (Array.isArray(parsed) && parsed.length > 0) {
-            sampleCases = parsed;
-          } else {
-            sampleCases = [{ input: data.sample_input || '', expected: data.sample_output || '' }];
-          }
-        } catch {
+      const data = await fetchPracticalDetails(p.id, token());
+      let sampleCases = [];
+      try {
+        const parsed = JSON.parse(data.sample_input);
+        if (Array.isArray(parsed) && parsed.length > 0) {
+          sampleCases = parsed;
+        } else {
           sampleCases = [{ input: data.sample_input || '', expected: data.sample_output || '' }];
         }
-        setViewingPractical({ ...data, sampleTestCases: sampleCases });
-        const allowed = data.starter_code?.allowed_languages || ['python', 'cpp'];
-        setViewPracticalCodeLang(allowed.includes('python') ? 'python' : (allowed[0] || 'python'));
-        setShowViewPracticalModal(true);
-      } else {
-        showToast('error', 'Failed to retrieve practical details.');
+      } catch {
+        sampleCases = [{ input: data.sample_input || '', expected: data.sample_output || '' }];
       }
+      setViewingPractical({ ...data, sampleTestCases: sampleCases });
+      const allowed = data.starter_code?.allowed_languages || ['python', 'cpp'];
+      setViewPracticalCodeLang(allowed.includes('python') ? 'python' : (allowed[0] || 'python'));
+      setShowViewPracticalModal(true);
     } catch (e) {
-      showToast('error', 'Failed to retrieve practical details.');
-    } finally {
-      setProcessing(false);
-    }
-  };
-
-  const handleAddTestCaseRow = () => {
-    if (testCases.length >= 20) {
-      showToast('error', 'You cannot add more than 20 test cases.');
-      return;
-    }
-    setTestCases([...testCases, { input: '', expected: '', marks: '5', is_hidden: false, label: '' }]);
-  };
-
-  const handleRemoveTestCaseRow = (idx) => {
-    if (testCases.length <= 1) {
-      showToast('error', 'At least 1 test case must remain.');
-      return;
-    }
-    setTestCases(testCases.filter((_, i) => i !== idx));
-  };
-
-  const handleTestCaseChange = (idx, field, val) => {
-    const updated = [...testCases];
-    updated[idx][field] = val;
-    setTestCases(updated);
-  };
-
-  const handleSubmitPractical = async (e) => {
-    e.preventDefault();
-    if (!pracTitle || !pracDesc) {
-      showToast('error', 'Title and Description are required.');
-      return;
-    }
-
-    setProcessing(true);
-
-    const payload = {
-      course_id: parseInt(selectedCourse),
-      batch_id: 'All',
-      title: pracTitle,
-      description: pracDesc,
-      topics: pracTopics,
-      instructions: pracInst,
-      difficulty: pracDiff,
-      is_challenge: true,
-      start_time: pracStartTime || null,
-      end_time: pracEndTime || null,
-      starter_code: {
-        allowed_languages: allowedLanguages,
-        python: pyTemplate,
-        cpp: cppTemplate,
-        entry: {
-          type: 'class-method',
-          className: 'Solution',
-          methodName: 'solution'
-        }
-      },
-      input_format: pracInputFormat,
-      output_format: pracOutputFormat,
-      constraints: pracConstraints,
-      sample_input: JSON.stringify(sampleTestCases),
-      sample_output: '', // Unused now but kept for DB compatibility
-      test_cases: testCases.map((tc, idx) => ({
-        input: tc.input,
-        expected: tc.expected,
-        marks: parseFloat(tc.marks) || 0,
-        is_hidden: !!tc.is_hidden,
-        order_index: idx,
-        label: tc.label || `Test Case ${idx + 1}`
-      }))
-    };
-
-    try {
-      const url = editingPractical ? `/api/faculty/practicals/${editingPractical.id}` : '/api/faculty/practicals';
-      const method = editingPractical ? 'PUT' : 'POST';
-
-      const res = await fetch(url, {
-        method,
-        headers: {
-          Authorization: `Bearer ${token()}`,
-          'Content-Type': 'application/json'
-        },
-        body: JSON.stringify(payload)
-      });
-
-      const data = await res.json();
-      if (res.ok) {
-        showToast('success', editingPractical ? 'Practical updated successfully.' : 'Practical created successfully.');
-        setShowPracticalModal(false);
-        fetchPracticals();
-        if (socket) {
-          const evt = editingPractical ? 'faculty_practical_updated' : 'faculty_practical_added';
-          socket.emit(evt, {
-            course_id: parseInt(selectedCourse),
-            practical: data.practical || { id: editingPractical?.id, title: pracTitle, course_id: parseInt(selectedCourse) }
-          });
-        }
-      } else {
-        showToast('error', data.error || 'Submission failed.');
-      }
-    } catch (err) {
-      showToast('error', 'Network error.');
+      showToast('error', e.message || 'Failed to retrieve practical details.');
     } finally {
       setProcessing(false);
     }
@@ -576,25 +378,17 @@ function FacultyWorkspace() {
 
     setProcessing(true);
     try {
-      const res = await fetch(`/api/faculty/practicals/${p.id}`, {
-        method: 'DELETE',
-        headers: { Authorization: `Bearer ${token()}` }
-      });
-      const data = await res.json();
-      if (res.ok) {
-        showToast('success', data.message || 'Practical deleted successfully.');
-        fetchPracticals();
-        if (socket) {
-          socket.emit('faculty_practical_deleted', {
-            course_id: parseInt(selectedCourse),
-            practicalId: p.id
-          });
-        }
-      } else {
-        showToast('error', data.error || 'Failed to delete practical.');
+      const data = await deletePracticalApi(p.id, token());
+      showToast('success', data.message || 'Practical deleted successfully.');
+      fetchPracticals();
+      if (socket) {
+        socket.emit('faculty_practical_deleted', {
+          course_id: parseInt(selectedCourse),
+          practicalId: p.id
+        });
       }
     } catch (e) {
-      showToast('error', 'Network error.');
+      showToast('error', e.message || 'Failed to delete practical.');
     } finally {
       setProcessing(false);
     }
@@ -606,105 +400,24 @@ function FacultyWorkspace() {
     try {
       const payload = customDate
         ? { newEndTime: customDate }
-        : { extraMinutes: minutes !== undefined ? minutes : extraMinutesInput };
+        : { extraMinutes: minutes !== undefined ? minutes : 15 };
 
-      const res = await fetch(`/api/faculty/practicals/${extraTimePractical.id}/extra-time`, {
-        method: 'POST',
-        headers: {
-          Authorization: `Bearer ${token()}`,
-          'Content-Type': 'application/json'
-        },
-        body: JSON.stringify(payload)
-      });
-
-      const data = await res.json();
-      if (res.ok) {
-        showToast('success', data.message || 'Extra time granted successfully!');
-        const practicalId = extraTimePractical.id;
-        setExtraTimePractical(null);
-        setCustomEndTimeInput('');
-        fetchPracticals();
-        if (socket) {
-          socket.emit('faculty_practical_updated', {
-            course_id: parseInt(selectedCourse),
-            practical: data.practical || { id: practicalId, course_id: parseInt(selectedCourse) }
-          });
-        }
-      } else {
-        showToast('error', data.error || 'Failed to grant extra time.');
+      const data = await grantExtraTimeApi(extraTimePractical.id, payload, token());
+      showToast('success', data.message || 'Extra time granted successfully!');
+      const practicalId = extraTimePractical.id;
+      setExtraTimePractical(null);
+      fetchPracticals();
+      if (socket) {
+        socket.emit('faculty_practical_updated', {
+          course_id: parseInt(selectedCourse),
+          practical: data.practical || { id: practicalId, course_id: parseInt(selectedCourse) }
+        });
       }
     } catch (err) {
-      showToast('error', 'Network error.');
+      showToast('error', err.message || 'Failed to grant extra time.');
     } finally {
       setProcessing(false);
     }
-  };
-
-  const renderTimelineBadge = (startTime, endTime) => {
-    if (!startTime && !endTime) {
-      return <span style={{ color: '#94a3b8', fontSize: '11px', fontStyle: 'italic' }}>No time limit</span>;
-    }
-
-    const start = startTime ? new Date(startTime).getTime() : null;
-    const end = endTime ? new Date(endTime).getTime() : null;
-
-    if (start && currentTime < start) {
-      const diffSecs = Math.max(0, Math.floor((start - currentTime) / 1000));
-      const hours = Math.floor(diffSecs / 3600);
-      const mins = Math.floor((diffSecs % 3600) / 60);
-      const secs = diffSecs % 60;
-      const startsInStr = hours > 0
-        ? `${hours}h ${mins}m ${secs}s`
-        : mins > 0
-          ? `${mins}m ${secs}s`
-          : `${secs}s`;
-
-      return (
-        <span style={{
-          display: 'inline-flex', alignItems: 'center', gap: '4px',
-          padding: '3px 8px', borderRadius: '12px', fontSize: '11px', fontWeight: 600,
-          backgroundColor: '#eff1ff', color: '#4338ca', border: '1px solid #bfdbfe'
-        }}>
-           Starts in {startsInStr} ({new Date(start).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })})
-        </span>
-      );
-    }
-
-    if (end) {
-      if (currentTime > end) {
-        return (
-          <span style={{
-            display: 'inline-flex', alignItems: 'center', gap: '4px',
-            padding: '3px 8px', borderRadius: '12px', fontSize: '11px', fontWeight: 600,
-            backgroundColor: '#fef2f2', color: '#b91c1c', border: '1px solid #fecaca'
-          }}>
-            ⛔ Expired ({new Date(end).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })})
-          </span>
-        );
-      } else {
-        const diffSecs = Math.max(0, Math.floor((end - currentTime) / 1000));
-        const hours = Math.floor(diffSecs / 3600);
-        const mins = Math.floor((diffSecs % 3600) / 60);
-        const secs = diffSecs % 60;
-        const remainingStr = hours > 0
-          ? `${hours}h ${mins}m ${secs}s left`
-          : mins > 0
-            ? `${mins}m ${secs}s left`
-            : `${secs}s left`;
-
-        return (
-          <span style={{
-            display: 'inline-flex', alignItems: 'center', gap: '4px',
-            padding: '3px 8px', borderRadius: '12px', fontSize: '11px', fontWeight: 600,
-            backgroundColor: '#eff1ff', color: '#059669', border: '1px solid #a7f3d0'
-          }}>
-             Active ({remainingStr})
-          </span>
-        );
-      }
-    }
-
-    return <span style={{ color: '#94a3b8', fontSize: '11px' }}>Active</span>;
   };
 
   const handleViewSubmission = async (s) => {
@@ -997,114 +710,18 @@ function FacultyWorkspace() {
 
       {/* TAB 1: PRACTICALS LIST */}
       {activeTab === 'practicals' && (
-        <div>
-          <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '20px', alignItems: 'center' }}>
-            <h3 style={{ fontSize: '18px', fontWeight: 600 }}>Available Practicals</h3>
-            {activeCourse?.is_co_coordinator && (
-              <button className="btn-primary" style={{ width: 'auto', padding: '10px 20px', margin: 0 }} onClick={handleOpenAddPractical}>
-                + Add Practical
-              </button>
-            )}
-          </div>
-
-          <div className="table-container" style={{ marginTop: '15px' }}>
-            {loadingPracticals ? <p>Loading practicals...</p> : (
-              <table>
-                <thead>
-                  <tr>
-                    <th scope="col">Title</th>
-                    <th scope="col">Difficulty</th>
-                    <th scope="col">Type</th>
-                    <th scope="col">Timeline</th>
-                    <th scope="col">Total Marks (Internal)</th>
-                    <th scope="col">Test Cases</th>
-                    <th scope="col">Submissions</th>
-                    <th scope="col">Actions</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {practicals.map(p => (
-                    <tr key={p.id}>
-                      <td
-                        style={{ fontWeight: 600, color: 'var(--primary)', cursor: 'pointer' }}
-                        onClick={() => handleOpenViewPractical(p)}
-                        title="Click to view practical details"
-                      >
-                        <span style={{ textDecoration: 'underline', textUnderlineOffset: '3px' }}>{p.title}</span>
-                      </td>
-                      <td>
-                        <span style={{
-                          padding: '4px 10px', borderRadius: '12px', fontSize: '11px', fontWeight: 600,
-                          backgroundColor: p.difficulty === 'Easy' ? '#eff1ff' : p.difficulty === 'Medium' ? '#f1f5f9' : '#fef2f2',
-                          color: p.difficulty === 'Easy' ? '#4f46e5' : p.difficulty === 'Medium' ? '#475569' : '#b91c1c'
-                        }}>
-                          {p.difficulty}
-                        </span>
-                      </td>
-                      <td style={{ fontWeight: 500 }}>{p.is_challenge ? ' Challenge' : '📘 Standard'}</td>
-                      <td>{renderTimelineBadge(p.start_time, p.end_time)}</td>
-                      <td>{p.total_marks} Marks</td>
-                      <td>{p.test_cases_count} cases</td>
-                      <td>{p.submissions_count} attempts</td>
-                      <td>
-                        <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
-                          <button onClick={() => setGradePractical(p)}>Grades</button>
-                          <button
-                            onClick={() => setExtraTimePractical(p)}
-                            style={{
-                              padding: '6px 12px', borderRadius: '6px', border: '1px solid #cbd5e1',
-                              backgroundColor: '#f8fafc', color: '#1e293b', cursor: 'pointer',
-                              fontWeight: 600, fontSize: '12px', display: 'flex', alignItems: 'center', gap: '4px'
-                            }}
-                            title="Add extra time for solving this practical"
-                          >
-                            ⏰ + Time
-                          </button>
-
-                          <button
-                            onClick={() => handleOpenViewPractical(p)}
-                            style={{
-                              padding: '6px 12px', borderRadius: '6px', border: '1px solid #cbd5e1',
-                              backgroundColor: '#ffffff', color: '#1e293b', cursor: 'pointer',
-                              fontWeight: 600, fontSize: '12px', display: 'flex', alignItems: 'center', gap: '4px'
-                            }}
-                            title="View practical details"
-                          >
-                            👁 Details
-                          </button>
-
-                          {activeCourse?.is_co_coordinator ? (
-                            <>
-                              <button
-                                onClick={() => handleOpenEditPractical(p)}
-                                style={{ padding: '6px 12px', borderRadius: '6px', border: 'none', backgroundColor: 'var(--primary)', color: 'white', cursor: 'pointer', fontWeight: 600, fontSize: '12px' }}
-                              >
-                                ✏️ Edit
-                              </button>
-                              <button
-                                onClick={() => handleDeletePractical(p)}
-                                style={{ padding: '6px 12px', borderRadius: '6px', border: 'none', backgroundColor: '#b91c1c', color: 'white', cursor: 'pointer', fontWeight: 600, fontSize: '12px' }}
-                              >
-                                 Delete
-                              </button>
-                            </>
-                          ) : (
-                            <span style={{ fontSize: '11px', color: '#64748b', backgroundColor: '#f1f5f9', border: '1px solid #e2e8f0', padding: '3px 8px', borderRadius: '10px', fontStyle: 'italic' }}>
-                              View-only
-                            </span>
-                          )}
-                        </div>
-                      </td>
-                    </tr>
-                  ))}
-                  {practicals.length === 0 && (
-                    <tr><td colSpan="8" style={{ textAlign: 'center', color: '#888', padding: '40px' }}>No practicals found. Create one to get started.</td></tr>
-                  )}
-                </tbody>
-              </table>
-            )}
-          </div>
-        </div>
+        <PracticalList
+          practicals={practicals}
+          loading={loadingPracticals}
+          activeCourse={activeCourse}
+          currentTime={currentTime}
+          onAddPractical={practicalEditor.handleOpenAddPractical}
+          onViewPractical={handleOpenViewPractical}
+          onEditPractical={practicalEditor.handleOpenEditPractical}
+          onDeletePractical={handleDeletePractical}
+          onExtraTime={setExtraTimePractical}
+          onGrades={setGradePractical}
+        />
       )}
 
       {/* TAB 2: STUDENT SUBMISSIONS */}
@@ -1394,579 +1011,30 @@ function FacultyWorkspace() {
       )}
 
       {/* MODAL: ADD / EDIT PRACTICAL */}
-      {showPracticalModal && (
-        <div style={{
-          position: 'fixed', inset: 0, backgroundColor: 'rgba(0,0,0,0.45)',
-          display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 1000,
-          overflowY: 'auto', padding: '40px 0'
-        }}>
-          <div style={{
-            background: 'white', borderRadius: '16px', padding: '32px',
-            width: '100%', maxWidth: '850px', boxShadow: '0 20px 60px rgba(0,0,0,0.2)',
-            maxHeight: '90vh', overflowY: 'auto'
-          }}>
-            <h3 style={{ marginBottom: '20px', fontSize: '20px', fontWeight: 700 }}>
-              {editingPractical ? `Edit Practical: ${editingPractical.title}` : 'Add New Coding Practical'}
-            </h3>
-
-
-
-            <form onSubmit={handleSubmitPractical} style={{ display: 'flex', flexDirection: 'column', gap: '15px' }}>
-              <div style={{ display: 'flex', gap: '15px' }}>
-                <div style={{ flex: 2 }}>
-                  <label style={{ fontSize: '12px', fontWeight: 600, color: 'var(--text-muted)' }}>Title *</label>
-                  <input
-                    type="text"
-                    className="input-field"
-                    placeholder="e.g. Reverse an array"
-                    value={pracTitle}
-                    onChange={e => setPracTitle(e.target.value)}
-                    required
-                  />
-                </div>
-                <div style={{ flex: 1 }}>
-                  <label style={{ fontSize: '12px', fontWeight: 600, color: 'var(--text-muted)' }}>Difficulty</label>
-                  <select
-                    className="input-field"
-                    value={pracDiff}
-                    onChange={e => setPracDiff(e.target.value)}
-                  >
-                    <option value="Easy">Easy</option>
-                    <option value="Medium">Medium</option>
-                    <option value="Hard">Hard</option>
-                  </select>
-                </div>
-              </div>
-
-              <div style={{ display: 'flex', gap: '15px' }}>
-                <div style={{ flex: 1 }}>
-                  <label style={{ fontSize: '12px', fontWeight: 600, color: 'var(--text-muted)' }}>Start Time (Optional)</label>
-                  <input
-                    type="datetime-local"
-                    className="input-field"
-                    value={pracStartTime}
-                    onChange={e => setPracStartTime(e.target.value)}
-                  />
-                </div>
-                <div style={{ flex: 1 }}>
-                  <label style={{ fontSize: '12px', fontWeight: 600, color: 'var(--text-muted)' }}>End Time (Optional)</label>
-                  <input
-                    type="datetime-local"
-                    className="input-field"
-                    value={pracEndTime}
-                    onChange={e => setPracEndTime(e.target.value)}
-                  />
-                </div>
-              </div>
-
-              <div>
-                <label style={{ fontSize: '12px', fontWeight: 600, color: 'var(--text-muted)', display: 'block', marginBottom: '8px' }}>Allowed Programming Languages *</label>
-                <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
-                  <select
-                    className="input-field"
-                    value=""
-                    onChange={e => {
-                      const val = e.target.value;
-                      if (val === 'all') {
-                        setAllowedLanguages(['python', 'cpp', 'java', 'c', 'javascript']);
-                      } else if (val && !allowedLanguages.includes(val)) {
-                        setAllowedLanguages([...allowedLanguages, val]);
-                      }
-                    }}
-                    style={{ padding: '8px 12px', borderRadius: '6px', border: '1px solid var(--border-color)', backgroundColor: 'white' }}
-                  >
-                    <option value="">Add language...</option>
-                    {allowedLanguages.length < 5 && <option value="all">All Languages</option>}
-                    {!allowedLanguages.includes('python') && <option value="python">Python</option>}
-                    {!allowedLanguages.includes('cpp') && <option value="cpp">C++</option>}
-                    {!allowedLanguages.includes('java') && <option value="java">Java</option>}
-                    {!allowedLanguages.includes('c') && <option value="c">C</option>}
-                    {!allowedLanguages.includes('javascript') && <option value="javascript">JavaScript</option>}
-                  </select>
-
-                  <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap', marginTop: '4px' }}>
-                    {allowedLanguages.map(lang => (
-                      <span
-                        key={lang}
-                        style={{
-                          display: 'inline-flex',
-                          alignItems: 'center',
-                          gap: '6px',
-                          padding: '4px 10px',
-                          borderRadius: '16px',
-                          backgroundColor: '#eff1ff',
-                          color: '#4338ca',
-                          fontSize: '12px',
-                          fontWeight: '600',
-                          border: '1px solid #bfdbfe'
-                        }}
-                      >
-                        {lang === 'cpp' ? 'C++' : lang === 'javascript' ? 'JavaScript' : lang.charAt(0).toUpperCase() + lang.slice(1)}
-                        <button
-                          type="button"
-                          onClick={() => {
-                            if (allowedLanguages.length <= 1) {
-                              alert('At least one language must be enabled.');
-                              return;
-                            }
-                            setAllowedLanguages(allowedLanguages.filter(l => l !== lang));
-                          }}
-                          style={{
-                            border: 'none',
-                            background: 'transparent',
-                            color: '#b91c1c',
-                            cursor: 'pointer',
-                            fontSize: '14px',
-                            fontWeight: 'bold',
-                            padding: '0 2px',
-                            lineHeight: 1
-                          }}
-                        >
-                          ×
-                        </button>
-                      </span>
-                    ))}
-                  </div>
-                </div>
-              </div>
-
-              <div>
-                <label style={{ fontSize: '12px', fontWeight: 600, color: 'var(--text-muted)' }}>Description / Problem Statement *</label>
-                <textarea
-                  className="input-field"
-                  rows={4}
-                  placeholder="Describe the coding challenge in detail (Supports HTML/Markdown)..."
-                  value={pracDesc}
-                  onChange={e => setPracDesc(e.target.value)} required style={{ fontFamily: 'monospace' }} /> </div> <div style={{ marginTop: '15px' }}> <label style={{ fontSize: '12px', fontWeight: 600, color: 'var(--text-muted)' }}>Topics (comma separated)</label> <input type="text" className="input-field" placeholder="e.g. Arrays, Sorting, Dynamic Programming" value={pracTopics} onChange={e => setPracTopics(e.target.value)} /> </div>
-
-              <div>
-                <label style={{ fontSize: '12px', fontWeight: 600, color: 'var(--text-muted)' }}>Instructions / Constraints (Optional)</label>
-                <textarea
-                  className="input-field"
-                  rows={2}
-                  placeholder="e.g. 1 <= N <= 10^5"
-                  value={pracInst}
-                  onChange={e => setPracInst(e.target.value)}
-                  style={{ fontFamily: 'monospace' }}
-                />
-              </div>
-
-              <div style={{ border: '1px solid var(--border-color)', borderRadius: '8px', padding: '15px', display: 'flex', flexDirection: 'column', gap: '12px' }}>
-                <h4 style={{ fontSize: '14px', fontWeight: 600 }}>Challenge Specific Inputs / Formatting</h4>
-                <div style={{ display: 'flex', gap: '15px' }}>
-                  <div style={{ flex: 1 }}>
-                    <label style={{ fontSize: '11px', color: 'var(--text-muted)' }}>Input Format *</label>
-                    <textarea className="input-field" rows={2} value={pracInputFormat} onChange={e => setPracInputFormat(e.target.value)} required />
-                  </div>
-                  <div style={{ flex: 1 }}>
-                    <label style={{ fontSize: '11px', color: 'var(--text-muted)' }}>Output Format *</label>
-                    <textarea className="input-field" rows={2} value={pracOutputFormat} onChange={e => setPracOutputFormat(e.target.value)} required />
-                  </div>
-                </div>
-                <div style={{ display: 'flex', flexDirection: 'column', gap: '15px' }}>
-                  <p style={{ fontWeight: 'bold', marginBottom: '8px', fontSize: '13px', color: '#1e293b' }}>Sample Test Cases (Shown to students)</p>
-                  {sampleTestCases.map((tc, idx) => (
-                    <div key={idx} style={{ display: 'flex', gap: '10px', alignItems: 'center', borderBottom: '1px solid #f1f5f9', pb: '10px', marginBottom: '10px' }}>
-                      <div style={{ flex: 1 }}>
-                        <textarea
-                          className="input-field"
-                          rows={2}
-                          placeholder={`Sample Input ${idx + 1}`}
-                          value={tc.input}
-                          onChange={e => {
-                            const updated = [...sampleTestCases];
-                            updated[idx].input = e.target.value;
-                            setSampleTestCases(updated);
-                          }}
-                          required
-                          style={{ padding: '6px', fontFamily: 'monospace', resize: 'vertical' }}
-                        />
-                      </div>
-                      <div style={{ flex: 1 }}>
-                        <textarea
-                          className="input-field"
-                          rows={2}
-                          placeholder={`Sample Output ${idx + 1}`}
-                          value={tc.expected}
-                          onChange={e => {
-                            const updated = [...sampleTestCases];
-                            updated[idx].expected = e.target.value;
-                            setSampleTestCases(updated);
-                          }}
-                          required
-                          style={{ padding: '6px', fontFamily: 'monospace', resize: 'vertical' }}
-                        />
-                      </div>
-                      <button type="button" style={{ border: 'none', background: 'none', color: '#b91c1c', fontWeight: 'bold', cursor: 'pointer', fontSize: '18px', padding: '0 5px' }} onClick={() => {
-                        if (sampleTestCases.length <= 1) {
-                          alert('At least 1 sample test case must remain.');
-                          return;
-                        }
-                        setSampleTestCases(sampleTestCases.filter((_, i) => i !== idx));
-                      }}>
-                        ×
-                      </button>
-                    </div>
-                  ))}
-                  <button type="button" onClick={() => setSampleTestCases([...sampleTestCases, { input: '', expected: '' }])} style={{ background: '#f8fafc', color: '#0066b1', border: '1px dashed #cbd5e1', padding: '6px 12px', borderRadius: '6px', fontSize: '12px', fontWeight: 600, cursor: 'pointer' }}>
-                    + Add Sample Test Case
-                  </button>
-                </div>
-              </div>
-
-              {/* Test Cases configuration */}
-              <div style={{ border: '1px solid var(--border-color)', borderRadius: '8px', padding: '15px' }}>
-                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '10px' }}>
-                  <h4 style={{ fontSize: '14px', fontWeight: 600 }}>Test Cases Config ({testCases.length} / 20)</h4>
-                  {true && (
-                    <button type="button" className="btn-small" style={{ backgroundColor: 'var(--primary)', color: 'white' }} onClick={handleAddTestCaseRow}>
-                      + Add Case Row
-                    </button>
-                  )}
-                </div>
-
-                <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
-                  {testCases.map((tc, idx) => (
-                    <div key={idx} style={{ display: 'flex', gap: '10px', alignItems: 'center', borderBottom: '1px solid #f1f5f9', pb: '10px' }}>
-                      <div style={{ flex: 1 }}>
-                        <textarea
-                          className="input-field"
-                          rows={2}
-                          placeholder="Input arguments (e.g. 3 5) *"
-                          value={tc.input}
-                          onChange={e => handleTestCaseChange(idx, 'input', e.target.value)}
-                          required
-
-                          style={{ padding: '6px', fontFamily: 'monospace', resize: 'vertical' }}
-                        />
-                      </div>
-                      <div style={{ flex: 1 }}>
-                        <textarea
-                          className="input-field"
-                          rows={2}
-                          placeholder="Expected result (e.g. 8) *"
-                          value={tc.expected}
-                          onChange={e => handleTestCaseChange(idx, 'expected', e.target.value)}
-                          required
-
-                          style={{ padding: '6px', fontFamily: 'monospace', resize: 'vertical' }}
-                        />
-                      </div>
-                      <div style={{ width: '80px' }}>
-                        <select
-                          className="input-field"
-                          value={tc.marks}
-                          onChange={e => handleTestCaseChange(idx, 'marks', e.target.value)}
-                          required
-
-                          style={{ padding: '6px' }}
-                        >
-                          {[...Array(11).keys()].map(n => (
-                            <option key={n} value={n}>{n}</option>
-                          ))}
-                        </select>
-                      </div>
-                      {true && (
-                        <button type="button" style={{ border: 'none', background: 'none', color: '#b91c1c', fontWeight: 'bold', cursor: 'pointer', fontSize: '18px', padding: '0 5px' }} onClick={() => handleRemoveTestCaseRow(idx)}>
-                          ×
-                        </button>
-                      )}
-                    </div>
-                  ))}
-                </div>
-              </div>
-
-              {/* Form Buttons */}
-              <div style={{ display: 'flex', gap: '15px', justifyContent: 'flex-end', marginTop: '15px' }}>
-                <button
-                  type="button"
-                  onClick={() => setShowPracticalModal(false)}
-                  style={{ padding: '10px 20px', border: '1px solid var(--border-color)', borderRadius: '6px', background: 'transparent', cursor: 'pointer', fontWeight: 600 }}
-                >
-                  Cancel
-                </button>
-                <button type="submit" className="btn-primary" style={{ width: 'auto', padding: '10px 30px', margin: 0 }}>
-                  Save Practical
-                </button>
-              </div>
-            </form>
-          </div>
-        </div>
-      )}
+      <PracticalEditor
+        isOpen={practicalEditor.showPracticalModal}
+        editingPractical={practicalEditor.editingPractical}
+        formData={practicalEditor.formData}
+        formHandlers={practicalEditor.formHandlers}
+        processing={processing}
+        onSubmit={practicalEditor.handleSubmitPractical}
+        onClose={() => practicalEditor.setShowPracticalModal(false)}
+      />
 
       {/* MODAL: VIEW PRACTICAL DETAILS (READ-ONLY) */}
       {showViewPracticalModal && viewingPractical && (
-        <div style={{
-          position: 'fixed', inset: 0, backgroundColor: 'rgba(0,0,0,0.5)',
-          display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 1000,
-          overflowY: 'auto', padding: '40px 0'
-        }}>
-          <div style={{
-            background: 'white', borderRadius: '16px', padding: '32px',
-            width: '100%', maxWidth: '880px', boxShadow: '0 20px 60px rgba(0,0,0,0.25)',
-            maxHeight: '90vh', overflowY: 'auto'
-          }}>
-            {/* Header */}
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', borderBottom: '1px solid var(--border-color)', paddingBottom: '16px', marginBottom: '20px' }}>
-              <div>
-                <div style={{ display: 'flex', alignItems: 'center', gap: '8px', flexWrap: 'wrap', marginBottom: '6px' }}>
-                  <span style={{ fontSize: '12px', fontWeight: 700, color: 'var(--primary)', textTransform: 'uppercase', letterSpacing: '0.5px' }}>
-                    {activeCourse?.course_code || viewingPractical.course_code || 'COURSE'}
-                  </span>
-                  <span style={{
-                    padding: '3px 8px', borderRadius: '12px', fontSize: '11px', fontWeight: 700,
-                    backgroundColor: viewingPractical.difficulty === 'Easy' ? '#eff1ff' : viewingPractical.difficulty === 'Medium' ? '#f1f5f9' : '#fef2f2',
-                    color: viewingPractical.difficulty === 'Easy' ? '#4f46e5' : viewingPractical.difficulty === 'Medium' ? '#475569' : '#b91c1c'
-                  }}>
-                    {viewingPractical.difficulty || 'Easy'}
-                  </span>
-                  <span style={{ fontSize: '11px', fontWeight: 600, backgroundColor: '#f1f5f9', color: '#475569', padding: '3px 8px', borderRadius: '12px' }}>
-                    {viewingPractical.is_challenge ? ' Challenge Problem' : '📘 Standard Assignment'}
-                  </span>
-                  {renderTimelineBadge(viewingPractical.start_time, viewingPractical.end_time)}
-                  {!activeCourse?.is_co_coordinator && (
-                    <span style={{ fontSize: '11px', fontWeight: 600, backgroundColor: '#eff1ff', color: '#1d4ed8', border: '1px solid #bfdbfe', padding: '3px 8px', borderRadius: '12px' }}>
-                      👁 View-only Access
-                    </span>
-                  )}
-                </div>
-                <h2 style={{ fontSize: '22px', fontWeight: 700, color: 'var(--text-main)', margin: 0 }}>
-                  {viewingPractical.title}
-                </h2>
-              </div>
-              <button
-                type="button"
-                onClick={() => setShowViewPracticalModal(false)}
-                style={{ border: 'none', background: 'transparent', fontSize: '24px', cursor: 'pointer', color: '#64748b', lineHeight: 1 }}
-                title="Close"
-              >
-                &times;
-              </button>
-            </div>
-
-            {/* Quick Stat Cards */}
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))', gap: '12px', marginBottom: '20px' }}>
-              <div style={{ background: '#f8fafc', padding: '12px 16px', borderRadius: '8px', border: '1px solid #e2e8f0' }}>
-                <span style={{ fontSize: '11px', fontWeight: 600, color: '#64748b', textTransform: 'uppercase' }}>Total Marks</span>
-                <p style={{ fontSize: '18px', fontWeight: 700, color: 'var(--primary)', margin: '4px 0 0 0' }}>{viewingPractical.total_marks} Marks</p>
-              </div>
-              <div style={{ background: '#f8fafc', padding: '12px 16px', borderRadius: '8px', border: '1px solid #e2e8f0' }}>
-                <span style={{ fontSize: '11px', fontWeight: 600, color: '#64748b', textTransform: 'uppercase' }}>Test Cases</span>
-                <p style={{ fontSize: '18px', fontWeight: 700, color: '#1e293b', margin: '4px 0 0 0' }}>{viewingPractical.test_cases?.length || viewingPractical.test_cases_count || 0} Cases</p>
-              </div>
-              <div style={{ background: '#f8fafc', padding: '12px 16px', borderRadius: '8px', border: '1px solid #e2e8f0' }}>
-                <span style={{ fontSize: '11px', fontWeight: 600, color: '#64748b', textTransform: 'uppercase' }}>Student Submissions</span>
-                <p style={{ fontSize: '18px', fontWeight: 700, color: '#1e293b', margin: '4px 0 0 0' }}>{viewingPractical.submissions_count || 0} Submissions</p>
-              </div>
-              <div style={{ background: '#f8fafc', padding: '12px 16px', borderRadius: '8px', border: '1px solid #e2e8f0' }}>
-                <span style={{ fontSize: '11px', fontWeight: 600, color: '#64748b', textTransform: 'uppercase' }}>Languages</span>
-                <div style={{ display: 'flex', gap: '4px', flexWrap: 'wrap', marginTop: '6px' }}>
-                  {(viewingPractical.starter_code?.allowed_languages || ['python', 'cpp']).map(l => (
-                    <span key={l} style={{ fontSize: '10px', fontWeight: 700, backgroundColor: '#e2e8f0', color: '#334155', padding: '2px 6px', borderRadius: '4px', textTransform: 'uppercase' }}>
-                      {l}
-                    </span>
-                  ))}
-                </div>
-              </div>
-            </div>
-
-            {/* Topics & Instructions if present */}
-            {viewingPractical.topics && (
-              <div style={{ marginBottom: '16px' }}>
-                <span style={{ fontSize: '12px', fontWeight: 600, color: '#64748b', display: 'block', marginBottom: '6px' }}>Topics Covered:</span>
-                <div style={{ display: 'flex', gap: '6px', flexWrap: 'wrap' }}>
-                  {viewingPractical.topics.split(',').map((t, idx) => (
-                    <span key={idx} style={{ fontSize: '12px', backgroundColor: '#eff1ff', color: '#1d4ed8', border: '1px solid #dbeafe', padding: '3px 10px', borderRadius: '12px', fontWeight: 500 }}>
-                      #{t.trim()}
-                    </span>
-                  ))}
-                </div>
-              </div>
-            )}
-
-            {viewingPractical.instructions && (
-              <div style={{ marginBottom: '20px', padding: '12px 16px', backgroundColor: '#eff1ff', border: '1px solid #c7d2fe', borderRadius: '8px' }}>
-                <span style={{ fontSize: '12px', fontWeight: 700, color: '#475569', display: 'block', marginBottom: '4px' }}>Special Instructions for Students:</span>
-                <p style={{ fontSize: '13px', color: '#78350f', margin: 0, whiteSpace: 'pre-wrap' }}>{viewingPractical.instructions}</p>
-              </div>
-            )}
-
-            {/* Description / Problem Statement */}
-            <div style={{ marginBottom: '24px' }}>
-              <h4 style={{ fontSize: '14px', fontWeight: 700, color: '#1e293b', marginBottom: '8px', borderLeft: '3px solid var(--primary)', paddingLeft: '8px' }}>
-                Problem Description
-              </h4>
-              <div style={{ background: '#f8fafc', padding: '16px', borderRadius: '8px', border: '1px solid #e2e8f0', fontSize: '13.5px', color: '#334155', lineHeight: '1.6', whiteSpace: 'pre-wrap' }}>
-                {viewingPractical.description || 'No description provided.'}
-              </div>
-            </div>
-
-            {/* Input & Output Format & Constraints */}
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(240px, 1fr))', gap: '16px', marginBottom: '24px' }}>
-              <div>
-                <h4 style={{ fontSize: '13px', fontWeight: 700, color: '#1e293b', marginBottom: '6px' }}>Input Format</h4>
-                <div style={{ background: '#f8fafc', padding: '12px', borderRadius: '8px', border: '1px solid #e2e8f0', fontSize: '12.5px', color: '#334155', whiteSpace: 'pre-wrap', minHeight: '60px' }}>
-                  {viewingPractical.input_format || 'Standard input format.'}
-                </div>
-              </div>
-              <div>
-                <h4 style={{ fontSize: '13px', fontWeight: 700, color: '#1e293b', marginBottom: '6px' }}>Output Format</h4>
-                <div style={{ background: '#f8fafc', padding: '12px', borderRadius: '8px', border: '1px solid #e2e8f0', fontSize: '12.5px', color: '#334155', whiteSpace: 'pre-wrap', minHeight: '60px' }}>
-                  {viewingPractical.output_format || 'Standard output format.'}
-                </div>
-              </div>
-              {viewingPractical.constraints && (
-                <div>
-                  <h4 style={{ fontSize: '13px', fontWeight: 700, color: '#1e293b', marginBottom: '6px' }}>Constraints</h4>
-                  <div style={{ background: '#f8fafc', padding: '12px', borderRadius: '8px', border: '1px solid #e2e8f0', fontSize: '12.5px', color: '#334155', whiteSpace: 'pre-wrap', minHeight: '60px' }}>
-                    {viewingPractical.constraints}
-                  </div>
-                </div>
-              )}
-            </div>
-
-            {/* Sample Test Cases */}
-            {viewingPractical.sampleTestCases && viewingPractical.sampleTestCases.length > 0 && (
-              <div style={{ marginBottom: '24px' }}>
-                <h4 style={{ fontSize: '14px', fontWeight: 700, color: '#1e293b', marginBottom: '10px', borderLeft: '3px solid var(--primary)', paddingLeft: '8px' }}>
-                  Sample Cases
-                </h4>
-                <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
-                  {viewingPractical.sampleTestCases.map((stc, idx) => (
-                    <div key={idx} style={{ background: '#f8fafc', border: '1px solid #e2e8f0', borderRadius: '8px', padding: '12px' }}>
-                      <span style={{ fontSize: '11px', fontWeight: 700, color: '#64748b', textTransform: 'uppercase' }}>Sample {idx + 1}</span>
-                      <div style={{ display: 'flex', gap: '12px', marginTop: '6px', flexWrap: 'wrap' }}>
-                        <div style={{ flex: 1, minWidth: '200px' }}>
-                          <span style={{ fontSize: '11px', color: '#64748b' }}>Input:</span>
-                          <pre style={{ margin: '2px 0 0 0', background: 'white', padding: '8px', borderRadius: '6px', border: '1px solid #cbd5e1', fontSize: '12px', fontFamily: 'monospace' }}>{stc.input || '(empty)'}</pre>
-                        </div>
-                        <div style={{ flex: 1, minWidth: '200px' }}>
-                          <span style={{ fontSize: '11px', color: '#64748b' }}>Expected Output:</span>
-                          <pre style={{ margin: '2px 0 0 0', background: 'white', padding: '8px', borderRadius: '6px', border: '1px solid #cbd5e1', fontSize: '12px', fontFamily: 'monospace' }}>{stc.expected || '(empty)'}</pre>
-                        </div>
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              </div>
-            )}
-
-            {/* Official Test Cases Evaluation Breakdown */}
-            <div style={{ marginBottom: '24px' }}>
-              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '10px' }}>
-                <h4 style={{ fontSize: '14px', fontWeight: 700, color: '#1e293b', margin: 0, borderLeft: '3px solid var(--primary)', paddingLeft: '8px' }}>
-                  Official Grading Test Cases ({viewingPractical.test_cases?.length || 0})
-                </h4>
-                <span style={{ fontSize: '12px', color: '#64748b', fontWeight: 500 }}>
-                  Total Evaluation Value: <strong>{viewingPractical.total_marks} Marks</strong>
-                </span>
-              </div>
-              <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
-                {(viewingPractical.test_cases || []).map((tc, idx) => (
-                  <div key={tc.id || idx} style={{ border: '1px solid var(--border-color)', borderRadius: '8px', padding: '12px', backgroundColor: '#ffffff' }}>
-                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '8px' }}>
-                      <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                        <span style={{ fontWeight: 600, fontSize: '13px' }}>{tc.label || `Test Case ${idx + 1}`}</span>
-                        <span style={{
-                          fontSize: '11px', fontWeight: 700,
-                          backgroundColor: tc.is_hidden ? '#fef2f2' : '#eff1ff',
-                          color: tc.is_hidden ? '#b91c1c' : '#4f46e5',
-                          padding: '2px 8px', borderRadius: '12px', border: `1px solid ${tc.is_hidden ? '#fecaca' : '#a7f3d0'}`
-                        }}>
-                          {tc.is_hidden ? '🔒 Hidden Case' : ' Public Case'}
-                        </span>
-                      </div>
-                      <span style={{ fontSize: '12px', fontWeight: 700, color: 'var(--primary)' }}>
-                        +{tc.marks} Marks
-                      </span>
-                    </div>
-
-                    <div style={{ display: 'flex', gap: '10px', fontSize: '12px', background: '#f8fafc', padding: '10px', borderRadius: '6px' }}>
-                      <div style={{ flex: 1 }}>
-                        <span style={{ color: 'var(--text-muted)', fontWeight: 600 }}>Input:</span>
-                        <pre style={{ margin: '3px 0 0 0', fontFamily: 'monospace', background: 'white', padding: '6px', borderRadius: '4px', border: '1px solid var(--border-color)', fontSize: '12px' }}>{tc.input}</pre>
-                      </div>
-                      <div style={{ flex: 1 }}>
-                        <span style={{ color: 'var(--text-muted)', fontWeight: 600 }}>Expected Output:</span>
-                        <pre style={{ margin: '3px 0 0 0', fontFamily: 'monospace', background: 'white', padding: '6px', borderRadius: '4px', border: '1px solid var(--border-color)', fontSize: '12px' }}>{tc.expected}</pre>
-                      </div>
-                    </div>
-                  </div>
-                ))}
-                {(!viewingPractical.test_cases || viewingPractical.test_cases.length === 0) && (
-                  <div style={{ padding: '16px', backgroundColor: '#f8fafc', borderRadius: '8px', color: '#64748b', fontSize: '13px', fontStyle: 'italic', textAlign: 'center' }}>
-                    No test cases configured for this practical yet.
-                  </div>
-                )}
-              </div>
-            </div>
-
-            {/* Starter Code Templates */}
-            <div style={{ marginBottom: '24px' }}>
-              <h4 style={{ fontSize: '14px', fontWeight: 700, color: '#1e293b', marginBottom: '8px', borderLeft: '3px solid var(--primary)', paddingLeft: '8px' }}>
-                Starter Code Templates
-              </h4>
-              <div style={{ display: 'flex', gap: '6px', marginBottom: '8px' }}>
-                {(viewingPractical.starter_code?.allowed_languages || ['python', 'cpp']).map(lang => (
-                  <button
-                    key={lang}
-                    type="button"
-                    onClick={() => setViewPracticalCodeLang(lang)}
-                    style={{
-                      padding: '6px 14px', borderRadius: '6px', border: '1px solid var(--border-color)',
-                      backgroundColor: viewPracticalCodeLang === lang ? 'var(--primary)' : '#ffffff',
-                      color: viewPracticalCodeLang === lang ? '#ffffff' : '#1e293b',
-                      fontSize: '12px', fontWeight: 600, cursor: 'pointer', textTransform: 'uppercase'
-                    }}
-                  >
-                    {lang}
-                  </button>
-                ))}
-              </div>
-              <div style={{ height: '220px', borderRadius: '8px', overflow: 'hidden', border: '1px solid #1e293b' }}>
-                <Editor
-                  height="100%"
-                  language={viewPracticalCodeLang === 'c' || viewPracticalCodeLang === 'cpp' ? 'cpp' : viewPracticalCodeLang}
-                  theme="light"
-                  value={viewingPractical.starter_code?.[viewPracticalCodeLang] || (viewPracticalCodeLang === 'cpp' ? viewingPractical.starter_code?.cpp : viewingPractical.starter_code?.python) || '# No template available'}
-                  options={{ readOnly: true, minimap: { enabled: false }, scrollBeyondLastLine: false, fontSize: 13, fontFamily: 'JetBrains Mono, Fira Code, Consolas, monospace' }}
-                />
-              </div>
-            </div>
-
-            {/* Footer Actions */}
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', borderTop: '1px solid var(--border-color)', paddingTop: '16px' }}>
-              <div>
-                {!activeCourse?.is_co_coordinator && (
-                  <span style={{ fontSize: '12px', color: '#64748b', fontStyle: 'italic' }}>
-                    👁 Read-only View: You have full access to inspect problem statements and grading criteria.
-                  </span>
-                )}
-              </div>
-              <div style={{ display: 'flex', gap: '10px' }}>
-                {activeCourse?.is_co_coordinator && (
-                  <button
-                    type="button"
-                    onClick={() => {
-                      setShowViewPracticalModal(false);
-                      handleOpenEditPractical(viewingPractical);
-                    }}
-                    style={{ padding: '10px 18px', borderRadius: '6px', border: 'none', backgroundColor: 'var(--primary)', color: 'white', fontWeight: 600, fontSize: '13px', cursor: 'pointer' }}
-                  >
-                    ✏️ Edit Practical
-                  </button>
-                )}
-                <button
-                  type="button"
-                  onClick={() => setShowViewPracticalModal(false)}
-                  style={{ padding: '10px 24px', borderRadius: '6px', border: '1px solid var(--border-color)', backgroundColor: '#ffffff', color: '#1e293b', fontWeight: 600, fontSize: '13px', cursor: 'pointer' }}
-                >
-                  Close
-                </button>
-              </div>
-            </div>
-          </div>
-        </div>
+        <PracticalDetailModal
+          practical={viewingPractical}
+          activeCourse={activeCourse}
+          currentTime={currentTime}
+          codeLang={viewPracticalCodeLang}
+          onChangeCodeLang={setViewPracticalCodeLang}
+          onClose={() => setShowViewPracticalModal(false)}
+          onEdit={(p) => {
+            setShowViewPracticalModal(false);
+            practicalEditor.handleOpenEditPractical(p);
+          }}
+        />
       )}
 
       {/* MODAL: VIEW SUBMISSION CODE & CASE RESULTS */}
@@ -2112,137 +1180,13 @@ function FacultyWorkspace() {
 
       {/* MODAL: GRANT EXTRA TIME */}
       {extraTimePractical && (
-        <div style={{
-          position: 'fixed', inset: 0, backgroundColor: 'rgba(0,0,0,0.5)',
-          display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 1100, padding: '20px'
-        }}>
-          <div style={{
-            background: 'white', borderRadius: '16px', padding: '28px',
-            width: '100%', maxWidth: '520px', boxShadow: '0 20px 60px rgba(0,0,0,0.25)'
-          }}>
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '16px' }}>
-              <div>
-                <span style={{ fontSize: '11px', fontWeight: 700, color: 'var(--primary)', textTransform: 'uppercase', letterSpacing: '0.5px' }}>
-                  Extend Timeline
-                </span>
-                <h3 style={{ fontSize: '19px', fontWeight: 700, color: 'var(--text-main)', marginTop: '2px' }}>
-                  Grant Extra Time
-                </h3>
-              </div>
-              <button
-                onClick={() => setExtraTimePractical(null)}
-                style={{ background: 'none', border: 'none', fontSize: '20px', cursor: 'pointer', color: '#94a3b8' }}
-              >
-                ×
-              </button>
-            </div>
-
-            <p style={{ fontSize: '13.5px', color: 'var(--text-muted)', marginBottom: '16px' }}>
-              Practical: <strong style={{ color: 'var(--text-main)' }}>{extraTimePractical.title}</strong>
-            </p>
-
-            <div style={{ backgroundColor: '#f8fafc', border: '1px solid #e2e8f0', borderRadius: '10px', padding: '14px', marginBottom: '20px' }}>
-              <div style={{ fontSize: '12px', color: 'var(--text-muted)' }}>Current Status:</div>
-              <div style={{ marginTop: '4px' }}>
-                {renderTimelineBadge(extraTimePractical.start_time, extraTimePractical.end_time)}
-              </div>
-              {extraTimePractical.end_time && (
-                <div style={{ fontSize: '12px', color: '#64748b', marginTop: '6px' }}>
-                  Deadline: <strong>{new Date(extraTimePractical.end_time).toLocaleString()}</strong>
-                </div>
-              )}
-            </div>
-
-            <div style={{ marginBottom: '20px' }}>
-              <label style={{ fontSize: '12.5px', fontWeight: 600, color: 'var(--text-main)', display: 'block', marginBottom: '8px' }}>
-                 Quick Add Presets:
-              </label>
-              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '8px' }}>
-                {[10, 15, 30, 60].map(mins => (
-                  <button
-                    key={mins}
-                    type="button"
-                    onClick={() => handleApplyExtraTime(mins)}
-                    disabled={processing}
-                    style={{
-                      padding: '10px 8px', borderRadius: '8px', border: '1px solid #cbd5e1',
-                      backgroundColor: '#ffffff', color: '#1e293b', fontWeight: 600, fontSize: '13px',
-                      cursor: 'pointer', transition: 'all 0.15s', textAlign: 'center'
-                    }}
-                    onMouseEnter={e => { e.currentTarget.style.borderColor = 'var(--primary)'; e.currentTarget.style.color = 'var(--primary)'; }}
-                    onMouseLeave={e => { e.currentTarget.style.borderColor = '#cbd5e1'; e.currentTarget.style.color = '#1e293b'; }}
-                  >
-                    +{mins >= 60 ? `${mins / 60}h` : `${mins}m`}
-                  </button>
-                ))}
-              </div>
-            </div>
-
-            <div style={{ marginBottom: '20px' }}>
-              <label style={{ fontSize: '12.5px', fontWeight: 600, color: 'var(--text-main)', display: 'block', marginBottom: '8px' }}>
-                Or Add Custom Minutes:
-              </label>
-              <div style={{ display: 'flex', gap: '8px' }}>
-                <input
-                  type="number"
-                  min="1"
-                  max="1440"
-                  className="input-field"
-                  placeholder="e.g. 45"
-                  value={extraMinutesInput}
-                  onChange={e => setExtraMinutesInput(e.target.value)}
-                  style={{ flex: 1, padding: '8px 12px' }}
-                />
-                <button
-                  type="button"
-                  onClick={() => handleApplyExtraTime(parseInt(extraMinutesInput))}
-                  disabled={processing || !extraMinutesInput}
-                  className="btn-primary"
-                  style={{ width: 'auto', padding: '8px 18px', margin: 0, fontSize: '13px' }}
-                >
-                  Apply
-                </button>
-              </div>
-            </div>
-
-            <div style={{ marginBottom: '24px' }}>
-              <label style={{ fontSize: '12.5px', fontWeight: 600, color: 'var(--text-main)', display: 'block', marginBottom: '8px' }}>
-                Or Pick Exact New End Time:
-              </label>
-              <div style={{ display: 'flex', gap: '8px' }}>
-                <input
-                  type="datetime-local"
-                  className="input-field"
-                  value={customEndTimeInput}
-                  onChange={e => setCustomEndTimeInput(e.target.value)}
-                  style={{ flex: 1, padding: '8px 12px' }}
-                />
-                <button
-                  type="button"
-                  onClick={() => handleApplyExtraTime(null, customEndTimeInput)}
-                  disabled={processing || !customEndTimeInput}
-                  style={{
-                    padding: '8px 18px', borderRadius: '6px', border: '1px solid var(--primary)',
-                    backgroundColor: 'var(--primary)', color: 'white', fontWeight: 600, fontSize: '13px',
-                    cursor: 'pointer'
-                  }}
-                >
-                  Set
-                </button>
-              </div>
-            </div>
-
-            <div style={{ display: 'flex', justifyContent: 'flex-end', borderTop: '1px solid #f1f5f9', paddingTop: '16px' }}>
-              <button
-                type="button"
-                onClick={() => setExtraTimePractical(null)}
-                style={{ padding: '8px 20px', border: '1px solid #cbd5e1', borderRadius: '6px', background: 'transparent', cursor: 'pointer', fontWeight: 600, fontSize: '13px' }}
-              >
-                Close
-              </button>
-            </div>
-          </div>
-        </div>
+        <ExtraTimeDialog
+          practical={extraTimePractical}
+          currentTime={currentTime}
+          processing={processing}
+          onApply={handleApplyExtraTime}
+          onClose={() => setExtraTimePractical(null)}
+        />
       )}
     </div>
   );
