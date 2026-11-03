@@ -222,6 +222,17 @@ test('domain and infrastructure dependencies obey one-way package boundaries', (
   }
 });
 
+test('core package contains no browser-only PDF generation utilities or exports', () => {
+  const corePackageJson = JSON.parse(readFileSync(fileURLToPath(new URL('packages/core/package.json', root)), 'utf8'));
+  assert.equal(corePackageJson.exports['./utils/pdf-gen'], undefined, 'core must not export ./utils/pdf-gen');
+  assert.equal(existsSync(fileURLToPath(new URL('packages/core/src/utils/pdf-gen.js', root))), false, 'core must not contain pdf-gen.js');
+
+  for (const file of walk(fileURLToPath(new URL('packages/core/src/', root))).filter(file => /\.m?js$/.test(file))) {
+    const source = readFileSync(file, 'utf8');
+    assert.doesNotMatch(source, /\b(?:jspdf|jspdf-autotable)\b/, `${file} must not reference jspdf libraries`);
+  }
+});
+
 test('HTTP adapters delegate SQL and sandbox execution to packages', () => {
   for (const file of walk(fileURLToPath(new URL('apps/web/src/app/api/', root))).filter(file => file.endsWith('route.js'))) {
     const source = readFileSync(file, 'utf8');

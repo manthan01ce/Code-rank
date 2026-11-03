@@ -20,38 +20,7 @@ import {
   IconChevronDown,
 } from '@tabler/icons-react';
 
-// ─── PDF Generator ────────────────────────────────────────────────────────────
-async function downloadCredentialsPDF(users) {
-  const { default: jsPDF } = await import('jspdf');
-  const { default: autoTable } = await import('jspdf-autotable');
-
-  const doc = new jsPDF();
-  doc.setFontSize(18);
-  doc.setTextColor(79, 70, 229);
-  doc.text('CodeRank — Faculty Credentials', 14, 20);
-
-  doc.setFontSize(10);
-  doc.setTextColor(100);
-  doc.text(`Generated: ${new Date().toLocaleString()}  |  CONFIDENTIAL — delete after distribution`, 14, 28);
-
-  autoTable(doc, {
-    startY: 35,
-    head: [['Name', 'Email', 'Department', 'Designation', 'Password']],
-    body: users.map((u) => [
-      u.name,
-      u.email,
-      u.extra_info?.department || '-',
-      u.extra_info?.designation || '-',
-      u.rawPassword,
-    ]),
-    theme: 'grid',
-    styles: { fontSize: 9, cellPadding: 4 },
-    headStyles: { fillColor: [79, 70, 229], textColor: 255, fontStyle: 'bold' },
-    alternateRowStyles: { fillColor: [245, 247, 255] },
-  });
-
-  doc.save(`CodeRank_Faculty_${Date.now()}.pdf`);
-}
+import { downloadFacultyCredentialsPDF as downloadCredentialsPDF } from '@/features/users/credential-pdf';
 
 export default function FacultyManagement() {
   const { token: authToken, isReady } = useAdminAuth();

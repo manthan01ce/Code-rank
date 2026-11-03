@@ -1,5 +1,9 @@
 /**
  * apps/web/src/lib/pdfGenerator.js
- * Re-exports PDF generation from @coderank/core
+ * Temporary web facade re-exporting PDF generation from ../features/users/credential-pdf.js
  */
-export { generateUserCredentialsPDF } from '@coderank/core/utils/pdf-gen';
+export {
+  generateUserCredentialsPDF,
+  downloadFacultyCredentialsPDF,
+  downloadStudentCredentialsPDF,
+} from '../features/users/credential-pdf.js';
