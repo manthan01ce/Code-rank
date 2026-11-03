@@ -1,4 +1,4 @@
-import '../packages/core/src/config/env.js';
+import '@coderank/core/config/env';
 import pg from 'pg';
 import { neon } from '@neondatabase/serverless';
 

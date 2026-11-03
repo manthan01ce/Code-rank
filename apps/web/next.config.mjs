@@ -1,4 +1,4 @@
-import '../../packages/core/src/config/env.js';
+import '@coderank/core/config/env';
 /** @type {import('next').NextConfig} */
 const nextConfig = {
   poweredByHeader: false,

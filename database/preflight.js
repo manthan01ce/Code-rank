@@ -1,4 +1,4 @@
-import "../packages/core/src/config/env.js";
+import '@coderank/core/config/env';
 import sql, { closeDatabase } from "../packages/database/src/client.js";
 import { loadMigrations } from "../packages/database/src/migrations.js";
 const required = {

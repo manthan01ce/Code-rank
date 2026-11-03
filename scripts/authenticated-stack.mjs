@@ -1,4 +1,4 @@
-import "../packages/core/src/config/env.js";
+import '@coderank/core/config/env';
 import assert from "node:assert/strict";
 import { spawn, spawnSync, execFileSync } from "node:child_process";
 import { randomBytes } from "node:crypto";

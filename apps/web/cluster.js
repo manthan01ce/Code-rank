@@ -1,4 +1,4 @@
-import '../../packages/core/src/config/env.js';
+import '@coderank/core/config/env';
 import cluster from 'node:cluster';
 import { availableParallelism } from 'node:os';
 process.env.NODE_ENV ||= 'production';

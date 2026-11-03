@@ -1,4 +1,4 @@
-import '../../packages/core/src/config/env.js';
+import '@coderank/core/config/env';
 import { createServer } from 'http';
 import { parse } from 'url';
 import { fileURLToPath } from 'url';

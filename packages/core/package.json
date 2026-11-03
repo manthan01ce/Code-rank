@@ -7,6 +7,7 @@
   "exports": {
     ".": "./src/index.js",
     "./db": "./src/db/client.js",
+    "./config/env": "./src/config/env.js",
     "./services/UserService": "./src/services/UserService.js",
     "./services/CourseService": "./src/services/CourseService.js",
     "./services/SubmissionService": "./src/services/SubmissionService.js",

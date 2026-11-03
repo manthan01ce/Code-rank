@@ -1,5 +1,5 @@
 #!/usr/bin/env node
-import '../packages/core/src/config/env.js';
+import '@coderank/core/config/env';
 import { parseArgs } from 'node:util';
 import { operateDatabase } from './lib/database-ops.mjs';
 

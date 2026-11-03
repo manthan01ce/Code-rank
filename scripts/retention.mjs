@@ -1,4 +1,4 @@
-import '../packages/core/src/config/env.js';
+import '@coderank/core/config/env';
 import { parseArgs } from 'node:util';
 import sql, { closeDatabase } from '../packages/database/src/client.js';
 import { retainOperationalData } from '../packages/database/src/retention.js';
