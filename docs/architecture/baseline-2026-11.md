@@ -18,7 +18,7 @@
 
 ## 2. Inventory Summary: Pages & API Routes
 
-A full source discovery was performed by traversing `apps/web/src/app` using AST inspection and route matching. Every URL dynamic segment, exported HTTP method, authentication model, request body/param parsing contract, status code, and internal service dependency was inventoried.
+The inventory records 19 page files and 47 API route files, their declared methods and migration owners. Response/status/auth metadata is source-observed guidance, not exhaustive runtime characterization. The architecture test discovers files and uses a regular expression for exported methods; AST parsing is used separately for syntax and dependency checks.
 
 ### 2.1 Web Pages (19 Total)
 
@@ -102,7 +102,7 @@ Each of the 47 API routes is assigned to exactly one migration package identifie
 | `/api/run` | `apps/web/src/app/api/run/route.js` | `POST` | **CR-ARCH-12A** | Optional / Guest | JSON | 202, 400, 429, 503 | `practiceHandler(null)`, `execution-api` |
 | `/api/practice-run` | `apps/web/src/app/api/practice-run/route.js` | `GET`, `POST` | **CR-ARCH-12A** | Optional / Guest | JSON | 200, 202, 400, 429, 503 | `practiceHandler()`, `execution-api` |
 | `/api/execute` | `apps/web/src/app/api/execute/route.js` | `GET`, `POST` | **CR-ARCH-12A** | Optional / Guest | JSON | 200, 202, 400, 429, 503 | `SubmissionService`, `execution-api` |
-| `/api/jobs/[jobId]` | `apps/web/src/app/api/jobs/[jobId]/route.js` | `GET` | **CR-ARCH-12A** | Optional / Guest | Params | 200, 401, 404, 500 | `SubmissionService.getJobStatus` |
+| `/api/jobs/[jobId]` | `apps/web/src/app/api/jobs/[jobId]/route.js` | `GET` | **CR-ARCH-12A** | Optional / Guest | Params | 200, 400, 401, 404, 500, 503 | `SubmissionService.getJobStatus` |
 | `/api/submit` | `apps/web/src/app/api/submit/route.js` | `POST` | **CR-ARCH-12B** | Optional / Guest | JSON | 202, 400, 401, 429, 503 | `practiceHandler(null, true)`, `execution-api` |
 | `/api/student/practicals/[id]/submit` | `apps/web/src/app/api/student/practicals/[id]/submit/route.js` | `POST` | **CR-ARCH-12B** | Student | JSON, Params | 202, 400, 401, 429, 503 | `enqueueExecution(submit=true)`, `execution-api` |
 | `/api/student/submissions` | `apps/web/src/app/api/student/submissions/route.js` | `GET` | **CR-ARCH-12B** | Student | Query | 200, 400, 401, 500 | `SubmissionHistoryService.student` |
@@ -158,7 +158,7 @@ The inventory defines:
    - Fails if any inventoried file does not exist in source.
 3. Validate that every API endpoint is allocated to a valid owner (`CR-ARCH-09` through `CR-ARCH-13`).
 4. Validate that CR-ARCH-09 has exactly one representative route.
-5. Verify every exported HTTP method against the actual source AST.
+5. Verify exported HTTP methods using source matching, while separate architecture checks use the TypeScript parser for syntax/dependency checks.
 6. Verify synchronization with legacy fixture `tests/fixtures/routes.json` (which was updated to include all 19 pages and 47 routes) so existing consumers like `tests/api-route-contracts.test.mjs` pass without modifying read-only test files.
 
 ### 4.3 Negative Allocation Tests
@@ -280,7 +280,7 @@ The source code contains mixed realtime communication patterns:
 
 ## 7. Baseline Command Results
 
-All baseline commands were executed on the clean baseline commit `e8cd0a5e7306befc8c441c249b0b50b524597dd9`:
+The original author recorded the following command output. `e8cd0a5e7306befc8c441c249b0b50b524597dd9` is the starting source revision, not a commit containing the inventory/test edits. Output explicitly labelled after migration reflects the working tree with those edits. The exact working-tree diff for each original local command was not recorded, so do not attribute all results to a clean unchanged baseline. These historical summaries are not fresh verification; use linked PR/CI results for commit-specific evidence.
 
 ### 1. `npm ci`
 - **Exit Code**: `0`
@@ -361,3 +361,15 @@ All baseline commands were executed on the clean baseline commit `e8cd0a5e7306be
 1. **F-REALTIME Migration Sequencing**: Please confirm whether the architecture team accepts **Variant X** (scheduling Issue 14 Socket.IO migration before extracting practical/submission endpoints in 11B/12A/12B) or mandates **Variant Y** (relying on transient client fallback with new cross-process tests in 09).
 2. **Disposition of `.test.js` Files**: Should `tests/batch-execution.test.js` and `tests/job-lifecycle.test.js` be modernized to ESM `.test.mjs` and added to `run-tests.mjs`, or archived into `docs/archive`?
 3. **Primary Deployment Topology**: Confirm whether production deployment targets single-process `server.js` or multi-worker `cluster.js` with Redis adapter enabled, to ensure appropriate socket adapter assumptions during API separation.
+
+## 9. Foundation corrections and owner decisions (3 November 2026)
+
+The owner selected Fastify, a same-origin gateway, local lab Docker with local PostgreSQL/Redis, and Variant X (realtime extraction before practical/submission extraction). ADR-0001 records the accepted target; earlier recommendations/questions above are historical context, not unresolved alternatives.
+
+The response inventory was reviewed against all 47 adapter files at source revision `051a654e52d484bfaea5a72775841a618fb22881`. It now captures literal status codes and explicitly observed response headers, including `/api/live` no-store and `/api/jobs/[jobId]`'s missing-jobId 400 branch. Shared execution error/guest-cookie contracts reference their helper instead of silently assuming the adapter's literals are exhaustive. A missing dynamic path segment may not reach the handler through normal framework routing; the 400 is still a handler contract to preserve.
+
+Header values are conditional observations: cached health and queue responses can have different headers from failures. Forwarded service/auth errors, automatic framework methods, body-size/abort/timeout behavior and dynamic pagination values still require real network characterization in the extraction PRs. No static inventory is proof of every runtime branch.
+
+The original page `owner` fields name associated backend extraction slices, not authorization to move a frontend page into API. Frontend feature extraction follows issues16–19C; all page URLs stay in Next.js.
+
+No historical test counts or local output have been relabelled as newly executed. The correction PR records fresh checks separately. Release migrations remain controlled; SQL bytes, app behavior, credentials and volumes are unchanged.

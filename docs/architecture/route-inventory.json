@@ -145,7 +145,15 @@
         200
       ],
       "services": [],
-      "description": "Dependency-free liveness probe for load balancers and orchestrators. Selected as CR-ARCH-09 baseline extraction route because it carries zero database or queue coupling."
+      "description": "Dependency-free liveness probe for load balancers and orchestrators. Selected as CR-ARCH-09 baseline extraction route because it carries zero database or queue coupling.",
+      "observedResponseHeaders": {
+        "cache-control": [
+          "no-store"
+        ]
+      },
+      "contractSources": [
+        "apps/web/src/app/api/live/route.js"
+      ]
     },
     {
       "url": "/api/auth/login",
@@ -170,7 +178,18 @@
         "@coderank/core/services/UserService",
         "@/lib/queue/rateLimiter"
       ],
-      "description": "User login authentication issuing session token and JWT"
+      "description": "User login authentication issuing session token and JWT",
+      "observedResponseHeaders": {
+        "retry-after": [
+          "5"
+        ],
+        "cache-control": [
+          "no-store"
+        ]
+      },
+      "contractSources": [
+        "apps/web/src/app/api/auth/login/route.js"
+      ]
     },
     {
       "url": "/api/auth/change-password",
@@ -193,7 +212,11 @@
         "@coderank/core/services/UserService",
         "@coderank/core/security/active-actor"
       ],
-      "description": "Authenticated self-service account password change"
+      "description": "Authenticated self-service account password change",
+      "observedResponseHeaders": {},
+      "contractSources": [
+        "apps/web/src/app/api/auth/change-password/route.js"
+      ]
     },
     {
       "url": "/api/auth/profile",
@@ -217,7 +240,11 @@
         "@coderank/core/services/UserService",
         "@coderank/core/security/active-actor"
       ],
-      "description": "Authenticated identity retrieval and self profile update"
+      "description": "Authenticated identity retrieval and self profile update",
+      "observedResponseHeaders": {},
+      "contractSources": [
+        "apps/web/src/app/api/auth/profile/route.js"
+      ]
     },
     {
       "url": "/api/admin/bulk-upload",
@@ -240,7 +267,11 @@
         "@coderank/core/services/UserService",
         "@coderank/core/security/active-actor"
       ],
-      "description": "Admin CSV/Excel bulk user ingestion"
+      "description": "Admin CSV/Excel bulk user ingestion",
+      "observedResponseHeaders": {},
+      "contractSources": [
+        "apps/web/src/app/api/admin/bulk-upload/route.js"
+      ]
     },
     {
       "url": "/api/admin/password",
@@ -263,7 +294,11 @@
         "@coderank/core/services/UserService",
         "@coderank/core/security/active-actor"
       ],
-      "description": "Admin-mediated password reset for users"
+      "description": "Admin-mediated password reset for users",
+      "observedResponseHeaders": {},
+      "contractSources": [
+        "apps/web/src/app/api/admin/password/route.js"
+      ]
     },
     {
       "url": "/api/users",
@@ -290,7 +325,15 @@
         "@coderank/core/services/UserService",
         "@coderank/core/security/active-actor"
       ],
-      "description": "Admin user CRUD and keyset pagination"
+      "description": "Admin user CRUD and keyset pagination",
+      "observedResponseHeaders": {
+        "cache-control": [
+          "no-store"
+        ]
+      },
+      "contractSources": [
+        "apps/web/src/app/api/users/route.js"
+      ]
     },
     {
       "url": "/api/users/[id]",
@@ -316,7 +359,11 @@
         "@coderank/core/services/UserManagementService",
         "@coderank/core/security/active-actor"
       ],
-      "description": "Admin single-user deletion and role/status mutation"
+      "description": "Admin single-user deletion and role/status mutation",
+      "observedResponseHeaders": {},
+      "contractSources": [
+        "apps/web/src/app/api/users/[id]/route.js"
+      ]
     },
     {
       "url": "/api/users/bulk",
@@ -339,7 +386,11 @@
         "@coderank/core/services/UserManagementService",
         "@coderank/core/security/active-actor"
       ],
-      "description": "Admin streaming user batch creation"
+      "description": "Admin streaming user batch creation",
+      "observedResponseHeaders": {},
+      "contractSources": [
+        "apps/web/src/app/api/users/bulk/route.js"
+      ]
     },
     {
       "url": "/api/courses",
@@ -364,7 +415,15 @@
         "@coderank/core/services/CourseService",
         "@coderank/core/security/active-actor"
       ],
-      "description": "List courses (authenticated) or create course (admin)"
+      "description": "List courses (authenticated) or create course (admin)",
+      "observedResponseHeaders": {
+        "cache-control": [
+          "no-store"
+        ]
+      },
+      "contractSources": [
+        "apps/web/src/app/api/courses/route.js"
+      ]
     },
     {
       "url": "/api/courses/[id]",
@@ -390,7 +449,11 @@
         "@coderank/core/services/CourseService",
         "@coderank/core/security/active-actor"
       ],
-      "description": "Update or delete course by ID"
+      "description": "Update or delete course by ID",
+      "observedResponseHeaders": {},
+      "contractSources": [
+        "apps/web/src/app/api/courses/[id]/route.js"
+      ]
     },
     {
       "url": "/api/departments",
@@ -414,7 +477,15 @@
         "@coderank/core/services/CourseService",
         "@coderank/core/security/active-actor"
       ],
-      "description": "List departments (authenticated) or create department (admin)"
+      "description": "List departments (authenticated) or create department (admin)",
+      "observedResponseHeaders": {
+        "cache-control": [
+          "no-store"
+        ]
+      },
+      "contractSources": [
+        "apps/web/src/app/api/departments/route.js"
+      ]
     },
     {
       "url": "/api/departments/[id]",
@@ -440,7 +511,11 @@
         "@coderank/core/services/CourseService",
         "@coderank/core/security/active-actor"
       ],
-      "description": "Update or delete department by ID"
+      "description": "Update or delete department by ID",
+      "observedResponseHeaders": {},
+      "contractSources": [
+        "apps/web/src/app/api/departments/[id]/route.js"
+      ]
     },
     {
       "url": "/api/mapping",
@@ -465,7 +540,11 @@
         "@coderank/core/services/MappingService",
         "@coderank/core/security/active-actor"
       ],
-      "description": "Admin faculty-to-course mapping assignment and lookup"
+      "description": "Admin faculty-to-course mapping assignment and lookup",
+      "observedResponseHeaders": {},
+      "contractSources": [
+        "apps/web/src/app/api/mapping/route.js"
+      ]
     },
     {
       "url": "/api/faculty/batches",
@@ -485,7 +564,15 @@
         "@coderank/core/services/CourseService",
         "@coderank/core/security/active-actor"
       ],
-      "description": "List student divisions and batches for faculty assignment"
+      "description": "List student divisions and batches for faculty assignment",
+      "observedResponseHeaders": {
+        "cache-control": [
+          "no-store"
+        ]
+      },
+      "contractSources": [
+        "apps/web/src/app/api/faculty/batches/route.js"
+      ]
     },
     {
       "url": "/api/faculty/courses",
@@ -505,7 +592,15 @@
         "@coderank/core/services/CourseService",
         "@coderank/core/security/active-actor"
       ],
-      "description": "List courses assigned to current faculty member"
+      "description": "List courses assigned to current faculty member",
+      "observedResponseHeaders": {
+        "cache-control": [
+          "no-store"
+        ]
+      },
+      "contractSources": [
+        "apps/web/src/app/api/faculty/courses/route.js"
+      ]
     },
     {
       "url": "/api/faculty/courses/[id]/stats",
@@ -528,7 +623,15 @@
         "@coderank/core/services/CourseReportService",
         "@coderank/core/security/active-actor"
       ],
-      "description": "Course performance and submission statistics reporting for faculty"
+      "description": "Course performance and submission statistics reporting for faculty",
+      "observedResponseHeaders": {
+        "cache-control": [
+          "no-store"
+        ]
+      },
+      "contractSources": [
+        "apps/web/src/app/api/faculty/courses/[id]/stats/route.js"
+      ]
     },
     {
       "url": "/api/faculty/practicals",
@@ -554,7 +657,11 @@
         "@coderank/core/services/PracticalManagementService",
         "@coderank/core/security/active-actor"
       ],
-      "description": "List or create practical assignments for faculty"
+      "description": "List or create practical assignments for faculty",
+      "observedResponseHeaders": {},
+      "contractSources": [
+        "apps/web/src/app/api/faculty/practicals/route.js"
+      ]
     },
     {
       "url": "/api/faculty/practicals/[id]",
@@ -581,7 +688,11 @@
         "@coderank/core/services/PracticalManagementService",
         "@coderank/core/security/active-actor"
       ],
-      "description": "Fetch, update or delete practical assignment by ID"
+      "description": "Fetch, update or delete practical assignment by ID",
+      "observedResponseHeaders": {},
+      "contractSources": [
+        "apps/web/src/app/api/faculty/practicals/[id]/route.js"
+      ]
     },
     {
       "url": "/api/faculty/practicals/[id]/extra-time",
@@ -605,7 +716,11 @@
         "@coderank/core/services/PracticalManagementService",
         "@coderank/core/security/active-actor"
       ],
-      "description": "Grant extra time extension to students for a practical"
+      "description": "Grant extra time extension to students for a practical",
+      "observedResponseHeaders": {},
+      "contractSources": [
+        "apps/web/src/app/api/faculty/practicals/[id]/extra-time/route.js"
+      ]
     },
     {
       "url": "/api/faculty/practicals/[id]/stats",
@@ -628,7 +743,15 @@
         "@coderank/core/services/PracticalReportService",
         "@coderank/core/security/active-actor"
       ],
-      "description": "Practical-level submission statistics and score distribution"
+      "description": "Practical-level submission statistics and score distribution",
+      "observedResponseHeaders": {
+        "cache-control": [
+          "no-store"
+        ]
+      },
+      "contractSources": [
+        "apps/web/src/app/api/faculty/practicals/[id]/stats/route.js"
+      ]
     },
     {
       "url": "/api/student/practicals",
@@ -650,7 +773,11 @@
         "@coderank/core/services/StudentPracticalService",
         "@coderank/core/security/active-actor"
       ],
-      "description": "List accessible practical labs for authenticated student"
+      "description": "List accessible practical labs for authenticated student",
+      "observedResponseHeaders": {},
+      "contractSources": [
+        "apps/web/src/app/api/student/practicals/route.js"
+      ]
     },
     {
       "url": "/api/student/practicals/[id]",
@@ -673,7 +800,15 @@
         "@coderank/core/services/StudentPracticalService",
         "@coderank/core/security/active-actor"
       ],
-      "description": "Get detailed practical instructions and configuration for student"
+      "description": "Get detailed practical instructions and configuration for student",
+      "observedResponseHeaders": {
+        "cache-control": [
+          "no-store"
+        ]
+      },
+      "contractSources": [
+        "apps/web/src/app/api/student/practicals/[id]/route.js"
+      ]
     },
     {
       "url": "/api/c-run",
@@ -689,13 +824,38 @@
       "statusCodes": [
         202,
         400,
+        404,
         429,
         503
       ],
       "services": [
         "@/lib/execution-api"
       ],
-      "description": "Dedicated C language execution alias"
+      "description": "Dedicated C language execution alias",
+      "observedResponseHeaders": {},
+      "contractSources": [
+        "apps/web/src/app/api/c-run/route.js",
+        "apps/web/src/lib/execution-api.js"
+      ],
+      "sharedExecutionContracts": {
+        "errorHeaders": {
+          "cache-control": "no-store",
+          "retry-after": "5 on executionError 503 only"
+        },
+        "errorStatus": "QUEUE_FULL -> 503; otherwise error.status or 500; this dynamic set is not exhaustive",
+        "guestCookie": {
+          "name": "coderank_execution_session",
+          "httpOnly": true,
+          "sameSite": "lax",
+          "secure": "only for https request URL",
+          "path": "/",
+          "maxAge": 86400,
+          "condition": "guest enqueue response only"
+        },
+        "enqueueHeaders": {
+          "cache-control": "no-store"
+        }
+      }
     },
     {
       "url": "/api/cpp-run",
@@ -711,13 +871,38 @@
       "statusCodes": [
         202,
         400,
+        404,
         429,
         503
       ],
       "services": [
         "@/lib/execution-api"
       ],
-      "description": "Dedicated C++ language execution alias"
+      "description": "Dedicated C++ language execution alias",
+      "observedResponseHeaders": {},
+      "contractSources": [
+        "apps/web/src/app/api/cpp-run/route.js",
+        "apps/web/src/lib/execution-api.js"
+      ],
+      "sharedExecutionContracts": {
+        "errorHeaders": {
+          "cache-control": "no-store",
+          "retry-after": "5 on executionError 503 only"
+        },
+        "errorStatus": "QUEUE_FULL -> 503; otherwise error.status or 500; this dynamic set is not exhaustive",
+        "guestCookie": {
+          "name": "coderank_execution_session",
+          "httpOnly": true,
+          "sameSite": "lax",
+          "secure": "only for https request URL",
+          "path": "/",
+          "maxAge": 86400,
+          "condition": "guest enqueue response only"
+        },
+        "enqueueHeaders": {
+          "cache-control": "no-store"
+        }
+      }
     },
     {
       "url": "/api/java-run",
@@ -733,13 +918,38 @@
       "statusCodes": [
         202,
         400,
+        404,
         429,
         503
       ],
       "services": [
         "@/lib/execution-api"
       ],
-      "description": "Dedicated Java language execution alias"
+      "description": "Dedicated Java language execution alias",
+      "observedResponseHeaders": {},
+      "contractSources": [
+        "apps/web/src/app/api/java-run/route.js",
+        "apps/web/src/lib/execution-api.js"
+      ],
+      "sharedExecutionContracts": {
+        "errorHeaders": {
+          "cache-control": "no-store",
+          "retry-after": "5 on executionError 503 only"
+        },
+        "errorStatus": "QUEUE_FULL -> 503; otherwise error.status or 500; this dynamic set is not exhaustive",
+        "guestCookie": {
+          "name": "coderank_execution_session",
+          "httpOnly": true,
+          "sameSite": "lax",
+          "secure": "only for https request URL",
+          "path": "/",
+          "maxAge": 86400,
+          "condition": "guest enqueue response only"
+        },
+        "enqueueHeaders": {
+          "cache-control": "no-store"
+        }
+      }
     },
     {
       "url": "/api/javascript-run",
@@ -755,13 +965,38 @@
       "statusCodes": [
         202,
         400,
+        404,
         429,
         503
       ],
       "services": [
         "@/lib/execution-api"
       ],
-      "description": "Dedicated JavaScript language execution alias"
+      "description": "Dedicated JavaScript language execution alias",
+      "observedResponseHeaders": {},
+      "contractSources": [
+        "apps/web/src/app/api/javascript-run/route.js",
+        "apps/web/src/lib/execution-api.js"
+      ],
+      "sharedExecutionContracts": {
+        "errorHeaders": {
+          "cache-control": "no-store",
+          "retry-after": "5 on executionError 503 only"
+        },
+        "errorStatus": "QUEUE_FULL -> 503; otherwise error.status or 500; this dynamic set is not exhaustive",
+        "guestCookie": {
+          "name": "coderank_execution_session",
+          "httpOnly": true,
+          "sameSite": "lax",
+          "secure": "only for https request URL",
+          "path": "/",
+          "maxAge": 86400,
+          "condition": "guest enqueue response only"
+        },
+        "enqueueHeaders": {
+          "cache-control": "no-store"
+        }
+      }
     },
     {
       "url": "/api/python-run",
@@ -777,13 +1012,38 @@
       "statusCodes": [
         202,
         400,
+        404,
         429,
         503
       ],
       "services": [
         "@/lib/execution-api"
       ],
-      "description": "Dedicated Python language execution alias"
+      "description": "Dedicated Python language execution alias",
+      "observedResponseHeaders": {},
+      "contractSources": [
+        "apps/web/src/app/api/python-run/route.js",
+        "apps/web/src/lib/execution-api.js"
+      ],
+      "sharedExecutionContracts": {
+        "errorHeaders": {
+          "cache-control": "no-store",
+          "retry-after": "5 on executionError 503 only"
+        },
+        "errorStatus": "QUEUE_FULL -> 503; otherwise error.status or 500; this dynamic set is not exhaustive",
+        "guestCookie": {
+          "name": "coderank_execution_session",
+          "httpOnly": true,
+          "sameSite": "lax",
+          "secure": "only for https request URL",
+          "path": "/",
+          "maxAge": 86400,
+          "condition": "guest enqueue response only"
+        },
+        "enqueueHeaders": {
+          "cache-control": "no-store"
+        }
+      }
     },
     {
       "url": "/api/run",
@@ -799,13 +1059,38 @@
       "statusCodes": [
         202,
         400,
+        404,
         429,
         503
       ],
       "services": [
         "@/lib/execution-api"
       ],
-      "description": "Generic code execution endpoint"
+      "description": "Generic code execution endpoint",
+      "observedResponseHeaders": {},
+      "contractSources": [
+        "apps/web/src/app/api/run/route.js",
+        "apps/web/src/lib/execution-api.js"
+      ],
+      "sharedExecutionContracts": {
+        "errorHeaders": {
+          "cache-control": "no-store",
+          "retry-after": "5 on executionError 503 only"
+        },
+        "errorStatus": "QUEUE_FULL -> 503; otherwise error.status or 500; this dynamic set is not exhaustive",
+        "guestCookie": {
+          "name": "coderank_execution_session",
+          "httpOnly": true,
+          "sameSite": "lax",
+          "secure": "only for https request URL",
+          "path": "/",
+          "maxAge": 86400,
+          "condition": "guest enqueue response only"
+        },
+        "enqueueHeaders": {
+          "cache-control": "no-store"
+        }
+      }
     },
     {
       "url": "/api/practice-run",
@@ -829,7 +1114,35 @@
       "services": [
         "@/lib/execution-api"
       ],
-      "description": "Practice problem definition retrieval and execution dispatch"
+      "description": "Practice problem definition retrieval and execution dispatch",
+      "observedResponseHeaders": {
+        "cache-control": [
+          "no-store"
+        ]
+      },
+      "contractSources": [
+        "apps/web/src/app/api/practice-run/route.js",
+        "apps/web/src/lib/execution-api.js"
+      ],
+      "sharedExecutionContracts": {
+        "errorHeaders": {
+          "cache-control": "no-store",
+          "retry-after": "5 on executionError 503 only"
+        },
+        "errorStatus": "QUEUE_FULL -> 503; otherwise error.status or 500; this dynamic set is not exhaustive",
+        "guestCookie": {
+          "name": "coderank_execution_session",
+          "httpOnly": true,
+          "sameSite": "lax",
+          "secure": "only for https request URL",
+          "path": "/",
+          "maxAge": 86400,
+          "condition": "guest enqueue response only"
+        },
+        "enqueueHeaders": {
+          "cache-control": "no-store"
+        }
+      }
     },
     {
       "url": "/api/execute",
@@ -854,7 +1167,35 @@
         "@/lib/execution-api",
         "@coderank/core/services/SubmissionService"
       ],
-      "description": "Unified execution intake and execution service status"
+      "description": "Unified execution intake and execution service status",
+      "observedResponseHeaders": {
+        "cache-control": [
+          "no-store"
+        ]
+      },
+      "contractSources": [
+        "apps/web/src/app/api/execute/route.js",
+        "apps/web/src/lib/execution-api.js"
+      ],
+      "sharedExecutionContracts": {
+        "errorHeaders": {
+          "cache-control": "no-store",
+          "retry-after": "5 on executionError 503 only"
+        },
+        "errorStatus": "QUEUE_FULL -> 503; otherwise error.status or 500; this dynamic set is not exhaustive",
+        "guestCookie": {
+          "name": "coderank_execution_session",
+          "httpOnly": true,
+          "sameSite": "lax",
+          "secure": "only for https request URL",
+          "path": "/",
+          "maxAge": 86400,
+          "condition": "guest enqueue response only"
+        },
+        "enqueueHeaders": {
+          "cache-control": "no-store"
+        }
+      }
     },
     {
       "url": "/api/jobs/[jobId]",
@@ -869,15 +1210,33 @@
       ],
       "statusCodes": [
         200,
+        400,
         401,
         404,
-        500
+        500,
+        503
       ],
       "services": [
         "@coderank/core/services/SubmissionService",
         "@coderank/core/security/active-actor"
       ],
-      "description": "Polling endpoint for execution job status and completed result"
+      "description": "Polling endpoint for execution job status and completed result",
+      "observedResponseHeaders": {
+        "cache-control": [
+          "no-store"
+        ]
+      },
+      "contractSources": [
+        "apps/web/src/app/api/jobs/[jobId]/route.js",
+        "apps/web/src/lib/execution-api.js"
+      ],
+      "sharedExecutionContracts": {
+        "errorHeaders": {
+          "cache-control": "no-store",
+          "retry-after": "5 on executionError 503 only"
+        },
+        "errorStatus": "QUEUE_FULL -> 503; otherwise error.status or 500; this dynamic set is not exhaustive"
+      }
     },
     {
       "url": "/api/submit",
@@ -894,13 +1253,38 @@
         202,
         400,
         401,
+        404,
         429,
         503
       ],
       "services": [
         "@/lib/execution-api"
       ],
-      "description": "Practice and generic code submission handler"
+      "description": "Practice and generic code submission handler",
+      "observedResponseHeaders": {},
+      "contractSources": [
+        "apps/web/src/app/api/submit/route.js",
+        "apps/web/src/lib/execution-api.js"
+      ],
+      "sharedExecutionContracts": {
+        "errorHeaders": {
+          "cache-control": "no-store",
+          "retry-after": "5 on executionError 503 only"
+        },
+        "errorStatus": "QUEUE_FULL -> 503; otherwise error.status or 500; this dynamic set is not exhaustive",
+        "guestCookie": {
+          "name": "coderank_execution_session",
+          "httpOnly": true,
+          "sameSite": "lax",
+          "secure": "only for https request URL",
+          "path": "/",
+          "maxAge": 86400,
+          "condition": "guest enqueue response only"
+        },
+        "enqueueHeaders": {
+          "cache-control": "no-store"
+        }
+      }
     },
     {
       "url": "/api/student/practicals/[id]/submit",
@@ -924,7 +1308,31 @@
       "services": [
         "@/lib/execution-api"
       ],
-      "description": "Student graded submission dispatch for assigned practical"
+      "description": "Student graded submission dispatch for assigned practical",
+      "observedResponseHeaders": {},
+      "contractSources": [
+        "apps/web/src/app/api/student/practicals/[id]/submit/route.js",
+        "apps/web/src/lib/execution-api.js"
+      ],
+      "sharedExecutionContracts": {
+        "errorHeaders": {
+          "cache-control": "no-store",
+          "retry-after": "5 on executionError 503 only"
+        },
+        "errorStatus": "QUEUE_FULL -> 503; otherwise error.status or 500; this dynamic set is not exhaustive",
+        "guestCookie": {
+          "name": "coderank_execution_session",
+          "httpOnly": true,
+          "sameSite": "lax",
+          "secure": "only for https request URL",
+          "path": "/",
+          "maxAge": 86400,
+          "condition": "guest enqueue response only"
+        },
+        "enqueueHeaders": {
+          "cache-control": "no-store"
+        }
+      }
     },
     {
       "url": "/api/student/submissions",
@@ -947,7 +1355,11 @@
         "@coderank/core/services/SubmissionHistoryService",
         "@coderank/core/security/active-actor"
       ],
-      "description": "Student global submission history with pagination"
+      "description": "Student global submission history with pagination",
+      "observedResponseHeaders": {},
+      "contractSources": [
+        "apps/web/src/app/api/student/submissions/route.js"
+      ]
     },
     {
       "url": "/api/student/practicals/[id]/submissions",
@@ -971,7 +1383,11 @@
         "@coderank/core/services/SubmissionHistoryService",
         "@coderank/core/security/active-actor"
       ],
-      "description": "Student practical-specific submission attempts history"
+      "description": "Student practical-specific submission attempts history",
+      "observedResponseHeaders": {},
+      "contractSources": [
+        "apps/web/src/app/api/student/practicals/[id]/submissions/route.js"
+      ]
     },
     {
       "url": "/api/faculty/practicals/[id]/submissions",
@@ -996,7 +1412,15 @@
         "@coderank/core/services/SubmissionHistoryService",
         "@coderank/core/security/active-actor"
       ],
-      "description": "Faculty practical submissions review and grading audit"
+      "description": "Faculty practical submissions review and grading audit",
+      "observedResponseHeaders": {
+        "cache-control": [
+          "no-store"
+        ]
+      },
+      "contractSources": [
+        "apps/web/src/app/api/faculty/practicals/[id]/submissions/route.js"
+      ]
     },
     {
       "url": "/api/faculty/submissions/[id]",
@@ -1020,7 +1444,11 @@
         "@coderank/core/services/SubmissionService",
         "@coderank/core/security/active-actor"
       ],
-      "description": "Faculty submission detail inspection (GET) and submission reset/deletion (DELETE)"
+      "description": "Faculty submission detail inspection (GET) and submission reset/deletion (DELETE)",
+      "observedResponseHeaders": {},
+      "contractSources": [
+        "apps/web/src/app/api/faculty/submissions/[id]/route.js"
+      ]
     },
     {
       "url": "/api/student/workspaces/load",
@@ -1042,7 +1470,11 @@
         "@coderank/core/services/SubmissionService",
         "@coderank/core/security/active-actor"
       ],
-      "description": "Load saved student draft workspace code"
+      "description": "Load saved student draft workspace code",
+      "observedResponseHeaders": {},
+      "contractSources": [
+        "apps/web/src/app/api/student/workspaces/load/route.js"
+      ]
     },
     {
       "url": "/api/student/workspaces/save",
@@ -1064,7 +1496,11 @@
         "@coderank/core/services/SubmissionService",
         "@coderank/core/security/active-actor"
       ],
-      "description": "Save active student draft workspace code"
+      "description": "Save active student draft workspace code",
+      "observedResponseHeaders": {},
+      "contractSources": [
+        "apps/web/src/app/api/student/workspaces/save/route.js"
+      ]
     },
     {
       "url": "/api/health",
@@ -1085,7 +1521,18 @@
         "@coderank/core/db-readiness",
         "@coderank/core/services/SubmissionService"
       ],
-      "description": "Public health check with DB/queue readiness evaluation and in-memory cache"
+      "description": "Public health check with DB/queue readiness evaluation and in-memory cache",
+      "observedResponseHeaders": {
+        "x-cache": [
+          "HIT"
+        ],
+        "cache-control": [
+          "no-store"
+        ]
+      },
+      "contractSources": [
+        "apps/web/src/app/api/health/route.js"
+      ]
     },
     {
       "url": "/api/health/detailed",
@@ -1106,7 +1553,19 @@
         "@coderank/core/security/active-actor",
         "@coderank/core/services/OperationsService"
       ],
-      "description": "Privileged detailed health diagnostics for administrators"
+      "description": "Privileged detailed health diagnostics for administrators",
+      "observedResponseHeaders": {
+        "x-cache": [
+          "HIT",
+          "STALE"
+        ],
+        "cache-control": [
+          "no-store"
+        ]
+      },
+      "contractSources": [
+        "apps/web/src/app/api/health/detailed/route.js"
+      ]
     },
     {
       "url": "/api/logs",
@@ -1128,7 +1587,15 @@
         "@coderank/core/services/OperationsService",
         "@coderank/core/security/active-actor"
       ],
-      "description": "Administrator audit and activity log retrieval"
+      "description": "Administrator audit and activity log retrieval",
+      "observedResponseHeaders": {
+        "cache-control": [
+          "no-store"
+        ]
+      },
+      "contractSources": [
+        "apps/web/src/app/api/logs/route.js"
+      ]
     },
     {
       "url": "/api/metrics",
@@ -1148,7 +1615,15 @@
         "@coderank/core/services/OperationsService",
         "@coderank/core/security/active-actor"
       ],
-      "description": "System operational metrics and performance telemetries"
+      "description": "System operational metrics and performance telemetries",
+      "observedResponseHeaders": {
+        "cache-control": [
+          "no-store"
+        ]
+      },
+      "contractSources": [
+        "apps/web/src/app/api/metrics/route.js"
+      ]
     },
     {
       "url": "/api/queue/stats",
@@ -1166,7 +1641,21 @@
       "services": [
         "@coderank/core/services/SubmissionService"
       ],
-      "description": "Public execution queue depth and status check"
+      "description": "Public execution queue depth and status check",
+      "observedResponseHeaders": {
+        "x-cache": [
+          "HIT",
+          "STALE",
+          "MISS"
+        ],
+        "cache-control": [
+          "public, s-maxage=5, stale-while-revalidate=10",
+          "no-cache"
+        ]
+      },
+      "contractSources": [
+        "apps/web/src/app/api/queue/stats/route.js"
+      ]
     },
     {
       "url": "/api/stats",
@@ -1186,7 +1675,15 @@
         "@coderank/core/services/OperationsService",
         "@coderank/core/security/active-actor"
       ],
-      "description": "Administrator system and active user counters"
+      "description": "Administrator system and active user counters",
+      "observedResponseHeaders": {
+        "cache-control": [
+          "no-store"
+        ]
+      },
+      "contractSources": [
+        "apps/web/src/app/api/stats/route.js"
+      ]
     },
     {
       "url": "/api/profile/[username]",
@@ -1212,7 +1709,21 @@
         "@coderank/core/services/UserService",
         "@coderank/core/security/active-actor"
       ],
-      "description": "Public username profile lookup and student biography update"
+      "description": "Public username profile lookup and student biography update",
+      "observedResponseHeaders": {},
+      "contractSources": [
+        "apps/web/src/app/api/profile/[username]/route.js"
+      ]
     }
-  ]
+  ],
+  "contractReview": {
+    "revision": "051a654e52d484bfaea5a72775841a618fb22881",
+    "date": "2026-11-03",
+    "coverage": "Source-observed adapter literals plus selected shared execution helper contracts; not exhaustive runtime HTTP characterization.",
+    "limitations": [
+      "Status codes forwarded dynamically from services/auth/helpers require per-feature network characterization before extraction.",
+      "Header entries are conditional observations, not assertions that every response has every listed value.",
+      "Original baselineRevision and generatedAt describe the original source inventory, not the correction commit."
+    ]
+  }
 }
