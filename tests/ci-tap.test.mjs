@@ -33,7 +33,7 @@ test('strict TAP rejects truncated, empty, forged count and plan streams',()=>{
 test('strict test configurations cannot recurse into fixtures or forward caller filters',async()=>{
  const unit=await testConfiguration('unit');
  assert.ok(unit.files.includes('tests/ci-tap.test.mjs'));
- assert.ok(unit.files.every(file=>/^tests\/[^/]+\.test\.mjs$/.test(file)));
+ assert.ok(unit.files.every(file=>/^tests\/[^/]+\.test\.m?js$/.test(file)));
  assert.ok(unit.args.includes('--test-concurrency=2'));
  assert.ok(unit.args.includes('--test-timeout=30000'));
  const integration=await testConfiguration('integration');assert.equal(integration.files.length,5);

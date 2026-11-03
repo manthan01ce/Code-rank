@@ -7,8 +7,14 @@ import { verifyTap } from './verify-tap.mjs';
 const root = fileURLToPath(new URL('../../', import.meta.url));
 export async function testConfiguration(mode) {
   const integration = ['queue', 'realtime', 'worker-readiness', 'worker-recovery', 'postgres'].map(name => `tests/integration/${name}.test.mjs`);
+  // Quarantined from unit lane (explicit named exclusion with reason):
+  //   tests/batch-execution.test.js — legacy Docker-command shim predates the
+  //   current Sandbox run/exec lifecycle. Not currently run by any CI lane.
+  //   Owner CR-ARCH-24: modernize against Executor, verify with disposable real
+  //   Docker, register in the docker lane, then remove quarantine; not just rename.
+  const UNIT_QUARANTINE = new Set(['batch-execution.test.js']);
   const modes = {
-    unit: { files: (await readdir(resolve(root, 'tests'))).filter(name => name.endsWith('.test.mjs')).sort().map(name => `tests/${name}`), timeoutMs: 300000 },
+    unit: { files: (await readdir(resolve(root, 'tests'))).filter(name => (name.endsWith('.test.mjs') || name.endsWith('.test.js')) && !UNIT_QUARANTINE.has(name)).sort().map(name => `tests/${name}`), timeoutMs: 300000 },
     integration: { files: integration, timeoutMs: 300000 },
     docker: { files: ['tests/integration/sandbox.test.mjs'], timeoutMs: 300000 },
   };

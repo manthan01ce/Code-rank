@@ -188,12 +188,14 @@ Current source files contain deep relative and non-exported paths that will requ
 - Direct database client access from web adapters: `@coderank/core/db` imported in `apps/web/server.js`, `apps/web/src/lib/db.js`, `apps/web/src/app/api/health/route.js`.
 
 ### 5.3 Intended Test Files & Exclusions
-- Unit test runner (`scripts/ci/run-tests.mjs unit`) automatically discovers all files matching `tests/*.test.mjs` (34 test files, 203 passing tests).
-- **Excluded `.test.js` files**:
-  - `tests/batch-execution.test.js`: legacy batch execution test. Excluded from default unit gate because `run-tests.mjs` filters on `.test.mjs`.
-  - `tests/job-lifecycle.test.js`: legacy job lifecycle test. Excluded from default unit gate for the same reason.
+- Unit test runner (`scripts/ci/run-tests.mjs unit`) discovers all files matching `tests/*.test.mjs` AND `tests/*.test.js`, with an explicit named quarantine list. At PR #37's reviewed source revision this is 60 `.test.mjs` files and one active `.test.js` file (61 unit test files); counts are source-snapshot facts, not fixed CI assertions.
+- **Quarantined from unit lane (explicit, documented)**:
+  - `tests/batch-execution.test.js`: its legacy Docker-command shim does not model the current Sandbox run/exec lifecycle. Quarantine is declared in `scripts/ci/run-tests.mjs` as `UNIT_QUARANTINE`; it is not selected by any current CI lane. CR-ARCH-24 must modernize the test, verify batch error/timeout/continuation behavior with real disposable Docker, register it in the docker lane and then remove quarantine. File relocation alone does not restore coverage.
+- **Included in unit lane (`.test.js` extension)**:
+  - `tests/job-lifecycle.test.js`: tests `waitForJob`, `boundedFetch`, `responseError` (from `apps/web/src/lib/job-lifecycle.js`) and `practicalPassed` (from `apps/worker/src/execution/runners/verdict.js`). No Docker or network dependencies; passes with 11 assertions. Uses ESM `import` syntax despite the `.js` extension; both extensions are deliberately supported.
 - Integration tests (`tests/integration/*.test.mjs`): `queue`, `realtime`, `worker-readiness`, `worker-recovery`, `postgres`, `neon`.
 - Docker isolation tests (`tests/integration/sandbox.test.mjs`).
+- The `docs/development/test-inventory.md` document records the complete intended file inventory, suite routing, quarantine list and before/after change summary.
 
 ### 5.4 Docker & Compose Deployment Configurations
 - **3 Compose Files**:
