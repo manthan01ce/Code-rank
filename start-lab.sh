@@ -26,13 +26,17 @@ if [ -z "$HOST_IP" ]; then
     HOST_IP="<LINUX_SERVER_IP>"
 fi
 
+# Resolve the effective port once, early. A user-provided PORT always wins;
+# the default is 3000. Exported so child processes (npm run web/worker) inherit it.
+export PORT="${PORT:-3000}"
+
 echo " 📍 Server Local IP    : $HOST_IP"
-echo " 🌐 Student / Lab Portal: http://${HOST_IP}:3000"
-echo " 💻 Localhost Access    : http://localhost:3000"
+echo " 🌐 Student / Lab Portal: http://${HOST_IP}:${PORT}"
+echo " 💻 Localhost Access    : http://localhost:${PORT}"
 echo ""
 echo " 🔒 Firewall Configuration:"
-echo "    Ensure port 3000 is open in UFW if enabled:"
-echo "    $ sudo ufw allow 3000/tcp"
+echo "    Ensure port ${PORT} is open in UFW if enabled:"
+echo "    $ sudo ufw allow ${PORT}/tcp"
 echo ""
 echo " 🔌 Network Note:"
 echo "    For high reliability during lab sessions/exams, connect"
@@ -81,8 +85,9 @@ if [ ! -f .env ] && [ ! -f .env.local ]; then
 fi
 if [ ! -d node_modules ]; then npm ci --no-audit --no-fund; fi
 export HOSTNAME="0.0.0.0"
-export PORT="${PORT:-3000}"
 export ALLOWED_ORIGIN="${ALLOWED_ORIGIN:-http://localhost:$PORT,http://$HOST_IP:$PORT}"
+# Derive REALTIME_URL from the effective port when no explicit value exists.
+export REALTIME_URL="${REALTIME_URL:-http://127.0.0.1:$PORT}"
 echo "Building the sandbox image and starting Redis..."
 $COMPOSE_CMD -f infrastructure/docker-compose.yml --profile build-image build runner-image
 $COMPOSE_CMD -f infrastructure/docker-compose.yml up -d redis
@@ -114,17 +119,15 @@ WORKER_PID=$!
 # Wait briefly for worker to initialize
 sleep 2
 
-# 9. Start Frontend Server on 0.0.0.0:3000
-echo "🖥️  [3/3] Starting Frontend web server (0.0.0.0:3000)..."
-export HOSTNAME="0.0.0.0"
-export PORT="3000"
+# 9. Start Frontend Server on 0.0.0.0:${PORT}
+echo "🖥️  [3/3] Starting Frontend web server (0.0.0.0:${PORT})..."
 
 npm run web &
 FRONTEND_PID=$!
 
 echo ""
 echo "✨ CodeRank is LIVE and accessible to all lab computers at:"
-echo "   👉 http://${HOST_IP}:3000"
+echo "   👉 http://${HOST_IP}:${PORT}"
 echo ""
 echo "Press Ctrl+C to stop all services."
 echo ""
