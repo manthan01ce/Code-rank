@@ -46,28 +46,32 @@ jobs:
           cache: npm
 
       - name: Install dependencies
+        id: install
         run: npm ci
 
       - name: Lint critical packages and services
+        id: lint
         run: npm run lint:critical
 
       - name: Apply database migrations
+        id: migrate
         run: npm run db:migrate
 
       - name: Database schema preflight validation
+        id: preflight
         run: npm run db:preflight
 
-      - name: Run strict unit test suite (192 tests)
+      - name: Run strict unit test suite
+        id: unit
         run: npm test
         timeout-minutes: 5
 
       - name: Generate summary report
         if: always()
-        run: |
-          echo "### 🚀 Fast CI Check Results" >> $GITHUB_STEP_SUMMARY
-          echo "| Check | Status |" >> $GITHUB_STEP_SUMMARY
-          echo "|---|---|" >> $GITHUB_STEP_SUMMARY
-          echo "| Critical Linting | ✅ Passed |" >> $GITHUB_STEP_SUMMARY
-          echo "| Database Schema Preflight | ✅ Current & Verified |" >> $GITHUB_STEP_SUMMARY
-          echo "| Unit Test Suite (192 tests) | ✅ All Passed |" >> $GITHUB_STEP_SUMMARY
-
+        env:
+          OUTCOME_INSTALL: ${{ steps.install.outcome }}
+          OUTCOME_LINT: ${{ steps.lint.outcome }}
+          OUTCOME_MIGRATE: ${{ steps.migrate.outcome }}
+          OUTCOME_PREFLIGHT: ${{ steps.preflight.outcome }}
+          OUTCOME_UNIT: ${{ steps.unit.outcome }}
+        run: node scripts/ci/generate-summary.mjs
