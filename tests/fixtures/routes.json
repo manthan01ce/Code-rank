@@ -17,6 +17,9 @@
   "apps/web/src/app/admin/page.js": [
     "PAGE"
   ],
+  "apps/web/src/app/admin/profile/page.js": [
+    "PAGE"
+  ],
   "apps/web/src/app/admin/settings/page.js": [
     "PAGE"
   ],
@@ -197,6 +200,9 @@
     "PAGE"
   ],
   "apps/web/src/app/profile/[username]/page.js": [
+    "PAGE"
+  ],
+  "apps/web/src/app/signup/page.tsx": [
     "PAGE"
   ],
   "apps/web/src/app/student/code/[id]/page.js": [

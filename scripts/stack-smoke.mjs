@@ -229,12 +229,10 @@ try {
   };
   for (const [language, code] of Object.entries(programs)) {
     const job = await submit(language, code, first.cookie);
+    const completed = await poll(job.jobId, job.cookie);
     assert.ok(
-      successfulExecution(
-        await poll(job.jobId, job.cookie),
-        `stack-${language}`,
-      ),
-      language,
+      successfulExecution(completed, `stack-${language}`),
+      `${language} execution failed: ${JSON.stringify(completed)}`,
     );
   }
   const failed = await submit(
