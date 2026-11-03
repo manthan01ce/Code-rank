@@ -65,7 +65,10 @@ jobs:
         timeout-minutes: 5
 
       - name: Validate authoritative Compose configuration
-        run: docker compose -f infrastructure/docker-compose.yml config --quiet
+        run: |
+          docker compose -f infrastructure/docker-compose.yml config --quiet
+          docker compose -f infrastructure/docker-compose.yml --profile local-database config --quiet
+          docker compose -f infrastructure/docker-compose.yml -f infrastructure/compose.warm-daemons.yaml --profile local-database config --quiet
 
       - name: Build worker deployment image
         run: docker build -t coderank-worker:ci -f apps/worker/Dockerfile .
