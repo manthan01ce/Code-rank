@@ -1,14 +1,6 @@
 name: Architecture checks
 on:
   pull_request:
-  push:
-    branches:
-      - master
-      - main
-      - 'feat/**'
-      - 'fix/**'
-      - 'design/**'
-      - 'fix/architecture-*'
 
 permissions:
   contents: read
