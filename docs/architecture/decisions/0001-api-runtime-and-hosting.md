@@ -11,6 +11,8 @@
 
 This decision replaces the earlier draft's blank owner fields and inconsistent alternatives. The owner reaffirmed the folder-structure review's three-application architecture. The initial implementation targets the local Linux lab; it does not assume a cloud subscription, domain, budget, remote credentials or staging access.
 
+See [migration status and next dependency order](../migration-status.md) for the distinction between merged preparation work and the unimplemented target.
+
 ## 1. Accepted application ownership
 
 | Owner | Responsibility | Dependency limits |

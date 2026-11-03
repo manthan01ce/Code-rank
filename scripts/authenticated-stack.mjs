@@ -260,7 +260,7 @@ try {
   );
   // A second real course makes cross-course response ordering observable in browser tests.
   await sql.query("INSERT INTO courses(course_code,name,semester,assigned_faculty) VALUES('CI102','CI Other Course',1,2)");
-  await sql.query("SELECT coderank_replace_mapping(2,1,ARRAY[2],2)");
+  await sql.query("SELECT coderank_replace_mapping(1,2,ARRAY[2],2)");
   await sql.query("INSERT INTO practicals(faculty_id,course_id,batch_id,title,description,total_marks,status,start_time,end_time) VALUES(2,2,'A','CI Other Practical','Course switch fixture',10,'active',now()-interval '1 hour',now()+interval '1 hour')");
   const cases = JSON.stringify([
     {
