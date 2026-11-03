@@ -45,6 +45,7 @@ Discovery rule: `tests/` root directory, `*.test.mjs` OR `*.test.js`, excluding 
 | `tests/bulk-users-api.test.mjs` | Bulk user import API contracts |
 | `tests/capacity.test.mjs` | Execution queue capacity gate |
 | `tests/certification.test.mjs` | CI certification artifact validation |
+| `tests/ci-summary.test.mjs` | Outcome-based CI summary and dynamic count reporting |
 | `tests/ci-tap.test.mjs` | TAP validator unit tests |
 | `tests/cluster-config.test.mjs` | Cluster/worker process config validation |
 | `tests/course-management-service.test.mjs` | Course management service logic |
@@ -63,6 +64,7 @@ Discovery rule: `tests/` root directory, `*.test.mjs` OR `*.test.js`, excluding 
 | `tests/grading.test.mjs` | Submission grading logic |
 | `tests/health.test.mjs` | Health endpoint logic |
 | `tests/job-wait.test.mjs` | Job polling wait utility |
+| `tests/lab-launcher-env.test.mjs` | Dotenv precedence, literal values, native launcher handoff and exit-code propagation |
 | `tests/load-result.test.mjs` | Load test result parsing |
 | `tests/migration-errors.test.mjs` | Migration error handling |
 | `tests/migrations.test.mjs` | Migration checksum and ordering |
@@ -72,16 +74,17 @@ Discovery rule: `tests/` root directory, `*.test.mjs` OR `*.test.js`, excluding 
 | `tests/profile-privacy.test.mjs` | Profile privacy and visibility rules |
 | `tests/progress-updates.test.mjs` | Progress update broadcasting |
 | `tests/rate-limit.test.mjs` | Rate limiter contracts |
-| `tests/realtime.test.mjs` | Realtime event handler unit contracts |
 | `tests/realtime-membership.test.mjs` | Room membership authorization |
 | `tests/realtime-revocation.test.mjs` | Session revocation on token expiry |
 | `tests/realtime-session.test.mjs` | Session guard timer and revalidation logic |
+| `tests/realtime.test.mjs` | Realtime event handler unit contracts |
 | `tests/request-revocation.test.mjs` | In-flight request revocation |
 | `tests/retention.test.mjs` | Data retention utility |
 | `tests/runner.test.mjs` | Runner language dispatch |
-| `tests/sandbox.test.mjs` | Sandbox lifetime bounds and isolation flags using an injected Docker command adapter |
 | `tests/sandbox-recovery.test.mjs` | Sandbox container recovery after crash |
+| `tests/sandbox.test.mjs` | Sandbox lifetime bounds and isolation flags using an injected Docker command adapter |
 | `tests/schema-readiness.test.mjs` | Schema readiness manifest validation |
+| `tests/seed-safety.test.mjs` | Destructive seed refusal before configuration or database connection |
 | `tests/selector-pagination.test.mjs` | Keyset pagination selector |
 | `tests/static-runners.test.mjs` | Static language runner contracts |
 | `tests/student-theme.test.mjs` | Student theme utility |
@@ -93,12 +96,6 @@ Discovery rule: `tests/` root directory, `*.test.mjs` OR `*.test.js`, excluding 
 | `tests/worker-config.test.mjs` | Worker concurrency and config validation |
 | `tests/worker-heartbeat.test.mjs` | Worker heartbeat monitor |
 | `tests/worker-shutdown.test.mjs` | Worker graceful shutdown |
-
-| `tests/ci-summary.test.mjs` | Outcome-based CI summary and dynamic count reporting |
-
-| `tests/lab-launcher-env.test.mjs` | Dotenv precedence, literal values, native launcher handoff and exit-code propagation |
-
-| `tests/seed-safety.test.mjs` | Destructive seed refusal before configuration or database connection |
 
 ### 2.2 `.test.js` files in unit lane (1 file)
 
