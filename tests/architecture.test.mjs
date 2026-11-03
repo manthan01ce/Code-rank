@@ -105,6 +105,25 @@ test('all inventoried API paths and pages retain their HTTP methods, locations, 
     assert.deepEqual(exports, [...endpoint.methods].sort(), endpoint.file);
   }
 
+  // Literal response branches are minimum source observations, not an exhaustive
+  // substitute for runtime contracts forwarded by services and shared helpers.
+  for (const endpoint of inventory.endpoints) {
+    const source = read(endpoint.file);
+    for (const [, code] of source.matchAll(/\\bstatus\\s*:\\s*(\\d{3})/g)) {
+      assert.ok(endpoint.statusCodes.includes(Number(code)), `${endpoint.file}: missing literal status ${code}`);
+    }
+    for (const [, name, , value] of source.matchAll(/['"]((?:Cache-Control|Retry-After|X-[\\w-]+|Content-Type))['"]\\s*:\\s*(['"])(.*?)\\2/gi)) {
+      assert.ok(endpoint.observedResponseHeaders?.[name.toLowerCase()]?.includes(value),
+        `${endpoint.file}: missing observed ${name}: ${value}`);
+    }
+  }
+  const live = inventory.endpoints.find(endpoint => endpoint.url === '/api/live');
+  assert.ok(live.observedResponseHeaders['cache-control'].includes('no-store'));
+  const jobs = inventory.endpoints.find(endpoint => endpoint.url === '/api/jobs/[jobId]');
+  assert.ok(jobs.statusCodes.includes(400), 'Missing jobId adapter branch returns 400');
+  assert.ok(jobs.contractSources.includes('apps/web/src/lib/execution-api.js'));
+  assert.equal(jobs.sharedExecutionContracts.errorHeaders['retry-after'], '5 on executionError 503 only');
+
   // Verify legacy routes fixture synchronization
   const legacyFixture = JSON.parse(read('tests/fixtures/routes.json'));
   assert.deepEqual(
