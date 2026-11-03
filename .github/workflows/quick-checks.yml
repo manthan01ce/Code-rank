@@ -75,3 +75,18 @@ jobs:
           OUTCOME_PREFLIGHT: ${{ steps.preflight.outcome }}
           OUTCOME_UNIT: ${{ steps.unit.outcome }}
         run: node scripts/ci/generate-summary.mjs
+
+  launcher-windows:
+    name: Windows launcher and seed safety
+    runs-on: windows-latest
+    timeout-minutes: 5
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+      - name: Setup Node.js 24
+        uses: actions/setup-node@v4
+        with:
+          node-version: 24
+      # Built-in Node modules only; no DB/Docker or secrets are used by these tests.
+      - name: Verify CMD environment handoff and destructive seed guard
+        run: node --test tests/lab-launcher-env.test.mjs tests/seed-safety.test.mjs

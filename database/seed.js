@@ -1,6 +1,12 @@
 #!/usr/bin/env node
-import '../packages/core/src/config/env.js';
-import pg from 'pg';
+// init.sql is a destructive snapshot restore, not an incremental seed.
+if (process.argv.length !== 3 || process.argv[2] !== '--allow-destructive-reset') {
+  console.error('Refusing destructive database reset. db:seed executes init.sql, which drops tables and replaces data. Back up first and use only a disposable development database. To opt in explicitly: npm run db:seed -- --allow-destructive-reset');
+  process.exit(1);
+}
+// Resolve dependencies/configuration only after the reset has been acknowledged.
+await import('../packages/core/src/config/env.js');
+const { default: pg } = await import('pg');
 import fs from 'node:fs';
 import { fileURLToPath } from 'node:url';
 import { resolve } from 'node:path';
@@ -21,7 +27,7 @@ if (!fs.existsSync(sqlPath)) {
 
 const sql = fs.readFileSync(sqlPath, 'utf8');
 
-console.log('Seeding database from database/init.sql...');
+console.warn('DESTRUCTIVE RESET: replacing database contents from database/init.sql...');
 const client = new pg.Client({ connectionString: url });
 
 try {
