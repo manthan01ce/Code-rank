@@ -8,7 +8,7 @@
 import dynamic from 'next/dynamic';
 
 const PythonDashboard = dynamic(
-  () => import('@/components/practice/PythonDashboard'),
+  () => import('@/features/practice/components/PythonDashboard'),
   {
     ssr: false,
     loading: () => (

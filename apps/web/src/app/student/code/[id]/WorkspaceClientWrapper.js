@@ -1,7 +1,7 @@
 'use client';
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
-import WorkspaceLayout from '@/components/compiler/WorkspaceLayout';
+import WorkspaceLayout from '@/features/coding-workspace/components/WorkspaceLayout';
 
 export default function WorkspaceClientWrapper({ problem = null, practicalId = null }) {
   const router = useRouter();

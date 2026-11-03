@@ -1,4 +1,4 @@
-import WorkspaceLayout from '@/components/compiler/WorkspaceLayout';
+import WorkspaceLayout from '@/features/coding-workspace/components/WorkspaceLayout';
 
 export const metadata = {
   title: 'Workspace - CodeRank',

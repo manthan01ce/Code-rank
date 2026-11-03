@@ -4,7 +4,7 @@ import { PracticalService } from '@coderank/core/services/PracticalService';
 import { authenticateRequest } from '@coderank/core/security/active-actor';
 import { guestActor, GUEST_COOKIE, validateExecution } from '@coderank/core/security/execution';
 import { checkRateLimit } from './queue/rateLimiter.js';
-import { STATIC_PROBLEMS } from './problems.js';
+import { STATIC_PROBLEMS } from '../features/practice/problems.js';
 
 export async function executionActor(request, create = false) {
   return await authenticateRequest(request, { optional: true }) || guestActor(request.headers.get('cookie') || '', create);

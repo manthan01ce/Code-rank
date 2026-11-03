@@ -41,7 +41,7 @@ test('workspace dark palette retains original fallbacks and every token has a li
     if (value === 'black') return '#000000';
     return /^#[a-f0-9]{3}$/i.test(value) ? '#' + [...value.slice(1)].map(c => c+c).join('') : value.toLowerCase();
   };
-  const directory = new URL('../apps/web/src/components/compiler/', import.meta.url);
+  const directory = new URL('../apps/web/src/features/coding-workspace/components/', import.meta.url);
   let checked = 0;
   for (const file of await readdir(directory)) {
     if (!file.endsWith('.js')) continue;
