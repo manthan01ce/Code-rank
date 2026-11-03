@@ -229,3 +229,5 @@ These files live in `tests/` but are not test entry points and must not appear i
 5. CR-ARCH-24 owns the move of `batch-execution.test.js` to the docker lane. Until that PR merges, the file stays quarantined here.
 
 The authenticated browser lane also holds a real course-list HTTP response across a course switch and verifies that stale practical rows cannot replace the selected course. The second course/practical exists only in its disposable database fixture.
+
+Browser acceptance also creates a synthetic student through the real admin form and inspects its downloaded PDF, and exercises faculty authoring validation/create/edit/extra-time/delete against the real API. These mutations are confined to the authenticated harness disposable database.
