@@ -258,6 +258,10 @@ try {
   await sql.query(
     "INSERT INTO practical_test_cases(practical_id,input,expected,marks,is_hidden,order_index,time_limit) VALUES(1,'','ok',10,true,0,5)",
   );
+  // A second real course makes cross-course response ordering observable in browser tests.
+  await sql.query("INSERT INTO courses(course_code,name,semester,assigned_faculty) VALUES('CI102','CI Other Course',1,2)");
+  await sql.query("SELECT coderank_replace_mapping(2,1,ARRAY[2],2)");
+  await sql.query("INSERT INTO practicals(faculty_id,course_id,batch_id,title,description,total_marks,status,start_time,end_time) VALUES(2,2,'A','CI Other Practical','Course switch fixture',10,'active',now()-interval '1 hour',now()+interval '1 hour')");
   const cases = JSON.stringify([
     {
       test_case_id: 1,
@@ -495,5 +499,6 @@ try {
   if (created) await admin.query(`DROP DATABASE ${database} WITH (FORCE)`);
   await admin.end();
   if (stopped.some((result) => result.status === "rejected"))
-    throw Error("Stack did not shut down cleanly");
+    // Cleanup failure must fail CI even when the stack body succeeded.
+    throw Error("Stack did not shut down cleanly"); // eslint-disable-line no-unsafe-finally
 }

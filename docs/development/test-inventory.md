@@ -2,7 +2,7 @@
 
 **Issue:** CR-ARCH-23
 **Last updated:** 2026-11-03
-**Inventory source revision:** master `ff9e0b8261af036d242b7a8322a38dc4735fd2b8` plus the two launcher/seed regression files in this correction. Counts describe files, not assertions.
+**Inventory source revision:** master `3d4ce2f97e1ece2686b25d4ce02587c7e0889378` plus the tooling lint regression file in this correction. Counts describe files, not assertions.
 
 This document records the intended test file inventory, suite routing, tools, quarantine list, and the before/after change summary introduced by CR-ARCH-23. It is the authoritative reference for understanding which tests belong to which CI lane and why.
 
@@ -25,14 +25,19 @@ This document records the intended test file inventory, suite routing, tools, qu
 
 ## 2. Unit Lane — Intended File Inventory
 
-At the recorded source revision plus this correction, 63 root `.test.mjs` files plus `job-lifecycle.test.js` give 64 discovered unit test files. `batch-execution.test.js` is the one explicitly quarantined root test; it is not counted as executed. This file count is separate from the number of assertions reported by TAP.
+At the recorded source revision plus this correction, 68 root `.test.mjs` files plus `job-lifecycle.test.js` give 69 discovered unit test files. `batch-execution.test.js` is the one explicitly quarantined root test; it is not counted as executed. This file count is separate from the number of assertions reported by TAP.
 
 Discovery rule: `tests/` root directory, `*.test.mjs` OR `*.test.js`, excluding files in `UNIT_QUARANTINE` (defined in `scripts/ci/run-tests.mjs`).
 
-### 2.1 `.test.mjs` files (63 files)
+### 2.1 `.test.mjs` files (68 files)
 
 | File | What it covers |
 |---|---|
+| `tests/credential-pdf.test.mjs` | Browser PDF ownership and isolated synthetic document output |
+| `tests/practical-authoring.test.mjs` | Practical feature boundaries and HTTP client contracts |
+| `tests/queue-script-contract.test.mjs` | BullMQ internal script compatibility and Redis contract |
+| `tests/runtime-config.test.mjs` | Public export, actual loader precedence and import evaluation order |
+| `tests/tooling-lint.test.mjs` | Backend lint defect detection and frontend rule severity |
 | `tests/active-actor.test.mjs` | JWT authentication middleware, actor resolution |
 | `tests/admin-api.test.mjs` | Admin HTTP route contracts |
 | `tests/admin-bootstrap.test.mjs` | Admin account initialization logic |
@@ -222,3 +227,5 @@ These files live in `tests/` but are not test entry points and must not appear i
 3. The architecture test `unit test discovery includes both .test.mjs and .test.js files and respects explicit quarantine` must continue to pass after any change to test discovery.
 4. No gate weakening: `verifyTap` strict validation, timeout, zero-failure policy remain unchanged.
 5. CR-ARCH-24 owns the move of `batch-execution.test.js` to the docker lane. Until that PR merges, the file stays quarantined here.
+
+The authenticated browser lane also holds a real course-list HTTP response across a course switch and verifies that stale practical rows cannot replace the selected course. The second course/practical exists only in its disposable database fixture.

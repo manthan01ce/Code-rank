@@ -1,13 +1,22 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { spawnSync } from 'node:child_process';
-import { mkdtempSync, mkdirSync, writeFileSync, rmSync } from 'node:fs';
+import { mkdtempSync, mkdirSync, writeFileSync, readFileSync, rmSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
-import { fileURLToPath } from 'node:url';
+import { pathToFileURL, fileURLToPath } from 'node:url';
 
 const repoRoot = fileURLToPath(new URL('../', import.meta.url));
 const dotenvModuleUrl = import.meta.resolve('dotenv');
+
+function fixtureLoader(tempDir) {
+  const target = join(tempDir, 'packages/core/src/config/env.mjs');
+  mkdirSync(join(tempDir, 'packages/core/src/config'), { recursive: true });
+  // Exercise the real implementation; only dependency resolution changes outside the workspace.
+  const source = readFileSync(join(repoRoot, 'packages/core/src/config/env.js'), 'utf8');
+  writeFileSync(target, source.replace("from 'dotenv'", `from ${JSON.stringify(dotenvModuleUrl)}`));
+  return pathToFileURL(target).href;
+}
 
 test('public package export @coderank/core/config/env resolves across root, web and worker workspaces', () => {
   const workspaces = [
@@ -56,12 +65,11 @@ test('runtime config preserves dotenv precedence with temporary fixtures', (t) =
   writeFileSync(join(tempDir, 'apps/web', '.env'), 'TEST_PRECEDENCE=app-base\n');
   writeFileSync(join(tempDir, 'apps/web', '.env.local'), 'TEST_PRECEDENCE=app-local\n');
 
-  // Helper running dotenv resolution mirroring env.js behavior in tempDir
+  const loaderUrl = fixtureLoader(tempDir);
+  // Run the actual loader from a relocated repository fixture.
   const runPrecedenceCheck = ({ cwd, initialEnv = {} }) => {
     const code = `
-      import dotenv from ${JSON.stringify(dotenvModuleUrl)};
-      const root = ${JSON.stringify(tempDir.replace(/\\/g, '/'))} + '/';
-      dotenv.config({ path: ['.env.local', '.env', root + '.env.local', root + '.env'], quiet: true });
+      import ${JSON.stringify(loaderUrl)};
       const { TEST_PRECEDENCE, TEST_SHARED, TEST_ROOT_ONLY, PROCESS_OVERRIDE } = process.env;
       console.log(JSON.stringify({ TEST_PRECEDENCE, TEST_SHARED, TEST_ROOT_ONLY, PROCESS_OVERRIDE }));
     `;
@@ -99,17 +107,25 @@ test('runtime config preserves dotenv precedence with temporary fixtures', (t) =
   assert.equal(overrideResult.PROCESS_OVERRIDE, 'active');
 });
 
-test('side-effect import executes before downstream modules read configuration', () => {
-  const code = `
-    import '@coderank/core/config/env';
-    // Verify that downstream module access to process.env sees loaded configuration
-    console.log(typeof process.env.NODE_ENV !== 'undefined' || true ? 'SUCCESS' : 'FAILURE');
-  `;
-  const res = spawnSync(process.execPath, ['--input-type=module', '-e', code], {
-    cwd: repoRoot,
-    encoding: 'utf8',
-    timeout: 5000,
-  });
-  assert.equal(res.status, 0, res.stderr);
-  assert.equal(res.stdout.trim(), 'SUCCESS');
+test('side-effect import executes before downstream modules read configuration', (t) => {
+  const tempDir = mkdtempSync(join(tmpdir(), 'coderank-env-order-'));
+  t.after(() => rmSync(tempDir, { recursive: true, force: true }));
+  writeFileSync(join(tempDir, '.env'), 'CODERANK_IMPORT_ORDER=loaded-before-consumer\n');
+  const loaderUrl = fixtureLoader(tempDir);
+  const consumer = join(tempDir, 'consumer.mjs');
+  writeFileSync(consumer, 'export const captured = process.env.CODERANK_IMPORT_ORDER;');
+  const run = (load) => {
+    const code = `${load ? `import ${JSON.stringify(loaderUrl)};` : ''}
+      import { captured } from ${JSON.stringify(pathToFileURL(consumer).href)};
+      console.log(JSON.stringify(captured ?? null));`;
+    const result = spawnSync(process.execPath, ['--input-type=module', '-e', code], {
+      cwd: tempDir,
+      env: { PATH: process.env.PATH, SYSTEMROOT: process.env.SYSTEMROOT },
+      encoding: 'utf8', timeout: 5000,
+    });
+    assert.equal(result.status, 0, result.stderr);
+    return JSON.parse(result.stdout.trim());
+  };
+  assert.equal(run(false), null, 'Control must not inherit the fixture value');
+  assert.equal(run(true), 'loaded-before-consumer');
 });

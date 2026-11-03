@@ -48,7 +48,11 @@
   },
   "devDependencies": {
     "@electric-sql/pglite": "0.5.10",
+    "@eslint/js": "9.39.5",
     "@playwright/test": "1.56.1",
+    "eslint": "9.39.5",
+    "eslint-config-next": "16.3.7",
+    "globals": "14.0.0",
     "pg": "8.23.1",
     "turbo": "^2.5.4"
   },

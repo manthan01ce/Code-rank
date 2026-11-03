@@ -168,17 +168,27 @@ function FacultyWorkspace() {
     }
   };
 
+  const practicalRequestVersion = useRef(0);
+  const practicalCourse = useRef('');
+
   // Load practicals when selected course changes
   useEffect(() => {
-    if (selectedCourse) {
-      fetchPracticals(true);
-    }
+    practicalCourse.current = selectedCourse;
+    if (selectedCourse) fetchPracticals(true);
+    else setLoadingPracticals(false);
+    return () => {
+      practicalCourse.current = '';
+      practicalRequestVersion.current += 1;
+    };
   }, [selectedCourse]);
 
   const fetchPracticals = async (showLoading = true) => {
+    if (!selectedCourse || practicalCourse.current !== selectedCourse) return;
+    const version = ++practicalRequestVersion.current;
     if (showLoading) setLoadingPracticals(true);
     try {
       const data = await fetchCoursePracticals(selectedCourse, token());
+      if (version !== practicalRequestVersion.current) return;
       setPracticals(data);
       if (data.length > 0) {
         setSelectedPracticalId(prev => {
@@ -196,9 +206,9 @@ function FacultyWorkspace() {
         setStatsData(null);
       }
     } catch (e) {
-      console.error(e);
+      if (version === practicalRequestVersion.current) console.error(e);
     } finally {
-      if (showLoading) setLoadingPracticals(false);
+      if (version === practicalRequestVersion.current) setLoadingPracticals(false);
     }
   };
 
@@ -1191,3 +1201,4 @@ function FacultyWorkspace() {
     </div>
   );
 }
+

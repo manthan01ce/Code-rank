@@ -138,7 +138,8 @@ export async function runDatabaseOperations({ databaseUrl, restoreAdminUrl, targ
     await Promise.all([source, admin].map(pool => clean(() => pool.end())));
     if (failures.length) {
       report.status = 'failed'; report.failedStage = 'cleanup'; await save();
-      throw Error('Database operation failed during cleanup; inspect the private evidence manifest');
+      // A failed cleanup invalidates the recovery evidence, including a successful return.
+      throw Error('Database operation failed during cleanup; inspect the private evidence manifest'); // eslint-disable-line no-unsafe-finally
     }
   }
 }

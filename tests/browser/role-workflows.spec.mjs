@@ -235,3 +235,45 @@ test('student overview and practical selection retain readable themes, navigatio
   expect(await page.evaluate(() => localStorage.getItem('token'))).toBe(token);
   assertNoErrors();
 });
+
+// Delay an actual server response; do not substitute invented practical data.
+test('late practical list response cannot overwrite the newly selected course', async ({ page }) => {
+  const assertNoErrors = failOnPageErrors(page);
+  await login(page, 'faculty');
+  await page.getByRole('heading', { name: 'CI Course', exact: true }).click();
+  await expect(page.getByRole('cell', { name: 'CI Practical', exact: true })).toBeVisible();
+  let release;
+  const held = new Promise(resolve => { release = resolve; });
+  let captured;
+  const requested = new Promise(resolve => { captured = resolve; });
+  let completed;
+  const delivered = new Promise(resolve => { completed = resolve; });
+  const pattern = /\/api\/faculty\/practicals\?course_id=1(?:&|$)/;
+  await page.route(pattern, async route => {
+    try {
+      const response = await route.fetch();
+      captured();
+      await held;
+      await route.fulfill({ response });
+    } finally { completed(); }
+  });
+  try {
+    await page.getByRole('button', { name: /Switch Subject/ }).click();
+    await page.getByRole('heading', { name: 'CI Course', exact: true }).click();
+    await requested;
+    await page.getByRole('button', { name: /Switch Subject/ }).click();
+    await page.getByRole('heading', { name: 'CI Other Course', exact: true }).click();
+    await expect(page.getByRole('cell', { name: 'CI Other Practical', exact: true })).toBeVisible();
+    const oldResponse = page.waitForResponse(response => pattern.test(response.url()));
+    release();
+    await oldResponse;
+    await delivered;
+    await page.evaluate(() => new Promise(resolve => requestAnimationFrame(() => requestAnimationFrame(resolve))));
+    await expect(page.getByRole('cell', { name: 'CI Other Practical', exact: true })).toBeVisible();
+    await expect(page.getByRole('cell', { name: 'CI Practical', exact: true })).toHaveCount(0);
+    assertNoErrors();
+  } finally {
+    release();
+    await page.unroute(pattern);
+  }
+});
