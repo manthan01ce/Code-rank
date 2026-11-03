@@ -5,7 +5,7 @@ if (process.argv.length !== 3 || process.argv[2] !== '--allow-destructive-reset'
   process.exit(1);
 }
 // Resolve dependencies/configuration only after the reset has been acknowledged.
-await import('../packages/core/src/config/env.js');
+await import('@coderank/core/config/env');
 const { default: pg } = await import('pg');
 import fs from 'node:fs';
 import { fileURLToPath } from 'node:url';

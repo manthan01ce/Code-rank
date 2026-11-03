@@ -1,4 +1,4 @@
-import '../../packages/core/src/config/env.js';
+import '@coderank/core/config/env';
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import pg from 'pg';

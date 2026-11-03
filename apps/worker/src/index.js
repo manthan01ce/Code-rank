@@ -1,4 +1,4 @@
-import '../../../packages/core/src/config/env.js';
+import '@coderank/core/config/env';
 
 import { createSubmissionWorker } from './workers/submission.worker.js';
 import { createSystemWorker } from './workers/system.worker.js';

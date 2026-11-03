@@ -295,3 +295,27 @@ test('unit test discovery includes both .test.mjs and .test.js files and respect
     assert.doesNotMatch(file, /\/browser\//, `Browser spec must not appear in unit lane: ${file}`);
   }
 });
+
+test('runtime config is exported deliberately and no relative cross-workspace env imports remain', () => {
+  const corePackageJson = JSON.parse(readFileSync(fileURLToPath(new URL('packages/core/package.json', root)), 'utf8'));
+  assert.equal(corePackageJson.exports['./config/env'], './src/config/env.js', 'core must export ./config/env');
+
+  const files = [
+    ...walk(fileURLToPath(new URL('apps/', root))),
+    ...walk(fileURLToPath(new URL('packages/', root))),
+    ...walk(fileURLToPath(new URL('scripts/', root))),
+    ...walk(fileURLToPath(new URL('database/', root))),
+    ...walk(fileURLToPath(new URL('tests/', root))),
+  ].filter(f => /\.(?:m?js|tsx?)$/.test(f));
+
+  for (const file of files) {
+    const source = readFileSync(file, 'utf8');
+    for (const [, specifier] of source.matchAll(/(?:from\s*|import\s*\(?|import\s*)['"]([^'"]+)['"]/g)) {
+      assert.doesNotMatch(
+        specifier,
+        /packages\/core\/src\/config\/env/,
+        `${file}: ${specifier} must not import relative cross-workspace path to env`
+      );
+    }
+  }
+});

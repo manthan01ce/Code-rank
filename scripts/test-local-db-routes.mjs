@@ -1,4 +1,4 @@
-import './../packages/core/src/config/env.js';
+import '@coderank/core/config/env';
 import sql, { closeDatabase } from './../packages/database/src/client.js';
 import { generateToken } from './../packages/core/src/utils/auth.js';
 import crypto from 'node:crypto';

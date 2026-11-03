@@ -1,7 +1,7 @@
 import test from "node:test";
 import assert from "node:assert/strict";
 import { randomUUID } from "node:crypto";
-import "../../packages/core/src/config/env.js";
+import '@coderank/core/config/env';
 import { neon } from "@neondatabase/serverless";
 import { migrate } from "../../packages/database/src/migrations.js";
 

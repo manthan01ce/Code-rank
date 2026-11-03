@@ -181,10 +181,7 @@ Declared in root `package.json`:
 
 ### 5.2 Internal Path Imports
 Current source files contain deep relative and non-exported paths that will require normalization in future package-boundary issues:
-- `apps/web/cluster.js` -> `../../packages/core/src/config/env.js`
-- `apps/web/next.config.mjs` -> `../../packages/core/src/config/env.js`
-- `apps/web/server.js` -> `../../packages/core/src/config/env.js`
-- `apps/worker/src/index.js` -> `../../../packages/core/src/config/env.js`
+- Runtime configuration: `apps/web/cluster.js`, `apps/web/next.config.mjs`, `apps/web/server.js`, and `apps/worker/src/index.js` import the deliberate `@coderank/core/config/env` package export (normalized in CR-ARCH-07 from legacy relative paths).
 - Direct database client access from web adapters: `@coderank/core/db` imported in `apps/web/server.js`, `apps/web/src/lib/db.js`, `apps/web/src/app/api/health/route.js`.
 
 ### 5.3 Intended Test Files & Exclusions
