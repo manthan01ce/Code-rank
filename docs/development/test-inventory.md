@@ -2,7 +2,7 @@
 
 **Issue:** CR-ARCH-23
 **Last updated:** 2026-11-03
-**Master commit at update:** `b10cc86521aa358c5038f6c02cd0fc98c882457f`
+**Inventory source revision:** `27a657611e04b04bebc800f2f299e4fedd21d2fa` (PR #37 source snapshot; counts describe files, not test assertions)
 
 This document records the intended test file inventory, suite routing, tools, quarantine list, and the before/after change summary introduced by CR-ARCH-23. It is the authoritative reference for understanding which tests belong to which CI lane and why.
 
@@ -25,9 +25,11 @@ This document records the intended test file inventory, suite routing, tools, qu
 
 ## 2. Unit Lane — Intended File Inventory
 
+At the recorded source revision, 60 root `.test.mjs` files plus `job-lifecycle.test.js` give 61 discovered unit test files. `batch-execution.test.js` is the one explicitly quarantined root test; it is not counted as executed. This file count is separate from the number of assertions reported by TAP.
+
 Discovery rule: `tests/` root directory, `*.test.mjs` OR `*.test.js`, excluding files in `UNIT_QUARANTINE` (defined in `scripts/ci/run-tests.mjs`).
 
-### 2.1 `.test.mjs` files (35 files)
+### 2.1 `.test.mjs` files (60 files)
 
 | File | What it covers |
 |---|---|
@@ -77,6 +79,7 @@ Discovery rule: `tests/` root directory, `*.test.mjs` OR `*.test.js`, excluding 
 | `tests/request-revocation.test.mjs` | In-flight request revocation |
 | `tests/retention.test.mjs` | Data retention utility |
 | `tests/runner.test.mjs` | Runner language dispatch |
+| `tests/sandbox.test.mjs` | Sandbox lifetime bounds and isolation flags using an injected Docker command adapter |
 | `tests/sandbox-recovery.test.mjs` | Sandbox container recovery after crash |
 | `tests/schema-readiness.test.mjs` | Schema readiness manifest validation |
 | `tests/selector-pagination.test.mjs` | Keyset pagination selector |
@@ -105,7 +108,7 @@ Files explicitly excluded from the unit lane, with documented reason, owner, and
 
 | File | Quarantine reason | Suite it belongs to | Restoration condition | Owner |
 |---|---|---|---|---|
-| `tests/batch-execution.test.js` | Requires a live Docker daemon. Calls `new Executor()` which spawns `docker run` directly. Fails with "failed to connect to the docker API" on machines without Docker Desktop or Docker daemon. Cannot be made unit-testable without replacing real Docker calls with mocks — which would weaken the behavioral contract. | `npm run test:docker` (docker lane) | Move to `tests/integration/batch-execution.test.mjs`, verify it passes in the docker CI lane, then remove from quarantine. | CR-ARCH-24 |
+| `tests/batch-execution.test.js` | Legacy test creates a fake docker executable intended to run generated shell locally, but its command shim predates the current Sandbox run/exec lifecycle. Its failure is not sufficient evidence that merely installing Docker fixes it. Batch framing, per-case errors/timeouts and continued execution still need restoration against the current Executor. | Intended future docker lane; NOT currently selected by any lane | CR-ARCH-24 must modernize this test against the current Executor, run it with real disposable Docker, register it in the docker lane, and only then remove quarantine. File relocation alone is insufficient. | CR-ARCH-24 |
 
 ---
 
@@ -174,7 +177,7 @@ These files live in `tests/` but are not test entry points and must not appear i
 
 ## 8. Before / After: CR-ARCH-23
 
-### Before (master at `051a654e`)
+### Before (original discovery baseline at `051a654e`)
 
 | Aspect | State |
 |---|---|
