@@ -41,7 +41,7 @@ Review and adjust variables in `.env`:
     ```
 Launcher precedence for PORT, REALTIME_URL and ALLOWED_ORIGIN is: existing process environment → apps/web/.env.local → apps/web/.env → root .env.local → root .env → defaults. A shared Node bridge resolves these settings before either shell launcher applies defaults. It parses values as data, never sources/evaluates .env as shell code, and exports only these launcher settings; unrelated app-local configuration keeps its normal runtime-loading behavior. The canonical infrastructure wrappers use root .env explicitly.
 
-For direct `npm run web` / `npm run worker`, each workspace retains its existing dotenv loader. Keep shared lab settings in root .env; do not configure contradictory per-app port/realtime values.
+For direct `npm run web` / `npm run worker`, each workspace retains its existing dotenv loader. Keep shared lab settings in root .env; do not configure contradictory per-app port/realtime values. Direct web startup defaults to the localhost browser origin at its effective PORT; allow additional LAN/browser origins explicitly in ALLOWED_ORIGIN when not using a launcher.
 
 - **JWT Secret**:
   - `JWT_SECRET=your_super_secret_jwt_key_here` (must be non-empty).
