@@ -30,49 +30,61 @@ mock.module("@coderank/core/services/UserManagementService", {
 const { generateToken, getUserFromRequest } = await import("../packages/core/src/utils/auth.js");
 mock.module('@coderank/core/security/active-actor', { namedExports: {
   authenticateRequest: async (request, { optional = false } = {}) => {
-    const header = request?.headers?.get?.('authorization');
+    const headers = request?.headers;
+    const header = typeof headers?.get === 'function' ? headers.get('authorization') : headers?.authorization;
     if (optional && !header) return null;
     const actor = header && getUserFromRequest(request);
     if (!actor) throw { status: 401, message: 'Authentication required' };
     return actor;
   },
+  authenticateToken: async () => ({ id: 1, role: 'admin' }),
 } });
 
-const { POST } = await import("../apps/web/src/app/api/users/bulk/route.js");
-function request(
-  content,
-  role = "student",
-  actor = "admin",
-  name = "users.csv",
-) {
-  const form = new FormData();
-  form.set("role", role);
-  form.set("file", new File([content], name));
-  return new Request("http://localhost/api/users/bulk", {
-    method: "POST",
-    headers: {
-      Authorization: `Bearer ${generateToken({ id: 1, role: actor })}`,
-    },
-    body: form,
+const { buildApp } = await import("../apps/api/src/app.js");
+
+test("bulk CSV validates roles/limits and reports only committed rows without leaking DB errors", async (t) => {
+  const api = buildApp();
+  const addr = await api.listen({ host: "127.0.0.1", port: 0 });
+  t.after(async () => {
+    await api.close();
   });
-}
-test("bulk CSV validates roles/limits and reports only committed rows without leaking DB errors", async () => {
+
+  async function request(
+    content,
+    role = "student",
+    actor = "admin",
+    name = "users.csv",
+  ) {
+    const form = new FormData();
+    if (role !== undefined) form.set("role", role);
+    if (content !== undefined) form.set("file", new File([content], name));
+    const headers = {};
+    if (actor) {
+      headers.Authorization = `Bearer ${generateToken({ id: 1, role: actor })}`;
+    }
+    return fetch(`${addr}/api/users/bulk`, {
+      method: "POST",
+      headers,
+      body: form,
+    });
+  }
+
   assert.equal(
-    (await POST(request("Name,Email\nName,n@test.io", "student", "faculty")))
+    (await request("Name,Email\nName,n@test.io", "student", "faculty"))
       .status,
     401,
   );
   assert.equal(
-    (await POST(request("Name,Email\nName,n@test.io", "admin"))).status,
+    (await request("Name,Email\nName,n@test.io", "admin")).status,
     400,
   );
   assert.equal(
-    (await POST(request("bad data", "student", "admin", "bad.xlsx"))).status,
+    (await request("bad data", "student", "admin", "bad.xlsx")).status,
     400,
   );
   const csv =
     "Name,,Email,Division\nFresh,,fresh@test.io,ce1\nDuplicate,,existing@test.io,CE1\nFail,,fail@test.io,CE1\nInvalid,,wrong,CE1";
-  const response = await POST(request(csv));
+  const response = await request(csv);
   assert.equal(response.status, 200);
   const result = await response.json();
   assert.equal(result.created.length, 1);
@@ -82,13 +94,11 @@ test("bulk CSV validates roles/limits and reports only committed rows without le
   assert.ok(!JSON.stringify(result).includes("private SQL"));
   assert.equal(
     (
-      await POST(
-        request(
-          "Name,Email,Division\n" +
-            Array.from({ length: 501 }, (_, i) => `S,s${i}@test.io,CE1`).join(
-              "\n",
-            ),
-        ),
+      await request(
+        "Name,Email,Division\n" +
+          Array.from({ length: 501 }, (_, i) => `S,s${i}@test.io,CE1`).join(
+            "\n",
+          ),
       )
     ).status,
     400,

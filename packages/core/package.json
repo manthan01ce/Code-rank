@@ -21,7 +21,6 @@
     "./security/service-token": "./src/security/service-token.js",
     "./services/GradingService": "./src/modules/submissions/GradingService.js",
     "./services/PracticalManagementService": "./src/modules/practicals/PracticalManagementService.js",
-    "./services/MappingService": "./src/modules/mapping/MappingService.js",
     "./services/SubmissionHistoryService": "./src/modules/submissions/SubmissionHistoryService.js",
     "./services/UserManagementService": "./src/modules/users/UserManagementService.js",
     "./services/CourseReportService": "./src/modules/reports/CourseReportService.js",

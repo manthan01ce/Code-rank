@@ -44,12 +44,6 @@
   "apps/web/src/app/admin/students/page.js": [
     "PAGE"
   ],
-  "apps/web/src/app/api/admin/bulk-upload/route.js": [
-    "POST"
-  ],
-  "apps/web/src/app/api/admin/password/route.js": [
-    "POST"
-  ],
   "apps/web/src/app/api/c-run/route.js": [
     "POST"
   ],
@@ -156,19 +150,6 @@
   "apps/web/src/app/api/submit/route.js": [
     "POST"
   ],
-  "apps/web/src/app/api/users/[id]/route.js": [
-    "DELETE",
-    "PUT"
-  ],
-  "apps/web/src/app/api/users/bulk/route.js": [
-    "POST"
-  ],
-  "apps/web/src/app/api/users/route.js": [
-    "DELETE",
-    "GET",
-    "POST",
-    "PUT"
-  ],
   "apps/web/src/app/code/page.js": [
     "PAGE"
   ],
@@ -198,5 +179,11 @@
   ],
   "apps/web/src/app/student/practicals/page.js": [
     "PAGE"
+  ],
+  "apps/api/src/modules/users/users.routes.js": [
+    "DELETE",
+    "GET",
+    "POST",
+    "PUT"
   ]
 }

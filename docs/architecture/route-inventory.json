@@ -255,7 +255,7 @@
     },
     {
       "url": "/api/admin/bulk-upload",
-      "file": "apps/web/src/app/api/admin/bulk-upload/route.js",
+      "file": "apps/api/src/modules/users/users.routes.js",
       "methods": [
         "POST"
       ],
@@ -271,18 +271,24 @@
         500
       ],
       "services": [
-        "@coderank/core/services/UserService",
-        "@coderank/core/security/active-actor"
+        "apps/api/src/modules/users/users.service.js",
+        "apps/api/src/middleware/authentication.js"
       ],
       "description": "Admin CSV/Excel bulk user ingestion",
-      "observedResponseHeaders": {},
+      "observedResponseHeaders": {
+        "cache-control": [
+          "no-store"
+        ]
+      },
       "contractSources": [
-        "apps/web/src/app/api/admin/bulk-upload/route.js"
+        "apps/api/src/modules/users/users.routes.js",
+        "apps/api/src/modules/users/users.service.js",
+        "apps/api/src/middleware/authentication.js"
       ]
     },
     {
       "url": "/api/admin/password",
-      "file": "apps/web/src/app/api/admin/password/route.js",
+      "file": "apps/api/src/modules/users/users.routes.js",
       "methods": [
         "POST"
       ],
@@ -298,18 +304,24 @@
         500
       ],
       "services": [
-        "@coderank/core/services/UserService",
-        "@coderank/core/security/active-actor"
+        "apps/api/src/modules/users/users.service.js",
+        "apps/api/src/middleware/authentication.js"
       ],
       "description": "Admin-mediated password reset for users",
-      "observedResponseHeaders": {},
+      "observedResponseHeaders": {
+        "cache-control": [
+          "no-store"
+        ]
+      },
       "contractSources": [
-        "apps/web/src/app/api/admin/password/route.js"
+        "apps/api/src/modules/users/users.routes.js",
+        "apps/api/src/modules/users/users.service.js",
+        "apps/api/src/middleware/authentication.js"
       ]
     },
     {
       "url": "/api/users",
-      "file": "apps/web/src/app/api/users/route.js",
+      "file": "apps/api/src/modules/users/users.routes.js",
       "methods": [
         "DELETE",
         "GET",
@@ -329,8 +341,8 @@
         500
       ],
       "services": [
-        "@coderank/core/services/UserService",
-        "@coderank/core/security/active-actor"
+        "apps/api/src/modules/users/users.service.js",
+        "apps/api/src/middleware/authentication.js"
       ],
       "description": "Admin user CRUD and keyset pagination",
       "observedResponseHeaders": {
@@ -339,12 +351,14 @@
         ]
       },
       "contractSources": [
-        "apps/web/src/app/api/users/route.js"
+        "apps/api/src/modules/users/users.routes.js",
+        "apps/api/src/modules/users/users.service.js",
+        "apps/api/src/middleware/authentication.js"
       ]
     },
     {
       "url": "/api/users/[id]",
-      "file": "apps/web/src/app/api/users/[id]/route.js",
+      "file": "apps/api/src/modules/users/users.routes.js",
       "methods": [
         "DELETE",
         "PUT"
@@ -363,18 +377,24 @@
         500
       ],
       "services": [
-        "@coderank/core/services/UserManagementService",
-        "@coderank/core/security/active-actor"
+        "apps/api/src/modules/users/users.service.js",
+        "apps/api/src/middleware/authentication.js"
       ],
       "description": "Admin single-user deletion and role/status mutation",
-      "observedResponseHeaders": {},
+      "observedResponseHeaders": {
+        "cache-control": [
+          "no-store"
+        ]
+      },
       "contractSources": [
-        "apps/web/src/app/api/users/[id]/route.js"
+        "apps/api/src/modules/users/users.routes.js",
+        "apps/api/src/modules/users/users.service.js",
+        "apps/api/src/middleware/authentication.js"
       ]
     },
     {
       "url": "/api/users/bulk",
-      "file": "apps/web/src/app/api/users/bulk/route.js",
+      "file": "apps/api/src/modules/users/users.routes.js",
       "methods": [
         "POST"
       ],
@@ -390,13 +410,19 @@
         500
       ],
       "services": [
-        "@coderank/core/services/UserManagementService",
-        "@coderank/core/security/active-actor"
+        "apps/api/src/modules/users/users.service.js",
+        "apps/api/src/middleware/authentication.js"
       ],
       "description": "Admin streaming user batch creation",
-      "observedResponseHeaders": {},
+      "observedResponseHeaders": {
+        "cache-control": [
+          "no-store"
+        ]
+      },
       "contractSources": [
-        "apps/web/src/app/api/users/bulk/route.js"
+        "apps/api/src/modules/users/users.routes.js",
+        "apps/api/src/modules/users/users.service.js",
+        "apps/api/src/middleware/authentication.js"
       ]
     },
     {
@@ -1744,3 +1770,4 @@
     ]
   }
 }
+

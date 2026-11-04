@@ -416,7 +416,7 @@ try {
   const courseAdminToken = await login(courseAdminEmail);
   const courseStudentToken = await login(courseStudentEmail);
   const courseFacultyToken = await login(courseFacultyEmail);
-  await verifyCoursesContracts({ base, apiBase, adminToken: courseAdminToken, studentToken: courseStudentToken, facultyToken: courseFacultyToken });
+  await verifyCoursesContracts({ base, apiBase, adminToken: courseAdminToken, studentToken: courseStudentToken, facultyToken: courseFacultyToken, facultyId: (await sql.query('SELECT id FROM users WHERE email=$1', [courseFacultyEmail]))[0].id });
 
 
   // Crash one web process and require the cluster to replace it while the

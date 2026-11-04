@@ -61,7 +61,7 @@ test('Fastify API direct runtime contracts for GET /api/live', async (t) => {
   });
 
   await t.test('Unmigrated routes are not authoritative on API runtime (return 404)', async () => {
-    for (const unmigratedPath of ['/api/health', '/api/users', '/api/stats']) {
+    for (const unmigratedPath of ['/api/health', '/api/stats']) {
       const res = await fetch(`${address}${unmigratedPath}`);
       assert.equal(res.status, 404, `${unmigratedPath} must return 404 on API runtime`);
     }

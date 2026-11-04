@@ -15,19 +15,20 @@ const migratedPaths = new Set([
   '/api/auth/login',
   '/api/auth/change-password',
   '/api/auth/profile',
+  '/api/admin/bulk-upload',
+  '/api/admin/password',
+  '/api/users',
   '/api/courses',
   '/api/departments',
   '/api/mapping',
 ]);
 
 function isMigratedPath(pathname) {
-  return (
-    migratedPaths.has(pathname) ||
+  return migratedPaths.has(pathname) ||
+    pathname.startsWith('/api/users/') ||
     pathname.startsWith('/api/courses/') ||
     pathname.startsWith('/api/departments/') ||
-    pathname === '/socket.io' ||
-    pathname.startsWith('/socket.io/')
-  );
+    pathname === '/socket.io' || pathname.startsWith('/socket.io/');
 }
 
 export function createApiGateway({ origin = process.env.INTERNAL_API_URL || 'http://127.0.0.1:3001', timeoutMs = 10000 } = {}) {
