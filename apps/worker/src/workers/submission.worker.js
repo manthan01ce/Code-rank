@@ -27,7 +27,7 @@ export function createSubmissionWorker() {
     maxRetriesPerRequest: null,
   };
 
-  const socket = io(process.env.REALTIME_URL || `http://127.0.0.1:${process.env.PORT || 3000}`, { transports: ['websocket'], auth: callback => callback({ serviceToken: createServiceToken() }) });
+  const socket = io(process.env.REALTIME_URL || process.env.INTERNAL_API_URL || `http://127.0.0.1:${process.env.API_PORT || 3001}`, { transports: ['websocket'], auth: callback => callback({ serviceToken: createServiceToken() }) });
   let realtimeClosed = false;
   socket.on('disconnect', reason => {
     // Socket.IO does not reconnect an explicit server disconnect. A fresh

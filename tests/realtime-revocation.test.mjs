@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { attachRealtime } from '../apps/web/src/lib/realtime.js';
+import { attachRealtime } from '../apps/api/src/realtime/server.js';
 
 function fixture(dependencies, service = false) {
   const handlers = new Map(), joined = [], sent = [];

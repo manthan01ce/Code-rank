@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { attachRealtime, revalidateRealtimeRooms } from '../apps/web/src/lib/realtime.js';
+import { attachRealtime, revalidateRealtimeRooms } from '../apps/api/src/realtime/server.js';
 
 function fixture() {
   const handlers = new Map(), joined = new Set(), left = [];

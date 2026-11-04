@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { guardRealtimeSession } from '../apps/web/src/lib/realtime-session.js';
+import { guardRealtimeSession } from '../apps/api/src/realtime/sessions.js';
 
 function fixture(options = {}) {
   const timers = [], handlers = new Map();

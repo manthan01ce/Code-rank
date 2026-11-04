@@ -5,7 +5,7 @@ registerHooks({ resolve(specifier, context, next) {
   if (specifier.startsWith('@/')) return next(new URL(`../apps/web/src/${specifier.slice(2)}${specifier.endsWith('.js') ? '' : '.js'}`, import.meta.url).href, context);
   return next(specifier === 'next/server' ? 'next/server.js' : specifier, context);
 } });
-mock.module('@coderank/core/security/active-actor', { namedExports: { authenticateRequest: async () => ({ id: 1, role: 'admin' }) } });
+mock.module('@coderank/core/security/active-actor', { namedExports: { authenticateRequest: async () => ({ id: 1, role: 'admin' }), authenticateToken: async () => ({ id: 1, role: 'admin' }) } });
 const sql = Object.assign(async () => { throw Error('private database details'); }, { query: async () => { throw Error('private database details'); } });
 mock.module(new URL('../packages/core/src/db/client.js', import.meta.url).href, { defaultExport: sql });
 

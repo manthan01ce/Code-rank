@@ -56,7 +56,7 @@ const env = {
   DB_POOL_SIZE: "3",
   DB_QUERY_TIMEOUT_MS: "5000",
   JWT_SECRET: randomBytes(48).toString("hex"),
-  REALTIME_URL: base,
+  REALTIME_URL: apiBase,
   ALLOWED_ORIGIN: base,
   REALTIME_REDIS_ENABLED: "true",
   CLUSTER_ENABLED: "true",
