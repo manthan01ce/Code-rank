@@ -2,8 +2,8 @@ import test, { mock } from 'node:test';
 import assert from 'node:assert/strict';
 let calls = [];
 let failure;
-mock.module('../packages/core/src/db/client.js', { defaultExport: { query: async (...args) => { calls.push(args); if (failure) throw failure; return [{ item: { id: 3, name: 'CS' } }]; } } });
-const { CourseManagementService, validateCatalog } = await import('../packages/core/src/modules/courses/CourseManagementService.js');
+mock.module('@coderank/database', { defaultExport: { query: async (...args) => { calls.push(args); if (failure) throw failure; return [{ item: { id: 3, name: 'CS' } }]; } } });
+const { CoursesService: CourseManagementService, validateCatalog } = await import('../apps/api/src/modules/courses/courses.service.js');
 
 test('catalog service validates payloads and identifiers before database access', async () => {
  calls = []; failure = undefined;

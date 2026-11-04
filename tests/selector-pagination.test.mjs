@@ -6,6 +6,8 @@ const db = new PGlite();
 const sql = (strings, ...params) => db.query(strings.reduce((q, s, i) => q + s + (i < params.length ? `$${i + 1}` : ''), ''), params).then(r => r.rows);
 mock.module(new URL('../packages/core/src/db/client.js', import.meta.url).href, { defaultExport: sql });
 mock.module('redis', { namedExports: { createClient: () => ({ on() {}, connect: async () => { throw Error('offline'); }, destroy() {} }) } });
+mock.module('@coderank/database', { defaultExport: sql });
+const { CoursesService: catalog } = await import('../apps/api/src/modules/courses/courses.service.js');
 const { CourseService: service } = await import('../packages/core/src/modules/courses/CourseService.js');
 test('selector pagination rejects invalid bounds and cursors', () => {
   for (const limit of [0, -1, 501, 1.2, 'bad']) assert.throws(() => listPage({ limit }));
@@ -33,14 +35,14 @@ test('course, department, faculty and batch selectors traverse complete nonoverl
       } while(cursor);
       return all;
     }
-    const courses = await collect(service.listCourses, admin, { search: 'Match', semester: '1' });
+    const courses = await collect(catalog.listCourses, admin, { search: 'Match', semester: '1' });
     assert.deepEqual(courses.map(r => r.id), [4,3,1]);
-    const departments = await collect(service.listDepartments, admin, { search: 'Institute' });
+    const departments = await collect(catalog.listDepartments, admin, { search: 'Institute' });
     assert.deepEqual(departments.map(r => r.id), [5,4,3,2,1]);
     const faculty = await collect(service.getFacultyCourses, { id:7, role:'faculty' });
     assert.deepEqual(faculty.map(r => r.id), [5,4,3,2,1]);
     assert.deepEqual(await collect(service.getBatches, admin, {}, true), ['B5','B4','B3','B2','B1']);
-    await assert.rejects(service.listCourses(admin, { semester: 'bad' }), e => e.status === 400);
-    await assert.rejects(service.listDepartments({ role: 'student' }), e => e.status === 401);
+    await assert.rejects(catalog.listCourses(admin, { semester: 'bad' }), e => e.status === 400);
+    await assert.rejects(catalog.listDepartments({ role: 'student' }), e => e.status === 401);
   } finally { await db.close(); }
 });

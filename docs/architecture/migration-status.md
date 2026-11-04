@@ -7,7 +7,7 @@ Reviewed against master `a8425a352cc355c12906c8af93a517f136d610ec` and branch `r
 | Area | Current implementation | Recommendation and remaining work |
 | --- | --- | --- |
 | Applications | `apps/web`, `apps/worker`, `apps/api` | Fastify API workspace created; three application workspaces; complete separation remains scheduled for 3J |
-| HTTP | `/api/live` and auth endpoints migrated to `apps/api`; 43 route files remain in `apps/web/src/app/api` | Continue moving feature adapters and API-only services into `apps/api/src/modules` per batch schedule (3B: auth, etc.); preserve URLs, auth, headers and responses |
+| HTTP | `/api/live`, auth, courses, departments, and mapping endpoints migrated to `apps/api`; 38 route files remain in `apps/web/src/app/api` | Continue moving feature adapters and API-only services into `apps/api/src/modules` per batch schedule (3D: users, 3F: practicals, etc.); preserve URLs, auth, headers and responses |
 | Realtime | Fastify API owns authoritative Socket.IO; Next.js server proxies `/socket.io` WebSocket upgrades | Web Socket.IO server completely eliminated; browser hooks and transitional publishers point to API |
 | Frontend features | Coding-workspace, practice, credential PDF and practical-authoring extractions landed | Finish submission/reports/user workflows as separate slices; route files assemble views |
 | Core | Browser PDF implementation removed; explicit runtime environment export added | Retain only genuinely shared backend rules; move API-only services, retire facades after consumers migrate |
@@ -24,8 +24,8 @@ Follow [ADR-0001](decisions/0001-api-runtime-and-hosting.md) and the [route inve
 | 1 | CR-ARCH-09 | **Merged** (PR #59) | Fastify API workspace, bootstrap/lifecycle/container/gateway wiring; migrated `/api/live` with real direct and gateway contract tests; old Next handler removed |
 | 2 | CR-ARCH-10A | Implementation in PR #60 (3B / #50); verification recorded in PR | Auth adapters/shared middleware and identity/password contracts |
 | 3 | CR-ARCH-14 | Merged in PR #61; lifecycle/deployment correction verified separately | Socket.IO moves from web to API, including worker transport and room/session ownership tests (Variant X) |
-| 4 | CR-ARCH-10B | Implementation in PR (3D / #52) | User-management, admin password and bulk ingestion HTTP slice; verified across direct Fastify API and gateway cutover |
-| 5 | CR-ARCH-11A | After 10A (3E / #53) | Course/department/mapping HTTP slices; coordinate shared-file edits |
+| 4 | CR-ARCH-10B | Merged in PR #63 (3D / #52) | User-management, admin password and bulk ingestion HTTP slice; verified across direct Fastify API and gateway cutover |
+| 5 | CR-ARCH-11A | Implementation in PR #64 (3E / #53) | Course/department/mapping HTTP slices; coordinate shared-file edits |
 | 5 | CR-ARCH-11B and CR-ARCH-12A | Blocked on 14 + 11A (3F / #54, 3G / #55) | Practical-management and execution HTTP slices; preserve event publication and execution contracts |
 | 6 | CR-ARCH-12B | Blocked on 12A + 11B (3H / #56) | Submission/history/reset/workspace HTTP slice |
 | 7 | CR-ARCH-13 | Blocked on 10B + 12B (3I / #57) | Operations/profile remaining HTTP slice; preserve readiness without running migrations |
@@ -52,3 +52,28 @@ The review of PR #61 removes forced-success test cleanup, exposes the API-local 
 
 ### CR-ARCH-10B ownership and verification
 User management, bulk upload/create, and administrative password modification endpoints migrated to the Fastify API runtime (`apps/api/src/modules/users/`). Handlers removed from Next.js (`apps/web/src/app/api/admin/bulk-upload/route.js`, `apps/web/src/app/api/admin/password/route.js`, `apps/web/src/app/api/users/route.js`, `apps/web/src/app/api/users/[id]/route.js`, `apps/web/src/app/api/users/bulk/route.js`). Streaming multipart upload parsing registered in Fastify via `@fastify/multipart` with 5MB limits; CSV and Excel parsing dependencies declared directly in `apps/api/package.json` (`csv-parse`, `exceljs`) and unneeded entries removed from `apps/web/package.json`. Keyset cursor pagination (`X-Next-Cursor`), `Cache-Control: no-store`, `Server-Timing`, administrator authorization checks, batch transactions, and HTTP 405 Method Not Allowed handling with `Allow` headers are verified. Direct API and gateway cutover tested via `tests/api-users-runtime.test.mjs`, `tests/bulk-users-api.test.mjs`, `tests/api-input-contracts.test.mjs`, `tests/architecture.test.mjs`, `npm test` (all 291 unit tests passing), `npm run lint:critical`, and turbo build.
+### CR-ARCH-11A ownership and verification
+Courses, departments, and faculty mapping APIs extracted to Fastify API runtime (`apps/api/src/modules/courses/` and `apps/api/src/modules/mapping/`).
+- **Exact endpoint ownership**:
+  - `GET /api/courses`: list courses with optional search, semester filter, cursor pagination, and `X-Next-Cursor` header.
+  - `POST /api/courses`: atomic course creation by administrator via `coderank_manage_catalog`.
+  - `PUT /api/courses/:id`: atomic course update by administrator.
+  - `DELETE /api/courses/:id`: atomic course deletion with practical history preservation check.
+  - `GET /api/departments`: list departments with search and cursor pagination.
+  - `POST /api/departments`: atomic department creation by administrator.
+  - `PUT /api/departments/:id`: atomic department update by administrator.
+  - `DELETE /api/departments/:id`: atomic department deletion with active user assignment check.
+  - `GET /api/mapping`: faculty-to-course mapping retrieval grouped by course ID.
+  - `POST /api/mapping`: atomic faculty mapping assignment via `coderank_replace_mapping`.
+- **Gateway Cutover**:
+  - Next.js handlers removed from `apps/web/src/app/api/courses/`, `departments/`, and `mapping/`.
+  - Same-origin gateway in `apps/web/src/lib/api-gateway.js` routes all courses, departments, and mapping requests directly to `INTERNAL_API_URL`.
+- **Backward Compatibility**:
+  - Retained faculty read queries (`getFacultyCourses`, `getBatches`) in `packages/core/src/modules/courses/CourseService.js` for upcoming CR-ARCH-11B (3F).
+  - Maintained single shared pagination helper in `packages/core/src/modules/courses/list-pagination.js` exported as `@coderank/core/pagination`.
+- **Verification**:
+  - Direct API and gateway runtime contracts in `tests/api-courses-runtime.test.mjs`.
+  - Unit and boundary checks in `tests/architecture.test.mjs`, `tests/admin-api.test.mjs`, `tests/api-input-contracts.test.mjs`, and `tests/api-live-runtime.test.mjs`.
+  - Stack contract verification in `scripts/lib/courses-contracts.mjs` and `scripts/authenticated-stack.mjs`.
+
+Review correction: API-only catalog CRUD and mapping implementations now live only in API modules; core retains faculty course/batch reads and one shared pagination helper. PR #63 users routing/contracts are preserved. Real PostgreSQL acceptance also checks mapping membership, failed replacements, concurrent writes and keyset traversal through direct API and gateway.

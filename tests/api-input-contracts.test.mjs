@@ -10,7 +10,7 @@ const sql = Object.assign(async () => { throw Error('private database details');
 mock.module(new URL('../packages/core/src/db/client.js', import.meta.url).href, { defaultExport: sql });
 
 test('JSON mutation adapters reject malformed and non-object bodies with 400', async () => {
-  const cases = [['courses','POST'],['courses/[id]','PUT'],['departments','POST'],['departments/[id]','PUT'],['student/workspaces/save','POST'],['mapping','POST']];
+  const cases = [['student/workspaces/save','POST']];
   for (const [name, method] of cases) {
     const route = await import(`../apps/web/src/app/api/${name}/route.js`);
     for (const body of ['{', 'null', '[]', '42', '"text"']) {
@@ -30,6 +30,11 @@ test('JSON mutation adapters reject malformed and non-object bodies with 400', a
       ['/api/users', 'POST'],
       ['/api/users', 'PUT'],
       ['/api/users/1', 'PUT'],
+      ['/api/courses', 'POST'],
+      ['/api/courses/1', 'PUT'],
+      ['/api/departments', 'POST'],
+      ['/api/departments/1', 'PUT'],
+      ['/api/mapping', 'POST'],
     ];
     for (const [url, method] of apiCases) {
       for (const body of ['{', 'null', '[]', '42', '"text"']) {

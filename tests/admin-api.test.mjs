@@ -6,20 +6,25 @@ registerHooks({resolve(specifier,context,next){if(specifier.startsWith('@/'))ret
 let observed,errorCode=null;const notifications=[];
 const sql=Object.assign(async()=>[],{query:async(q,p)=>{observed={q,p};if(errorCode)throw Object.assign(Error('database internal details'),{code:errorCode});if(q.includes('mutate_practical'))return [{practical:{id:1,course_id:1,title:'Test',end_time:'2027-01-01'}}];return [{id:1}];}});
 mock.module(new URL('../packages/core/src/db/client.js',import.meta.url).href,{defaultExport:sql});
+mock.module('@coderank/database', { defaultExport: sql, namedExports: { closeDatabase: async () => {} } });
 mock.module(new URL('../apps/web/src/lib/practical-events.js',import.meta.url).href,{namedExports:{publishPractical:(...args)=>notifications.push(args)}});
 const {generateToken, getUserFromRequest}=await import('../packages/core/src/utils/auth.js');
 mock.module('@coderank/core/security/active-actor', { namedExports: {
   authenticateRequest: async (request, { optional = false } = {}) => {
-    const header = request?.headers?.get?.('authorization');
+    const header = request?.headers?.get?.('authorization') || request?.headers?.authorization;
     if (optional && !header) return null;
     const actor = header && getUserFromRequest(request);
     if (!actor) throw { status: 401, message: 'Authentication required' };
     return actor;
   },
+  authenticateToken: async () => ({ id: 2, role: 'admin' }),
 } });
 
 const routes=await import('../apps/web/src/app/api/faculty/practicals/route.js');
-const mapping=await import('../apps/web/src/app/api/mapping/route.js');
+const { buildApp } = await import('../apps/api/src/app.js');
+const api = buildApp();
+await api.ready();
+
 const body={course_id:1,title:'Test',description:'Description',test_cases:[{input:'',expected:'ok',marks:10}]};
 const req=(path,payload,role='faculty')=>new Request('http://localhost'+path,{method:payload?'POST':'GET',headers:{Authorization:`Bearer ${generateToken({id:2,role})}`,'Content-Type':'application/json'},...(payload?{body:JSON.stringify(payload)}:{})});
 test('practical adapters enforce role and payloads, preserve response and notify only on commit',async()=>{
@@ -33,8 +38,17 @@ test('practical adapters enforce role and payloads, preserve response and notify
  assert.equal((await routes.GET(req('/api/faculty/practicals?limit=201'))).status,400);
 });
 test('mapping adapter normalizes IDs and denies duplicate or unauthorized writes',async()=>{
- assert.equal((await mapping.POST(req('/api/mapping',{course_id:1,faculty_ids:[2]},'faculty'))).status,401);
- assert.equal((await mapping.POST(req('/api/mapping',{course_id:1,faculty_ids:['2',2]},'admin'))).status,400);
- assert.equal((await mapping.POST(req('/api/mapping',{course_id:'1',faculty_ids:['2'],co_coordinator_id:'2'},'admin'))).status,200);
- assert.deepEqual(observed.p,[2,1,[2],2]);
+ const postMapping = (payload, role) => api.inject({
+   method: 'POST',
+   url: '/api/mapping',
+   headers: {
+     authorization: `Bearer ${generateToken({ id: 2, role })}`,
+     'content-type': 'application/json',
+   },
+   payload,
+ });
+ assert.equal((await postMapping({ course_id: 1, faculty_ids: [2] }, 'faculty')).statusCode, 401);
+ assert.equal((await postMapping({ course_id: 1, faculty_ids: ['2', 2] }, 'admin')).statusCode, 400);
+ assert.equal((await postMapping({ course_id: '1', faculty_ids: ['2'], co_coordinator_id: '2' }, 'admin')).statusCode, 200);
+ assert.deepEqual(observed.p, [2, 1, [2], 2]);
 });

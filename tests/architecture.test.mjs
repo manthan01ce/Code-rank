@@ -137,8 +137,9 @@ test('all inventoried API paths and pages retain their HTTP methods, locations, 
   try {
     await api.ready();
     for (const endpoint of inventory.endpoints.filter(item => item.file.startsWith('apps/api/'))) {
+      const routeUrl = endpoint.url.replace(/\[(\w+)\]/g, ':$1');
       for (const method of endpoint.methods) {
-        assert.ok(api.hasRoute({ method, url: endpoint.url.replaceAll(/\[([^\]]+)\]/g, ':' + String.fromCharCode(36) + '1') }), `${method} ${endpoint.url} is not registered`);
+        assert.ok(api.hasRoute({ method, url: routeUrl }), `${method} ${routeUrl} is not registered`);
       }
     }
   } finally { await api.close(); }

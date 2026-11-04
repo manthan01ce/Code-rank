@@ -454,8 +454,14 @@ test('Fastify API and same-origin gateway user management runtime contracts', as
     });
   }
 
+  await t.test('Course slice is forwarded to API after users and courses cutover', async () => {
+    for (const migrated of ['/api/courses', '/api/departments', '/api/mapping']) {
+      assert.equal((await fetch(`${gatewayAddress}${migrated}`)).status, 401);
+    }
+  });
+
   await t.test('Same-origin gateway bypasses unmigrated paths to web fallback (418)', async () => {
-    for (const unmigrated of ['/api/courses', '/api/departments', '/api/health']) {
+    for (const unmigrated of ['/api/health', '/api/stats']) {
       const res = await fetch(`${gatewayAddress}${unmigrated}`);
       assert.equal(res.status, 418, `${unmigrated} must bypass API gateway`);
       assert.equal(await res.text(), 'web fallback');

@@ -1,5 +1,6 @@
 import { verifyRealtimeContracts } from './lib/realtime-contracts.mjs';
 import { verifyAuthContracts } from './lib/auth-contracts.mjs';
+import { verifyCoursesContracts } from './lib/courses-contracts.mjs';
 import '@coderank/core/config/env';
 import assert from "node:assert/strict";
 import { spawn, spawnSync, execFileSync } from "node:child_process";
@@ -405,6 +406,17 @@ try {
   await verifyRealtimeContracts({ base, apiBase, peerBase: 'http://127.0.0.1:3103', token, jobId, secret: env.JWT_SECRET,
     adminLogin: () => login(env.E2E_ADMIN_EMAIL), stopPeer: () => stop(apiPeer),
   });
+  const courseAdminEmail = `course-admin-${randomBytes(6).toString('hex')}@e2e.test`;
+  const courseFacultyEmail = `course-faculty-${randomBytes(6).toString('hex')}@e2e.test`;
+  const courseStudentEmail = `course-student-${randomBytes(6).toString('hex')}@e2e.test`;
+  const contractHashed = await hashPassword(password);
+  await sql.query("INSERT INTO users(name,email,password,role,status,extra_info) VALUES('Course Admin',$1,$2,'admin','active','{}')", [courseAdminEmail, contractHashed]);
+  await sql.query("INSERT INTO users(name,email,password,role,status,extra_info) VALUES('Course Faculty',$1,$2,'faculty','active','{}')", [courseFacultyEmail, contractHashed]);
+  await sql.query("INSERT INTO users(name,email,password,role,status,extra_info) VALUES('Course Student',$1,$2,'student','active','{}')", [courseStudentEmail, contractHashed]);
+  const courseAdminToken = await login(courseAdminEmail);
+  const courseStudentToken = await login(courseStudentEmail);
+  const courseFacultyToken = await login(courseFacultyEmail);
+  await verifyCoursesContracts({ base, apiBase, adminToken: courseAdminToken, studentToken: courseStudentToken, facultyToken: courseFacultyToken, facultyId: (await sql.query('SELECT id FROM users WHERE email=$1', [courseFacultyEmail]))[0].id });
 
 
   // Crash one web process and require the cluster to replace it while the
