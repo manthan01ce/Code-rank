@@ -1,1 +1,1 @@
-export { STATIC_PROBLEMS } from '@coderank/core/practice/problems';
+export { STATIC_PROBLEMS } from '@coderank/contracts/practice';

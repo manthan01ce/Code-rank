@@ -409,6 +409,8 @@ test('API artifact excludes runner source and web gateway has runtime configurat
   const dockerfile = read('apps/api/Dockerfile');
   assert.doesNotMatch(dockerfile, /COPY packages \.\/packages/);
   assert.doesNotMatch(dockerfile, /packages\/runner|docker\.sock/);
-  assert.match(read('apps/web/server.js'), /createApiGateway/);
+  assert.match(read('infrastructure/gateway/server.mjs'), /createApiGateway/);
+  assert.equal(existsSync(new URL('apps/web/server.js', root)), false);
+  assert.equal(existsSync(new URL('apps/web/cluster.js', root)), false);
   assert.doesNotMatch(read('apps/web/next.config.mjs'), /destination:.*api\/live/);
 });

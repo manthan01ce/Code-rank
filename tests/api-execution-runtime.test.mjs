@@ -3,7 +3,7 @@ import assert from 'node:assert/strict';
 import http from 'node:http';
 import { PGlite } from '@electric-sql/pglite';
 import { migrate } from '../packages/database/src/migrations.js';
-import { createApiGateway } from '../apps/web/src/lib/api-gateway.js';
+import { createApiGateway } from '../infrastructure/gateway/proxy.mjs';
 import { ALLOWED_LANGUAGES, GUEST_COOKIE } from '../packages/core/src/security/execution.js';
 
 process.env.JWT_SECRET = 'execution-runtime-test-secret-32-chars';
@@ -405,7 +405,7 @@ test('Fastify execution and job polling runtime contracts direct and via gateway
   }
 
   await t.test('Same-origin gateway bypasses unmigrated paths to web fallback (418)', async () => {
-    const unmigrated = await fetch(`${gatewayAddress}/api/unmigrated-sample`, { method: 'POST' });
+    const unmigrated = await fetch(`${gatewayAddress}/unmigrated-page`, { method: 'POST' });
     assert.equal(unmigrated.status, 418);
     assert.equal(await unmigrated.text(), 'web-fallback');
   });

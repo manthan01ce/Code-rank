@@ -39,9 +39,9 @@ Review and adjust variables in `.env`:
     DATABASE_DRIVER=neon
     DATABASE_URL=postgresql://<user>:<password>@<endpoint>.neon.tech/neondb?sslmode=require&pgbouncer=true
     ```
-Launcher precedence for PORT, REALTIME_URL, ALLOWED_ORIGIN, API_PORT, API_HOST and INTERNAL_API_URL is: existing process environment → apps/web/.env.local → apps/web/.env → root .env.local → root .env → defaults. A shared Node bridge resolves these settings before either shell launcher applies defaults. It parses values as data, never sources/evaluates .env as shell code, and exports only these launcher settings; unrelated app-local configuration keeps its normal runtime-loading behavior. The canonical infrastructure wrappers use root .env explicitly.
+Launcher precedence for PORT, REALTIME_URL, ALLOWED_ORIGIN, API_PORT, API_HOST, INTERNAL_API_URL and public web replica/port settings is: existing process environment → apps/web/.env.local → apps/web/.env → root .env.local → root .env → defaults. A shared Node bridge resolves these settings before either shell launcher applies defaults. It parses values as data, never sources/evaluates .env as shell code, and exports only these launcher settings; unrelated app-local configuration keeps its normal runtime-loading behavior. The canonical infrastructure wrappers use root .env explicitly.
 
-For direct `npm run api` / `npm run web` / `npm run worker`, each workspace retains its existing dotenv loader. Keep shared lab settings in root .env; do not configure contradictory per-app port/realtime values. Direct web startup defaults to the localhost browser origin at its effective PORT; allow additional LAN/browser origins explicitly in ALLOWED_ORIGIN when not using a launcher.
+API and worker load their app-local/root backend environment before runtime imports; existing process variables win. Keep shared backend settings in root `.env` or their backend workspace. Do not put database/JWT/admin credentials in `apps/web/.env*`: Next.js loads its own frontend environment files. The host supervisor forwards only public frontend/runtime settings to Next.js. The web artifact needs no database, Redis, JWT, worker token or API origin to build/start.
 
 - **JWT Secret**:
   - `JWT_SECRET=your_super_secret_jwt_key_here` (must be non-empty).
@@ -116,12 +116,14 @@ docker compose --env-file .env -f infrastructure/docker-compose.yml --profile bu
 
 ## 6. Running the Applications
 
-### Current Runtime Architecture (Three Application Workspaces)
-1. **Web (`apps/web`)**: Next.js pages, the 43 unmigrated HTTP handler files and WebSocket upgrade forwarding. Public browser origin uses `PORT` (default 3000).
-2. **API (`apps/api`)**: Fastify owns `/api/live`, auth endpoints and Socket.IO; other endpoints migrate in later issues. Private `API_PORT` defaults to 3001 and is independent of web's `PORT`; `API_HOST` defaults to loopback.
-3. **Worker (`apps/worker`)**: BullMQ execution orchestration; the only application needing Docker-daemon access.
+### Three independent applications and one public infrastructure gateway
+1. **Web (`apps/web`)**: frontend pages/features only. Workspace commands use standard `next dev` / `next start`; the Docker image uses framework-generated standalone output.
+2. **API (`apps/api`)**: all 47 baseline endpoint groups under `/api`, plus Socket.IO. Private `API_PORT` defaults to 3001 and `API_HOST` to loopback.
+3. **Worker (`apps/worker`)**: BullMQ execution/grading orchestration; only this application receives Docker-daemon access.
 
-The web custom server forwards `/api/live` and the three auth paths to `INTERNAL_API_URL` at startup (default `http://127.0.0.1:3001`). Configure this as an origin without a path. The same built web artifact can use host or container API addresses. Socket.IO runs on API and browser upgrades pass through web; complete frontend/backend isolation remains #58.
+`infrastructure/gateway` owns the public `PORT` (default 3000). Every `/api/*` and `/socket.io/*` request goes to API; page/static requests go to Next.js. Unknown API URLs receive API's 404 and never fall back to frontend. Host `INTERNAL_API_URL` defaults from API_PORT; container gateway uses `http://api:3001` and `http://web:3000`. The web app itself receives neither address nor backend secrets.
+
+Root `npm run dev` starts API, worker and the web/gateway host supervisor, assuming infrastructure and the runner image are ready. You can also use the three terminals below.
 
 ### Terminal 1: API
 ```sh
@@ -138,7 +140,7 @@ npm run worker
 ```sh
 npm run web
 ```
-> **Note**: root `npm run web` invokes the web workspace's dev script, `node server.js`. This custom server starts Next.js in development mode and hosts the unmigrated HTTP handlers and forwards Socket.IO upgrades to API. It is not the `next dev` CLI command. The web workspace's production start script is `node cluster.js`.
+> Root `npm run web` launches the external gateway and one `next dev` child on an internal loopback port. Internal web ports default to PORT+20, optionally overridden by WEB_INTERNAL_PORT. For production, build web first and use `npm run web:production`; CLUSTER_ENABLED=true and WEB_CONCURRENCY select supervised standard Next.js replicas. Crashed replicas are replaced and shutdown drains the gateway/children. Direct `npm run dev --workspace=apps/web -- --port 3020` starts frontend alone, without API or backend secrets; use the gateway for complete browser workflows.
 
 Open [http://localhost:3000](http://localhost:3000) for the default port, or use the effective PORT shown by the launcher.
 
@@ -178,7 +180,7 @@ And set `USE_WARM_DAEMONS=true` in the worker process environment.
 
 ### Containerized application mode
 
-Use `docker compose --env-file .env -f infrastructure/docker-compose.yml -f infrastructure/compose.containers.yaml --profile local-database up -d --build` after configuring DATABASE_URL with a container-reachable host (`postgres` for the local Compose database). The web gateway uses `http://api:3001`; worker realtime uses `http://api:3001`. API has no Docker socket. Check existing volume identity before starting this mode.
+Use `docker compose --env-file .env -f infrastructure/docker-compose.yml -f infrastructure/compose.containers.yaml --profile local-database up -d --build` after configuring DATABASE_URL with a container-reachable host (`postgres` for the local Compose database). The infrastructure gateway uses `http://api:3001` and `http://web:3000`; worker realtime uses `http://api:3001`. Web receives no backend environment variables. API has no Docker socket. Check existing volume identity before starting this mode.
 
 ### Containerized Worker Mode
 To run the worker in Docker with host Docker daemon access, first configure its database URL with a hostname reachable FROM the worker container (for local Compose PostgreSQL this is `postgres`, not `localhost`), and its REALTIME_URL with a reachable API host address. Do not reuse a host-only localhost database URL unchanged. The host-run web/worker and container-run worker can require different internal addresses. Start PostgreSQL with the local-database profile if needed before this mode:
@@ -216,3 +218,7 @@ npm run test:stack       # Full web-to-worker stack test on loopback port 3100
 4. **WebSocket Disconnections**:
    - Ensure worker `REALTIME_URL` points to API; browser requests use the web origin and its WebSocket proxy.
    - If overriding ports, ensure `ALLOWED_ORIGIN` includes the client's URL.
+
+## Architecture completion and hosting scope
+
+See [three-app topology](architecture/three-app-topology.md) for ownership, addresses, image checks and release order. The competing Vercel configs are retired: this batch certifies the Linux lab Docker/host topology, not a cloud deployment. External hosting needs a separately approved topology including API/realtime, worker, PostgreSQL, Redis and gateway. Later batches retain frontend decomposition, broader core facade cleanup, database assets, runner/warm-mode consolidation and script/test organization.

@@ -293,7 +293,7 @@ try {
     );
   start("api", "apps/api/src/server.js");
   const apiPeer = start("api-peer", "apps/api/src/server.js", { API_PORT: "3103" });
-  start("web", "apps/web/cluster.js");
+  start("web", "scripts/dev/web-runtime.mjs");
   const executionWorker = start("worker", "apps/worker/src/index.js");
   await ready();
   // Cross the actual production web gateway, not a substitute test proxy.

@@ -7,7 +7,6 @@ let observed,errorCode=null;const notifications=[];
 const sql=Object.assign(async()=>[],{query:async(q,p)=>{observed={q,p};if(errorCode)throw Object.assign(Error('database internal details'),{code:errorCode});if(q.includes('mutate_practical'))return [{practical:{id:1,course_id:1,title:'Test',end_time:'2027-01-01'}}];return [{id:1}];}});
 mock.module(new URL('../packages/core/src/db/client.js',import.meta.url).href,{defaultExport:sql});
 mock.module('@coderank/database', { defaultExport: sql, namedExports: { closeDatabase: async () => {} } });
-mock.module(new URL('../apps/web/src/lib/practical-events.js',import.meta.url).href,{namedExports:{publishPractical:(...args)=>notifications.push(args)}});
 const {generateToken, getUserFromRequest}=await import('../packages/core/src/utils/auth.js');
 mock.module('@coderank/core/security/active-actor', { namedExports: {
   authenticateRequest: async (request, { optional = false } = {}) => {

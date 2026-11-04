@@ -12,29 +12,9 @@ export function proxy(request) {
   response.headers.set('Permissions-Policy', 'camera=(), microphone=(), geolocation=()');
   response.headers.set('Strict-Transport-Security', 'max-age=31536000; includeSubDomains');
 
-  // Handle CORS
-  const origin = request.headers.get('origin');
-  const allowedOrigins = (process.env.ALLOWED_ORIGIN || 'http://localhost:3000')
-    .split(',')
-    .map((value) => value.trim())
-    .filter(Boolean);
-
-  // Never reflect arbitrary origins while allowing credentials. Same-origin
-  // requests need no CORS header; approved browser clients receive one.
-  if (origin && allowedOrigins.includes(origin)) {
-    response.headers.set('Access-Control-Allow-Origin', origin);
-    response.headers.set('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS');
-    response.headers.set('Access-Control-Allow-Headers', 'Content-Type, Authorization, x-compiler-secret');
-    response.headers.set('Access-Control-Allow-Credentials', 'true');
-    response.headers.set('Access-Control-Max-Age', '86400');
-    response.headers.set('Vary', 'Origin');
-  }
-
-  // Note: Rate limiting is now handled via Redis in individual route handlers
-
   return response;
 }
 
 export const config = {
-  matcher: '/api/:path*',
+  matcher: '/((?!_next/static|_next/image|favicon.ico).*)',
 };

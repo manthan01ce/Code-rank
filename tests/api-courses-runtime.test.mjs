@@ -3,7 +3,7 @@ import assert from 'node:assert/strict';
 import http from 'node:http';
 import { PGlite } from '@electric-sql/pglite';
 import { migrate } from '../packages/database/src/migrations.js';
-import { createApiGateway } from '../apps/web/src/lib/api-gateway.js';
+import { createApiGateway } from '../infrastructure/gateway/proxy.mjs';
 
 process.env.JWT_SECRET = 'courses-runtime-test-secret-32-chars';
 

@@ -2,7 +2,7 @@ import test, { mock } from 'node:test';
 import assert from 'node:assert/strict';
 import http from 'node:http';
 import { registerHooks } from 'node:module';
-import { createApiGateway } from '../apps/web/src/lib/api-gateway.js';
+import { createApiGateway } from '../infrastructure/gateway/proxy.mjs';
 
 process.env.JWT_SECRET = 'users-runtime-test-secret';
 
@@ -464,7 +464,7 @@ test('Fastify API and same-origin gateway user management runtime contracts', as
   });
 
   await t.test('Same-origin gateway bypasses unmigrated paths to web fallback (418)', async () => {
-    for (const unmigrated of ['/api/unmigrated-sample', '/api/other-unmigrated']) {
+    for (const unmigrated of ['/unmigrated-page', '/other-unmigrated-page']) {
       const res = await fetch(`${gatewayAddress}${unmigrated}`);
       assert.equal(res.status, 418, `${unmigrated} must bypass API gateway`);
       assert.equal(await res.text(), 'web fallback');

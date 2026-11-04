@@ -16,19 +16,12 @@ Fastify HTTP and Socket.IO API service for CodeRank.
   - Host development: `http://127.0.0.1:3001`
   - Container network: `http://api:3001`
 - **API configuration**: `API_PORT` defaults to `3001`; `API_HOST` defaults to `127.0.0.1`. The web `PORT` and inherited machine `HOSTNAME` do not select API listening addresses. Containers explicitly set `API_HOST=0.0.0.0`.
-- **Gateway**: the current web custom server forwards exactly `/api/live`, `/api/auth/login`, `/api/auth/change-password` and `/api/auth/profile` (including query strings) using `src/lib/api-gateway.js`. `INTERNAL_API_URL` is read at web process startup, defaults to `http://127.0.0.1:3001`, and must be an HTTP(S) origin. Container web uses `http://api:3001`. Changing it requires restarting web, not rebuilding. Other HTTP paths stay on web until their slices migrate; `/socket.io` upgrades are forwarded to API.
+- **Gateway**: `infrastructure/gateway` sends every `/api/*` and `/socket.io/*` request to API and pages/static assets to standard Next.js. `INTERNAL_API_URL` is read by gateway at startup, not by web. No API URL remains authoritative on frontend.
 - **Failure handling**: unavailable API returns uncached 502; upstream timeout returns uncached 504. Request cancellation closes upstream work. No second web liveness handler hides API outages.
 
-## Migrated Endpoints
+## Endpoint ownership
 
-| URL | Method | Module | Migration Slice |
-| --- | --- | --- | --- |
-| `/api/live` | GET | `operations` | CR-ARCH-09 (Issue 3A / #49) |
-| `/api/auth/login` | POST | `auth` | CR-ARCH-10A (#50) |
-| `/api/auth/change-password` | POST | `auth` | CR-ARCH-10A (#50) |
-| `/api/auth/profile` | GET, PUT | `auth` | CR-ARCH-10A (#50) |
-
-All other 43 baseline endpoint entries remain authoritative on `apps/web` until their respective migration slices.
+All **47 baseline endpoint groups** are API-owned. The exact URLs/methods and sources are maintained in `docs/architecture/route-inventory.json`; architecture checks reconcile every registration. Modules are auth, users, courses, mapping, practicals, execution, submissions, operations and username profile. Socket.IO resides in `src/realtime`.
 
 ## Development and Host Mode
 
@@ -49,6 +42,6 @@ npm run lint --workspace=@coderank/api
 
 The API build command validates every source file, resolves actual imports/plugins and checks route registration without a database or listener. Node runs the source directly; there is no generated bundle.
 
-Auth lifecycle: Fastify close drains HTTP requests, then closes API-owned Redis and database connections. Login and profile loading live in `src/modules/auth/auth.service.js`; reusable authority checks live in `src/middleware/authentication.js`. Shared account mutations remain once in core for the still-unmigrated administrative-password and username-profile adapters until 3D/3I. JSON/error/method handling is adapted explicitly to preserve the previous HTTP behavior.
+Auth lifecycle: Fastify close drains HTTP requests, then closes API-owned Redis and database connections. Login and profile loading live in `src/modules/auth/auth.service.js`; reusable authority checks live in `src/middleware/authentication.js`. Shared self-account mutations reside once in API `src/modules/auth/account.service.js`, used by auth, administrative-password and username-profile adapters. JSON/error/method handling is adapted explicitly to preserve the previous HTTP behavior.
 
 Realtime lifecycle: the API's public Fastify publisher is available to feature modules after readiness. Pre-close disconnects only this replica's sockets; closing one API must not disconnect healthy replicas. Namespace/Engine.IO and Redis adapter cleanup is awaited with bounded deadlines. Tests must exit naturally, without forced process success. Lab launchers derive worker REALTIME_URL from API_PORT; container API explicitly receives database, Redis, allowed-origin and adapter configuration.

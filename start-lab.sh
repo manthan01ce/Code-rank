@@ -99,6 +99,7 @@ $COMPOSE_CMD -f infrastructure/docker-compose.yml --profile build-image build ru
 $COMPOSE_CMD -f infrastructure/docker-compose.yml up -d redis
 
 # 7. Setup Process Cleanup Trap
+API_PID=""
 WORKER_PID=""
 FRONTEND_PID=""
 

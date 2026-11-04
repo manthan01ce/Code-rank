@@ -157,7 +157,7 @@ try {
   );
   mkdirSync(`${root}/test-results/stack`, { recursive: true });
   start("api", ["apps/api/src/server.js"]);
-  start("web", ["apps/web/server.js"]);
+  start("web", ["scripts/dev/web-runtime.mjs"]);
   start("worker", ["apps/worker/src/index.js"]);
   await waitReady();
   // Cross the actual production web gateway, not a substitute test proxy.

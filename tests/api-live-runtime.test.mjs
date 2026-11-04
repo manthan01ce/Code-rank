@@ -1,7 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import http from 'node:http';
-import { createApiGateway } from '../apps/web/src/lib/api-gateway.js';
+import { createApiGateway } from '../infrastructure/gateway/proxy.mjs';
 import { resolveApiEnvironment } from '../apps/api/src/config/env.js';
 import { spawn } from 'node:child_process';
 import { once } from 'node:events';
@@ -61,7 +61,7 @@ test('Fastify API direct runtime contracts for GET /api/live', async (t) => {
   });
 
   await t.test('Unmigrated routes are not authoritative on API runtime (return 404)', async () => {
-    for (const unmigratedPath of ['/api/unmigrated-sample', '/api/unmigrated-extra']) {
+    for (const unmigratedPath of ['/unmigrated-page', '/unmigrated-extra-page']) {
       const res = await fetch(`${address}${unmigratedPath}`);
       assert.equal(res.status, 404, `${unmigratedPath} must return 404 on API runtime`);
     }
@@ -94,7 +94,7 @@ test('Same-origin gateway routing and cutover contract', async (t) => {
   });
   const apiAddress = await apiApp.listen({ host: '127.0.0.1', port: 0 });
 
-  // Use the exact production gateway imported by apps/web/server.js.
+  // Use the exact production gateway imported by infrastructure/gateway/server.mjs.
   const proxyApi = createApiGateway({ origin: apiAddress });
   const gateway = http.createServer((req, res) => {
     if (!proxyApi(req, res)) { res.writeHead(418); res.end('web fallback'); }
@@ -138,7 +138,7 @@ test('Same-origin gateway routing and cutover contract', async (t) => {
   });
 
   await t.test('unmigrated paths bypass API forwarding', async () => {
-    for (const path of ['/api/unmigrated-sample', '/api/live-extra']) {
+    for (const path of ['/unmigrated-page', '/live-extra-page']) {
       const res = await fetch(`${gatewayAddress}${path}`);
       assert.equal(res.status, 418, 'Only the migrated exact path may be forwarded');
     }

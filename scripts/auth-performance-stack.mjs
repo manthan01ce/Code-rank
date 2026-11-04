@@ -27,7 +27,7 @@ try{
  await sql.query("INSERT INTO departments(name,institute_name) VALUES('CI Department','CI Institute')");
  // The identical timing harness also runs on the pre-API baseline revision.
  if(existsSync('apps/api/src/server.js')) start('apps/api/src/server.js','api');
- start('apps/web/cluster.js','web');start('apps/worker/src/index.js','worker');
+ start(existsSync('scripts/dev/web-runtime.mjs')?'scripts/dev/web-runtime.mjs':'apps/web/cluster.js','web');start('apps/worker/src/index.js','worker');
  let ready=false;const deadline=Date.now()+60000;
  while(Date.now()<deadline){assert.ok(children.every(c=>c.exitCode===null&&c.signalCode===null),'Performance stack process exited');try{await checkDeployment(base);ready=true;break;}catch{}await new Promise(r=>setTimeout(r,500));}
  assert.ok(ready,'Real DB/Redis/runner readiness must pass before timing');

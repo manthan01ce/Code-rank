@@ -5,10 +5,12 @@ PostgreSQL/Neon, Redis/BullMQ and Docker.
 
 ## Active workspace
 
-- `apps/web`: UI, 43 unmigrated HTTP handler files and WebSocket upgrade forwarding.
-- `apps/api`: Fastify API runtime; owns `/api/live`, auth endpoints and Socket.IO behind the web runtime gateway.
+- `apps/web`: frontend pages and features, served by standard Next.js; no backend implementation dependencies or secrets.
+- `apps/api`: all 47 baseline HTTP endpoint groups and Socket.IO; feature adapters under `src/modules`.
 - `apps/worker`: execution and system queue consumers.
-- `packages/core`: domain services and access policy.
+- `infrastructure/gateway`: public HTTP/WebSocket routing to web/API; no business logic.
+- `packages/contracts`: browser-safe public practice catalog shared by web and API; no backend imports or secrets.
+- `packages/core`: backend services and access policy; remaining feature/export cleanup is a separate follow-up.
 - `packages/database`: database client and migration engine.
 - `packages/queue`: atomic execution admission.
 - `packages/runner`: language execution and disposable sandboxes.
@@ -65,7 +67,7 @@ In Terminal 2 (Web Platform):
 ```sh
 npm run web
 ```
-> *Note:* `npm run web` runs the custom development server (`node server.js`). Clustered multi-process serving (`apps/web/cluster.js`) is reserved for production environments.
+> Root `npm run web` starts the lab gateway and one standard `next dev` process. `NODE_ENV=production npm run web` (after building) starts standard `next start` processes; `CLUSTER_ENABLED=true` enables the configured WEB_CONCURRENCY replicas. Web workspace commands remain `next dev` / `next start` and run independently. See the [three-app topology](docs/architecture/three-app-topology.md).
 
 Open **[http://localhost:3000](http://localhost:3000)** in your browser.
 

@@ -5,7 +5,7 @@ import { parseEnv } from 'node:util';
 import { spawn } from 'node:child_process';
 
 const repositoryRoot = resolve(dirname(fileURLToPath(import.meta.url)), '../..');
-const launcherKeys = ['PORT', 'REALTIME_URL', 'ALLOWED_ORIGIN', 'API_PORT', 'API_HOST', 'INTERNAL_API_URL'];
+const launcherKeys = ['PORT', 'REALTIME_URL', 'ALLOWED_ORIGIN', 'API_PORT', 'API_HOST', 'INTERNAL_API_URL', 'WEB_INTERNAL_PORT', 'WEB_CONCURRENCY', 'CLUSTER_ENABLED'];
 
 // Match the web bootstrap's dotenv precedence without evaluating shell syntax
 // or exporting unrelated app-local secrets/configuration into the worker.
@@ -38,6 +38,7 @@ export function resolveLabEnvironment(root = repositoryRoot, inherited = process
   // An absent origin is derived by the native launcher after LAN IP discovery.
   if (selected.ALLOWED_ORIGIN) env.ALLOWED_ORIGIN = selected.ALLOWED_ORIGIN;
   else delete env.ALLOWED_ORIGIN;
+  for (const key of ['WEB_INTERNAL_PORT', 'WEB_CONCURRENCY', 'CLUSTER_ENABLED']) if (selected[key] !== undefined) env[key] = selected[key];
   return env;
 }
 

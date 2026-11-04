@@ -26,7 +26,7 @@ async function measure(route,label,options={}){
 }
 try{
  if(!process.env.PROFILE_BASE_URL){
-  const web=start('apps/web/server.js','web');start('apps/worker/src/index.js','worker');
+  start('apps/api/src/server.js','api');const web=start('scripts/dev/web-runtime.mjs','web');start('apps/worker/src/index.js','worker');
   await new Promise((resolve,reject)=>{const timer=setTimeout(()=>reject(Error('Startup exceeded 30 seconds')),30000);web.on('error',e=>{clearTimeout(timer);reject(e);});web.on('exit',code=>{clearTimeout(timer);reject(Error(`Web exited ${code}`));});web.stdout.on('data',chunk=>{if(chunk.toString().includes('Server ready')){clearTimeout(timer);resolve();}});});
  }
  await measure('/api/live','liveness');
