@@ -80,7 +80,18 @@ export function createApiGateway({ origin = process.env.INTERNAL_API_URL || 'htt
       agent: false,
     });
 
+    // Bound only the handshake; a healthy idle WebSocket must stay open.
+    upstream.setTimeout(timeoutMs, () => { upstream.destroy(); clientSocket.destroy(); });
+    clientSocket.on('error', () => upstream.destroy());
+    clientSocket.on('close', () => upstream.destroy());
+    upstream.on('response', response => {
+      clientSocket.end(`HTTP/1.1 ${response.statusCode} ${response.statusMessage}\r\nConnection: close\r\nContent-Length: 0\r\n\r\n`);
+      response.resume();
+      upstream.destroy();
+    });
     upstream.on('upgrade', (res, upstreamSocket, upstreamHead) => {
+      upstream.setTimeout(0);
+      upstreamSocket.setTimeout(0);
       track(upstreamSocket);
       let raw = 'HTTP/1.1 101 Switching Protocols\r\n';
       for (let i = 0; i < res.rawHeaders.length; i += 2) {

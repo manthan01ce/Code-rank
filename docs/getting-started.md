@@ -24,7 +24,7 @@ cp .env.example .env
 Review and adjust variables in `.env`:
 - **Server Ports**:
   - `PORT=3000` (documented default port; launcher scripts and runtime inherit this override).
-  - `REALTIME_URL` (optional explicit worker/internal relay Socket.IO address). Leave it unset to derive `http://127.0.0.1:<PORT>`. If an older `.env` contains a fixed port-3000 value, remove/comment it when you want automatic derivation.
+  - `REALTIME_URL` (optional explicit worker/internal relay Socket.IO address). Leave it unset to derive `http://127.0.0.1:<API_PORT>`. If an older `.env` contains a fixed port-3000 value, remove/comment it when you want automatic derivation.
   - `ALLOWED_ORIGIN` (optional comma-separated browser origins for CORS). Launchers derive localhost and detected LAN origins from the effective port when it is unset.
   - `NEXT_PUBLIC_REALTIME_URL` (optional separate browser realtime origin; leave commented out for same-origin). Note: this is a Next.js build-time variable; changing it requires rebuilding the web bundle.
 - **Database**:
@@ -117,11 +117,11 @@ docker compose --env-file .env -f infrastructure/docker-compose.yml --profile bu
 ## 6. Running the Applications
 
 ### Current Runtime Architecture (Three Application Workspaces)
-1. **Web (`apps/web`)**: Next.js pages, the 43 unmigrated HTTP handler files and Socket.IO. Public browser origin uses `PORT` (default 3000).
-2. **API (`apps/api`)**: Fastify owns `/api/live` and auth endpoints; other endpoints migrate in later issues. Private `API_PORT` defaults to 3001 and is independent of web's `PORT`; `API_HOST` defaults to loopback.
+1. **Web (`apps/web`)**: Next.js pages, the 43 unmigrated HTTP handler files and WebSocket upgrade forwarding. Public browser origin uses `PORT` (default 3000).
+2. **API (`apps/api`)**: Fastify owns `/api/live`, auth endpoints and Socket.IO; other endpoints migrate in later issues. Private `API_PORT` defaults to 3001 and is independent of web's `PORT`; `API_HOST` defaults to loopback.
 3. **Worker (`apps/worker`)**: BullMQ execution orchestration; the only application needing Docker-daemon access.
 
-The web custom server forwards `/api/live` and the three auth paths to `INTERNAL_API_URL` at startup (default `http://127.0.0.1:3001`). Configure this as an origin without a path. The same built web artifact can use host or container API addresses. Socket.IO remains on web until #51; complete frontend/backend isolation remains #58.
+The web custom server forwards `/api/live` and the three auth paths to `INTERNAL_API_URL` at startup (default `http://127.0.0.1:3001`). Configure this as an origin without a path. The same built web artifact can use host or container API addresses. Socket.IO runs on API and browser upgrades pass through web; complete frontend/backend isolation remains #58.
 
 ### Terminal 1: API
 ```sh
@@ -138,7 +138,7 @@ npm run worker
 ```sh
 npm run web
 ```
-> **Note**: root `npm run web` invokes the web workspace's dev script, `node server.js`. This custom server starts Next.js in development mode and hosts the current HTTP/Socket.IO responsibilities. It is not the `next dev` CLI command. The web workspace's production start script is `node cluster.js`.
+> **Note**: root `npm run web` invokes the web workspace's dev script, `node server.js`. This custom server starts Next.js in development mode and hosts the unmigrated HTTP handlers and forwards Socket.IO upgrades to API. It is not the `next dev` CLI command. The web workspace's production start script is `node cluster.js`.
 
 Open [http://localhost:3000](http://localhost:3000) for the default port, or use the effective PORT shown by the launcher.
 
@@ -178,10 +178,10 @@ And set `USE_WARM_DAEMONS=true` in the worker process environment.
 
 ### Containerized application mode
 
-Use `docker compose --env-file .env -f infrastructure/docker-compose.yml -f infrastructure/compose.containers.yaml --profile local-database up -d --build` after configuring DATABASE_URL with a container-reachable host (`postgres` for the local Compose database). The web gateway uses `http://api:3001`; worker realtime remains on web and should use `http://web:3000`. API has no Docker socket. Check existing volume identity before starting this mode.
+Use `docker compose --env-file .env -f infrastructure/docker-compose.yml -f infrastructure/compose.containers.yaml --profile local-database up -d --build` after configuring DATABASE_URL with a container-reachable host (`postgres` for the local Compose database). The web gateway uses `http://api:3001`; worker realtime uses `http://api:3001`. API has no Docker socket. Check existing volume identity before starting this mode.
 
 ### Containerized Worker Mode
-To run the worker in Docker with host Docker daemon access, first configure its database URL with a hostname reachable FROM the worker container (for local Compose PostgreSQL this is `postgres`, not `localhost`), and its REALTIME_URL with a reachable web host address. Do not reuse a host-only localhost database URL unchanged. The host-run web/worker and container-run worker can require different internal addresses. Start PostgreSQL with the local-database profile if needed before this mode:
+To run the worker in Docker with host Docker daemon access, first configure its database URL with a hostname reachable FROM the worker container (for local Compose PostgreSQL this is `postgres`, not `localhost`), and its REALTIME_URL with a reachable API host address. Do not reuse a host-only localhost database URL unchanged. The host-run web/worker and container-run worker can require different internal addresses. Start PostgreSQL with the local-database profile if needed before this mode:
 ```sh
 docker compose --env-file .env -f infrastructure/docker-compose.yml --profile container-worker up -d
 ```
@@ -214,5 +214,5 @@ npm run test:stack       # Full web-to-worker stack test on loopback port 3100
    - Check that `DATABASE_URL` in `.env` is reachable.
    - Run `npm run db:migrate` as the explicit upgrade step, then `npm run db:preflight` to confirm readiness. Do not use the destructive fixture restore to resolve a migration error.
 4. **WebSocket Disconnections**:
-   - Ensure `PORT` and `REALTIME_URL` in `.env` match.
+   - Ensure worker `REALTIME_URL` points to API; browser requests use the web origin and its WebSocket proxy.
    - If overriding ports, ensure `ALLOWED_ORIGIN` includes the client's URL.

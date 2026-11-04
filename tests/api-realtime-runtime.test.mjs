@@ -26,8 +26,6 @@ function client(address, options = {}) {
 function closeClients() {
   for (const c of clientSockets) {
     try {
-      c.io.engine?.transport?.ws?._socket?.destroy();
-      c.io.engine?.close();
       c.disconnect();
     } catch {}
   }
@@ -42,6 +40,7 @@ describe('Fastify API Socket.IO runtime and same-origin gateway cutover', () => 
   before(async () => {
     apiApp = buildApp({
       realtime: {
+        authorization: { getJobStatus: async () => null },
         authenticateToken: async (token) => {
           const claims = verifyToken(token);
           if (!claims) throw new Error('Invalid token');
@@ -81,10 +80,8 @@ describe('Fastify API Socket.IO runtime and same-origin gateway cutover', () => 
     closeClients();
     proxyApi?.close?.();
     for (const s of sockets) s.destroy();
-    for (const s of apiSockets) s.destroy();
     if (gateway) await new Promise(resolve => gateway.close(resolve));
     if (apiApp) await apiApp.close();
-    setTimeout(() => process.exit(0), 100).unref();
   });
 
   test('Direct API Socket.IO connects with valid service token', async (t) => {
@@ -160,6 +157,7 @@ describe('Fastify API Socket.IO runtime and same-origin gateway cutover', () => 
   });
 
   test('Transitional web practical publisher sends events to API Socket.IO server', async (t) => {
+    assert.ok(apiApp.publisher, 'Publisher must be available to sibling API feature modules');
     const courseId = 99;
     const serviceToken = createServiceToken();
 
@@ -178,7 +176,6 @@ describe('Fastify API Socket.IO runtime and same-origin gateway cutover', () => 
     process.env.REALTIME_URL = apiAddress;
     const pubSocket = publishPractical('added', { id: 42, course_id: courseId, title: 'Test Practical' });
     t.after(() => {
-      try { pubSocket?.io?.engine?.transport?.ws?._socket?.destroy(); } catch {}
       pubSocket?.disconnect();
     });
 
@@ -188,6 +185,9 @@ describe('Fastify API Socket.IO runtime and same-origin gateway cutover', () => 
     ]);
     assert.equal(payload.id, 42);
     assert.equal(payload.title, 'Test Practical');
+    const localEvent = once(browser, 'practical_updated');
+    apiApp.publisher.publishPracticalChange('updated', { courseId, practical: { id: 42, title: 'Local API update' } });
+    assert.equal((await localEvent)[0].title, 'Local API update');
   });
 
   test('Unrelated WebSocket upgrade requests are rejected by gateway', async () => {
@@ -206,4 +206,21 @@ describe('Fastify API Socket.IO runtime and same-origin gateway cutover', () => 
     await errorPromise;
     rawReq.destroy();
   });
+  test('API close drains connected direct and gateway WebSockets without process exit', async () => {
+    const direct = client(apiAddress, { auth: { serviceToken: createServiceToken() } });
+    const proxied = client(gatewayAddress, { auth: { serviceToken: createServiceToken() } });
+    await Promise.all([once(direct, 'connect'), once(proxied, 'connect')]);
+    const gone = Promise.all([once(direct, 'disconnect'), once(proxied, 'disconnect')]);
+    let timer;
+    try {
+      await Promise.race([
+        Promise.all([apiApp.close(), gone]),
+        new Promise((_, reject) => { timer = setTimeout(() => reject(Error('Realtime close did not drain live connections')), 3000); }),
+      ]);
+    } finally { clearTimeout(timer); }
+    assert.equal(direct.connected, false);
+    assert.equal(proxied.connected, false);
+    await assert.rejects(fetch(`${apiAddress}/api/live`));
+  });
+
 });

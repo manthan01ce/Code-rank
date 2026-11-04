@@ -26,11 +26,12 @@ export function resolveLabEnvironment(root = repositoryRoot, inherited = process
   if (!/^\d+$/.test(port) || Number(port) < 1 || Number(port) > 65535) {
     throw new Error('PORT must be an integer between 1 and 65535');
   }
-  const env = { ...inherited, PORT: port, REALTIME_URL: selected.REALTIME_URL || `http://127.0.0.1:${port}` };
+  const env = { ...inherited, PORT: port, REALTIME_URL: selected.REALTIME_URL };
   const apiPort = String(selected.API_PORT || '3001').trim();
   if (!/^\d+$/.test(apiPort) || Number(apiPort) < 1 || Number(apiPort) > 65535 || apiPort === port) {
     throw new Error('API_PORT must be a valid port different from PORT');
   }
+  env.REALTIME_URL = selected.REALTIME_URL || `http://127.0.0.1:${apiPort}`;
   env.API_PORT = apiPort;
   env.API_HOST = selected.API_HOST || '127.0.0.1';
   env.INTERNAL_API_URL = selected.INTERNAL_API_URL || `http://127.0.0.1:${apiPort}`;

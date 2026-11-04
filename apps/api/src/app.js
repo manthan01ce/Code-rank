@@ -1,5 +1,6 @@
 import Fastify from 'fastify';
 import operationsRoutes from './modules/operations/operations.routes.js';
+import { SubmissionService } from '@coderank/core/services/SubmissionService';
 import { closeDatabase } from '@coderank/database';
 import { closeRateLimiter } from './middleware/rate-limiter.js';
 import authRoutes from './modules/auth/auth.routes.js';
@@ -12,7 +13,7 @@ export function buildApp(options = {}) {
   });
 
   app.addHook('onClose', async () => {
-    const outcomes = await Promise.allSettled([closeRateLimiter(), closeDatabase()]);
+    const outcomes = await Promise.allSettled([closeRateLimiter(), closeDatabase(), SubmissionService.close?.()]);
     const failed = outcomes.find(result => result.status === 'rejected');
     if (failed) throw failed.reason;
   });

@@ -2,6 +2,7 @@ import { PracticalService } from '../practicals/PracticalService.js';
 import { ALLOWED_LANGUAGES } from '../../security/execution.js';
 import sql from '../../db/client.js';
 import { createExecutionQueue, readExecutionWorkers } from '@coderank/queue';
+import { withTimeout } from '../../utils/timeout.js';
 import { randomUUID } from 'node:crypto';
 import { canReadJob, publicCase, publicResult } from '../../security/execution.js';
 
@@ -28,6 +29,16 @@ function getExecutionQueue() {
 }
 
 export class SubmissionService {
+  // Only close an already allocated queue; shutdown must not create one.
+  static async close() {
+    const queue = codeExecutionQueue;
+    codeExecutionQueue = null;
+    queueStatsCache = null; queueStatsCacheAt = 0; queueStatsPromise = null;
+    if (!queue) return;
+    try { await withTimeout(queue.close(), 3000); }
+    catch (error) { await queue.disconnect(); throw error; }
+  }
+
   /**
    * Enqueue a job into BullMQ
    */
