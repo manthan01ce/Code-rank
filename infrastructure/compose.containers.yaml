@@ -1,12 +1,12 @@
 # Full local topology: standard Next.js web, API/realtime, worker, and infrastructure gateway.
 services:
   api:
-    profiles: []
+    profiles: !reset []
   web:
-    profiles: []
+    profiles: !reset []
   gateway:
-    profiles: []
+    profiles: !reset []
   worker:
-    profiles: []
+    profiles: !reset []
     environment:
       REALTIME_URL: http://api:3001
