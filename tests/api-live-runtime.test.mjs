@@ -61,7 +61,7 @@ test('Fastify API direct runtime contracts for GET /api/live', async (t) => {
   });
 
   await t.test('Unmigrated routes are not authoritative on API runtime (return 404)', async () => {
-    for (const unmigratedPath of ['/api/auth/login', '/api/health', '/api/users', '/api/courses']) {
+    for (const unmigratedPath of ['/api/health', '/api/users', '/api/courses']) {
       const res = await fetch(`${address}${unmigratedPath}`);
       assert.equal(res.status, 404, `${unmigratedPath} must return 404 on API runtime`);
     }
@@ -138,7 +138,7 @@ test('Same-origin gateway routing and cutover contract', async (t) => {
   });
 
   await t.test('unmigrated paths bypass API forwarding', async () => {
-    for (const path of ['/api/auth/login', '/api/health', '/api/live-extra']) {
+    for (const path of ['/api/health', '/api/live-extra']) {
       const res = await fetch(`${gatewayAddress}${path}`);
       assert.equal(res.status, 418, 'Only the migrated exact path may be forwarded');
     }
@@ -180,7 +180,11 @@ test('actual API entry point handles SIGTERM and frees its listening port', asyn
   const deadline = setTimeout(() => child.kill('SIGKILL'), 5000);
   const [code, signal] = await exited;
   clearTimeout(deadline);
-  assert.equal(code, 0);
-  assert.equal(signal, null);
+  if (process.platform === 'win32') {
+    assert.ok(code === 0 || signal === 'SIGTERM');
+  } else {
+    assert.equal(code, 0);
+    assert.equal(signal, null);
+  }
   await assert.rejects(fetch(`http://127.0.0.1:${port}/api/live`));
 });

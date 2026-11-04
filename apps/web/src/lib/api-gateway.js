@@ -10,13 +10,14 @@ function forwardedHeaders(headers) {
 
 // Transitional same-origin gateway. Only explicitly migrated URLs belong to API.
 // Resolve at process startup: the same built web artifact runs on host and Docker.
+const migratedPaths = new Set(['/api/live', '/api/auth/login', '/api/auth/change-password', '/api/auth/profile']);
 export function createApiGateway({ origin = process.env.INTERNAL_API_URL || 'http://127.0.0.1:3001', timeoutMs = 10000 } = {}) {
   const target = new URL(origin);
   if (!['http:', 'https:'].includes(target.protocol) || target.username || target.password || target.pathname !== '/' || target.search || target.hash) {
     throw new Error('INTERNAL_API_URL must be an HTTP(S) origin without credentials or a path');
   }
   return (req, res) => {
-    if (req.url.split('?')[0] !== '/api/live') return false;
+    if (!migratedPaths.has(req.url.split('?')[0])) return false;
     const fail = (status) => {
       if (res.destroyed) return;
       if (res.headersSent) { res.destroy(); return; }

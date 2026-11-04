@@ -300,7 +300,7 @@ try {
   const unmigratedLogin = await fetch(`${base}/api/auth/login`, {
     method: 'POST', headers: { 'Content-Type': 'application/json' }, body: '{}',
   });
-  assert.equal(unmigratedLogin.status, 400, 'Unmigrated login still belongs to web');
+  assert.equal(unmigratedLogin.status, 400, 'Login via gateway rejects invalid payload');
 
   const clusterLog = readFileSync(
     `${root}/test-results/authenticated/web.log`,

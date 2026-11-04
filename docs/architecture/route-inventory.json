@@ -157,7 +157,7 @@
     },
     {
       "url": "/api/auth/login",
-      "file": "apps/web/src/app/api/auth/login/route.js",
+      "file": "apps/api/src/modules/auth/auth.routes.js",
       "methods": [
         "POST"
       ],
@@ -176,7 +176,7 @@
       ],
       "services": [
         "@coderank/core/services/UserService",
-        "@/lib/queue/rateLimiter"
+        "apps/api/src/middleware/rate-limiter"
       ],
       "description": "User login authentication issuing session token and JWT",
       "observedResponseHeaders": {
@@ -188,12 +188,12 @@
         ]
       },
       "contractSources": [
-        "apps/web/src/app/api/auth/login/route.js"
+        "apps/api/src/modules/auth/auth.routes.js"
       ]
     },
     {
       "url": "/api/auth/change-password",
-      "file": "apps/web/src/app/api/auth/change-password/route.js",
+      "file": "apps/api/src/modules/auth/auth.routes.js",
       "methods": [
         "POST"
       ],
@@ -215,12 +215,12 @@
       "description": "Authenticated self-service account password change",
       "observedResponseHeaders": {},
       "contractSources": [
-        "apps/web/src/app/api/auth/change-password/route.js"
+        "apps/api/src/modules/auth/auth.routes.js"
       ]
     },
     {
       "url": "/api/auth/profile",
-      "file": "apps/web/src/app/api/auth/profile/route.js",
+      "file": "apps/api/src/modules/auth/auth.routes.js",
       "methods": [
         "GET",
         "PUT"
@@ -243,7 +243,7 @@
       "description": "Authenticated identity retrieval and self profile update",
       "observedResponseHeaders": {},
       "contractSources": [
-        "apps/web/src/app/api/auth/profile/route.js"
+        "apps/api/src/modules/auth/auth.routes.js"
       ]
     },
     {
