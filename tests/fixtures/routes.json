@@ -10,6 +10,10 @@
     "POST",
     "PUT"
   ],
+  "apps/api/src/modules/execution/execution.routes.js": [
+    "GET",
+    "POST"
+  ],
   "apps/api/src/modules/mapping/mapping.routes.js": [
     "GET",
     "POST"
@@ -56,16 +60,6 @@
   "apps/web/src/app/admin/students/page.js": [
     "PAGE"
   ],
-  "apps/web/src/app/api/c-run/route.js": [
-    "POST"
-  ],
-  "apps/web/src/app/api/cpp-run/route.js": [
-    "POST"
-  ],
-  "apps/web/src/app/api/execute/route.js": [
-    "GET",
-    "POST"
-  ],
   "apps/web/src/app/api/faculty/practicals/[id]/submissions/route.js": [
     "GET"
   ],
@@ -79,37 +73,18 @@
   "apps/web/src/app/api/health/route.js": [
     "GET"
   ],
-  "apps/web/src/app/api/java-run/route.js": [
-    "POST"
-  ],
-  "apps/web/src/app/api/javascript-run/route.js": [
-    "POST"
-  ],
-  "apps/web/src/app/api/jobs/[jobId]/route.js": [
-    "GET"
-  ],
   "apps/web/src/app/api/logs/route.js": [
     "GET"
   ],
   "apps/web/src/app/api/metrics/route.js": [
     "GET"
   ],
-  "apps/web/src/app/api/practice-run/route.js": [
-    "GET",
-    "POST"
-  ],
   "apps/web/src/app/api/profile/[username]/route.js": [
     "GET",
     "PUT"
   ],
-  "apps/web/src/app/api/python-run/route.js": [
-    "POST"
-  ],
   "apps/web/src/app/api/queue/stats/route.js": [
     "GET"
-  ],
-  "apps/web/src/app/api/run/route.js": [
-    "POST"
   ],
   "apps/web/src/app/api/stats/route.js": [
     "GET"

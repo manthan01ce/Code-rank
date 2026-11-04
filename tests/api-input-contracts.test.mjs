@@ -83,7 +83,17 @@ test('legacy profile adapter never exposes unexpected database errors', async ()
 
 test('execution connectivity returns 503 for cached fallback and redacts queue failures', async () => {
   const { SubmissionService } = await import('../packages/core/src/modules/submissions/SubmissionService.js');
-  const { GET } = await import('../apps/web/src/app/api/execute/route.js');
+  const { buildApp } = await import('../apps/api/src/app.js');
+  const api = buildApp();
+  await api.ready();
+  const GET = async () => {
+    const res = await api.inject({ method: 'GET', url: '/api/execute' });
+    return {
+      status: res.statusCode,
+      headers: { get: name => res.headers[name.toLowerCase()] },
+      json: async () => res.json(),
+    };
+  };
   const stub = mock.method(SubmissionService, 'getQueueStats', async () => ({ cached: true, waiting: 0 }));
   try {
     const response = await GET();
@@ -94,7 +104,7 @@ test('execution connectivity returns 503 for cached fallback and redacts queue f
     const failed = await GET();
     assert.equal(failed.status, 503);
     assert.ok(!JSON.stringify(await failed.json()).includes('private Redis'));
-  } finally { stub.mock.restore(); }
+  } finally { stub.mock.restore(); await api.close(); }
 });
 
 test('admin statistics read the database service on every request with no replica-local response cache', async () => {

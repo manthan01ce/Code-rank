@@ -8,14 +8,20 @@ let unavailable=false;
 const sql=Object.assign(async()=>[],{query:async(query,params)=>{if(unavailable)throw Error('database unavailable');if(query.startsWith('SELECT id,name,email,role,status,session_token'))return users.has(params[0])?[users.get(params[0])]:[];return [];}});
 mock.module(new URL('../packages/core/src/db/client.js',import.meta.url).href,{defaultExport:sql});
 mock.module('@coderank/database', { defaultExport: sql, namedExports: { closeDatabase: async () => {} } });
-mock.module('@coderank/queue',{namedExports:{readExecutionWorkers:async()=>({healthy:true,healthyWorkers:1}),createExecutionQueue:()=>({getJob:async()=>({id:'job',data:{userId:1},getState:async()=>'completed',returnvalue:{status:'accepted'}})})}});
+mock.module('@coderank/queue',{namedExports:{readExecutionWorkers:async()=>({healthy:true,healthyWorkers:1}),createExecutionQueue:()=>({getJob:async()=>({id:'job',data:{userId:1},getState:async()=>'completed',returnvalue:{status:'accepted'}}),close:async()=>{},disconnect:async()=>{}})}});
 const {generateToken}=await import('../packages/core/src/utils/auth.js');
-const {GET}=await import('../apps/web/src/app/api/jobs/[jobId]/route.js');
+// const {GET}=await import('../apps/web/src/app/api/jobs/[jobId]/route.js');
 const { buildApp } = await import('../apps/api/src/app.js');
 const api = buildApp();
 await api.ready();
+test.after(async () => { await api.close(); });
 
-const req=(token,cookie)=>new Request('http://localhost/api/jobs/job',{headers:{...(token?{Authorization:`Bearer ${token}`}:{}) ,...(cookie?{cookie}:{})}});
+const req=(token,cookie)=>({headers:{...(token?{authorization:`Bearer ${token}`}:{}) ,...(cookie?{cookie}:{})}});
+const GET = async (r, p) => {
+  const { jobId } = await p.params;
+  const res = await api.inject({ method: 'GET', url: `/api/jobs/${jobId}`, headers: r.headers });
+  return { status: res.statusCode };
+};
 test('protected polling checks current status/session and cannot downgrade a revoked bearer to guest',async()=>{
  const token=generateToken({id:1,role:'student',session_token:'one'}),params={params:Promise.resolve({jobId:'job'})};
  assert.equal((await GET(req(token),params)).status,200);
