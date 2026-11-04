@@ -15,7 +15,7 @@ registerHooks({
   },
 });
 const created = [];
-mock.module("@coderank/core/services/UserManagementService", {
+mock.module("../apps/api/src/modules/users/user-management.service.js", {
   namedExports: {
     UserManagementService: {
       mutate: async (_admin, _id, _action, body) => {

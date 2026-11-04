@@ -9,7 +9,7 @@ mock.module(
   { defaultExport: { query } },
 );
 const { CourseReportService: service } = await import(
-  "../packages/core/src/modules/reports/CourseReportService.js"
+  "../apps/api/src/modules/practicals/course-report.service.js"
 );
 test("marks matrix bounds both dimensions, ignores malformed semesters and scopes grades", async () => {
   try {

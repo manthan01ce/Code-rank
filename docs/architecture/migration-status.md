@@ -26,16 +26,16 @@ Follow [ADR-0001](decisions/0001-api-runtime-and-hosting.md) and the [route inve
 
 | Order | Planned work identifier | Status | Deliverable |
 | --- | --- | --- | --- |
-| 1 | CR-ARCH-09 | **Merged** (PR #59) | Fastify API workspace, bootstrap/lifecycle/container/gateway wiring; migrated `/api/live` with real direct and gateway contract tests; old Next handler removed |
-| 2 | CR-ARCH-10A | Implementation in PR #60 (3B / #50); verification recorded in PR | Auth adapters/shared middleware and identity/password contracts |
-| 3 | CR-ARCH-14 | Merged in PR #61; lifecycle/deployment correction verified separately | Socket.IO moves from web to API, including worker transport and room/session ownership tests (Variant X) |
-| 4 | CR-ARCH-10B | Merged in PR #63 (3D / #52) | User-management, admin password and bulk ingestion HTTP slice; verified across direct Fastify API and gateway cutover |
-| 5 | CR-ARCH-11A | Merged in PR #64 (3E / #53) | Course/department/mapping HTTP slices; coordinate shared-file edits |
-| 6 | CR-ARCH-11B | Merged in PR #65 (3F / #54) | Practical management and reporting HTTP slice; preserve realtime publication and reporting snapshot integrity |
-| 7 | CR-ARCH-12A | Merged in PR #66 (3G / #55) | Execution intake, language aliases and job status HTTP slice; verified across direct Fastify API and gateway cutover |
-| 8 | CR-ARCH-12B | Implementation in PR (3H / #56) | Submission/history/reset/workspace HTTP slice; verified across direct Fastify API and gateway cutover |
-| 9 | CR-ARCH-13 | Implementation in PR (3I / #57) | Operations/profile remaining HTTP slice; preserve readiness without running migrations |
-| 10 | CR-ARCH-15 | Implementation prepared; final-head CI and merge pending (3J / #58) | Complete web/API separation; remove web backend imports/secrets/custom Socket.IO server only now |
+| 1 | CR-ARCH-09 | **Merged** (PR #59, #49) | Fastify API workspace, bootstrap/lifecycle/container/gateway wiring; migrated `/api/live` with real direct and gateway contract tests; old Next handler removed |
+| 2 | CR-ARCH-10A | **Merged** (PR #60, #50) | Auth adapters/shared middleware and identity/password contracts |
+| 3 | CR-ARCH-14 | **Merged** (PR #61, #51) | Socket.IO moves from web to API, including worker transport and room/session ownership tests (Variant X; corrective PR #62) |
+| 4 | CR-ARCH-10B | **Merged** (PR #63, #52) | User-management, admin password and bulk ingestion HTTP slice; verified across direct Fastify API and gateway cutover |
+| 5 | CR-ARCH-11A | **Merged** (PR #64, #53) | Course/department/mapping HTTP slices; coordinate shared-file edits |
+| 6 | CR-ARCH-11B | **Merged** (PR #65, #54) | Practical management and reporting HTTP slice; preserve realtime publication and reporting snapshot integrity |
+| 7 | CR-ARCH-12A | **Merged** (PR #66, #55) | Execution intake, language aliases and job status HTTP slice; verified across direct Fastify API and gateway cutover |
+| 8 | CR-ARCH-12B | **Merged** (PR #67, #56) | Submission/history/reset/workspace HTTP slice; verified across direct Fastify API and gateway cutover |
+| 9 | CR-ARCH-13 | **Merged** (PR #68, #57) | Operations/profile remaining HTTP slice; preserve readiness without running migrations |
+| 10 | CR-ARCH-15 | **Merged** (PR #69, #58) | Complete web/API separation; remove web backend imports/secrets/custom Socket.IO server only now |
 
 ## Completion evidence for CR-ARCH-09 (3A)
 
@@ -211,6 +211,40 @@ PR #68 review correction: operations SQL and username profile reads now belong t
 
 ## CR-ARCH-15 (#58) separation evidence
 
-Implementation prepared for review; completion requires successful CI and merge of the final PR head. The web custom server/cluster and server-only compatibility helpers are removed. Standard Next.js and standalone packaging are independently tested without backend modules/services/secrets; API is independently tested without Next.js/React/runner. The infrastructure gateway routes all API paths exactly once and upgrades Socket.IO; host supervision retains frontend replica replacement and drain. All application images also run together against disposable Compose PostgreSQL/Redis, controlled migrations and real worker/Docker execution. Certification requires container-topology evidence in addition to all existing browser, security, capacity and recovery gates. Vercel configs are retired under ADR-0001; cloud hosting remains separate. Broad frontend decomposition, remaining core feature/facade cleanup, database assets, sandbox/warm mode and test/script organization remain later work.
+**Merged** in PR #69. The web custom server/cluster and server-only compatibility helpers are removed. Standard Next.js and standalone packaging are independently tested without backend modules/services/secrets; API is independently tested without Next.js/React/runner. The infrastructure gateway routes all API paths exactly once and upgrades Socket.IO; host supervision retains frontend replica replacement and drain. All application images also run together against disposable Compose PostgreSQL/Redis, controlled migrations and real worker/Docker execution. Certification requires container-topology evidence in addition to all existing browser, security, capacity and recovery gates. Vercel configs are retired under ADR-0001; cloud hosting remains separate. Broad frontend decomposition, remaining core feature/facade cleanup, database assets, sandbox/warm mode and test/script organization remain later work.
 
 Vercel Git retirement: root `vercel.json` contains only the schema and `git.deploymentEnabled: false`. It disables obsolete automatic Git deployments; it contains no build/output/routes and does not claim cloud support. The competing infrastructure config is removed. Existing hosted deployments are not deleted; a supported cloud topology needs its own reviewed cutover.
+
+## Position 4A: API-only service ownership correction and reconciliation (#70)
+
+### Audit and corrective scope
+All ten runtime migration issues (#49–#58) were closed and their PRs merged, achieving standard Next web, Fastify API and independent worker runtimes. However, earlier route extractions had left API-only feature business logic in `packages/core` behind delegating API wrappers. Position 4A resolves these confirmed omissions:
+1. User CRUD & Administration: `UserManagementService` (mutate, admin validation) and API-only user features (`listUsers`, `bulkCreateUsers`, `bulkUploadUsers`) relocated to `apps/api/src/modules/users/`.
+2. Faculty Practical CRUD: `PracticalManagementService` moved to `apps/api/src/modules/practicals/practical-management.service.js`; shared identifier validation primitive (`positiveId`) extracted to `@coderank/core/shared/identifiers`.
+3. Practical & Course Reporting: `PracticalReportService` and `CourseReportService` moved to `apps/api/src/modules/practicals/`.
+4. Student Practical Discovery: `StudentPracticalService` moved to `apps/api/src/modules/practicals/student-practical.service.js`.
+5. Submission History & Reset: `SubmissionHistoryService` moved to `apps/api/src/modules/submissions/submission-history.service.js`. Reset orchestration (`deleteSubmission`) and student workspace draft persistence (`saveWorkspace`, `loadWorkspace`) moved from core `SubmissionService` directly to `apps/api/src/modules/submissions/submissions.service.js`.
+
+### Method-to-Owner reconciliation
+
+| Domain & Feature | Method / Responsibility | Final Owning Module | Runtime Scope |
+| --- | --- | --- | --- |
+| User Admin | `mutate`, `createUser`, `updateUser`, `deleteUser` | `apps/api/src/modules/users/user-management.service.js` | API-only (HTTP) |
+| User Discovery | `listUsers`, `validateDivision` | `apps/api/src/modules/users/user-management.service.js` & `users.service.js` | API-only (HTTP) |
+| Bulk Users | `bulkUploadUsers`, `bulkCreateUsers` | `apps/api/src/modules/users/users.service.js` | API-only (HTTP) |
+| Practical CRUD | `list`, `mutate`, `detail`, `faculty` | `apps/api/src/modules/practicals/practical-management.service.js` | API-only (HTTP) |
+| Practical Discovery | `StudentPracticalService.list`, `detail` | `apps/api/src/modules/practicals/student-practical.service.js` | API-only (HTTP) |
+| Practical Reports | `PracticalReportService.stats` | `apps/api/src/modules/practicals/practical-report.service.js` | API-only (HTTP) |
+| Course Reports | `CourseReportService.marks` | `apps/api/src/modules/practicals/course-report.service.js` | API-only (HTTP) |
+| Submission History | `SubmissionHistoryService.student`, `faculty` | `apps/api/src/modules/submissions/submission-history.service.js` | API-only (HTTP) |
+| Reset Orchestration | `deleteSubmission` (`coderank_reset_submission`) | `apps/api/src/modules/submissions/submissions.service.js` | API-only (HTTP) |
+| Workspace Drafts | `saveWorkspace`, `loadWorkspace` | `apps/api/src/modules/submissions/submissions.service.js` | API-only (HTTP) |
+| Practical Policy | `PracticalService.authorize` | `packages/core/src/modules/practicals/PracticalService.js` | Shared (API & Worker) |
+| Queue & Status | `enqueueJob`, `getJobStatus`, `getQueueStats`, `getWorkerStatus` | `packages/core/src/modules/submissions/SubmissionService.js` | Shared (API & Worker) |
+| Submission Persist | `getSubmission` (details + test cases) | `packages/core/src/modules/submissions/SubmissionService.js` | Shared (API & Worker) |
+| Grading Policy | `GradingService.gradePractical` | `packages/core/src/modules/submissions/GradingService.js` | Shared (Worker) |
+| Identifiers | `positiveId` | `packages/core/src/shared/identifiers.js` | Shared Primitive |
+| Pagination | `listPage` | `packages/core/src/shared/pagination.js` | Shared Primitive |
+
+### Boundary Enforcement
+`tests/final-separation.test.mjs` explicitly asserts that the six API-only modules (`UserManagementService`, `PracticalManagementService`, `StudentPracticalService`, `CourseReportService`, `PracticalReportService`, `SubmissionHistoryService`) do not exist in `packages/core`, and that their replacement services are present in `apps/api`.

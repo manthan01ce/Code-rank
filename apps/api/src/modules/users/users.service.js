@@ -1,42 +1,115 @@
 import { AccountService } from '../auth/account.service.js';
-import { UserManagementService } from '@coderank/core/services/UserManagementService';
-import { UserService } from '@coderank/core/services/UserService';
+import sql from '@coderank/core/db';
+import { UserManagementService } from './user-management.service.js';
+
+const fail = (status, message) => {
+  throw { status, message };
+};
 
 export class UsersService {
   static admin(user) {
-    if (!user || user.role !== 'admin') throw { status: 401, message: 'Unauthorized' };
+    if (!user || user.role !== 'admin') fail(401, 'Unauthorized');
   }
 
+  /**
+   * Validate student division format
+   */
   static validateDivision(division) {
-    return UserService.validateDivision(division);
+    if (!division || typeof division !== 'string' || !division.trim()) {
+      return { valid: false, error: 'Division is compulsory for students.' };
+    }
+    const trimmed = division.trim();
+    const alphaMatches = trimmed.match(/[a-zA-Z]/g) || [];
+    const digitMatches = trimmed.match(/[0-9]/g) || [];
+    if (alphaMatches.length < 2) {
+      return {
+        valid: false,
+        error:
+          'Division must contain at least 2 alphabetic letters (e.g., CE1, IT2).',
+      };
+    }
+    if (digitMatches.length < 1) {
+      return {
+        valid: false,
+        error:
+          'Division must contain at least 1 numeric digit (e.g., CE1, IT2).',
+      };
+    }
+    return { valid: true };
   }
 
   static async changePassword(admin, body) {
     return AccountService.changePassword(admin, body);
   }
 
+  /**
+   * Admin: List users with filters
+   */
   static async listUsers(options) {
-    return UserService.listUsers(options);
+    return UserManagementService.listUsers(options);
   }
 
-  static async mutate(admin, id, action, body, options) {
+  /**
+   * User mutation handler (create, update, deactivate)
+   */
+  static async mutate(admin, id, action, body = {}, options = {}) {
     return UserManagementService.mutate(admin, id, action, body, options);
   }
 
+  /**
+   * Admin: Create single user
+   */
   static async createUser(admin, body, options) {
-    return UserService.createUser(admin, body, options);
+    return this.mutate(admin, null, 'create', body, options);
   }
 
   static async updateUser(admin, body) {
-    return UserService.updateUser(admin, body);
+    return (await this.mutate(admin, body.id, 'update', body)).user;
   }
 
   static async deleteUser(admin, id) {
-    return UserService.deleteUser(admin, id);
+    await this.mutate(admin, id, 'deactivate');
+    return { success: true };
   }
 
+  /**
+   * Admin: Bulk upload users
+   */
   static async bulkUploadUsers(admin, usersList, role) {
-    return UserService.bulkUploadUsers(admin, usersList, role);
+    this.admin(admin);
+    if (!Array.isArray(usersList) || usersList.length > 500)
+      fail(400, 'Maximum 500 users per upload');
+    const users = [],
+      errors = [];
+    for (const [index, u] of usersList.entries()) {
+      try {
+        const result = await this.mutate(
+          admin,
+          null,
+          'create',
+          {
+            ...u,
+            role,
+            name: u.name || `${u.first_name || ''} ${u.last_name || ''}`.trim(),
+            extra_info: {
+              roll_number: u.roll_number || u.roll || '',
+              division: u.division || '',
+              batch: u.batch || '',
+              semester: u.semester || 1,
+              department: u.department || '',
+            },
+          },
+        );
+        users.push({ ...result.user, rawPassword: result.rawPassword });
+      } catch (error) {
+        errors.push({
+          row: index + 1,
+          email: u.email,
+          error: error.status ? error.message : 'Unable to create user',
+        });
+      }
+    }
+    return { success: true, createdCount: users.length, users, errors };
   }
 
   static async bulkCreateUsers(admin, records, role) {
@@ -167,6 +240,8 @@ export class UsersService {
     return {
       success: true,
       created: results,
+      users: results,
+      createdCount: results.length,
       updated,
       errors,
       skipped,

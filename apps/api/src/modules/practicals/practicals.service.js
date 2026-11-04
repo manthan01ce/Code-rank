@@ -1,7 +1,7 @@
-import { PracticalManagementService } from '@coderank/core/services/PracticalManagementService';
-import { StudentPracticalService } from '@coderank/core/services/StudentPracticalService';
-import { PracticalReportService } from '@coderank/core/services/PracticalReportService';
-import { CourseReportService } from '@coderank/core/services/CourseReportService';
+import { PracticalManagementService } from './practical-management.service.js';
+import { StudentPracticalService } from './student-practical.service.js';
+import { PracticalReportService } from './practical-report.service.js';
+import { CourseReportService } from './course-report.service.js';
 import { CourseService } from '@coderank/core/services/CourseService';
 
 export class PracticalsService {

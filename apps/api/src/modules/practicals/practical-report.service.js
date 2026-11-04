@@ -1,5 +1,5 @@
-import sql from '../../db/client.js';
-import { listPage } from '../courses/list-pagination.js';
+import sql from '@coderank/core/db';
+import { listPage } from '@coderank/core/shared/pagination';
 
 export class PracticalReportService {
   static async stats(user, id, options = {}) {
@@ -52,7 +52,7 @@ export class PracticalReportService {
       'pagination',jsonb_build_object('limit',$6::int,'nextCursor',
         CASE WHEN EXISTS(SELECT 1 FROM eligible WHERE id>(SELECT max(id) FROM student_page))
           THEN (SELECT max(id)::text FROM student_page) END)
-    ) AS report`, [practicalId,user.id,user.role,user.session_token ?? null,cursor,limit]);
+    ) AS report`, [practicalId, user.id, user.role, user.session_token ?? null, cursor, limit]);
     if (!row?.report?.practical) throw { status: 404, message: 'Practical not found or access denied' };
     return row.report;
   }

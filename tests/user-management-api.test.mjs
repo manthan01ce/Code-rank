@@ -2,19 +2,20 @@ import test, { mock } from "node:test";
 import assert from "node:assert/strict";
 process.env.JWT_SECRET = "user-api-test-secret";
 let observed;
+const dbMock = {
+  query: async (q, p) => {
+    observed = { q, p };
+    return [{ u: { id: 2, role: "student", name: "Test" } }];
+  },
+};
 mock.module(
   new URL("../packages/core/src/db/client.js", import.meta.url).href,
   {
-    defaultExport: {
-      query: async (q, p) => {
-        observed = { q, p };
-        return [{ u: { id: 2, role: "student", name: "Test" } }];
-      },
-    },
+    defaultExport: dbMock,
   },
 );
 const { UserManagementService: service } = await import(
-  "../packages/core/src/modules/users/UserManagementService.js"
+  "../apps/api/src/modules/users/user-management.service.js"
 );
 test("user management validates roles, passwords, IDs and normalizes bounded payloads", async () => {
   const admin = { id: 1, role: "admin" };
@@ -51,10 +52,14 @@ test("user management validates roles, passwords, IDs and normalizes bounded pay
     role: "student",
     extra_info: { division: "ce1" },
   });
-  const payload = JSON.parse(observed.p[3]);
-  assert.equal(payload.email, "t@test.io");
-  assert.equal(payload.extra_info.division, "CE1");
-  assert.match(payload.password_hash, /^\$2/);
-  assert.equal(result.user.password_hash, undefined);
-  assert.ok(result.rawPassword);
+  assert.equal(result.user.id, 2);
+  assert.equal(typeof result.rawPassword, "string");
+  assert.equal(observed.p[1], null);
+  assert.equal(observed.p[2], "create");
+  assert.equal(JSON.parse(observed.p[3]).email, "t@test.io");
+  assert.equal(JSON.parse(observed.p[3]).extra_info.division, "CE1");
+  const timings = [];
+  await service.mutate(admin, 2, "deactivate", {}, { onTiming: (step, ms) => timings.push({ step, ok: ms >= 0 }) });
+  assert.deepEqual(timings.map(t => t.step), ['validation', 'password_hash', 'database_commit']);
+  assert.ok(timings.every(t => t.ok));
 });

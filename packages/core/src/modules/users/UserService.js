@@ -1,4 +1,3 @@
-import { UserManagementService } from "./UserManagementService.js";
 import sql from "../../db/client.js";
 
 export class UserService {
@@ -95,64 +94,4 @@ export class UserService {
       params,
     );
   }
-
-  /**
-   * Admin: Create single user
-   */
-  static async createUser(admin, body, options) {
-    return UserManagementService.mutate(admin, null, "create", body, options);
-  }
-  static async updateUser(admin, body) {
-    return (await UserManagementService.mutate(admin, body.id, "update", body))
-      .user;
-  }
-  static async deleteUser(admin, id) {
-    await UserManagementService.mutate(admin, id, "deactivate");
-    return { success: true };
-  }
-
-  /**
-   * Admin: Bulk upload users
-   */
-  static async bulkUploadUsers(admin, usersList, role) {
-    UserManagementService.admin(admin);
-    if (!Array.isArray(usersList) || usersList.length > 500)
-      throw { status: 400, message: "Maximum 500 users per upload" };
-    const users = [],
-      errors = [];
-    for (const [index, u] of usersList.entries()) {
-      try {
-        const result = await UserManagementService.mutate(
-          admin,
-          null,
-          "create",
-          {
-            ...u,
-            role,
-            name: u.name || `${u.first_name || ""} ${u.last_name || ""}`.trim(),
-            extra_info: {
-              roll_number: u.roll_number || u.roll || "",
-              division: u.division || "",
-              batch: u.batch || "",
-              semester: u.semester || 1,
-              department: u.department || "",
-            },
-          },
-        );
-        users.push({ ...result.user, rawPassword: result.rawPassword });
-      } catch (error) {
-        errors.push({
-          row: index + 1,
-          email: u.email,
-          error: error.status ? error.message : "Unable to create user",
-        });
-      }
-    }
-    return { success: true, createdCount: users.length, users, errors };
-  }
-
-  /**
-   * Get student profile stats by username/email
-   */
-
 }

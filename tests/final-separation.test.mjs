@@ -62,3 +62,28 @@ test('standard Next.js processes receive frontend settings without backend or la
   assert.deepEqual(Object.keys(env).sort(), ['HOSTNAME', 'NEXT_PUBLIC_REALTIME_URL', 'NEXT_TELEMETRY_DISABLED', 'NODE_ENV', 'PATH', 'PORT'].sort());
   assert.equal(env.NODE_ENV, 'production'); assert.equal(env.PORT, '3020');
 });
+
+test('confirmed API-only feature modules are owned by API and do not return to core', () => {
+  const forbiddenInCore = [
+    'packages/core/src/modules/users/UserManagementService.js',
+    'packages/core/src/modules/practicals/PracticalManagementService.js',
+    'packages/core/src/modules/practicals/StudentPracticalService.js',
+    'packages/core/src/modules/reports/CourseReportService.js',
+    'packages/core/src/modules/reports/PracticalReportService.js',
+    'packages/core/src/modules/submissions/SubmissionHistoryService.js',
+  ];
+  for (const path of forbiddenInCore) {
+    assert.equal(existsSync(path), false, `${path} must not exist in core`);
+  }
+  const requiredInApi = [
+    'apps/api/src/modules/users/user-management.service.js',
+    'apps/api/src/modules/practicals/practical-management.service.js',
+    'apps/api/src/modules/practicals/student-practical.service.js',
+    'apps/api/src/modules/practicals/course-report.service.js',
+    'apps/api/src/modules/practicals/practical-report.service.js',
+    'apps/api/src/modules/submissions/submission-history.service.js',
+  ];
+  for (const path of requiredInApi) {
+    assert.equal(existsSync(path), true, `${path} must exist in API`);
+  }
+});

@@ -29,100 +29,92 @@ let deactivatedIds = [];
 let updatedUsers = [];
 let changedPasswords = [];
 
-mock.module('@coderank/core/services/UserManagementService', {
+const mockUsersService = {
+  admin: (user) => {
+    if (!user || user.role !== 'admin') throw { status: 401, message: 'Unauthorized' };
+  },
+  validateDivision: (division) => {
+    if (!division || typeof division !== 'string') return { valid: false, error: 'Division is compulsory' };
+    const trimmed = division.trim();
+    const alpha = (trimmed.match(/[a-zA-Z]/g) || []).length;
+    const digits = (trimmed.match(/[0-9]/g) || []).length;
+    if (alpha < 2 || digits < 1) return { valid: false, error: 'Division must contain at least 2 letters and 1 digit' };
+    return { valid: true };
+  },
+  changePassword: async (admin, { currentPassword, newPassword } = {}) => {
+    if (!admin || admin.role !== 'admin') throw { status: 401, message: 'Unauthorized' };
+    if (!currentPassword || !newPassword || newPassword.length < 8) {
+      throw { status: 400, message: 'Current password is required; new password must be at least 8 characters' };
+    }
+    if (currentPassword === 'wrong') throw { status: 400, message: 'Invalid current password' };
+    changedPasswords.push({ adminId: admin.id, newPassword });
+    return { success: true, message: 'Password updated successfully', token: 'new-rotated-token' };
+  },
+  listUsers: async ({ role, cursor, limit = 100 } = {}) => {
+    const lim = Number(limit);
+    if (!Number.isSafeInteger(lim) || lim < 1 || lim > 200) throw { status: 400, message: 'Invalid pagination' };
+    if (cursor !== null && (!Number.isSafeInteger(Number(cursor)) || Number(cursor) < 1)) {
+      throw { status: 400, message: 'Invalid pagination' };
+    }
+    return mockUsers.filter(u => !role || u.role === role);
+  },
+  mutate: async (admin, id, action, body) => {
+    if (!admin || admin.role !== 'admin') throw { status: 401, message: 'Unauthorized' };
+    if (action === 'create') {
+      if (!body?.name || !body?.email || !body?.role) throw { status: 400, message: 'Name, email and role are required' };
+      if (body.email === 'duplicate@test.io') throw { status: 409, message: 'Email already exists' };
+      if (body.role === 'student' && !body.extra_info?.division) throw { status: 400, message: 'Student division is required' };
+      if (body.extra_info?.division === 'BAD') throw { status: 400, message: 'Invalid student division' };
+      const u = { id: 100 + createdUsers.length, ...body };
+      createdUsers.push(u);
+      return { user: u, rawPassword: 'generated-raw-password-123' };
+    }
+    if (action === 'update') {
+      if (id === 999 || id === '999') throw { status: 404, message: 'User not found or protected' };
+      updatedUsers.push({ id, ...body });
+      return { user: { id: Number(id), ...body } };
+    }
+    if (action === 'deactivate') {
+      if (id === 999 || id === '999') throw { status: 404, message: 'User not found or protected' };
+      deactivatedIds.push(Number(id));
+      return { user: { id: Number(id), status: 'inactive' } };
+    }
+    throw Error('unsupported action');
+  },
+  createUser: async (admin, body, options) => {
+    return mockUsersService.mutate(admin, null, 'create', body, options);
+  },
+  updateUser: async (admin, body) => {
+    return (await mockUsersService.mutate(admin, body.id, 'update', body)).user;
+  },
+  deleteUser: async (admin, id) => {
+    await mockUsersService.mutate(admin, id, 'deactivate');
+    return { success: true };
+  },
+  bulkUploadUsers: async (admin, usersList, role) => {
+    if (!admin || admin.role !== 'admin') throw { status: 401, message: 'Unauthorized' };
+    if (!Array.isArray(usersList) || usersList.length > 500) throw { status: 400, message: 'Maximum 500 users per upload' };
+    const users = [];
+    const errors = [];
+    for (const [index, u] of usersList.entries()) {
+      if (u.email === 'duplicate@test.io') {
+        errors.push({ row: index + 1, email: u.email, error: 'Email already exists' });
+      } else {
+        const created = { id: 200 + index, ...u, role };
+        users.push({ ...created, rawPassword: 'raw-password' });
+      }
+    }
+    return { success: true, createdCount: users.length, users, errors };
+  },
+};
+
+mock.module('../apps/api/src/modules/users/user-management.service.js', {
   namedExports: {
-    UserManagementService: {
-      admin: (user) => {
-        if (!user || user.role !== 'admin') throw { status: 401, message: 'Unauthorized' };
-      },
-      mutate: async (admin, id, action, body) => {
-        if (!admin || admin.role !== 'admin') throw { status: 401, message: 'Unauthorized' };
-        if (action === 'create') {
-          if (!body?.name || !body?.email || !body?.role) throw { status: 400, message: 'Name, email and role are required' };
-          if (body.email === 'duplicate@test.io') throw { status: 409, message: 'Email already exists' };
-          if (body.role === 'student' && !body.extra_info?.division) throw { status: 400, message: 'Student division is required' };
-          if (body.extra_info?.division === 'BAD') throw { status: 400, message: 'Invalid student division' };
-          const u = { id: 100 + createdUsers.length, ...body };
-          createdUsers.push(u);
-          return { user: u, rawPassword: 'generated-raw-password-123' };
-        }
-        if (action === 'update') {
-          if (id === 999 || id === '999') throw { status: 404, message: 'User not found or protected' };
-          updatedUsers.push({ id, ...body });
-          return { user: { id: Number(id), ...body } };
-        }
-        if (action === 'deactivate') {
-          if (id === 999 || id === '999') throw { status: 404, message: 'User not found or protected' };
-          deactivatedIds.push(Number(id));
-          return { user: { id: Number(id), status: 'inactive' } };
-        }
-        throw Error('unsupported action');
-      },
-    },
+    UserManagementService: mockUsersService,
   },
 });
 
-mock.module('@coderank/core/services/UserService', {
-  namedExports: {
-    UserService: {
-      validateDivision: (division) => {
-        if (!division || typeof division !== 'string') return { valid: false, error: 'Division is compulsory' };
-        const trimmed = division.trim();
-        const alpha = (trimmed.match(/[a-zA-Z]/g) || []).length;
-        const digits = (trimmed.match(/[0-9]/g) || []).length;
-        if (alpha < 2 || digits < 1) return { valid: false, error: 'Division must contain >=2 letters and >=1 digit' };
-        return { valid: true };
-      },
-      changePassword: async (admin, { currentPassword, newPassword } = {}) => {
-        if (!admin || admin.role !== 'admin') throw { status: 401, message: 'Unauthorized' };
-        if (!currentPassword || !newPassword || newPassword.length < 8) {
-          throw { status: 400, message: 'Current password is required; new password must be at least 8 characters' };
-        }
-        if (currentPassword === 'wrong') throw { status: 400, message: 'Invalid current password' };
-        changedPasswords.push({ adminId: admin.id, newPassword });
-        return { success: true, message: 'Password updated successfully', token: 'new-rotated-token' };
-      },
-      listUsers: async ({ role, cursor, limit = 100 } = {}) => {
-        const lim = Number(limit);
-        if (!Number.isSafeInteger(lim) || lim < 1 || lim > 200) throw { status: 400, message: 'Invalid pagination' };
-        if (cursor !== null && (!Number.isSafeInteger(Number(cursor)) || Number(cursor) < 1)) {
-          throw { status: 400, message: 'Invalid pagination' };
-        }
-        return mockUsers.filter(u => !role || u.role === role);
-      },
-      createUser: async (admin, body, options) => {
-        const { UserManagementService } = await import('@coderank/core/services/UserManagementService');
-        return UserManagementService.mutate(admin, null, 'create', body, options);
-      },
-      updateUser: async (admin, body) => {
-        const { UserManagementService } = await import('@coderank/core/services/UserManagementService');
-        return (await UserManagementService.mutate(admin, body.id, 'update', body)).user;
-      },
-      deleteUser: async (admin, id) => {
-        const { UserManagementService } = await import('@coderank/core/services/UserManagementService');
-        await UserManagementService.mutate(admin, id, 'deactivate');
-        return { success: true };
-      },
-      bulkUploadUsers: async (admin, usersList, role) => {
-        if (!admin || admin.role !== 'admin') throw { status: 401, message: 'Unauthorized' };
-        if (!Array.isArray(usersList) || usersList.length > 500) throw { status: 400, message: 'Maximum 500 users per upload' };
-        const users = [];
-        const errors = [];
-        for (const [index, u] of usersList.entries()) {
-          if (u.email === 'duplicate@test.io') {
-            errors.push({ row: index + 1, email: u.email, error: 'Email already exists' });
-          } else {
-            const created = { id: 200 + index, ...u, role };
-            users.push({ ...created, rawPassword: 'raw-password' });
-          }
-        }
-        return { success: true, createdCount: users.length, users, errors };
-      },
-    },
-  },
-});
-
-const { UserService: accountDouble } = await import('@coderank/core/services/UserService');
+const accountDouble = { changePassword: mockUsersService.changePassword };
 mock.module('../apps/api/src/modules/auth/account.service.js', { namedExports: { AccountService: accountDouble } });
 
 const { generateToken, getUserFromRequest } = await import('../packages/core/src/utils/auth.js');
