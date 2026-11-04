@@ -19,4 +19,4 @@ services:
   worker:
     profiles: []
     environment:
-      REALTIME_URL: http://web:3000
+      REALTIME_URL: http://api:3001

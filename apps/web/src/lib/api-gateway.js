@@ -11,13 +11,19 @@ function forwardedHeaders(headers) {
 // Transitional same-origin gateway. Only explicitly migrated URLs belong to API.
 // Resolve at process startup: the same built web artifact runs on host and Docker.
 const migratedPaths = new Set(['/api/live', '/api/auth/login', '/api/auth/change-password', '/api/auth/profile']);
+
+function isMigratedPath(pathname) {
+  return migratedPaths.has(pathname) || pathname === '/socket.io' || pathname.startsWith('/socket.io/');
+}
+
 export function createApiGateway({ origin = process.env.INTERNAL_API_URL || 'http://127.0.0.1:3001', timeoutMs = 10000 } = {}) {
   const target = new URL(origin);
   if (!['http:', 'https:'].includes(target.protocol) || target.username || target.password || target.pathname !== '/' || target.search || target.hash) {
     throw new Error('INTERNAL_API_URL must be an HTTP(S) origin without credentials or a path');
   }
-  return (req, res) => {
-    if (!migratedPaths.has(req.url.split('?')[0])) return false;
+
+  const proxy = (req, res) => {
+    if (!isMigratedPath(req.url.split('?')[0])) return false;
     const fail = (status) => {
       if (res.destroyed) return;
       if (res.headersSent) { res.destroy(); return; }
@@ -40,4 +46,62 @@ export function createApiGateway({ origin = process.env.INTERNAL_API_URL || 'htt
     req.pipe(upstream);
     return true;
   };
+
+  const activeSockets = new Set();
+  const track = (s) => {
+    if (!s) return;
+    activeSockets.add(s);
+    s.once('close', () => activeSockets.delete(s));
+  };
+
+  proxy.close = () => {
+    for (const s of activeSockets) {
+      try { s.destroy(); } catch {}
+    }
+    activeSockets.clear();
+  };
+
+  proxy.upgrade = (req, clientSocket, head) => {
+    const pathname = req.url.split('?')[0];
+    if (pathname !== '/socket.io' && !pathname.startsWith('/socket.io/')) return false;
+
+    track(clientSocket);
+    const headers = { ...req.headers };
+    headers.host = target.host;
+    headers['x-forwarded-host'] = req.headers.host;
+    headers['x-forwarded-proto'] = req.socket.encrypted ? 'https' : 'http';
+
+    const upstream = (target.protocol === 'https:' ? https : http).request({
+      hostname: target.hostname,
+      port: target.port,
+      path: req.url,
+      method: req.method,
+      headers,
+      agent: false,
+    });
+
+    upstream.on('upgrade', (res, upstreamSocket, upstreamHead) => {
+      track(upstreamSocket);
+      let raw = 'HTTP/1.1 101 Switching Protocols\r\n';
+      for (let i = 0; i < res.rawHeaders.length; i += 2) {
+        raw += `${res.rawHeaders[i]}: ${res.rawHeaders[i + 1]}\r\n`;
+      }
+      raw += '\r\n';
+      clientSocket.write(raw);
+      if (upstreamHead?.length) clientSocket.write(upstreamHead);
+      if (head?.length) upstreamSocket.write(head);
+      upstreamSocket.pipe(clientSocket);
+      clientSocket.pipe(upstreamSocket);
+      upstreamSocket.on('error', () => clientSocket.destroy());
+      clientSocket.on('error', () => upstreamSocket.destroy());
+      upstreamSocket.on('close', () => clientSocket.destroy());
+      clientSocket.on('close', () => upstreamSocket.destroy());
+    });
+
+    upstream.on('error', () => clientSocket.destroy());
+    upstream.end();
+    return true;
+  };
+
+  return proxy;
 }

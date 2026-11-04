@@ -5,18 +5,8 @@ import { fileURLToPath } from 'url';
 import path from 'path';
 import next from 'next';
 import { createApiGateway } from './src/lib/api-gateway.js';
-import { Server } from 'socket.io';
 import compression from 'compression';
 import { performance } from 'perf_hooks';
-import { configureRealtimeAdapter } from './src/lib/realtime-adapter.js';
-import { attachRealtime, revalidateRealtimeRooms } from './src/lib/realtime.js';
-import { guardRealtimeSession } from './src/lib/realtime-session.js';
-import { guestActor } from '@coderank/core/security/execution';
-import { verifyServiceToken } from '@coderank/core/security/service-token';
-import { PracticalService } from '@coderank/core/services/PracticalService';
-import { SubmissionService } from '@coderank/core/services/SubmissionService';
-import sql from '@coderank/core/db';
-import { authenticateToken } from '@coderank/core/security/active-actor';
 import { logger } from '@coderank/core/utils/logger';
 import { recordHttpRequest } from './src/lib/observability.js';
 
@@ -43,10 +33,10 @@ const app = next({
 const handle = app.getRequestHandler();
 const proxyApi = createApiGateway();
 
-// Compression middleware configuration
+// Performance middleware
 const compressionMiddleware = compression({
-  threshold: 1024, // Only compress responses > 1KB
-  level: 6, // Balanced compression level (0-9)
+  threshold: 1024, // Only compress responses larger than 1KB
+  level: 6, // Balanced compression level
   filter: (req, res) => {
     // Don't compress images and other already-compressed content
     const contentType = res.getHeader('Content-Type');
@@ -104,72 +94,19 @@ app.prepare().then(async () => {
   server.keepAliveTimeout = 65000; // Slightly higher than load balancer timeout
   server.headersTimeout = 66000; // Slightly higher than keepAliveTimeout
 
-  const io = new Server(server, {
-    cors: {
-      origin: (process.env.ALLOWED_ORIGIN || `http://localhost:${port}`).split(',').map(value => value.trim()),
-      methods: ['GET', 'POST']
-    },
-    // Performance optimizations for Socket.IO
-    pingTimeout: 60000,
-    pingInterval: 25000,
-    upgradeTimeout: 10000,
-    maxHttpBufferSize: 1e6, // 1MB
-    transports: ['websocket'], // One connection stays on one process; no polling affinity required.
+  server.on('upgrade', (req, socket, head) => {
+    if (proxyApi.upgrade?.(req, socket, head)) return;
+    socket.destroy();
   });
 
-  const closeAdapter = await configureRealtimeAdapter(io);
   const shutdown = async () => {
-    io.close();
+    proxyApi.close?.();
     server.close();
-    await closeAdapter();
     await app.close();
     process.exit(0);
   };
   process.once('SIGTERM', shutdown);
   process.once('SIGINT', shutdown);
-  global.io = io;
-  io.use(async (socket, next) => {
-    try {
-      const serviceToken = socket.handshake.auth?.serviceToken;
-      const token = socket.handshake.auth?.token;
-      const service = serviceToken !== undefined ? verifyServiceToken(serviceToken) : null;
-      if (serviceToken !== undefined && !service) throw new Error('Invalid service credentials');
-      const actor = token !== undefined ? await authenticateToken(token)
-        : service ? null : guestActor(socket.handshake.headers.cookie || '');
-      if (!service && !actor) throw new Error('Authentication required');
-      socket.data.service = !!service;
-      socket.data.actor = actor;
-      socket.data.token = token;
-      socket.data.serviceToken = serviceToken;
-      socket.data.expiresAt = service ? service.exp * 1000
-        : actor.role === 'guest' ? Date.now() + 86400000 : actor.exp * 1000;
-      next();
-    } catch { next(new Error('Authentication required')); }
-  });
-  io.on('connection', socket => {
-    const authorization = {
-    refreshActor: () => socket.data.actor?.role === 'guest' ? socket.data.actor : authenticateToken(socket.data.token),
-    validateService: () => !!verifyServiceToken(socket.data.serviceToken),
-    authorizePractical: (actor, id) => PracticalService.authorize(actor, id),
-    getJobStatus: (id, actor) => SubmissionService.getJobStatus(id, actor),
-    authorizeCourse: async (actor, id) => {
-      if (!actor || actor.role === 'guest') throw new Error('Authentication required');
-      if (actor.role === 'admin') return;
-      const rows = actor.role === 'faculty'
-        ? await sql`SELECT 1 FROM course_faculty WHERE course_id = ${id} AND faculty_id = ${actor.id}`
-        : await sql`SELECT 1 FROM users u JOIN courses c ON c.semester = (u.extra_info->>'semester')::int WHERE u.id = ${actor.id} AND u.status = 'active' AND c.id = ${id} AND (u.session_token IS NULL OR u.session_token = ${actor.session_token || ''})`;
-      if (!rows.length) throw new Error('Course access denied');
-    },
-    };
-    attachRealtime(io, socket, authorization);
-    guardRealtimeSession(socket, {
-      expiresAt: socket.data.expiresAt,
-      revalidate: !socket.data.service ? async () => {
-        if (socket.data.actor?.role !== 'guest') socket.data.actor = await authenticateToken(socket.data.token);
-        await revalidateRealtimeRooms(socket, { ...authorization, actor: socket.data.actor });
-      } : undefined,
-    });
-  });
 
   server
     .once('error', (err) => {
@@ -185,4 +122,3 @@ app.prepare().then(async () => {
       });
     });
 }).catch(error => { logger.error('Web startup failed', error); process.exit(1); });
-

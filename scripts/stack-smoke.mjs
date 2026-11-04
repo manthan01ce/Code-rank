@@ -28,7 +28,7 @@ const env = {
   API_PORT: apiPort,
   API_HOST: "127.0.0.1",
   INTERNAL_API_URL: apiBase,
-  REALTIME_URL: base,
+  REALTIME_URL: apiBase,
   ALLOWED_ORIGIN: base,
   CLUSTER_ENABLED: "false",
   JWT_SECRET: randomBytes(48).toString("hex"),

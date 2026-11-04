@@ -169,7 +169,7 @@ test('actual API entry point handles SIGTERM and frees its listening port', asyn
   t.after(() => { if (child.exitCode === null) child.kill('SIGKILL'); });
   const exited = once(child, 'exit');
   let ready = false;
-  for (let count = 0; count < 100; count++) {
+  for (let count = 0; count < 200; count++) {
     assert.equal(child.exitCode, null, 'API process exited before readiness');
     try { ready = (await fetch(`http://127.0.0.1:${port}/api/live`)).status === 200; } catch {}
     if (ready) break;

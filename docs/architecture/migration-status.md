@@ -8,7 +8,7 @@ Reviewed against master `a8425a352cc355c12906c8af93a517f136d610ec` and branch `r
 | --- | --- | --- |
 | Applications | `apps/web`, `apps/worker`, `apps/api` | Fastify API workspace created; three application workspaces; complete separation remains scheduled for 3J |
 | HTTP | `/api/live` and auth endpoints migrated to `apps/api`; 43 route files remain in `apps/web/src/app/api` | Continue moving feature adapters and API-only services into `apps/api/src/modules` per batch schedule (3B: auth, etc.); preserve URLs, auth, headers and responses |
-| Realtime | Web custom server owns Socket.IO | Socket.IO migration to API scheduled for 3C (CR-ARCH-14) |
+| Realtime | Fastify API owns authoritative Socket.IO; Next.js server proxies `/socket.io` WebSocket upgrades | Web Socket.IO server completely eliminated; browser hooks and transitional publishers point to API |
 | Frontend features | Coding-workspace, practice, credential PDF and practical-authoring extractions landed | Finish submission/reports/user workflows as separate slices; route files assemble views |
 | Core | Browser PDF implementation removed; explicit runtime environment export added | Retain only genuinely shared backend rules; move API-only services, retire facades after consumers migrate |
 | Tooling | Root tooling includes explicit lint dependencies, backend correctness rules, and covers `apps/api` | Continue expanding checks as each module migrates |
@@ -23,7 +23,7 @@ Follow [ADR-0001](decisions/0001-api-runtime-and-hosting.md) and the [route inve
 | --- | --- | --- | --- |
 | 1 | CR-ARCH-09 | **Merged** (PR #59) | Fastify API workspace, bootstrap/lifecycle/container/gateway wiring; migrated `/api/live` with real direct and gateway contract tests; old Next handler removed |
 | 2 | CR-ARCH-10A | Implementation in PR #60 (3B / #50); verification recorded in PR | Auth adapters/shared middleware and identity/password contracts |
-| 3 | CR-ARCH-14 | Blocked on 10A (3C / #51) | Socket.IO moves from web to API, including worker transport and room/session ownership tests (Variant X) |
+| 3 | CR-ARCH-14 | Implementation in PR (3C / #51); verification recorded in PR | Socket.IO moves from web to API, including worker transport and room/session ownership tests (Variant X) |
 | 4 | CR-ARCH-10B and CR-ARCH-11A | After 10A (3D / #52, 3E / #53) | User-management and course/department/mapping HTTP slices; coordinate shared-file edits |
 | 5 | CR-ARCH-11B and CR-ARCH-12A | Blocked on 14 + 11A (3F / #54, 3G / #55) | Practical-management and execution HTTP slices; preserve event publication and execution contracts |
 | 6 | CR-ARCH-12B | Blocked on 12A + 11B (3H / #56) | Submission/history/reset/workspace HTTP slice |
@@ -41,3 +41,6 @@ Follow [ADR-0001](decisions/0001-api-runtime-and-hosting.md) and the [route inve
 
 ### CR-ARCH-10A ownership and verification
 Login and authenticated profile loading move to the API auth service, with API middleware authenticating before protected JSON parsing. Shared self-account mutations remain in core temporarily because the unmigrated admin-password and username-profile adapters still consume them; 3D/3I must retire that compatibility usage. The API closes its Redis and database resources after HTTP drain. Real direct/gateway contracts cover auth errors, session rotation, expiry, database role authority, profile/password changes, deactivation and Redis throttling/outage, including clean shutdown. See PR #60 for final tested SHA and CI evidence.
+
+### CR-ARCH-14 ownership and verification
+Socket.IO server creation, authentication middleware, room authorization, periodic session revalidation, and worker/service realtime publisher moved from Next.js custom server (apps/web/server.js) into Fastify API runtime (apps/api/src/realtime/). Next.js server now exclusively forwards WebSocket upgrade requests via same-origin gateway (proxyApi.upgrade). Removed obsolete server realtime files (apps/web/src/lib/realtime.js, realtime-session.js, realtime-adapter.js) and removed socket.io and @socket.io/redis-adapter dependencies from apps/web. Updated worker, stack smoke tests, and Docker compose configurations to point REALTIME_URL to the API server at http://api:3001. Verified with direct API Socket.IO and gateway upgrade proxy contracts in tests/api-realtime-runtime.test.mjs, unit tests, lint, and full build.
