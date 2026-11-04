@@ -3,6 +3,8 @@
 Current implementation after the final separation change: all 47 baseline endpoint groups and Socket.IO are API-owned. Web uses standard Next.js serving without core/database/queue/runner imports or secrets. Public routing lives in infrastructure/gateway; only worker has Docker access. The browser-safe public practice catalog has two real consumers, so it resides in packages/contracts with no backend/environment dependencies. See [current topology](three-app-topology.md). Final PR CI provides completion evidence; historical stage notes below describe their implementation snapshots.
 
 
+Faculty review/report frontend ownership is extracted in #71; see [method and consumer reconciliation](faculty-review-ownership.md). Runtime separation and API-only core ownership correction (#70) remain distinct from this frontend change.
+
 Reviewed against master `a8425a352cc355c12906c8af93a517f136d610ec` and branch `refactor/cr-arch-13-3i` (CR-ARCH-13 / Issue 3I / #57).
 
 ## Historical status after 3I (before the final separation change)
