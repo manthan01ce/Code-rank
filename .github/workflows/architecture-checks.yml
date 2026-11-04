@@ -1,6 +1,7 @@
 name: Architecture checks
 on:
   pull_request:
+    types: [opened, synchronize, reopened, labeled]
 
 permissions:
   contents: read
@@ -11,6 +12,8 @@ concurrency:
 
 jobs:
   verify:
+    # Budget mode: opt in on the final PR revision; skipped is not certification.
+    if: contains(github.event.pull_request.labels.*.name, 'ci:full-stack')
     name: Full Stack & Strict Architecture Certification
     runs-on: ubuntu-latest
     timeout-minutes: 45
