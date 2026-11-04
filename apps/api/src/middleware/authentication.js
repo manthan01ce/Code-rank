@@ -10,3 +10,13 @@ export async function requireActor(request, reply) {
     });
   }
 }
+
+export async function requireAdmin(request, reply) {
+  await requireActor(request, reply);
+  if (reply.sent) return;
+  if (!request.actor || request.actor.role !== 'admin') {
+    reply.header('Cache-Control', 'no-store').code(401).send({
+      error: 'Unauthorized',
+    });
+  }
+}

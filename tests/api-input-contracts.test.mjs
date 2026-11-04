@@ -10,7 +10,7 @@ const sql = Object.assign(async () => { throw Error('private database details');
 mock.module(new URL('../packages/core/src/db/client.js', import.meta.url).href, { defaultExport: sql });
 
 test('JSON mutation adapters reject malformed and non-object bodies with 400', async () => {
-  const cases = [['admin/password','POST'],['courses','POST'],['courses/[id]','PUT'],['departments','POST'],['departments/[id]','PUT'],['student/workspaces/save','POST'],['users','PUT'],['users','POST'],['users/[id]','PUT'],['mapping','POST']];
+  const cases = [['courses','POST'],['courses/[id]','PUT'],['departments','POST'],['departments/[id]','PUT'],['student/workspaces/save','POST'],['mapping','POST']];
   for (const [name, method] of cases) {
     const route = await import(`../apps/web/src/app/api/${name}/route.js`);
     for (const body of ['{', 'null', '[]', '42', '"text"']) {
@@ -23,7 +23,14 @@ test('JSON mutation adapters reject malformed and non-object bodies with 400', a
   const api = buildApp();
   await api.ready();
   try {
-    const apiCases = [['/api/auth/profile', 'PUT'], ['/api/auth/change-password', 'POST']];
+    const apiCases = [
+      ['/api/auth/profile', 'PUT'],
+      ['/api/auth/change-password', 'POST'],
+      ['/api/admin/password', 'POST'],
+      ['/api/users', 'POST'],
+      ['/api/users', 'PUT'],
+      ['/api/users/1', 'PUT'],
+    ];
     for (const [url, method] of apiCases) {
       for (const body of ['{', 'null', '[]', '42', '"text"']) {
         const response = await api.inject({
@@ -41,11 +48,24 @@ test('JSON mutation adapters reject malformed and non-object bodies with 400', a
 });
 
 test('both upload adapters reject malformed multipart requests and redact unexpected errors', async () => {
-  for (const name of ['users/bulk', 'admin/bulk-upload']) {
-    const { POST } = await import(`../apps/web/src/app/api/${name}/route.js`);
-    assert.equal((await POST(new Request('http://localhost/api/test', { method: 'POST', body: '{}' }))).status, 400);
-    const response = await POST({ formData: async () => { throw { status: 0, message: 'private database details' }; } });
-    assert.ok(!JSON.stringify(await response.json()).includes('private database'));
+  const { buildApp } = await import('../apps/api/src/app.js');
+  const api = buildApp();
+  await api.ready();
+  try {
+    for (const path of ['/api/users/bulk', '/api/admin/bulk-upload']) {
+      const malformed = await api.inject({
+        method: 'POST',
+        url: path,
+        payload: '{}',
+        headers: { authorization: 'Bearer test' },
+      });
+      assert.equal(malformed.statusCode, 400, `${path} malformed payload status`);
+      const body = malformed.json();
+      assert.equal(body.error, 'Invalid multipart payload');
+      assert.ok(!JSON.stringify(body).includes('private database'));
+    }
+  } finally {
+    await api.close();
   }
 });
 
