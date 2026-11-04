@@ -1350,7 +1350,7 @@
     },
     {
       "url": "/api/submit",
-      "file": "apps/web/src/app/api/submit/route.js",
+      "file": "apps/api/src/modules/submissions/submissions.routes.js",
       "methods": [
         "POST"
       ],
@@ -1368,11 +1368,19 @@
         503
       ],
       "services": [
-        "@/lib/execution-api"
+        "apps/api/src/modules/submissions/submissions.service.js",
+        "@coderank/core/services/SubmissionService",
+        "@coderank/core/services/PracticalService"
       ],
       "description": "Practice and generic code submission handler",
-      "observedResponseHeaders": {},
+      "observedResponseHeaders": {
+        "cache-control": [
+          "no-store"
+        ]
+      },
       "contractSources": [
+        "apps/api/src/modules/submissions/submissions.routes.js",
+        "apps/api/src/modules/submissions/submissions.service.js",
         "apps/web/src/app/api/submit/route.js",
         "apps/web/src/lib/execution-api.js"
       ],
@@ -1398,7 +1406,7 @@
     },
     {
       "url": "/api/student/practicals/[id]/submit",
-      "file": "apps/web/src/app/api/student/practicals/[id]/submit/route.js",
+      "file": "apps/api/src/modules/submissions/submissions.routes.js",
       "methods": [
         "POST"
       ],
@@ -1416,11 +1424,19 @@
         503
       ],
       "services": [
-        "@/lib/execution-api"
+        "apps/api/src/modules/submissions/submissions.service.js",
+        "@coderank/core/services/SubmissionService",
+        "@coderank/core/services/PracticalService"
       ],
       "description": "Student graded submission dispatch for assigned practical",
-      "observedResponseHeaders": {},
+      "observedResponseHeaders": {
+        "cache-control": [
+          "no-store"
+        ]
+      },
       "contractSources": [
+        "apps/api/src/modules/submissions/submissions.routes.js",
+        "apps/api/src/modules/submissions/submissions.service.js",
         "apps/web/src/app/api/student/practicals/[id]/submit/route.js",
         "apps/web/src/lib/execution-api.js"
       ],
@@ -1446,7 +1462,7 @@
     },
     {
       "url": "/api/student/submissions",
-      "file": "apps/web/src/app/api/student/submissions/route.js",
+      "file": "apps/api/src/modules/submissions/submissions.routes.js",
       "methods": [
         "GET"
       ],
@@ -1462,18 +1478,24 @@
         500
       ],
       "services": [
-        "@coderank/core/services/SubmissionHistoryService",
-        "@coderank/core/security/active-actor"
+        "apps/api/src/modules/submissions/submissions.service.js",
+        "apps/api/src/middleware/authentication.js"
       ],
       "description": "Student global submission history with pagination",
-      "observedResponseHeaders": {},
+      "observedResponseHeaders": {
+        "cache-control": [
+          "no-store"
+        ]
+      },
       "contractSources": [
+        "apps/api/src/modules/submissions/submissions.routes.js",
+        "apps/api/src/modules/submissions/submissions.service.js",
         "apps/web/src/app/api/student/submissions/route.js"
       ]
     },
     {
       "url": "/api/student/practicals/[id]/submissions",
-      "file": "apps/web/src/app/api/student/practicals/[id]/submissions/route.js",
+      "file": "apps/api/src/modules/submissions/submissions.routes.js",
       "methods": [
         "GET"
       ],
@@ -1490,18 +1512,24 @@
         500
       ],
       "services": [
-        "@coderank/core/services/SubmissionHistoryService",
-        "@coderank/core/security/active-actor"
+        "apps/api/src/modules/submissions/submissions.service.js",
+        "apps/api/src/middleware/authentication.js"
       ],
       "description": "Student practical-specific submission attempts history",
-      "observedResponseHeaders": {},
+      "observedResponseHeaders": {
+        "cache-control": [
+          "no-store"
+        ]
+      },
       "contractSources": [
+        "apps/api/src/modules/submissions/submissions.routes.js",
+        "apps/api/src/modules/submissions/submissions.service.js",
         "apps/web/src/app/api/student/practicals/[id]/submissions/route.js"
       ]
     },
     {
       "url": "/api/faculty/practicals/[id]/submissions",
-      "file": "apps/web/src/app/api/faculty/practicals/[id]/submissions/route.js",
+      "file": "apps/api/src/modules/submissions/submissions.routes.js",
       "methods": [
         "GET"
       ],
@@ -1519,8 +1547,8 @@
         500
       ],
       "services": [
-        "@coderank/core/services/SubmissionHistoryService",
-        "@coderank/core/security/active-actor"
+        "apps/api/src/modules/submissions/submissions.service.js",
+        "apps/api/src/middleware/authentication.js"
       ],
       "description": "Faculty practical submissions review and grading audit",
       "observedResponseHeaders": {
@@ -1529,12 +1557,14 @@
         ]
       },
       "contractSources": [
+        "apps/api/src/modules/submissions/submissions.routes.js",
+        "apps/api/src/modules/submissions/submissions.service.js",
         "apps/web/src/app/api/faculty/practicals/[id]/submissions/route.js"
       ]
     },
     {
       "url": "/api/faculty/submissions/[id]",
-      "file": "apps/web/src/app/api/faculty/submissions/[id]/route.js",
+      "file": "apps/api/src/modules/submissions/submissions.routes.js",
       "methods": [
         "DELETE",
         "GET"
@@ -1551,18 +1581,24 @@
         500
       ],
       "services": [
-        "@coderank/core/services/SubmissionService",
-        "@coderank/core/security/active-actor"
+        "apps/api/src/modules/submissions/submissions.service.js",
+        "apps/api/src/middleware/authentication.js"
       ],
       "description": "Faculty submission detail inspection (GET) and submission reset/deletion (DELETE)",
-      "observedResponseHeaders": {},
+      "observedResponseHeaders": {
+        "cache-control": [
+          "no-store"
+        ]
+      },
       "contractSources": [
+        "apps/api/src/modules/submissions/submissions.routes.js",
+        "apps/api/src/modules/submissions/submissions.service.js",
         "apps/web/src/app/api/faculty/submissions/[id]/route.js"
       ]
     },
     {
       "url": "/api/student/workspaces/load",
-      "file": "apps/web/src/app/api/student/workspaces/load/route.js",
+      "file": "apps/api/src/modules/submissions/submissions.routes.js",
       "methods": [
         "GET"
       ],
@@ -1577,18 +1613,24 @@
         500
       ],
       "services": [
-        "@coderank/core/services/SubmissionService",
-        "@coderank/core/security/active-actor"
+        "apps/api/src/modules/submissions/submissions.service.js",
+        "apps/api/src/middleware/authentication.js"
       ],
       "description": "Load saved student draft workspace code",
-      "observedResponseHeaders": {},
+      "observedResponseHeaders": {
+        "cache-control": [
+          "no-store"
+        ]
+      },
       "contractSources": [
+        "apps/api/src/modules/submissions/submissions.routes.js",
+        "apps/api/src/modules/submissions/submissions.service.js",
         "apps/web/src/app/api/student/workspaces/load/route.js"
       ]
     },
     {
       "url": "/api/student/workspaces/save",
-      "file": "apps/web/src/app/api/student/workspaces/save/route.js",
+      "file": "apps/api/src/modules/submissions/submissions.routes.js",
       "methods": [
         "POST"
       ],
@@ -1603,12 +1645,18 @@
         500
       ],
       "services": [
-        "@coderank/core/services/SubmissionService",
-        "@coderank/core/security/active-actor"
+        "apps/api/src/modules/submissions/submissions.service.js",
+        "apps/api/src/middleware/authentication.js"
       ],
       "description": "Save active student draft workspace code",
-      "observedResponseHeaders": {},
+      "observedResponseHeaders": {
+        "cache-control": [
+          "no-store"
+        ]
+      },
       "contractSources": [
+        "apps/api/src/modules/submissions/submissions.routes.js",
+        "apps/api/src/modules/submissions/submissions.service.js",
         "apps/web/src/app/api/student/workspaces/save/route.js"
       ]
     },

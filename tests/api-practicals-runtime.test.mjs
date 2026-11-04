@@ -441,21 +441,9 @@ test('Fastify practicals and practical reporting HTTP contracts direct and via g
     assert.equal(gwStudentPracticalDetail.status, 200);
 
     // Unmigrated endpoints must NOT be proxied (must fall through to web / return 404 in test server)
-    const unmigratedSubmissions = await fetch(`${gatewayAddress}/api/faculty/practicals/${createdPracticalId}/submissions`);
-    assert.equal(unmigratedSubmissions.status, 404);
-    assert.equal(await unmigratedSubmissions.text(), 'web: not proxied');
-
-    const unmigratedStudentSubmit = await fetch(`${gatewayAddress}/api/student/practicals/${createdPracticalId}/submit`);
-    assert.equal(unmigratedStudentSubmit.status, 404);
-    assert.equal(await unmigratedStudentSubmit.text(), 'web: not proxied');
-
-    const unmigratedStudentSubmissions = await fetch(`${gatewayAddress}/api/student/practicals/${createdPracticalId}/submissions`);
-    assert.equal(unmigratedStudentSubmissions.status, 404);
-    assert.equal(await unmigratedStudentSubmissions.text(), 'web: not proxied');
-
-    const unmigratedWorkspace = await fetch(`${gatewayAddress}/api/student/workspaces/load`);
-    assert.equal(unmigratedWorkspace.status, 404);
-    assert.equal(await unmigratedWorkspace.text(), 'web: not proxied');
+    const unmigratedStats = await fetch(gatewayAddress + '/api/stats');
+    assert.equal(unmigratedStats.status, 404);
+    assert.equal(await unmigratedStats.text(), 'web: not proxied');
   }
 
   // 14. DELETE /api/faculty/practicals/:id

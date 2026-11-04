@@ -33,13 +33,18 @@ const migratedPaths = new Set([
   '/api/run',
   '/api/practice-run',
   '/api/execute',
+  '/api/submit',
+  '/api/student/submissions',
+  '/api/student/workspaces/load',
+  '/api/student/workspaces/save',
 ]);
 
 const migratedPracticalPatterns = [
   /^\/api\/faculty\/courses\/[^/]+\/stats$/,
   /^\/api\/faculty\/practicals\/[^/]+$/,
-  /^\/api\/faculty\/practicals\/[^/]+\/(extra-time|stats)$/,
+  /^\/api\/faculty\/practicals\/[^/]+\/(extra-time|stats|submissions)$/,
   /^\/api\/student\/practicals\/[^/]+$/,
+  /^\/api\/student\/practicals\/[^/]+\/(submit|submissions)$/,
 ];
 
 function isMigratedPath(pathname) {
@@ -48,6 +53,7 @@ function isMigratedPath(pathname) {
     pathname.startsWith('/api/courses/') ||
     pathname.startsWith('/api/departments/') ||
     pathname.startsWith('/api/jobs/') ||
+    pathname.startsWith('/api/faculty/submissions/') ||
     pathname === '/socket.io' || pathname.startsWith('/socket.io/') ||
     migratedPracticalPatterns.some(pattern => pattern.test(pathname));
 }

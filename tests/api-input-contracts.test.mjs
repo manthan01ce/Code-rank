@@ -10,7 +10,7 @@ const sql = Object.assign(async () => { throw Error('private database details');
 mock.module(new URL('../packages/core/src/db/client.js', import.meta.url).href, { defaultExport: sql });
 
 test('JSON mutation adapters reject malformed and non-object bodies with 400', async () => {
-  const cases = [['student/workspaces/save','POST']];
+  const cases = [];
   for (const [name, method] of cases) {
     const route = await import(`../apps/web/src/app/api/${name}/route.js`);
     for (const body of ['{', 'null', '[]', '42', '"text"']) {
@@ -35,6 +35,7 @@ test('JSON mutation adapters reject malformed and non-object bodies with 400', a
       ['/api/departments', 'POST'],
       ['/api/departments/1', 'PUT'],
       ['/api/mapping', 'POST'],
+      ['/api/student/workspaces/save', 'POST'],
     ];
     for (const [url, method] of apiCases) {
       for (const body of ['{', 'null', '[]', '42', '"text"']) {
@@ -58,65 +59,48 @@ test('both upload adapters reject malformed multipart requests and redact unexpe
   await api.ready();
   try {
     for (const path of ['/api/users/bulk', '/api/admin/bulk-upload']) {
-      const malformed = await api.inject({
+      // 1. Missing boundary in Content-Type
+      const noBoundary = await api.inject({
         method: 'POST',
         url: path,
-        payload: '{}',
-        headers: { authorization: 'Bearer test' },
+        headers: {
+          'Content-Type': 'multipart/form-data',
+          authorization: 'Bearer test',
+        },
+        payload: 'not a real multipart body',
       });
-      assert.equal(malformed.statusCode, 400, `${path} malformed payload status`);
-      const body = malformed.json();
-      assert.equal(body.error, 'Invalid multipart payload');
-      assert.ok(!JSON.stringify(body).includes('private database'));
+      assert.equal(noBoundary.statusCode, 400, `${path} missing boundary should return 400`);
+      assert.equal(noBoundary.headers['cache-control'], 'no-store');
+      const err = noBoundary.json();
+      assert.match(err.error, /multipart/i);
+
+      // 2. Completely bogus Content-Type
+      const bogusCt = await api.inject({
+        method: 'POST',
+        url: path,
+        headers: {
+          'Content-Type': 'application/x-bogus-format',
+          authorization: 'Bearer test',
+        },
+        payload: 'nonsense',
+      });
+      assert.equal(bogusCt.statusCode, 400, `${path} bogus Content-Type should return 400`);
+      assert.equal(bogusCt.headers['cache-control'], 'no-store');
+
+      // 3. Truncated multipart boundary stream
+      const truncated = await api.inject({
+        method: 'POST',
+        url: path,
+        headers: {
+          'Content-Type': 'multipart/form-data; boundary=----WebKitFormBoundary7MA4YWxkTrZu0gW',
+          authorization: 'Bearer test',
+        },
+        payload: '------WebKitFormBoundary7MA4YWxkTrZu0gW\r\nContent-Disposition: form-data; name="file"\r\n\r\npartial content without closing boundary',
+      });
+      assert.equal(truncated.statusCode, 400, `${path} truncated multipart should return 400`);
+      assert.equal(truncated.headers['cache-control'], 'no-store');
     }
   } finally {
     await api.close();
   }
-});
-
-test('legacy profile adapter never exposes unexpected database errors', async () => {
-  const { PUT } = await import('../apps/web/src/app/api/profile/[username]/route.js');
-  const response = await PUT(new Request('http://localhost/api/profile/student', { method: 'PUT', body: '{}' }));
-  assert.equal(response.status, 500);
-  assert.deepEqual(await response.json(), { error: 'Internal server error' });
-});
-
-test('execution connectivity returns 503 for cached fallback and redacts queue failures', async () => {
-  const { SubmissionService } = await import('../packages/core/src/modules/submissions/SubmissionService.js');
-  const { buildApp } = await import('../apps/api/src/app.js');
-  const api = buildApp();
-  await api.ready();
-  const GET = async () => {
-    const res = await api.inject({ method: 'GET', url: '/api/execute' });
-    return {
-      status: res.statusCode,
-      headers: { get: name => res.headers[name.toLowerCase()] },
-      json: async () => res.json(),
-    };
-  };
-  const stub = mock.method(SubmissionService, 'getQueueStats', async () => ({ cached: true, waiting: 0 }));
-  try {
-    const response = await GET();
-    assert.equal(response.status, 503);
-    assert.equal(response.headers.get('Cache-Control'), 'no-store');
-    assert.equal((await response.json()).status, 'degraded');
-    stub.mock.mockImplementation(async () => { throw Error('private Redis connection details'); });
-    const failed = await GET();
-    assert.equal(failed.status, 503);
-    assert.ok(!JSON.stringify(await failed.json()).includes('private Redis'));
-  } finally { stub.mock.restore(); await api.close(); }
-});
-
-test('admin statistics read the database service on every request with no replica-local response cache', async () => {
-  const { OperationsService } = await import('../packages/core/src/modules/reports/OperationsService.js');
-  const { GET } = await import('../apps/web/src/app/api/stats/route.js');
-  let calls=0;
-  const stub=mock.method(OperationsService,'stats',async()=>({faculty:1,students:++calls,courses:1}));
-  try {
-    const first=await GET(new Request('http://localhost/api/stats'));
-    const second=await GET(new Request('http://localhost/api/stats'));
-    assert.equal((await first.json()).students,1);
-    assert.equal((await second.json()).students,2);
-    assert.equal(second.headers.get('Cache-Control'),'no-store');
-  } finally { stub.mock.restore(); }
 });

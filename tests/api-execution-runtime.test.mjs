@@ -405,7 +405,7 @@ test('Fastify execution and job polling runtime contracts direct and via gateway
   }
 
   await t.test('Same-origin gateway bypasses unmigrated paths to web fallback (418)', async () => {
-    const unmigrated = await fetch(`${gatewayAddress}/api/submit`, { method: 'POST' });
+    const unmigrated = await fetch(`${gatewayAddress}/api/stats`, { method: 'POST' });
     assert.equal(unmigrated.status, 418);
     assert.equal(await unmigrated.text(), 'web-fallback');
   });
