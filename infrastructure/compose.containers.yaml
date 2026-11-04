@@ -1,0 +1,22 @@
+# Containerized application services overlay for local lab deployment.
+# Extends infrastructure/docker-compose.yml with containerized web, api, and worker tiers.
+#
+# Usage:
+#   docker compose -f infrastructure/docker-compose.yml -f infrastructure/compose.containers.yaml up -d
+
+services:
+  api:
+    profiles: []
+  web:
+    profiles: []
+    depends_on:
+      redis:
+        condition: service_healthy
+      api:
+        condition: service_started
+    environment:
+      INTERNAL_API_URL: ${INTERNAL_API_URL:-http://api:3001}
+  worker:
+    profiles: []
+    environment:
+      REALTIME_URL: http://web:3000

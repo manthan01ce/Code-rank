@@ -1,0 +1,42 @@
+import http from 'node:http';
+import https from 'node:https';
+
+const hopHeaders = ['connection', 'keep-alive', 'proxy-authenticate', 'proxy-authorization', 'te', 'trailer', 'transfer-encoding', 'upgrade'];
+function forwardedHeaders(headers) {
+  const result = { ...headers };
+  for (const name of [...hopHeaders, ...(headers.connection || '').split(',').map(value => value.trim().toLowerCase())]) delete result[name];
+  return result;
+}
+
+// Transitional same-origin gateway. Only explicitly migrated URLs belong to API.
+// Resolve at process startup: the same built web artifact runs on host and Docker.
+export function createApiGateway({ origin = process.env.INTERNAL_API_URL || 'http://127.0.0.1:3001', timeoutMs = 10000 } = {}) {
+  const target = new URL(origin);
+  if (!['http:', 'https:'].includes(target.protocol) || target.username || target.password || target.pathname !== '/' || target.search || target.hash) {
+    throw new Error('INTERNAL_API_URL must be an HTTP(S) origin without credentials or a path');
+  }
+  return (req, res) => {
+    if (req.url.split('?')[0] !== '/api/live') return false;
+    const fail = (status) => {
+      if (res.destroyed) return;
+      if (res.headersSent) { res.destroy(); return; }
+      res.writeHead(status, { 'Content-Type': 'application/json', 'Cache-Control': 'no-store' });
+      res.end(JSON.stringify({ error: status === 504 ? 'API gateway timeout' : 'API unavailable' }));
+    };
+    const headers = forwardedHeaders(req.headers);
+    headers.host = target.host;
+    headers['x-forwarded-host'] = req.headers.host;
+    headers['x-forwarded-proto'] = req.socket.encrypted ? 'https' : 'http';
+    const upstream = (target.protocol === 'https:' ? https : http).request(new URL(req.url, target), { method: req.method, headers, agent: false }, response => {
+      res.writeHead(response.statusCode, forwardedHeaders(response.headers));
+      response.on('error', () => res.destroy());
+      response.pipe(res);
+    });
+    upstream.on('error', () => fail(502));
+    upstream.setTimeout(timeoutMs, () => { fail(504); upstream.destroy(); });
+    req.on('aborted', () => upstream.destroy());
+    res.on('close', () => { if (!res.writableFinished) upstream.destroy(); });
+    req.pipe(upstream);
+    return true;
+  };
+}

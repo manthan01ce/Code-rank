@@ -70,5 +70,6 @@ set HOSTNAME=0.0.0.0
 if not defined ALLOWED_ORIGIN set ALLOWED_ORIGIN=http://localhost:!PORT!,http://!HOST_IP!:!PORT!
 :: Derive REALTIME_URL from the effective port when no explicit value exists.
 if not defined REALTIME_URL set REALTIME_URL=http://127.0.0.1:!PORT!
+start "CodeRank API" cmd /k "npm run api"
 start "CodeRank Worker" cmd /k "npm run worker"
 call npm run web

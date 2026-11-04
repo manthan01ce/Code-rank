@@ -14,6 +14,20 @@ function walk(dir) {
   );
 }
 
+function getActualRoutes() {
+  const actualWebRoutes = existsSync(fileURLToPath(new URL('apps/web/src/app/api/', root)))
+    ? walk(fileURLToPath(new URL('apps/web/src/app/api/', root)))
+        .filter(file => /[\\/]route\.[cm]?[jt]sx?$/.test(file))
+        .map(file => path.relative(fileURLToPath(root), file).replaceAll('\\', '/'))
+    : [];
+  const actualApiRoutes = existsSync(fileURLToPath(new URL('apps/api/src/modules/', root)))
+    ? walk(fileURLToPath(new URL('apps/api/src/modules/', root)))
+        .filter(file => /[\\/].*?routes\.[cm]?[jt]sx?$/.test(file))
+        .map(file => path.relative(fileURLToPath(root), file).replaceAll('\\', '/'))
+    : [];
+  return [...actualWebRoutes, ...actualApiRoutes].sort();
+}
+
 export function validateInventory(inventory, actualRoutes, actualPages) {
   const allowedOwners = new Set([
     'CR-ARCH-09',
@@ -89,9 +103,7 @@ export function validateInventory(inventory, actualRoutes, actualPages) {
 
 test('all inventoried API paths and pages retain their HTTP methods, locations, and migration allocations', () => {
   const inventory = JSON.parse(read('docs/architecture/route-inventory.json'));
-  const actualRoutes = walk(fileURLToPath(new URL('apps/web/src/app/api/', root)))
-    .filter(file => /[\\/]route\.[cm]?[jt]sx?$/.test(file))
-    .map(file => path.relative(fileURLToPath(root), file).replaceAll('\\', '/')).sort();
+  const actualRoutes = getActualRoutes();
   const actualPages = walk(fileURLToPath(new URL('apps/web/src/app/', root)))
     .filter(file => /[\\/]page\.[cm]?[jt]sx?$/.test(file))
     .map(file => path.relative(fileURLToPath(root), file).replaceAll('\\', '/')).sort();
@@ -101,8 +113,13 @@ test('all inventoried API paths and pages retain their HTTP methods, locations, 
   // Preserve HTTP method checks against actual source files
   for (const endpoint of inventory.endpoints) {
     const source = read(endpoint.file);
-    const exports = [...source.matchAll(/export (?:async )?(?:function|const) (GET|POST|PUT|PATCH|DELETE|OPTIONS)/g)].map(x => x[1]).sort();
-    assert.deepEqual(exports, [...endpoint.methods].sort(), endpoint.file);
+    if (endpoint.file.startsWith('apps/api/')) {
+      const methods = [...source.matchAll(/fastify\.(get|post|put|delete|patch|options)\(/gi)].map(x => x[1].toUpperCase()).sort();
+      assert.deepEqual(methods, [...endpoint.methods].sort(), endpoint.file);
+    } else {
+      const exports = [...source.matchAll(/export (?:async )?(?:function|const) (GET|POST|PUT|PATCH|DELETE|OPTIONS)/g)].map(x => x[1]).sort();
+      assert.deepEqual(exports, [...endpoint.methods].sort(), endpoint.file);
+    }
   }
 
   // Literal response branches are minimum source observations, not an exhaustive
@@ -140,9 +157,7 @@ test('all inventoried API paths and pages retain their HTTP methods, locations, 
 
 test('route inventory rejects unassigned, duplicate, or invalid endpoint allocations (negative validation)', () => {
   const inventory = JSON.parse(read('docs/architecture/route-inventory.json'));
-  const actualRoutes = walk(fileURLToPath(new URL('apps/web/src/app/api/', root)))
-    .filter(file => /[\\/]route\.[cm]?[jt]sx?$/.test(file))
-    .map(file => path.relative(fileURLToPath(root), file).replaceAll('\\', '/')).sort();
+  const actualRoutes = getActualRoutes();
   const actualPages = walk(fileURLToPath(new URL('apps/web/src/app/', root)))
     .filter(file => /[\\/]page\.[cm]?[jt]sx?$/.test(file))
     .map(file => path.relative(fileURLToPath(root), file).replaceAll('\\', '/')).sort();
@@ -264,13 +279,29 @@ test('tooling package is resolved and critical lint uses tooling configuration',
 });
 
 test('HTTP adapters delegate SQL and sandbox execution to packages', () => {
-  for (const file of walk(fileURLToPath(new URL('apps/web/src/app/api/', root))).filter(file => file.endsWith('route.js'))) {
+  const routeFiles = [
+    ...walk(fileURLToPath(new URL('apps/web/src/app/api/', root))).filter(file => file.endsWith('route.js')),
+    ...(existsSync(fileURLToPath(new URL('apps/api/src/modules/', root)))
+      ? walk(fileURLToPath(new URL('apps/api/src/modules/', root))).filter(file => file.endsWith('routes.js'))
+      : []),
+  ];
+  for (const file of routeFiles) {
     const source = readFileSync(file, 'utf8');
     // Health is an infrastructure probe and may use the read-only database readiness adapter.
     if (!file.replaceAll('\\', '/').endsWith('/api/health/route.js')) {
       assert.doesNotMatch(source, /from ['"](?:@\/lib\/db|@coderank\/(?:core\/db|database)(?:['"/]))/, file);
     }
     assert.doesNotMatch(source, /@coderank\/runner|node:child_process|from ['"]child_process|\bsql\s*(?:`|\.query\()/, file);
+  }
+});
+
+test('apps/api contains no Next.js, React, runner or Docker imports', () => {
+  const apiSrc = fileURLToPath(new URL('apps/api/src/', root));
+  if (!existsSync(apiSrc)) return;
+  const apiFiles = walk(apiSrc).filter(f => /\.(?:m?js|ts)$/.test(f));
+  for (const file of apiFiles) {
+    const source = readFileSync(file, 'utf8');
+    assert.doesNotMatch(source, /\bfrom ['"](?:next(?:\/|$)|react(?:\/|$)|@coderank\/runner|node:child_process|child_process)/, `${file} must not import Next.js, React, runner, or child_process`);
   }
 });
 
@@ -348,4 +379,12 @@ test('runtime config is exported deliberately and no relative cross-workspace en
       );
     }
   }
+});
+
+test('API artifact excludes runner source and web gateway has runtime configuration', () => {
+  const dockerfile = read('apps/api/Dockerfile');
+  assert.doesNotMatch(dockerfile, /COPY packages \.\/packages/);
+  assert.doesNotMatch(dockerfile, /packages\/runner|docker\.sock/);
+  assert.match(read('apps/web/server.js'), /createApiGateway/);
+  assert.doesNotMatch(read('apps/web/next.config.mjs'), /destination:.*api\/live/);
 });

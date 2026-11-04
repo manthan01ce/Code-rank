@@ -1,0 +1,20 @@
+{
+  "name": "@coderank/api",
+  "version": "1.1.0",
+  "private": true,
+  "type": "module",
+  "main": "src/server.js",
+  "scripts": {
+    "dev": "node src/server.js",
+    "start": "node src/server.js",
+    "build": "node scripts/verify-build.mjs",
+    "lint": "eslint --config ../../tooling/eslint.config.mjs ."
+  },
+  "dependencies": {
+    "@coderank/core": "*",
+    "fastify": "^5.2.1"
+  },
+  "devDependencies": {
+    "eslint": "^9"
+  }
+}

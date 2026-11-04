@@ -5,7 +5,7 @@ import { parseEnv } from 'node:util';
 import { spawn } from 'node:child_process';
 
 const repositoryRoot = resolve(dirname(fileURLToPath(import.meta.url)), '../..');
-const launcherKeys = ['PORT', 'REALTIME_URL', 'ALLOWED_ORIGIN'];
+const launcherKeys = ['PORT', 'REALTIME_URL', 'ALLOWED_ORIGIN', 'API_PORT', 'API_HOST', 'INTERNAL_API_URL'];
 
 // Match the web bootstrap's dotenv precedence without evaluating shell syntax
 // or exporting unrelated app-local secrets/configuration into the worker.
@@ -27,6 +27,13 @@ export function resolveLabEnvironment(root = repositoryRoot, inherited = process
     throw new Error('PORT must be an integer between 1 and 65535');
   }
   const env = { ...inherited, PORT: port, REALTIME_URL: selected.REALTIME_URL || `http://127.0.0.1:${port}` };
+  const apiPort = String(selected.API_PORT || '3001').trim();
+  if (!/^\d+$/.test(apiPort) || Number(apiPort) < 1 || Number(apiPort) > 65535 || apiPort === port) {
+    throw new Error('API_PORT must be a valid port different from PORT');
+  }
+  env.API_PORT = apiPort;
+  env.API_HOST = selected.API_HOST || '127.0.0.1';
+  env.INTERNAL_API_URL = selected.INTERNAL_API_URL || `http://127.0.0.1:${apiPort}`;
   // An absent origin is derived by the native launcher after LAN IP discovery.
   if (selected.ALLOWED_ORIGIN) env.ALLOWED_ORIGIN = selected.ALLOWED_ORIGIN;
   else delete env.ALLOWED_ORIGIN;

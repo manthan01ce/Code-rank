@@ -4,6 +4,7 @@ import { parse } from 'url';
 import { fileURLToPath } from 'url';
 import path from 'path';
 import next from 'next';
+import { createApiGateway } from './src/lib/api-gateway.js';
 import { Server } from 'socket.io';
 import compression from 'compression';
 import { performance } from 'perf_hooks';
@@ -40,6 +41,7 @@ const app = next({
 });
 
 const handle = app.getRequestHandler();
+const proxyApi = createApiGateway();
 
 // Compression middleware configuration
 const compressionMiddleware = compression({
@@ -85,6 +87,7 @@ app.prepare().then(async () => {
     };
 
     try {
+      if (proxyApi(req, res)) return;
       compressionMiddleware(req, res, () => {
         // Enable keep-alive for better performance
         res.setHeader('Connection', 'keep-alive');
@@ -182,3 +185,4 @@ app.prepare().then(async () => {
       });
     });
 }).catch(error => { logger.error('Web startup failed', error); process.exit(1); });
+

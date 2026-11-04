@@ -12,7 +12,10 @@ import { successfulExecution } from "../load-tests/lib/execution-result.js";
 const root = fileURLToPath(new URL("../", import.meta.url));
 const port = process.env.STACK_TEST_PORT || "3100";
 assert.match(port, /^\d+$/);
+const apiPort = process.env.STACK_TEST_API_PORT || String(Number(port) + 10);
+assert.match(apiPort, /^\d+$/);
 const base = `http://127.0.0.1:${port}`;
+const apiBase = `http://127.0.0.1:${apiPort}`;
 const pause = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
 const children = [],
   sockets = [],
@@ -22,6 +25,9 @@ const env = {
   NODE_ENV: "production",
   HOSTNAME: "127.0.0.1",
   PORT: port,
+  API_PORT: apiPort,
+  API_HOST: "127.0.0.1",
+  INTERNAL_API_URL: apiBase,
   REALTIME_URL: base,
   ALLOWED_ORIGIN: base,
   CLUSTER_ENABLED: "false",
@@ -150,9 +156,22 @@ try {
     { stdio: "ignore", timeout: 10000 },
   );
   mkdirSync(`${root}/test-results/stack`, { recursive: true });
+  start("api", ["apps/api/src/server.js"]);
   start("web", ["apps/web/server.js"]);
   start("worker", ["apps/worker/src/index.js"]);
   await waitReady();
+  // Cross the actual production web gateway, not a substitute test proxy.
+  const directLive = await fetch(`${apiBase}/api/live`);
+  const publicLive = await fetch(`${base}/api/live`);
+  assert.equal(directLive.status, 200);
+  assert.equal(publicLive.status, 200);
+  assert.equal(publicLive.headers.get('cache-control'), 'no-store');
+  assert.equal((await publicLive.json()).status, 'ok');
+  const unmigratedLogin = await fetch(`${base}/api/auth/login`, {
+    method: 'POST', headers: { 'Content-Type': 'application/json' }, body: '{}',
+  });
+  assert.equal(unmigratedLogin.status, 400, 'Unmigrated login still belongs to web');
+
 
   const first = await submit(
     "python",

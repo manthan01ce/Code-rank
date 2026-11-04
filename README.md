@@ -5,7 +5,8 @@ PostgreSQL/Neon, Redis/BullMQ and Docker.
 
 ## Active workspace
 
-- `apps/web`: UI, HTTP adapters and authenticated realtime server.
+- `apps/web`: UI, 46 unmigrated HTTP handler files and authenticated realtime server.
+- `apps/api`: Fastify API runtime; owns `/api/live` behind the web runtime gateway.
 - `apps/worker`: execution and system queue consumers.
 - `packages/core`: domain services and access policy.
 - `packages/database`: database client and migration engine.
@@ -55,6 +56,8 @@ npm run infra:build:sandbox
 In Terminal 1 (Execution Worker):
 ```sh
 npm ci
+npm run api
+# In a separate terminal:
 npm run worker
 ```
 
@@ -62,7 +65,7 @@ In Terminal 2 (Web Platform):
 ```sh
 npm run web
 ```
-> *Note:* `npm run web` runs the development server (`next dev`). Clustered multi-process serving (`apps/web/cluster.js`) is reserved for production environments.
+> *Note:* `npm run web` runs the custom development server (`node server.js`). Clustered multi-process serving (`apps/web/cluster.js`) is reserved for production environments.
 
 Open **[http://localhost:3000](http://localhost:3000)** in your browser.
 
@@ -91,7 +94,7 @@ If choosing a cloud database rather than the local pre-seeded container:
    npm run db:migrate
    ```
 3. Start Redis: `docker compose -f infrastructure/docker-compose.yml up -d redis` (or `npm run infra:up`)
-4. Run `npm run worker` and `npm run web`.
+4. Run `npm run api`, `npm run worker` and `npm run web` in separate terminals.
 
 ### Existing installations: preserve the actual volume identity
 

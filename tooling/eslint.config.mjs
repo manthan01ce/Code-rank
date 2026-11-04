@@ -47,7 +47,7 @@ const webScopedNext = nextCoreWebVitals.map((config) => {
 export default defineConfig([
   ...baseConfig,
   {
-    files: ['packages/**/*.js', 'apps/worker/**/*.js', 'scripts/**/*.{js,mjs}', 'load-tests/**/*.mjs'],
+    files: ['packages/**/*.js', 'apps/api/**/*.js', 'apps/worker/**/*.js', 'scripts/**/*.{js,mjs}', 'load-tests/**/*.mjs'],
     languageOptions: { globals: { ...globals.node, ...globals.browser } },
     // Existing code does not enforce unused bindings; keep that separate from correctness.
     rules: { ...js.configs.recommended.rules, 'no-unused-vars': 'off', 'no-empty': ['error', { allowEmptyCatch: true }] },
@@ -65,4 +65,3 @@ export default defineConfig([
     },
   },
 ]);
-

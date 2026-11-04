@@ -38,13 +38,18 @@ const database = `coderank_e2e_${randomBytes(8).toString("hex")}`;
 const appUrl = new URL(url);
 appUrl.pathname = "/" + database;
 const port = "3101",
-  base = `http://127.0.0.1:${port}`;
+  apiPort = "3102",
+  base = `http://127.0.0.1:${port}`,
+  apiBase = `http://127.0.0.1:${apiPort}`;
 const password = randomBytes(16).toString("hex");
 const env = {
   ...process.env,
   NODE_ENV: "production",
   HOSTNAME: "127.0.0.1",
   PORT: port,
+  API_PORT: apiPort,
+  API_HOST: "127.0.0.1",
+  INTERNAL_API_URL: apiBase,
   DATABASE_DRIVER: "postgres",
   DATABASE_URL: appUrl.href,
   DB_POOL_SIZE: "3",
@@ -281,9 +286,22 @@ try {
         JSON.stringify({ status: "accepted" }),
       ],
     );
+  start("api", "apps/api/src/server.js");
   start("web", "apps/web/cluster.js");
   const executionWorker = start("worker", "apps/worker/src/index.js");
   await ready();
+  // Cross the actual production web gateway, not a substitute test proxy.
+  const directLive = await fetch(`${apiBase}/api/live`);
+  const publicLive = await fetch(`${base}/api/live`);
+  assert.equal(directLive.status, 200);
+  assert.equal(publicLive.status, 200);
+  assert.equal(publicLive.headers.get('cache-control'), 'no-store');
+  assert.equal((await publicLive.json()).status, 'ok');
+  const unmigratedLogin = await fetch(`${base}/api/auth/login`, {
+    method: 'POST', headers: { 'Content-Type': 'application/json' }, body: '{}',
+  });
+  assert.equal(unmigratedLogin.status, 400, 'Unmigrated login still belongs to web');
+
   const clusterLog = readFileSync(
     `${root}/test-results/authenticated/web.log`,
     "utf8",

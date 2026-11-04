@@ -25,11 +25,11 @@ This document records the intended test file inventory, suite routing, tools, qu
 
 ## 2. Unit Lane — Intended File Inventory
 
-At the recorded source revision plus this correction, 68 root `.test.mjs` files plus `job-lifecycle.test.js` give 69 discovered unit test files. `batch-execution.test.js` is the one explicitly quarantined root test; it is not counted as executed. This file count is separate from the number of assertions reported by TAP.
+At the recorded source revision plus this correction, 69 root `.test.mjs` files plus `job-lifecycle.test.js` give 70 discovered unit test files. `batch-execution.test.js` is the one explicitly quarantined root test; it is not counted as executed. This file count is separate from the number of assertions reported by TAP.
 
 Discovery rule: `tests/` root directory, `*.test.mjs` OR `*.test.js`, excluding files in `UNIT_QUARANTINE` (defined in `scripts/ci/run-tests.mjs`).
 
-### 2.1 `.test.mjs` files (68 files)
+### 2.1 `.test.mjs` files (69 files)
 
 | File | What it covers |
 |---|---|
@@ -38,6 +38,7 @@ Discovery rule: `tests/` root directory, `*.test.mjs` OR `*.test.js`, excluding 
 | `tests/queue-script-contract.test.mjs` | BullMQ internal script compatibility and Redis contract |
 | `tests/runtime-config.test.mjs` | Public export, actual loader precedence and import evaluation order |
 | `tests/tooling-lint.test.mjs` | Backend lint defect detection and frontend rule severity |
+| `tests/api-live-runtime.test.mjs` | Real API, production forwarding, ownership/error contracts and process shutdown |
 | `tests/active-actor.test.mjs` | JWT authentication middleware, actor resolution |
 | `tests/admin-api.test.mjs` | Admin HTTP route contracts |
 | `tests/admin-bootstrap.test.mjs` | Admin account initialization logic |

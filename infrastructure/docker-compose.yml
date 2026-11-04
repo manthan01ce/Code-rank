@@ -85,6 +85,7 @@ services:
     - CLUSTER_ENABLED=true
     - WEB_CONCURRENCY=${WEB_CONCURRENCY:-2}
     - ALLOWED_ORIGIN=${ALLOWED_ORIGIN:-http://localhost:3000}
+    - INTERNAL_API_URL=${INTERNAL_API_URL:-http://api:3001}
     ports:
     - 127.0.0.1:3000:3000
     read_only: true
@@ -99,6 +100,30 @@ services:
     restart: unless-stopped
     profiles:
     - container-web
+  # Optional container API tier has no Docker socket, runner package or Next.js/React.
+  api:
+    build:
+      context: ..
+      dockerfile: apps/api/Dockerfile
+    environment:
+    - API_HOST=0.0.0.0
+    - PORT=3001
+    - API_PORT=3001
+    - NODE_ENV=production
+    - JWT_SECRET=${JWT_SECRET}
+    ports:
+    - 127.0.0.1:3001:3001
+    read_only: true
+    tmpfs:
+    - /tmp
+    cap_drop:
+    - ALL
+    security_opt:
+    - no-new-privileges:true
+    stop_grace_period: 30s
+    restart: unless-stopped
+    profiles:
+    - container-api
   runner-image:
     build:
       context: ..
