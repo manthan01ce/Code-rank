@@ -25,11 +25,11 @@ This document records the intended test file inventory, suite routing, tools, qu
 
 ## 2. Unit Lane — Intended File Inventory
 
-At the recorded source revision plus this correction, 70 root `.test.mjs` files plus `job-lifecycle.test.js` give 71 discovered unit test files. `batch-execution.test.js` is the one explicitly quarantined root test; it is not counted as executed. This file count is separate from the number of assertions reported by TAP.
+At the recorded source revision plus this correction, 71 root `.test.mjs` files plus `job-lifecycle.test.js` give 72 discovered unit test files. `batch-execution.test.js` is the one explicitly quarantined root test; it is not counted as executed. This file count is separate from the number of assertions reported by TAP.
 
 Discovery rule: `tests/` root directory, `*.test.mjs` OR `*.test.js`, excluding files in `UNIT_QUARANTINE` (defined in `scripts/ci/run-tests.mjs`).
 
-### 2.1 `.test.mjs` files (70 files)
+### 2.1 `.test.mjs` files (71 files)
 
 | File | What it covers |
 |---|---|
@@ -38,6 +38,7 @@ Discovery rule: `tests/` root directory, `*.test.mjs` OR `*.test.js`, excluding 
 | `tests/queue-script-contract.test.mjs` | BullMQ internal script compatibility and Redis contract |
 | `tests/runtime-config.test.mjs` | Public export, actual loader precedence and import evaluation order |
 | `tests/tooling-lint.test.mjs` | Backend lint defect detection and frontend rule severity |
+| `tests/api-realtime-runtime.test.mjs` | Actual Socket.IO/gateway protocol and natural close with connected sockets |
 | `tests/api-auth-runtime.test.mjs` | Real auth direct/gateway HTTP errors, Redis outage and clean shutdown |
 | `tests/api-live-runtime.test.mjs` | Real API, production forwarding, ownership/error contracts and process shutdown |
 | `tests/active-actor.test.mjs` | JWT authentication middleware, actor resolution |
@@ -235,3 +236,5 @@ The authenticated browser lane also holds a real course-list HTTP response acros
 Browser acceptance also creates a synthetic student through the real admin form and inspects its downloaded PDF, and exercises faculty authoring validation/create/edit/extra-time/delete against the real API. These mutations are confined to the authenticated harness disposable database.
 
 The authenticated disposable stack runs scripts/lib/auth-contracts.mjs against both the direct API and actual public gateway, verifying session/expiry/role authority, profile/password changes, deactivation and real Redis throttling.
+
+The disposable authenticated lane also runs scripts/lib/realtime-contracts.mjs with two actual API processes sharing PostgreSQL/Redis, checking fan-out, owner-only job results, service/browser boundaries, expiry/revocation and replica-local drain.

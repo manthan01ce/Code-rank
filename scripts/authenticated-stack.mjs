@@ -1,3 +1,4 @@
+import { verifyRealtimeContracts } from './lib/realtime-contracts.mjs';
 import { verifyAuthContracts } from './lib/auth-contracts.mjs';
 import '@coderank/core/config/env';
 import assert from "node:assert/strict";
@@ -85,12 +86,12 @@ admin.on("error", () => {});
 let sql,
   created = false;
 const pause = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
-function start(name, script) {
+function start(name, script, overrides = {}) {
   const fd = openSync(`${root}/test-results/authenticated/${name}.log`, "w");
   descriptors.push(fd);
   const child = spawn(process.execPath, [script], {
     cwd: root,
-    env,
+    env: { ...env, ...overrides },
     detached: process.platform !== "win32",
     stdio: ["ignore", fd, fd],
   });
@@ -289,6 +290,7 @@ try {
       ],
     );
   start("api", "apps/api/src/server.js");
+  const apiPeer = start("api-peer", "apps/api/src/server.js", { API_PORT: "3103" });
   start("web", "apps/web/cluster.js");
   const executionWorker = start("worker", "apps/worker/src/index.js");
   await ready();
@@ -400,6 +402,10 @@ try {
   // Browser logins rotate the student's session. Use a freshly authenticated
   // session for recovery instead of the now-revoked pre-browser JWT.
   token = await login(env.E2E_STUDENT_EMAIL, newPassword);
+  await verifyRealtimeContracts({ base, apiBase, peerBase: 'http://127.0.0.1:3103', token, jobId, secret: env.JWT_SECRET,
+    adminLogin: () => login(env.E2E_ADMIN_EMAIL), stopPeer: () => stop(apiPeer),
+  });
+
 
   // Crash one web process and require the cluster to replace it while the
   // same rotated session remains valid through the surviving process.

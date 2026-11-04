@@ -92,8 +92,8 @@ fi
 if [ ! -d node_modules ]; then npm ci --no-audit --no-fund; fi
 export HOSTNAME="0.0.0.0"
 export ALLOWED_ORIGIN="${ALLOWED_ORIGIN:-http://localhost:$PORT,http://$HOST_IP:$PORT}"
-# Derive REALTIME_URL from the effective port when no explicit value exists.
-export REALTIME_URL="${REALTIME_URL:-http://127.0.0.1:$PORT}"
+# Derive REALTIME_URL from the API port when no explicit value exists.
+export REALTIME_URL="${REALTIME_URL:-http://127.0.0.1:${API_PORT:-3001}}"
 echo "Building the sandbox image and starting Redis..."
 $COMPOSE_CMD -f infrastructure/docker-compose.yml --profile build-image build runner-image
 $COMPOSE_CMD -f infrastructure/docker-compose.yml up -d redis

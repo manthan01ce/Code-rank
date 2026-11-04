@@ -1,11 +1,11 @@
 # @coderank/api
 
-Fastify HTTP API service (Socket.IO migration is pending 3C) for CodeRank.
+Fastify HTTP and Socket.IO API service for CodeRank.
 
 ## Architecture and Ownership
 
 - **Runtime**: Fastify v5 on Node.js >=24.
-- **Topology**: Serves migrated backend HTTP endpoints behind a same-origin gateway; Socket.IO remains on web until 3C.
+- **Topology**: Serves migrated backend HTTP endpoints behind a same-origin gateway; Socket.IO is authoritative on API.
 - **Independence**: Runs independently of Next.js frontend (`apps/web`) and execution orchestrator (`apps/worker`). Contains no React, Next.js, runner or Docker daemon access.
 - **Module Structure**: Feature adapters and use cases reside in `src/modules/<feature>/`.
 
@@ -16,7 +16,7 @@ Fastify HTTP API service (Socket.IO migration is pending 3C) for CodeRank.
   - Host development: `http://127.0.0.1:3001`
   - Container network: `http://api:3001`
 - **API configuration**: `API_PORT` defaults to `3001`; `API_HOST` defaults to `127.0.0.1`. The web `PORT` and inherited machine `HOSTNAME` do not select API listening addresses. Containers explicitly set `API_HOST=0.0.0.0`.
-- **Gateway**: the current web custom server forwards exactly `/api/live`, `/api/auth/login`, `/api/auth/change-password` and `/api/auth/profile` (including query strings) using `src/lib/api-gateway.js`. `INTERNAL_API_URL` is read at web process startup, defaults to `http://127.0.0.1:3001`, and must be an HTTP(S) origin. Container web uses `http://api:3001`. Changing it requires restarting web, not rebuilding. All other HTTP paths and Socket.IO stay on web until their slices migrate.
+- **Gateway**: the current web custom server forwards exactly `/api/live`, `/api/auth/login`, `/api/auth/change-password` and `/api/auth/profile` (including query strings) using `src/lib/api-gateway.js`. `INTERNAL_API_URL` is read at web process startup, defaults to `http://127.0.0.1:3001`, and must be an HTTP(S) origin. Container web uses `http://api:3001`. Changing it requires restarting web, not rebuilding. Other HTTP paths stay on web until their slices migrate; `/socket.io` upgrades are forwarded to API.
 - **Failure handling**: unavailable API returns uncached 502; upstream timeout returns uncached 504. Request cancellation closes upstream work. No second web liveness handler hides API outages.
 
 ## Migrated Endpoints
@@ -50,3 +50,5 @@ npm run lint --workspace=@coderank/api
 The API build command validates every source file, resolves actual imports/plugins and checks route registration without a database or listener. Node runs the source directly; there is no generated bundle.
 
 Auth lifecycle: Fastify close drains HTTP requests, then closes API-owned Redis and database connections. Login and profile loading live in `src/modules/auth/auth.service.js`; reusable authority checks live in `src/middleware/authentication.js`. Shared account mutations remain once in core for the still-unmigrated administrative-password and username-profile adapters until 3D/3I. JSON/error/method handling is adapted explicitly to preserve the previous HTTP behavior.
+
+Realtime lifecycle: the API's public Fastify publisher is available to feature modules after readiness. Pre-close disconnects only this replica's sockets; closing one API must not disconnect healthy replicas. Namespace/Engine.IO and Redis adapter cleanup is awaited with bounded deadlines. Tests must exit naturally, without forced process success. Lab launchers derive worker REALTIME_URL from API_PORT; container API explicitly receives database, Redis, allowed-origin and adapter configuration.

@@ -14,11 +14,11 @@ function fixture(t, files = {}) {
   return root;
 }
 
-test('launcher uses root dotenv port before defaults and derives realtime from it', t => {
+test('launcher preserves the web port and derives worker realtime from the API port', t => {
   const root = fixture(t, { '.env': 'PORT=3010\n' });
   const env = resolveLabEnvironment(root, {});
   assert.equal(env.PORT, '3010');
-  assert.equal(env.REALTIME_URL, 'http://127.0.0.1:3010');
+  assert.equal(env.REALTIME_URL, 'http://127.0.0.1:3001');
   assert.equal(env.ALLOWED_ORIGIN, undefined);
 });
 
@@ -31,7 +31,7 @@ test('launcher dotenv precedence matches web bootstrap while process overrides w
   });
   assert.equal(resolveLabEnvironment(root, {}).PORT, '3040');
   assert.equal(resolveLabEnvironment(root, { PORT: '3050' }).PORT, '3050');
-  assert.equal(resolveLabEnvironment(root, { PORT: '3050' }).REALTIME_URL, 'http://127.0.0.1:3050');
+  assert.equal(resolveLabEnvironment(root, { PORT: '3050' }).REALTIME_URL, 'http://127.0.0.1:3001');
 });
 
 test('launcher preserves explicit dotenv realtime/origins and process overrides', t => {
@@ -78,19 +78,20 @@ test('launcher bridge passes resolved values to a real child and preserves its e
   writeFileSync(join(root, 'start-lab.sh'), '#!/bin/sh\nprintf "%s|%s\\n" "$PORT" "$REALTIME_URL"\nexit 7\n');
   writeFileSync(join(root, 'start-lab.bat'), '@echo off\r\necho %PORT%^|%REALTIME_URL%\r\nexit /b 7\r\n');
   const inherited = { ...process.env };
-  for (const key of ['PORT', 'REALTIME_URL', 'ALLOWED_ORIGIN']) delete inherited[key];
+  for (const key of ['PORT', 'REALTIME_URL', 'ALLOWED_ORIGIN', 'API_PORT', 'API_HOST', 'INTERNAL_API_URL']) delete inherited[key];
   const moduleUrl = new URL('../scripts/dev/lab-launcher.mjs', import.meta.url).href;
   const code = `import { launchLab } from ${JSON.stringify(moduleUrl)}; process.exitCode = await launchLab(${JSON.stringify(root)});`;
   const result = spawnSync(process.execPath, ['--input-type=module', '-e', code], { env: inherited, encoding: 'utf8', timeout: 10000 });
   assert.ifError(result.error);
   assert.equal(result.status, 7, result.stderr);
-  assert.match(result.stdout, /3099\|http:\/\/127\.0\.0\.1:3099/);
+  assert.match(result.stdout, /3099\|http:\/\/127\.0\.0\.1:3001/);
 });
 
 test('launcher derives a separate API origin and preserves explicit overrides', t => {
   const root = fixture(t, { '.env': 'PORT=3010\nAPI_PORT=3110\n' });
   const env = resolveLabEnvironment(root, {});
   assert.equal(env.API_PORT, '3110');
+  assert.equal(env.REALTIME_URL, 'http://127.0.0.1:3110');
   assert.equal(env.INTERNAL_API_URL, 'http://127.0.0.1:3110');
   assert.equal(env.API_HOST, '127.0.0.1');
   assert.equal(resolveLabEnvironment(root, { API_PORT: '3210' }).INTERNAL_API_URL, 'http://127.0.0.1:3210');

@@ -1,3 +1,5 @@
+import fp from 'fastify-plugin';
+import { withTimeout } from '@coderank/core/utils/timeout';
 import { Server } from 'socket.io';
 import { createClient } from 'redis';
 import { createAdapter } from '@socket.io/redis-adapter';
@@ -33,9 +35,9 @@ export async function configureRealtimeAdapter(io, env = process.env) {
     await Promise.all([pub, sub].map(async c => {
       if (c.isOpen) {
         try {
-          await c.quit();
+          await withTimeout(c.close(), 2000);
         } catch {
-          c.destroy();
+          if (c.isOpen) c.destroy();
         }
       }
     }));
@@ -59,6 +61,7 @@ export function attachRealtime(io, socket, {
   getJobStatus,
   refreshActor,
   validateService,
+  trackOperation = work => work(),
 }) {
   let actor = socket.data.actor;
   const service = socket.data.service === true;
@@ -75,8 +78,9 @@ export function attachRealtime(io, socket, {
     }
   };
 
-  const handle = (event, fn) => socket.on(event, async (payload, ack) => {
+  const handle = (event, fn) => socket.on(event, (payload, ack) => trackOperation(async () => {
     try {
+      if (socket.connected === false) throw new Error('Socket closed');
       if (service) {
         if (validateService && !(await validateService())) {
           socket.disconnect?.(true);
@@ -90,12 +94,13 @@ export function attachRealtime(io, socket, {
           throw error;
         }
       }
+      if (socket.connected === false) throw new Error('Socket closed');
       await fn(payload);
       if (typeof ack === 'function') ack({ ok: true });
     } catch {
       if (typeof ack === 'function') ack({ ok: false, error: 'Access denied' });
     }
-  });
+  }));
 
   const id = (value) => {
     if (!/^\d+$/.test(String(value)) || Number(value) <= 0) throw new Error('Invalid ID');
@@ -183,41 +188,51 @@ export async function setupRealtime(fastifyApp, options = {}) {
 
   const closeAdapter = await configureRealtimeAdapter(io);
   const publisher = createRealtimePublisher(io);
+  const inFlight = new Set();
+  const trackOperation = work => {
+    const task = Promise.resolve().then(work);
+    inFlight.add(task);
+    task.then(() => inFlight.delete(task), () => inFlight.delete(task));
+    return task;
+  };
 
   io.use((socket, next) => socketAuthMiddleware(socket, next, options));
 
   io.on('connection', (socket) => {
-    const authorization = { ...createAuthorization(socket, options), ...options.authorization };
+    const authorization = { ...createAuthorization(socket, options), ...options.authorization, trackOperation };
     attachRealtime(io, socket, authorization);
     guardRealtimeSession(socket, {
       expiresAt: socket.data.expiresAt,
       revalidate: !socket.data.service
-        ? async () => {
+        ? () => trackOperation(async () => {
+          if (!socket.connected) return;
           if (socket.data.actor?.role !== 'guest') {
             const authFn = options.authenticateToken || (await import('@coderank/core/security/active-actor')).authenticateToken;
             socket.data.actor = await authFn(socket.data.token);
           }
+          if (!socket.connected) return;
           await revalidateRealtimeRooms(socket, { ...authorization, actor: socket.data.actor });
-        }
+        })
         : undefined,
     });
   });
 
-  let closed = false;
-  const close = async () => {
-    if (closed) return;
-    closed = true;
-    try {
-      io.disconnectSockets?.(true);
-    } catch {}
-    io.httpServer = null;
-    io.close();
-    await closeAdapter();
-  };
-
-  fastifyApp.addHook('onClose', async () => {
-    await close();
+  // Close upgraded connections before Fastify waits for its HTTP listener.
+  // No private httpServer mutation and no forced process exit to hide leaks.
+  fastifyApp.addHook('preClose', async () => {
+    io.local.disconnectSockets(true);
+    io.engine.close();
+    await withTimeout(Promise.allSettled([...inFlight]), 5000);
   });
+  let closing;
+  const close = () => {
+    closing ||= (async () => {
+      try { await withTimeout(io.close(), 2000); }
+      finally { await closeAdapter(); }
+    })();
+    return closing;
+  };
+  fastifyApp.addHook('onClose', close);
 
   fastifyApp.decorate('io', io);
   fastifyApp.decorate('publisher', publisher);
@@ -225,7 +240,7 @@ export async function setupRealtime(fastifyApp, options = {}) {
   return { io, publisher, close };
 }
 
-export default setupRealtime;
+export default fp(setupRealtime, { name: 'coderank-realtime', fastify: '5.x' });
 
 export {
   guardRealtimeSession,

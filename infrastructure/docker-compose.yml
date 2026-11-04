@@ -105,12 +105,23 @@ services:
     build:
       context: ..
       dockerfile: apps/api/Dockerfile
+    depends_on:
+      redis:
+        condition: service_healthy
     environment:
     - API_HOST=0.0.0.0
     - PORT=3001
     - API_PORT=3001
     - NODE_ENV=production
     - JWT_SECRET=${JWT_SECRET}
+    - DATABASE_URL=${DATABASE_URL}
+    - DATABASE_DRIVER=${DATABASE_DRIVER:-neon}
+    - DB_POOL_SIZE=${DB_POOL_SIZE:-10}
+    - DB_QUERY_TIMEOUT_MS=${DB_QUERY_TIMEOUT_MS:-30000}
+    - REDIS_HOST=redis
+    - REDIS_PORT=6379
+    - REALTIME_REDIS_ENABLED=true
+    - ALLOWED_ORIGIN=${ALLOWED_ORIGIN:-http://localhost:3000}
     ports:
     - 127.0.0.1:3001:3001
     read_only: true

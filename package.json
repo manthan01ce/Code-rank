@@ -55,6 +55,8 @@
     "eslint-config-next": "16.3.7",
     "globals": "14.0.0",
     "pg": "8.23.1",
+    "socket.io": "4.8.4",
+    "socket.io-client": "4.8.4",
     "turbo": "^2.5.4"
   },
   "engines": {
