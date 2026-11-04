@@ -1,5 +1,5 @@
 /**
- * apps/web/src/lib/auth-client.js
+ * apps/web/src/features/auth/api/auth-client.js
  * Client-side authentication helpers for Next.js browser context
  */
 
@@ -20,10 +20,12 @@ export function setClientAuth(token, user) {
   if (typeof window === 'undefined') return;
   if (token) localStorage.setItem('token', token);
   if (user) localStorage.setItem('user', JSON.stringify(user));
+  window.dispatchEvent(new Event('coderank:account'));
 }
 
 export function clearClientAuth() {
   if (typeof window === 'undefined') return;
   localStorage.removeItem('token');
   localStorage.removeItem('user');
+  window.dispatchEvent(new Event('coderank:account'));
 }

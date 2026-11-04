@@ -16,7 +16,7 @@ import {
   IconPlus,
   IconClock,
 } from '@tabler/icons-react';
-import { useAdminAuth } from '@/hooks/useAdminAuth';
+import { useAdminAuth } from '@/features/auth/hooks/useAdminAuth';
 import { usePolling } from '@/hooks/usePolling';
 import { AnimatedNumber } from '@/components/ui/AnimatedNumber';
 

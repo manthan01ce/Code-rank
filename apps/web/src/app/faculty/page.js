@@ -12,7 +12,7 @@ import { useRouter, useSearchParams } from 'next/navigation';
 import LoadingOverlay from '@/components/LoadingOverlay';
 import { useSocket } from '@/hooks/useSocket';
 import { usePolling } from '@/hooks/usePolling';
-import { useFacultyAuth } from '@/hooks/useFacultyAuth';
+import { useFacultyAuth } from '@/features/auth/hooks/useFacultyAuth';
 import { PracticalList } from '@/features/practicals/components/PracticalList';
 import { PracticalEditor } from '@/features/practicals/components/PracticalEditor';
 import { PracticalDetailModal } from '@/features/practicals/components/PracticalDetailModal';

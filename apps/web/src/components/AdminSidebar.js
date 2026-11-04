@@ -17,8 +17,8 @@ import {
   IconKey,
 } from '@tabler/icons-react';
 import { Sidebar, SidebarBody, SidebarLink, useSidebar } from '@/components/ui/sidebar';
-import { useAccountIdentity } from '@/hooks/useAccountIdentity';
-import ChangePasswordModal from './ChangePasswordModal';
+import { useAccountIdentity } from '@/features/auth/hooks/useAccountIdentity';
+import ChangePasswordModal from '@/features/auth/components/ChangePasswordModal';
 import LogoutConfirmModal from './LogoutConfirmModal';
 
 // Preserving the exact existing admin destinations and labels

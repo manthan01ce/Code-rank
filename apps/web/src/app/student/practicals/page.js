@@ -8,7 +8,7 @@ import { fetchCollection } from '@/lib/fetch-collection';
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import Editor from '@monaco-editor/react';
-import ChangePasswordModal from '@/components/ChangePasswordModal';
+import ChangePasswordModal from '@/features/auth/components/ChangePasswordModal';
 import { useSocket } from '@/hooks/useSocket';
 import { usePolling } from '@/hooks/usePolling';
 

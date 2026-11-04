@@ -2,11 +2,11 @@
 
 import { useState } from 'react';
 import Link from 'next/link';
-import { useAccountIdentity } from '@/hooks/useAccountIdentity';
+import { useAccountIdentity } from '@/features/auth/hooks/useAccountIdentity';
 import Image from 'next/image';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { IconLayoutDashboard, IconInbox, IconChartBar, IconUser, IconKey, IconLogout } from '@tabler/icons-react';
-import ChangePasswordModal from './ChangePasswordModal';
+import ChangePasswordModal from '@/features/auth/components/ChangePasswordModal';
 import LogoutConfirmModal from './LogoutConfirmModal';
 
 const links = [['Dashboard', '/faculty?tab=practicals', IconLayoutDashboard], ['Student submissions', '/faculty?tab=submissions', IconInbox], ['Marks overview', '/faculty?tab=marks', IconChartBar]];
