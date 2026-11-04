@@ -26,8 +26,8 @@ Follow [ADR-0001](decisions/0001-api-runtime-and-hosting.md) and the [route inve
 | 3 | CR-ARCH-14 | Merged in PR #61; lifecycle/deployment correction verified separately | Socket.IO moves from web to API, including worker transport and room/session ownership tests (Variant X) |
 | 4 | CR-ARCH-10B | Merged in PR #63 (3D / #52) | User-management, admin password and bulk ingestion HTTP slice; verified across direct Fastify API and gateway cutover |
 | 5 | CR-ARCH-11A | Merged in PR #64 (3E / #53) | Course/department/mapping HTTP slices; coordinate shared-file edits |
-| 5 | CR-ARCH-11B | Implementation in PR (3F / #54) | Practical management and reporting HTTP slice; preserve realtime publication and reporting snapshot integrity |
-| 5 | CR-ARCH-12A | In progress / next in schedule (3G / #55) | Execution orchestration HTTP slice; preserve runner and execution contracts |
+| 6 | CR-ARCH-11B | Merged in PR #65 (3F / #54) | Practical management and reporting HTTP slice; preserve realtime publication and reporting snapshot integrity |
+| 7 | CR-ARCH-12A | Implementation in PR (3G / #55) | Execution intake, language aliases and job status HTTP slice; verified across direct Fastify API and gateway cutover |
 | 6 | CR-ARCH-12B | Blocked on 12A + 11B (3H / #56) | Submission/history/reset/workspace HTTP slice |
 | 7 | CR-ARCH-13 | Blocked on 10B + 12B (3I / #57) | Operations/profile remaining HTTP slice; preserve readiness without running migrations |
 | 8 | CR-ARCH-15 | Every slice complete (3J / #58) | Complete web/API separation; remove web backend imports/secrets/custom Socket.IO server only now |
@@ -100,3 +100,32 @@ Practical management, extra time extension, practical stats, and course marks re
   - Direct Fastify API contracts, realtime event emission, 401/403/404/405/OPTIONS handling, and gateway selective routing in `tests/api-practicals-runtime.test.mjs`.
   - Architecture boundaries and route inventory alignment in `tests/architecture.test.mjs`.
   - Unit test lane (`npm test`, 304 passing), linting (`npm run lint:critical`), and build checks (`@coderank/api` and `@coderank/web`) pass cleanly.
+
+
+### CR-ARCH-12A ownership and verification
+Execution intake, language aliases, and job status polling endpoints migrated to the Fastify API runtime (`apps/api/src/modules/execution/`).
+- **Exact endpoint ownership (9 endpoints)**:
+  - `POST /api/c-run`: Dedicated C language execution alias.
+  - `POST /api/cpp-run`: Dedicated C++ language execution alias.
+  - `POST /api/java-run`: Dedicated Java language execution alias.
+  - `POST /api/javascript-run`: Dedicated JavaScript language execution alias.
+  - `POST /api/python-run`: Dedicated Python language execution alias.
+  - `POST /api/run`: Generic execution intake endpoint with problem and language detection.
+  - `GET /api/practice-run`: Practice queue status and connectivity inspection.
+  - `POST /api/practice-run`: Playground execution intake with Python default.
+  - `GET /api/execute`: Queue connectivity and supported language capability inspection.
+  - `POST /api/execute`: Unified playground execution intake.
+  - `GET /api/jobs/[jobId]`: Job status polling and sanitized completed result retrieval.
+- **Relocation of Static Problem Content**:
+  - Deliberately relocated `STATIC_PROBLEMS` to `packages/core/src/modules/practice/problems.js` and exported via `@coderank/core/practice/problems`.
+  - Re-exported `STATIC_PROBLEMS` from `apps/web/src/features/practice/problems.js` ensuring full environment safety across API and Web without cyclic dependencies.
+- **Gateway Cutover**:
+  - Removed old handlers: `apps/web/src/app/api/c-run/route.js`, `apps/web/src/app/api/cpp-run/route.js`, `apps/web/src/app/api/java-run/route.js`, `apps/web/src/app/api/javascript-run/route.js`, `apps/web/src/app/api/python-run/route.js`, `apps/web/src/app/api/run/route.js`, `apps/web/src/app/api/practice-run/route.js`, `apps/web/src/app/api/execute/route.js`, and `apps/web/src/app/api/jobs/[jobId]/route.js`.
+  - Same-origin gateway (`apps/web/src/lib/api-gateway.js`) configured to route all 9 endpoints and dynamic `/api/jobs/*` paths to `INTERNAL_API_URL`.
+  - Unmigrated practical submission and workspace endpoints remain on Next.js for slice 3H.
+- **Verification**:
+  - Direct Fastify API contracts, guest session cookies (`coderank_execution_session`), job ownership authorization, hidden test case output sanitization, rate limits (429), queue saturation (503 with Retry-After: 5), validation errors (400, 413, 404), and 405 Method Not Allowed handling verified in `tests/api-execution-runtime.test.mjs`.
+  - Architecture boundaries and route inventory validated in `tests/architecture.test.mjs` (13/13 passing).
+  - All unit tests pass in `npm test` (312/312 passing).
+  - Critical lint passes (`npm run lint:critical` with 0 warnings).
+  - Turborepo build (`turbo run build`) succeeds cleanly for all workspaces.

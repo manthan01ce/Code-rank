@@ -889,7 +889,7 @@
     },
     {
       "url": "/api/c-run",
-      "file": "apps/web/src/app/api/c-run/route.js",
+      "file": "apps/api/src/modules/execution/execution.routes.js",
       "methods": [
         "POST"
       ],
@@ -909,8 +909,13 @@
         "@/lib/execution-api"
       ],
       "description": "Dedicated C language execution alias",
-      "observedResponseHeaders": {},
+      "observedResponseHeaders": {
+        "cache-control": [
+          "no-store"
+        ]
+      },
       "contractSources": [
+        "apps/api/src/modules/execution/execution.routes.js",
         "apps/web/src/app/api/c-run/route.js",
         "apps/web/src/lib/execution-api.js"
       ],
@@ -936,7 +941,7 @@
     },
     {
       "url": "/api/cpp-run",
-      "file": "apps/web/src/app/api/cpp-run/route.js",
+      "file": "apps/api/src/modules/execution/execution.routes.js",
       "methods": [
         "POST"
       ],
@@ -956,8 +961,13 @@
         "@/lib/execution-api"
       ],
       "description": "Dedicated C++ language execution alias",
-      "observedResponseHeaders": {},
+      "observedResponseHeaders": {
+        "cache-control": [
+          "no-store"
+        ]
+      },
       "contractSources": [
+        "apps/api/src/modules/execution/execution.routes.js",
         "apps/web/src/app/api/cpp-run/route.js",
         "apps/web/src/lib/execution-api.js"
       ],
@@ -983,7 +993,7 @@
     },
     {
       "url": "/api/java-run",
-      "file": "apps/web/src/app/api/java-run/route.js",
+      "file": "apps/api/src/modules/execution/execution.routes.js",
       "methods": [
         "POST"
       ],
@@ -1003,8 +1013,13 @@
         "@/lib/execution-api"
       ],
       "description": "Dedicated Java language execution alias",
-      "observedResponseHeaders": {},
+      "observedResponseHeaders": {
+        "cache-control": [
+          "no-store"
+        ]
+      },
       "contractSources": [
+        "apps/api/src/modules/execution/execution.routes.js",
         "apps/web/src/app/api/java-run/route.js",
         "apps/web/src/lib/execution-api.js"
       ],
@@ -1030,7 +1045,7 @@
     },
     {
       "url": "/api/javascript-run",
-      "file": "apps/web/src/app/api/javascript-run/route.js",
+      "file": "apps/api/src/modules/execution/execution.routes.js",
       "methods": [
         "POST"
       ],
@@ -1050,8 +1065,13 @@
         "@/lib/execution-api"
       ],
       "description": "Dedicated JavaScript language execution alias",
-      "observedResponseHeaders": {},
+      "observedResponseHeaders": {
+        "cache-control": [
+          "no-store"
+        ]
+      },
       "contractSources": [
+        "apps/api/src/modules/execution/execution.routes.js",
         "apps/web/src/app/api/javascript-run/route.js",
         "apps/web/src/lib/execution-api.js"
       ],
@@ -1077,7 +1097,7 @@
     },
     {
       "url": "/api/python-run",
-      "file": "apps/web/src/app/api/python-run/route.js",
+      "file": "apps/api/src/modules/execution/execution.routes.js",
       "methods": [
         "POST"
       ],
@@ -1097,8 +1117,13 @@
         "@/lib/execution-api"
       ],
       "description": "Dedicated Python language execution alias",
-      "observedResponseHeaders": {},
+      "observedResponseHeaders": {
+        "cache-control": [
+          "no-store"
+        ]
+      },
       "contractSources": [
+        "apps/api/src/modules/execution/execution.routes.js",
         "apps/web/src/app/api/python-run/route.js",
         "apps/web/src/lib/execution-api.js"
       ],
@@ -1124,7 +1149,7 @@
     },
     {
       "url": "/api/run",
-      "file": "apps/web/src/app/api/run/route.js",
+      "file": "apps/api/src/modules/execution/execution.routes.js",
       "methods": [
         "POST"
       ],
@@ -1144,8 +1169,13 @@
         "@/lib/execution-api"
       ],
       "description": "Generic code execution endpoint",
-      "observedResponseHeaders": {},
+      "observedResponseHeaders": {
+        "cache-control": [
+          "no-store"
+        ]
+      },
       "contractSources": [
+        "apps/api/src/modules/execution/execution.routes.js",
         "apps/web/src/app/api/run/route.js",
         "apps/web/src/lib/execution-api.js"
       ],
@@ -1171,7 +1201,7 @@
     },
     {
       "url": "/api/practice-run",
-      "file": "apps/web/src/app/api/practice-run/route.js",
+      "file": "apps/api/src/modules/execution/execution.routes.js",
       "methods": [
         "GET",
         "POST"
@@ -1198,6 +1228,7 @@
         ]
       },
       "contractSources": [
+        "apps/api/src/modules/execution/execution.routes.js",
         "apps/web/src/app/api/practice-run/route.js",
         "apps/web/src/lib/execution-api.js"
       ],
@@ -1223,7 +1254,7 @@
     },
     {
       "url": "/api/execute",
-      "file": "apps/web/src/app/api/execute/route.js",
+      "file": "apps/api/src/modules/execution/execution.routes.js",
       "methods": [
         "GET",
         "POST"
@@ -1251,6 +1282,7 @@
         ]
       },
       "contractSources": [
+        "apps/api/src/modules/execution/execution.routes.js",
         "apps/web/src/app/api/execute/route.js",
         "apps/web/src/lib/execution-api.js"
       ],
@@ -1276,7 +1308,7 @@
     },
     {
       "url": "/api/jobs/[jobId]",
-      "file": "apps/web/src/app/api/jobs/[jobId]/route.js",
+      "file": "apps/api/src/modules/execution/execution.routes.js",
       "methods": [
         "GET"
       ],
@@ -1304,6 +1336,7 @@
         ]
       },
       "contractSources": [
+        "apps/api/src/modules/execution/execution.routes.js",
         "apps/web/src/app/api/jobs/[jobId]/route.js",
         "apps/web/src/lib/execution-api.js"
       ],

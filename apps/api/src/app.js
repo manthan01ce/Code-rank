@@ -9,6 +9,7 @@ import realtimePlugin from './realtime/server.js';
 import coursesRoutes from './modules/courses/courses.routes.js';
 import mappingRoutes from './modules/mapping/mapping.routes.js';
 import practicalsRoutes from './modules/practicals/practicals.routes.js';
+import executionRoutes from './modules/execution/execution.routes.js';
 
 export function buildApp(options = {}) {
   const app = Fastify({
@@ -29,6 +30,7 @@ export function buildApp(options = {}) {
   app.register(coursesRoutes, { prefix: '/api' });
   app.register(mappingRoutes, { prefix: '/api' });
   app.register(practicalsRoutes, { prefix: '/api' });
+  app.register(executionRoutes, { prefix: '/api' });
 
   return app;
 }
