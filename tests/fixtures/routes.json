@@ -1,4 +1,9 @@
 {
+  "apps/api/src/modules/auth/auth.routes.js": [
+    "GET",
+    "POST",
+    "PUT"
+  ],
   "apps/api/src/modules/operations/operations.routes.js": [
     "GET"
   ],
@@ -34,16 +39,6 @@
   ],
   "apps/web/src/app/api/admin/password/route.js": [
     "POST"
-  ],
-  "apps/web/src/app/api/auth/change-password/route.js": [
-    "POST"
-  ],
-  "apps/web/src/app/api/auth/login/route.js": [
-    "POST"
-  ],
-  "apps/web/src/app/api/auth/profile/route.js": [
-    "GET",
-    "PUT"
   ],
   "apps/web/src/app/api/c-run/route.js": [
     "POST"

@@ -157,7 +157,7 @@
     },
     {
       "url": "/api/auth/login",
-      "file": "apps/web/src/app/api/auth/login/route.js",
+      "file": "apps/api/src/modules/auth/auth.routes.js",
       "methods": [
         "POST"
       ],
@@ -175,8 +175,9 @@
         503
       ],
       "services": [
-        "@coderank/core/services/UserService",
-        "@/lib/queue/rateLimiter"
+        "apps/api/src/modules/auth/auth.service.js",
+        "apps/api/src/middleware/authentication.js",
+        "apps/api/src/middleware/rate-limiter.js"
       ],
       "description": "User login authentication issuing session token and JWT",
       "observedResponseHeaders": {
@@ -188,12 +189,14 @@
         ]
       },
       "contractSources": [
-        "apps/web/src/app/api/auth/login/route.js"
+        "apps/api/src/modules/auth/auth.routes.js",
+        "apps/api/src/modules/auth/auth.service.js",
+        "apps/api/src/middleware/authentication.js"
       ]
     },
     {
       "url": "/api/auth/change-password",
-      "file": "apps/web/src/app/api/auth/change-password/route.js",
+      "file": "apps/api/src/modules/auth/auth.routes.js",
       "methods": [
         "POST"
       ],
@@ -209,18 +212,20 @@
         500
       ],
       "services": [
-        "@coderank/core/services/UserService",
-        "@coderank/core/security/active-actor"
+        "apps/api/src/modules/auth/auth.service.js",
+        "apps/api/src/middleware/authentication.js"
       ],
       "description": "Authenticated self-service account password change",
       "observedResponseHeaders": {},
       "contractSources": [
-        "apps/web/src/app/api/auth/change-password/route.js"
+        "apps/api/src/modules/auth/auth.routes.js",
+        "apps/api/src/modules/auth/auth.service.js",
+        "apps/api/src/middleware/authentication.js"
       ]
     },
     {
       "url": "/api/auth/profile",
-      "file": "apps/web/src/app/api/auth/profile/route.js",
+      "file": "apps/api/src/modules/auth/auth.routes.js",
       "methods": [
         "GET",
         "PUT"
@@ -237,13 +242,15 @@
         500
       ],
       "services": [
-        "@coderank/core/services/UserService",
-        "@coderank/core/security/active-actor"
+        "apps/api/src/modules/auth/auth.service.js",
+        "apps/api/src/middleware/authentication.js"
       ],
       "description": "Authenticated identity retrieval and self profile update",
       "observedResponseHeaders": {},
       "contractSources": [
-        "apps/web/src/app/api/auth/profile/route.js"
+        "apps/api/src/modules/auth/auth.routes.js",
+        "apps/api/src/modules/auth/auth.service.js",
+        "apps/api/src/middleware/authentication.js"
       ]
     },
     {

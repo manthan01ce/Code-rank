@@ -10,13 +10,33 @@ const sql = Object.assign(async () => { throw Error('private database details');
 mock.module(new URL('../packages/core/src/db/client.js', import.meta.url).href, { defaultExport: sql });
 
 test('JSON mutation adapters reject malformed and non-object bodies with 400', async () => {
-  const cases = [['auth/profile','PUT'],['auth/change-password','POST'],['admin/password','POST'],['courses','POST'],['courses/[id]','PUT'],['departments','POST'],['departments/[id]','PUT'],['student/workspaces/save','POST'],['users','PUT'],['users','POST'],['users/[id]','PUT'],['mapping','POST']];
+  const cases = [['admin/password','POST'],['courses','POST'],['courses/[id]','PUT'],['departments','POST'],['departments/[id]','PUT'],['student/workspaces/save','POST'],['users','PUT'],['users','POST'],['users/[id]','PUT'],['mapping','POST']];
   for (const [name, method] of cases) {
     const route = await import(`../apps/web/src/app/api/${name}/route.js`);
     for (const body of ['{', 'null', '[]', '42', '"text"']) {
       const response = await route[method](new Request('http://localhost/api/test', { method, body, headers: { 'Content-Type': 'application/json' } }), { params: Promise.resolve({ id: '1' }) });
       assert.equal(response.status, 400, `${method} ${name}: ${body}`);
     }
+  }
+
+  const { buildApp } = await import('../apps/api/src/app.js');
+  const api = buildApp();
+  await api.ready();
+  try {
+    const apiCases = [['/api/auth/profile', 'PUT'], ['/api/auth/change-password', 'POST']];
+    for (const [url, method] of apiCases) {
+      for (const body of ['{', 'null', '[]', '42', '"text"']) {
+        const response = await api.inject({
+          method,
+          url,
+          payload: body,
+          headers: { 'Content-Type': 'application/json', authorization: 'Bearer test' },
+        });
+        assert.equal(response.statusCode, 400, `${method} ${url}: ${body}`);
+      }
+    }
+  } finally {
+    await api.close();
   }
 });
 

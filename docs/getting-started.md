@@ -117,11 +117,11 @@ docker compose --env-file .env -f infrastructure/docker-compose.yml --profile bu
 ## 6. Running the Applications
 
 ### Current Runtime Architecture (Three Application Workspaces)
-1. **Web (`apps/web`)**: Next.js pages, the 46 unmigrated HTTP handler files and Socket.IO. Public browser origin uses `PORT` (default 3000).
-2. **API (`apps/api`)**: Fastify owns `/api/live`; other endpoints migrate in later issues. Private `API_PORT` defaults to 3001 and is independent of web's `PORT`; `API_HOST` defaults to loopback.
+1. **Web (`apps/web`)**: Next.js pages, the 43 unmigrated HTTP handler files and Socket.IO. Public browser origin uses `PORT` (default 3000).
+2. **API (`apps/api`)**: Fastify owns `/api/live` and auth endpoints; other endpoints migrate in later issues. Private `API_PORT` defaults to 3001 and is independent of web's `PORT`; `API_HOST` defaults to loopback.
 3. **Worker (`apps/worker`)**: BullMQ execution orchestration; the only application needing Docker-daemon access.
 
-The web custom server forwards `/api/live` to `INTERNAL_API_URL` at startup (default `http://127.0.0.1:3001`). Configure this as an origin without a path. The same built web artifact can use host or container API addresses. Socket.IO remains on web until #51; complete frontend/backend isolation remains #58.
+The web custom server forwards `/api/live` and the three auth paths to `INTERNAL_API_URL` at startup (default `http://127.0.0.1:3001`). Configure this as an origin without a path. The same built web artifact can use host or container API addresses. Socket.IO remains on web until #51; complete frontend/backend isolation remains #58.
 
 ### Terminal 1: API
 ```sh

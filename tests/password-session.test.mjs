@@ -13,12 +13,14 @@ const {UserService}=await import('../packages/core/src/services/UserService.js')
 const {hashPassword,comparePassword}=await import('../packages/core/src/utils/auth.js');
 const {authenticateToken}=await import('../packages/core/src/security/active-actor.js');
 
+mock.module('@coderank/database', { defaultExport: sql, namedExports: { closeDatabase: async () => {} } });
+const { AuthService } = await import('../apps/api/src/modules/auth/auth.service.js');
 test('self-service password changes rotate sessions atomically and reject concurrent session changes',async()=>{
  try {
   await db.exec("CREATE TABLE users(id int primary key,name text,email text unique,password text,role text,status text,session_token text,extra_info jsonb); CREATE TABLE activity_logs(id serial primary key,user_id int,action text,details text)");
   await db.query("INSERT INTO users VALUES(1,'Student','s@test.io',$1,'student','active','original','{}')",[await hashPassword('old-password')]);
   let actor={id:1,role:'student',session_token:'original'};
-  assert.equal((await UserService.getProfile(actor)).session_token,undefined);
+  assert.equal((await AuthService.getProfile(actor)).session_token,undefined);
   for(const body of [{currentPassword:'old-password',newPassword:'short'}, {currentPassword:'old-password',newPassword:'😀'.repeat(19)}, {currentPassword:{},newPassword:'new-password'}]) {
    await assert.rejects(UserService.changePassword(actor,body),e=>e.status===400);
   }

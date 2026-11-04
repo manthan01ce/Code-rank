@@ -32,20 +32,18 @@ test('sign in distinguishes outage and throttling and aborts a stalled request w
   const data={token:'test-only',user:{role:'student'}};
   assert.deepEqual(await signInRequest({}, {fetchImpl:async()=>Response.json(data)}),data);
 });
-registerHooks({resolve(specifier,context,next){
- if(specifier.startsWith('@/'))return next(new URL(`../apps/web/src/${specifier.slice(2)}.js`,import.meta.url).href,context);
- if(specifier==='next/server')return next('next/server.js',context);
- return next(specifier,context);
-}});
 let rate={allowed:false,unavailable:true}, logins=0;
-mock.module(new URL('../apps/web/src/lib/queue/rateLimiter.js',import.meta.url).href,{namedExports:{checkRateLimit:async()=>rate}});
-mock.module('@coderank/core/services/UserService',{namedExports:{UserService:{login:async()=>{logins++;return {token:'test',user:{id:1}};}}}});
-const {POST}=await import('../apps/web/src/app/api/auth/login/route.js');
-const request=()=>new Request('http://local/api/auth/login',{method:'POST',body:JSON.stringify({email:'user@test.invalid',password:'test-only'})});
-test('login fails closed on limiter outage, preserves 429 and only authenticates allowed requests',async()=>{
- let res=await POST(request());assert.equal(res.status,503);assert.equal(res.headers.get('Retry-After'),'5');assert.equal(logins,0);
- rate={allowed:false,retryAfter:17};res=await POST(request());assert.equal(res.status,429);assert.equal(res.headers.get('Retry-After'),'17');assert.equal(logins,0);
- rate={allowed:true};res=await POST(request());assert.equal(res.status,200);assert.equal(logins,1);assert.equal(res.headers.get('Cache-Control'),'no-store');
+mock.module(new URL('../apps/api/src/middleware/rate-limiter.js',import.meta.url).href,{namedExports:{checkRateLimit:async()=>rate,closeRateLimiter:async()=>{}}});
+mock.module(new URL('../apps/api/src/modules/auth/auth.service.js',import.meta.url).href,{namedExports:{AuthService:{login:async()=>{logins++;return {token:'test',user:{id:1}};}}}});
+const {buildApp}=await import('../apps/api/src/app.js');
+const app=buildApp();
+await app.ready();
+test('login fails closed on limiter outage, preserves 429 and only authenticates allowed requests',async(t)=>{
+ t.after(async()=>await app.close());
+ const inject=(body)=>app.inject({method:'POST',url:'/api/auth/login',payload:body,headers:{'content-type':'application/json'}});
+ let res=await inject({email:'user@test.invalid',password:'test-only'});assert.equal(res.statusCode,503);assert.equal(res.headers['retry-after'],'5');assert.equal(logins,0);
+ rate={allowed:false,retryAfter:17};res=await inject({email:'user@test.invalid',password:'test-only'});assert.equal(res.statusCode,429);assert.equal(res.headers['retry-after'],'17');assert.equal(logins,0);
+ rate={allowed:true};res=await inject({email:'user@test.invalid',password:'test-only'});assert.equal(res.statusCode,200);assert.equal(logins,1);assert.equal(res.headers['cache-control'],'no-store');
 });
 
 test('timing headers accept only numeric durations and safe labels',async()=>{

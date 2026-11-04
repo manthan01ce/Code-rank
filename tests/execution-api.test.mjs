@@ -87,12 +87,7 @@ test('direct-Docker legacy practice path now queues and validates payloads', asy
   assert.equal(jobs.get((await response.json()).jobId).data.type, 'playground');
   assert.equal((await practice.POST(request('/api/practice-run', { code: 'print(1)', input: {} }, null))).status, 400);
 });
-test('login rate limiter runs before password/database work', async () => {
-  const login = await import('../apps/web/src/app/api/auth/login/route.js');
-  rateAllowed = false;
-  assert.equal((await login.POST(request('/api/auth/login', { email: 'student@example.com', password: 'password' }, null))).status, 429);
-  rateAllowed = true;
-});
+// Login rate limiter test migrated to auth-resilience.test.mjs (route now in apps/api)
 test('prototype-property problem identifiers cannot enqueue an empty test suite', async () => {
   const route = await import('../apps/web/src/app/api/run/route.js');
   assert.equal((await route.POST(request('/api/run', { language: 'python', code: 'x', problemId: '__proto__' }))).status, 404);

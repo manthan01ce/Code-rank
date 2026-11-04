@@ -64,18 +64,20 @@ export function validateInventory(inventory, actualRoutes, actualPages) {
     if (!page.owner) throw new Error(`Page ${page.file} has no assigned owner`);
   }
 
-  // Verify endpoints in both directions
-  const inventoriedRouteFiles = inventory.endpoints.map(e => e.file);
-  const uniqueRouteFiles = new Set(inventoriedRouteFiles);
-  if (uniqueRouteFiles.size !== inventoriedRouteFiles.length) {
-    throw new Error('Duplicate endpoint files in inventory');
+  // Verify endpoints: unique URLs, and every file exists in both directions.
+  // Fastify route files may register multiple endpoints.
+  const inventoriedUrls = inventory.endpoints.map(e => e.url);
+  const uniqueUrls = new Set(inventoriedUrls);
+  if (uniqueUrls.size !== inventoriedUrls.length) {
+    throw new Error('Duplicate endpoint URLs in inventory');
   }
+  const uniqueRouteFiles = new Set(inventory.endpoints.map(e => e.file));
 
   const missingRoutes = actualRoutes.filter(f => !uniqueRouteFiles.has(f));
   if (missingRoutes.length > 0) {
     throw new Error(`API routes discovered in source but missing from inventory: ${missingRoutes.join(', ')}`);
   }
-  const extraRoutes = inventoriedRouteFiles.filter(f => !actualRoutes.includes(f));
+  const extraRoutes = [...uniqueRouteFiles].filter(f => !actualRoutes.includes(f));
   if (extraRoutes.length > 0) {
     throw new Error(`API routes present in inventory but missing from source: ${extraRoutes.join(', ')}`);
   }
@@ -101,7 +103,7 @@ export function validateInventory(inventory, actualRoutes, actualPages) {
   return true;
 }
 
-test('all inventoried API paths and pages retain their HTTP methods, locations, and migration allocations', () => {
+test('all inventoried API paths and pages retain their HTTP methods, locations, and migration allocations', async () => {
   const inventory = JSON.parse(read('docs/architecture/route-inventory.json'));
   const actualRoutes = getActualRoutes();
   const actualPages = walk(fileURLToPath(new URL('apps/web/src/app/', root)))
@@ -110,17 +112,36 @@ test('all inventoried API paths and pages retain their HTTP methods, locations, 
 
   validateInventory(inventory, actualRoutes, actualPages);
 
-  // Preserve HTTP method checks against actual source files
+  // Preserve HTTP method checks against actual source files.
+  // Fastify route files may contain multiple endpoints: aggregate their methods.
+  const methodsByFile = new Map();
   for (const endpoint of inventory.endpoints) {
-    const source = read(endpoint.file);
-    if (endpoint.file.startsWith('apps/api/')) {
-      const methods = [...source.matchAll(/fastify\.(get|post|put|delete|patch|options)\(/gi)].map(x => x[1].toUpperCase()).sort();
-      assert.deepEqual(methods, [...endpoint.methods].sort(), endpoint.file);
+    const existing = methodsByFile.get(endpoint.file) || [];
+    methodsByFile.set(endpoint.file, [...existing, ...endpoint.methods]);
+  }
+  for (const [file, declaredMethods] of methodsByFile) {
+    const source = read(file);
+    if (file.startsWith('apps/api/')) {
+      const methods = [...new Set([...source.matchAll(/fastify\.(get|post|put|delete|patch|options)\(/gi)].map(x => x[1].toUpperCase()))].sort();
+      assert.deepEqual(methods, [...new Set(declaredMethods)].sort(), file);
     } else {
       const exports = [...source.matchAll(/export (?:async )?(?:function|const) (GET|POST|PUT|PATCH|DELETE|OPTIONS)/g)].map(x => x[1]).sort();
-      assert.deepEqual(exports, [...endpoint.methods].sort(), endpoint.file);
+      assert.deepEqual(exports, [...new Set(declaredMethods)].sort(), file);
     }
   }
+
+  // Shared route files must still register EACH URL/method, not only a union
+  // of verbs that could conceal a missing change-password/profile handler.
+  const { buildApp } = await import('../apps/api/src/app.js');
+  const api = buildApp();
+  try {
+    await api.ready();
+    for (const endpoint of inventory.endpoints.filter(item => item.file.startsWith('apps/api/'))) {
+      for (const method of endpoint.methods) {
+        assert.ok(api.hasRoute({ method, url: endpoint.url }), `${method} ${endpoint.url} is not registered`);
+      }
+    }
+  } finally { await api.close(); }
 
   // Literal response branches are minimum source observations, not an exhaustive
   // substitute for runtime contracts forwarded by services and shared helpers.
@@ -169,12 +190,12 @@ test('route inventory rejects unassigned, duplicate, or invalid endpoint allocat
     validateInventory(bad, actualRoutes, actualPages);
   }, /unassigned/);
 
-  // 2. Reject duplicate endpoint assignment
+  // 2. Reject duplicate endpoint URL
   assert.throws(() => {
     const bad = JSON.parse(JSON.stringify(inventory));
     bad.endpoints.push({ ...bad.endpoints[0] });
     validateInventory(bad, actualRoutes, actualPages);
-  }, /Duplicate endpoint files/);
+  }, /Duplicate endpoint URLs/);
 
   // 3. Reject missing endpoint from inventory
   assert.throws(() => {

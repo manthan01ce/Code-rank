@@ -7,7 +7,7 @@ Reviewed against master `a8425a352cc355c12906c8af93a517f136d610ec` and branch `r
 | Area | Current implementation | Recommendation and remaining work |
 | --- | --- | --- |
 | Applications | `apps/web`, `apps/worker`, `apps/api` | Fastify API workspace created; three application workspaces; complete separation remains scheduled for 3J |
-| HTTP | `/api/live` migrated to `apps/api`; 46 route files remain in `apps/web/src/app/api` | Continue moving feature adapters and API-only services into `apps/api/src/modules` per batch schedule (3B: auth, etc.); preserve URLs, auth, headers and responses |
+| HTTP | `/api/live` and auth endpoints migrated to `apps/api`; 43 route files remain in `apps/web/src/app/api` | Continue moving feature adapters and API-only services into `apps/api/src/modules` per batch schedule (3B: auth, etc.); preserve URLs, auth, headers and responses |
 | Realtime | Web custom server owns Socket.IO | Socket.IO migration to API scheduled for 3C (CR-ARCH-14) |
 | Frontend features | Coding-workspace, practice, credential PDF and practical-authoring extractions landed | Finish submission/reports/user workflows as separate slices; route files assemble views |
 | Core | Browser PDF implementation removed; explicit runtime environment export added | Retain only genuinely shared backend rules; move API-only services, retire facades after consumers migrate |
@@ -21,8 +21,8 @@ Follow [ADR-0001](decisions/0001-api-runtime-and-hosting.md) and the [route inve
 
 | Order | Planned work identifier | Status | Deliverable |
 | --- | --- | --- | --- |
-| 1 | CR-ARCH-09 | Implementation in PR #59; completion requires final CI | Fastify API workspace, bootstrap/lifecycle/container/gateway wiring; migrated `/api/live` with real direct and gateway contract tests; old Next handler removed |
-| 2 | CR-ARCH-10A | Next (3B / #50) | Auth adapters/shared middleware and identity/password contracts |
+| 1 | CR-ARCH-09 | **Merged** (PR #59) | Fastify API workspace, bootstrap/lifecycle/container/gateway wiring; migrated `/api/live` with real direct and gateway contract tests; old Next handler removed |
+| 2 | CR-ARCH-10A | Implementation in PR #60 (3B / #50); verification recorded in PR | Auth adapters/shared middleware and identity/password contracts |
 | 3 | CR-ARCH-14 | Blocked on 10A (3C / #51) | Socket.IO moves from web to API, including worker transport and room/session ownership tests (Variant X) |
 | 4 | CR-ARCH-10B and CR-ARCH-11A | After 10A (3D / #52, 3E / #53) | User-management and course/department/mapping HTTP slices; coordinate shared-file edits |
 | 5 | CR-ARCH-11B and CR-ARCH-12A | Blocked on 14 + 11A (3F / #54, 3G / #55) | Practical-management and execution HTTP slices; preserve event publication and execution contracts |
@@ -38,3 +38,6 @@ Follow [ADR-0001](decisions/0001-api-runtime-and-hosting.md) and the [route inve
 - **Cutover**: Next.js handler `apps/web/src/app/api/live/route.js` removed; runtime gateway in `apps/web/server.js` and `src/lib/api-gateway.js` forwarding `/api/live` to `INTERNAL_API_URL` while preserving unmigrated routes on web.
 - **Compose and Deployment**: `apps/api/Dockerfile` created (no runner/Docker socket); `infrastructure/docker-compose.yml` and `infrastructure/compose.containers.yaml` wired with `api` service.
 - **Verification**: Real listening direct API and gateway contract tests in `tests/api-live-runtime.test.mjs`, full architecture boundary tests in `tests/architecture.test.mjs`, unit tests (`npm test`), critical lint (`npm run lint:critical`), and build checks pass cleanly.
+
+### CR-ARCH-10A ownership and verification
+Login and authenticated profile loading move to the API auth service, with API middleware authenticating before protected JSON parsing. Shared self-account mutations remain in core temporarily because the unmigrated admin-password and username-profile adapters still consume them; 3D/3I must retire that compatibility usage. The API closes its Redis and database resources after HTTP drain. Real direct/gateway contracts cover auth errors, session rotation, expiry, database role authority, profile/password changes, deactivation and Redis throttling/outage, including clean shutdown. See PR #60 for final tested SHA and CI evidence.

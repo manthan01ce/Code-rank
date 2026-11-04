@@ -2,8 +2,9 @@
 import {performance} from 'node:perf_hooks';
 import {writeFileSync,mkdirSync} from 'node:fs';
 import {hashPassword,comparePassword} from '../packages/core/src/utils/auth.js';
-import {UserService} from '../packages/core/src/modules/users/UserService.js';
-import {checkRateLimit} from '../apps/web/src/lib/queue/rateLimiter.js';
+import {AuthService} from '../apps/api/src/modules/auth/auth.service.js';
+import {checkRateLimit,closeRateLimiter} from '../apps/api/src/middleware/rate-limiter.js';
+import {closeDatabase} from '@coderank/database';
 const dir=process.env.PROFILE_OUTPUT || 'reports/auth-page-review-2026-10-22';
 mkdirSync(dir,{recursive:true});
 const round=x=>+x.toFixed(2);
@@ -16,6 +17,8 @@ for(let i=0;i<10;i++){
 }
 report.passwordHash=summarize(hashTimes);report.passwordCompare=summarize(compareTimes);
 let start=performance.now();report.rateLimitResult=await checkRateLimit('timing-probe@example.invalid','login');report.rateLimitMs=round(performance.now()-start);
-start=performance.now();try{await UserService.login({email:'timing-probe@example.invalid',password:'not-a-real-account'});report.directLoginService={unexpectedSuccess:true};}catch(error){report.directLoginService={elapsedMs:round(performance.now()-start),status:error.status || null,error:error.message};}
+start=performance.now();try{await AuthService.login({email:'timing-probe@example.invalid',password:'not-a-real-account'});report.directLoginService={unexpectedSuccess:true};}catch(error){report.directLoginService={elapsedMs:round(performance.now()-start),status:error.status || null,error:error.message};}
 report.finishedAt=new Date().toISOString();
 writeFileSync(`${dir}/auth-component-timings.json`,JSON.stringify(report,null,2));console.log(JSON.stringify(report,null,2));
+
+await Promise.all([closeRateLimiter(),closeDatabase()]);
