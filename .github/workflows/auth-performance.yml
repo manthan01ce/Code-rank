@@ -1,18 +1,17 @@
 name: Authentication performance comparison
 on:
   pull_request:
-    paths:
-      - 'apps/**'
-      - 'packages/**'
-      - 'tests/browser/auth-performance.spec.mjs'
-      - 'tests/browser/playwright.config.mjs'
-      - 'scripts/auth-performance-stack.mjs'
-      - 'scripts/ci/install-browser.mjs'
-      - '.github/workflows/auth-performance.yml'
+    types: [opened, synchronize, reopened, labeled]
 permissions:
   contents: read
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
 jobs:
   measure:
+    # Two image/browser builds are optional under the owner's CI minute budget.
+    if: contains(github.event.pull_request.labels.*.name, 'ci:auth-performance')
     runs-on: ubuntu-latest
     timeout-minutes: 20
     strategy:
