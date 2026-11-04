@@ -22,7 +22,7 @@ Follow [ADR-0001](decisions/0001-api-runtime-and-hosting.md) and the [route inve
 | Order | Planned work identifier | Status | Deliverable |
 | --- | --- | --- | --- |
 | 1 | CR-ARCH-09 | **Merged** (PR #59) | Fastify API workspace, bootstrap/lifecycle/container/gateway wiring; migrated `/api/live` with real direct and gateway contract tests; old Next handler removed |
-| 2 | CR-ARCH-10A | Implementation in PR (3B / #50) | Auth adapters/shared middleware and identity/password contracts |
+| 2 | CR-ARCH-10A | Implementation in PR #60 (3B / #50); verification recorded in PR | Auth adapters/shared middleware and identity/password contracts |
 | 3 | CR-ARCH-14 | Blocked on 10A (3C / #51) | Socket.IO moves from web to API, including worker transport and room/session ownership tests (Variant X) |
 | 4 | CR-ARCH-10B and CR-ARCH-11A | After 10A (3D / #52, 3E / #53) | User-management and course/department/mapping HTTP slices; coordinate shared-file edits |
 | 5 | CR-ARCH-11B and CR-ARCH-12A | Blocked on 14 + 11A (3F / #54, 3G / #55) | Practical-management and execution HTTP slices; preserve event publication and execution contracts |
@@ -38,3 +38,6 @@ Follow [ADR-0001](decisions/0001-api-runtime-and-hosting.md) and the [route inve
 - **Cutover**: Next.js handler `apps/web/src/app/api/live/route.js` removed; runtime gateway in `apps/web/server.js` and `src/lib/api-gateway.js` forwarding `/api/live` to `INTERNAL_API_URL` while preserving unmigrated routes on web.
 - **Compose and Deployment**: `apps/api/Dockerfile` created (no runner/Docker socket); `infrastructure/docker-compose.yml` and `infrastructure/compose.containers.yaml` wired with `api` service.
 - **Verification**: Real listening direct API and gateway contract tests in `tests/api-live-runtime.test.mjs`, full architecture boundary tests in `tests/architecture.test.mjs`, unit tests (`npm test`), critical lint (`npm run lint:critical`), and build checks pass cleanly.
+
+### CR-ARCH-10A ownership and verification
+Login and authenticated profile loading move to the API auth service, with API middleware authenticating before protected JSON parsing. Shared self-account mutations remain in core temporarily because the unmigrated admin-password and username-profile adapters still consume them; 3D/3I must retire that compatibility usage. The API closes its Redis and database resources after HTTP drain. Real direct/gateway contracts cover auth errors, session rotation, expiry, database role authority, profile/password changes, deactivation and Redis throttling/outage, including clean shutdown. See PR #60 for final tested SHA and CI evidence.

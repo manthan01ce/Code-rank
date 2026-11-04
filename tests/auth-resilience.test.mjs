@@ -33,8 +33,8 @@ test('sign in distinguishes outage and throttling and aborts a stalled request w
   assert.deepEqual(await signInRequest({}, {fetchImpl:async()=>Response.json(data)}),data);
 });
 let rate={allowed:false,unavailable:true}, logins=0;
-mock.module(new URL('../apps/api/src/middleware/rate-limiter.js',import.meta.url).href,{namedExports:{checkRateLimit:async()=>rate}});
-mock.module('@coderank/core/services/UserService',{namedExports:{UserService:{login:async()=>{logins++;return {token:'test',user:{id:1}};}}}});
+mock.module(new URL('../apps/api/src/middleware/rate-limiter.js',import.meta.url).href,{namedExports:{checkRateLimit:async()=>rate,closeRateLimiter:async()=>{}}});
+mock.module(new URL('../apps/api/src/modules/auth/auth.service.js',import.meta.url).href,{namedExports:{AuthService:{login:async()=>{logins++;return {token:'test',user:{id:1}};}}}});
 const {buildApp}=await import('../apps/api/src/app.js');
 const app=buildApp();
 await app.ready();

@@ -5,7 +5,7 @@ Fastify HTTP API service (Socket.IO migration is pending 3C) for CodeRank.
 ## Architecture and Ownership
 
 - **Runtime**: Fastify v5 on Node.js >=24.
-- **Topology**: Serves backend HTTP endpoints and Socket.IO realtime connections behind a same-origin gateway.
+- **Topology**: Serves migrated backend HTTP endpoints behind a same-origin gateway; Socket.IO remains on web until 3C.
 - **Independence**: Runs independently of Next.js frontend (`apps/web`) and execution orchestrator (`apps/worker`). Contains no React, Next.js, runner or Docker daemon access.
 - **Module Structure**: Feature adapters and use cases reside in `src/modules/<feature>/`.
 
@@ -16,7 +16,7 @@ Fastify HTTP API service (Socket.IO migration is pending 3C) for CodeRank.
   - Host development: `http://127.0.0.1:3001`
   - Container network: `http://api:3001`
 - **API configuration**: `API_PORT` defaults to `3001`; `API_HOST` defaults to `127.0.0.1`. The web `PORT` and inherited machine `HOSTNAME` do not select API listening addresses. Containers explicitly set `API_HOST=0.0.0.0`.
-- **Gateway**: the current web custom server forwards exactly `/api/live` (including query strings) using `src/lib/api-gateway.js`. `INTERNAL_API_URL` is read at web process startup, defaults to `http://127.0.0.1:3001`, and must be an HTTP(S) origin. Container web uses `http://api:3001`. Changing it requires restarting web, not rebuilding. All other HTTP paths and Socket.IO stay on web until their slices migrate.
+- **Gateway**: the current web custom server forwards exactly `/api/live`, `/api/auth/login`, `/api/auth/change-password` and `/api/auth/profile` (including query strings) using `src/lib/api-gateway.js`. `INTERNAL_API_URL` is read at web process startup, defaults to `http://127.0.0.1:3001`, and must be an HTTP(S) origin. Container web uses `http://api:3001`. Changing it requires restarting web, not rebuilding. All other HTTP paths and Socket.IO stay on web until their slices migrate.
 - **Failure handling**: unavailable API returns uncached 502; upstream timeout returns uncached 504. Request cancellation closes upstream work. No second web liveness handler hides API outages.
 
 ## Migrated Endpoints
@@ -24,8 +24,11 @@ Fastify HTTP API service (Socket.IO migration is pending 3C) for CodeRank.
 | URL | Method | Module | Migration Slice |
 | --- | --- | --- | --- |
 | `/api/live` | GET | `operations` | CR-ARCH-09 (Issue 3A / #49) |
+| `/api/auth/login` | POST | `auth` | CR-ARCH-10A (#50) |
+| `/api/auth/change-password` | POST | `auth` | CR-ARCH-10A (#50) |
+| `/api/auth/profile` | GET, PUT | `auth` | CR-ARCH-10A (#50) |
 
-All other 46 endpoints remain authoritative on `apps/web` until their respective migration slices.
+All other 43 baseline endpoint entries remain authoritative on `apps/web` until their respective migration slices.
 
 ## Development and Host Mode
 
@@ -45,3 +48,5 @@ npm run lint --workspace=@coderank/api
 ```
 
 The API build command validates every source file, resolves actual imports/plugins and checks route registration without a database or listener. Node runs the source directly; there is no generated bundle.
+
+Auth lifecycle: Fastify close drains HTTP requests, then closes API-owned Redis and database connections. Login and profile loading live in `src/modules/auth/auth.service.js`; reusable authority checks live in `src/middleware/authentication.js`. Shared account mutations remain once in core for the still-unmigrated administrative-password and username-profile adapters until 3D/3I. JSON/error/method handling is adapted explicitly to preserve the previous HTTP behavior.

@@ -103,7 +103,7 @@ export function validateInventory(inventory, actualRoutes, actualPages) {
   return true;
 }
 
-test('all inventoried API paths and pages retain their HTTP methods, locations, and migration allocations', () => {
+test('all inventoried API paths and pages retain their HTTP methods, locations, and migration allocations', async () => {
   const inventory = JSON.parse(read('docs/architecture/route-inventory.json'));
   const actualRoutes = getActualRoutes();
   const actualPages = walk(fileURLToPath(new URL('apps/web/src/app/', root)))
@@ -129,6 +129,19 @@ test('all inventoried API paths and pages retain their HTTP methods, locations, 
       assert.deepEqual(exports, [...new Set(declaredMethods)].sort(), file);
     }
   }
+
+  // Shared route files must still register EACH URL/method, not only a union
+  // of verbs that could conceal a missing change-password/profile handler.
+  const { buildApp } = await import('../apps/api/src/app.js');
+  const api = buildApp();
+  try {
+    await api.ready();
+    for (const endpoint of inventory.endpoints.filter(item => item.file.startsWith('apps/api/'))) {
+      for (const method of endpoint.methods) {
+        assert.ok(api.hasRoute({ method, url: endpoint.url }), `${method} ${endpoint.url} is not registered`);
+      }
+    }
+  } finally { await api.close(); }
 
   // Literal response branches are minimum source observations, not an exhaustive
   // substitute for runtime contracts forwarded by services and shared helpers.

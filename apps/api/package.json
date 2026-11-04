@@ -13,7 +13,8 @@
   "dependencies": {
     "@coderank/core": "*",
     "fastify": "^5.2.1",
-    "redis": "^6.2.1"
+    "redis": "^6.2.1",
+    "@coderank/database": "1.1.0"
   },
   "devDependencies": {
     "eslint": "^9"

@@ -1,3 +1,4 @@
+import { verifyAuthContracts } from './lib/auth-contracts.mjs';
 import '@coderank/core/config/env';
 import assert from "node:assert/strict";
 import { spawn, spawnSync, execFileSync } from "node:child_process";
@@ -61,6 +62,7 @@ const env = {
   CLUSTER_ENABLED: "true",
   WEB_CONCURRENCY: "2",
   DISABLE_RATE_LIMIT: "false",
+  RATE_LIMIT_LOGIN: "5",
   MAX_CONCURRENT_JOBS: "2",
   BROWSER_BASE_URL: base,
   E2E_ADMIN_EMAIL: "admin@e2e.test",
@@ -389,6 +391,12 @@ try {
     )[0].n,
     0,
   );
+  const authEmail = `auth-contract-${randomBytes(6).toString('hex')}@e2e.test`;
+  await sql.query("INSERT INTO users(name,email,password,role,status,extra_info) VALUES('Auth Contract',$1,$2,'faculty','active','{}')", [authEmail, await hashPassword(password)]);
+  await verifyAuthContracts({ base, apiBase, email: authEmail, password, secret: env.JWT_SECRET,
+    deactivate: () => sql.query("UPDATE users SET status='inactive' WHERE email=$1", [authEmail]),
+  });
+
   // Browser logins rotate the student's session. Use a freshly authenticated
   // session for recovery instead of the now-revoked pre-browser JWT.
   token = await login(env.E2E_STUDENT_EMAIL, newPassword);

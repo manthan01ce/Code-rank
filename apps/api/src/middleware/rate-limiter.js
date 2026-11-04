@@ -108,3 +108,13 @@ export async function checkRateLimit(identifier, category = 'default') {
   }
 }
 
+
+export async function closeRateLimiter() {
+  // A connect in flight must settle before we release its resulting client.
+  if (redisConnecting) await redisConnecting;
+  const current = redis;
+  redis = null;
+  if (!current) return;
+  try { await withTimeout(current.close(), 1000); }
+  finally { if (current.isOpen) current.destroy(); }
+}

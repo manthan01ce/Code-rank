@@ -5,8 +5,8 @@ PostgreSQL/Neon, Redis/BullMQ and Docker.
 
 ## Active workspace
 
-- `apps/web`: UI, 46 unmigrated HTTP handler files and authenticated realtime server.
-- `apps/api`: Fastify API runtime; owns `/api/live` behind the web runtime gateway.
+- `apps/web`: UI, 43 unmigrated HTTP handler files and authenticated realtime server.
+- `apps/api`: Fastify API runtime; owns `/api/live` and auth endpoints behind the web runtime gateway.
 - `apps/worker`: execution and system queue consumers.
 - `packages/core`: domain services and access policy.
 - `packages/database`: database client and migration engine.

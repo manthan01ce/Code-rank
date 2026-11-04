@@ -43,8 +43,10 @@ const { UserService } = await import(
   "../packages/core/src/services/UserService.js"
 );
 const { verifyToken } = await import("../packages/core/src/utils/auth.js");
+mock.module('@coderank/database', { defaultExport: sql, namedExports: { closeDatabase: async () => {} } });
+const { AuthService } = await import('../apps/api/src/modules/auth/auth.service.js');
 test("configured admin bootstraps a persistent identity and never logs in without a committed session", async () => {
-  const result = await UserService.login({
+  const result = await AuthService.login({
     email: process.env.ADMIN_EMAIL,
     password: process.env.ADMIN_PASSWORD,
   });
@@ -53,7 +55,7 @@ test("configured admin bootstraps a persistent identity and never logs in withou
   assert.notEqual(user.password, process.env.ADMIN_PASSWORD);
   sessionFailure = true;
   await assert.rejects(
-    UserService.login({
+    AuthService.login({
       email: process.env.ADMIN_EMAIL,
       password: process.env.ADMIN_PASSWORD,
     }),
@@ -62,7 +64,7 @@ test("configured admin bootstraps a persistent identity and never logs in withou
   sessionFailure = false;
   offline = true;
   await assert.rejects(
-    UserService.login({
+    AuthService.login({
       email: process.env.ADMIN_EMAIL,
       password: process.env.ADMIN_PASSWORD,
     }),
@@ -71,7 +73,7 @@ test("configured admin bootstraps a persistent identity and never logs in withou
   offline = false;
   user.status = "inactive";
   await assert.rejects(
-    UserService.login({
+    AuthService.login({
       email: process.env.ADMIN_EMAIL,
       password: process.env.ADMIN_PASSWORD,
     }),
