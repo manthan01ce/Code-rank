@@ -12,7 +12,10 @@ import { successfulExecution } from "../load-tests/lib/execution-result.js";
 const root = fileURLToPath(new URL("../", import.meta.url));
 const port = process.env.STACK_TEST_PORT || "3100";
 assert.match(port, /^\d+$/);
+const apiPort = process.env.STACK_TEST_API_PORT || String(Number(port) + 10);
+assert.match(apiPort, /^\d+$/);
 const base = `http://127.0.0.1:${port}`;
+const apiBase = `http://127.0.0.1:${apiPort}`;
 const pause = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
 const children = [],
   sockets = [],
@@ -22,6 +25,8 @@ const env = {
   NODE_ENV: "production",
   HOSTNAME: "127.0.0.1",
   PORT: port,
+  API_PORT: apiPort,
+  INTERNAL_API_URL: apiBase,
   REALTIME_URL: base,
   ALLOWED_ORIGIN: base,
   CLUSTER_ENABLED: "false",
@@ -150,6 +155,7 @@ try {
     { stdio: "ignore", timeout: 10000 },
   );
   mkdirSync(`${root}/test-results/stack`, { recursive: true });
+  start("api", ["apps/api/src/server.js"]);
   start("web", ["apps/web/server.js"]);
   start("worker", ["apps/worker/src/index.js"]);
   await waitReady();

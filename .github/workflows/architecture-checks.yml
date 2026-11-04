@@ -69,9 +69,16 @@ jobs:
           docker compose -f infrastructure/docker-compose.yml config --quiet
           docker compose -f infrastructure/docker-compose.yml --profile local-database config --quiet
           docker compose -f infrastructure/docker-compose.yml -f infrastructure/compose.warm-daemons.yaml --profile local-database config --quiet
+          docker compose -f infrastructure/docker-compose.yml -f infrastructure/compose.containers.yaml --profile local-database config --quiet
 
       - name: Build worker deployment image
         run: docker build -t coderank-worker:ci -f apps/worker/Dockerfile .
+
+      - name: Build API application bundle
+        run: npm run build --workspace=@coderank/api
+
+      - name: Build isolated API deployment image
+        run: docker build -t coderank-api:ci -f apps/api/Dockerfile .
 
       - name: Build web application bundle
         run: npm run build --workspace=apps/web

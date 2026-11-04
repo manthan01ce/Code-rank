@@ -38,13 +38,17 @@ const database = `coderank_e2e_${randomBytes(8).toString("hex")}`;
 const appUrl = new URL(url);
 appUrl.pathname = "/" + database;
 const port = "3101",
-  base = `http://127.0.0.1:${port}`;
+  apiPort = "3102",
+  base = `http://127.0.0.1:${port}`,
+  apiBase = `http://127.0.0.1:${apiPort}`;
 const password = randomBytes(16).toString("hex");
 const env = {
   ...process.env,
   NODE_ENV: "production",
   HOSTNAME: "127.0.0.1",
   PORT: port,
+  API_PORT: apiPort,
+  INTERNAL_API_URL: apiBase,
   DATABASE_DRIVER: "postgres",
   DATABASE_URL: appUrl.href,
   DB_POOL_SIZE: "3",
@@ -281,6 +285,7 @@ try {
         JSON.stringify({ status: "accepted" }),
       ],
     );
+  start("api", "apps/api/src/server.js");
   start("web", "apps/web/cluster.js");
   const executionWorker = start("worker", "apps/worker/src/index.js");
   await ready();

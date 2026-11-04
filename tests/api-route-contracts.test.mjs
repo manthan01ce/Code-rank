@@ -19,7 +19,7 @@ const revoked = generateToken({ id: 1, role: 'admin', session_token: 'revoked' }
 const publicMethods = new Set(['auth/login:POST', 'execute:GET', 'practice-run:GET', 'health:GET', 'live:GET', 'queue/stats:GET']);
 const optionalMethods = new Set(['execute:POST', 'practice-run:POST', 'run:POST', 'submit:POST', 'c-run:POST', 'cpp-run:POST', 'java-run:POST', 'javascript-run:POST', 'python-run:POST', 'jobs/[jobId]:GET']);
 const routes = [];
-for (const [file, methods] of Object.entries(fixture).filter(([file]) => file.includes('/api/'))) {
+for (const [file, methods] of Object.entries(fixture).filter(([file]) => file.includes('apps/web/src/app/api/'))) {
   const name = file.split('/api/')[1].replace('/route.js', '');
   const module = await import(new URL(`../${file}`, import.meta.url));
   for (const method of methods) if (!publicMethods.has(`${name}:${method}`)) routes.push({ name, method, handler: module[method] });

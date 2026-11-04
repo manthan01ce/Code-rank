@@ -1,4 +1,7 @@
 {
+  "apps/api/src/modules/operations/operations.routes.js": [
+    "GET"
+  ],
   "apps/web/src/app/admin/courses/page.js": [
     "PAGE"
   ],
@@ -112,9 +115,6 @@
     "POST"
   ],
   "apps/web/src/app/api/jobs/[jobId]/route.js": [
-    "GET"
-  ],
-  "apps/web/src/app/api/live/route.js": [
     "GET"
   ],
   "apps/web/src/app/api/logs/route.js": [

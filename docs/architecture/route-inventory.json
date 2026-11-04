@@ -134,7 +134,7 @@
   "endpoints": [
     {
       "url": "/api/live",
-      "file": "apps/web/src/app/api/live/route.js",
+      "file": "apps/api/src/modules/operations/operations.routes.js",
       "methods": [
         "GET"
       ],
@@ -152,7 +152,7 @@
         ]
       },
       "contractSources": [
-        "apps/web/src/app/api/live/route.js"
+        "apps/api/src/modules/operations/operations.routes.js"
       ]
     },
     {

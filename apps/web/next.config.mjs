@@ -25,6 +25,17 @@ const nextConfig = {
     minimumCacheTTL: 60,
   },
   
+  // Gateway rewrites: proxy migrated API routes to the authoritative Fastify API runtime
+  async rewrites() {
+    const internalApiUrl = process.env.INTERNAL_API_URL || process.env.API_URL || 'http://127.0.0.1:3001';
+    return [
+      {
+        source: '/api/live',
+        destination: `${internalApiUrl}/api/live`,
+      },
+    ];
+  },
+
   // Add cache headers for static assets
   async headers() {
     return [
