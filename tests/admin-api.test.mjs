@@ -20,22 +20,39 @@ mock.module('@coderank/core/security/active-actor', { namedExports: {
   authenticateToken: async () => ({ id: 2, role: 'admin' }),
 } });
 
-const routes=await import('../apps/web/src/app/api/faculty/practicals/route.js');
 const { buildApp } = await import('../apps/api/src/app.js');
 const api = buildApp();
 await api.ready();
+api.publisher.publishPracticalChange = (...args) => notifications.push(args);
 
 const body={course_id:1,title:'Test',description:'Description',test_cases:[{input:'',expected:'ok',marks:10}]};
-const req=(path,payload,role='faculty')=>new Request('http://localhost'+path,{method:payload?'POST':'GET',headers:{Authorization:`Bearer ${generateToken({id:2,role})}`,'Content-Type':'application/json'},...(payload?{body:JSON.stringify(payload)}:{})});
+const injectPractical = (method, path, payload, role = 'faculty') => api.inject({
+  method,
+  url: path,
+  headers: {
+    authorization: `Bearer ${generateToken({ id: 2, role })}`,
+    ...(payload ? { 'content-type': 'application/json' } : {}),
+  },
+  ...(payload ? { payload } : {}),
+});
+
 test('practical adapters enforce role and payloads, preserve response and notify only on commit',async()=>{
- assert.equal((await routes.POST(req('/api/faculty/practicals',body,'student'))).status,401);
- const malformed=req('/api/faculty/practicals',body);
- assert.equal((await routes.POST(new Request(malformed.url,{method:'POST',headers:malformed.headers,body:'{'}))).status,400);
- for(const patch of [{course_id:'1junk'},{test_cases:[]},{test_cases:[{input:'',expected:'ok',marks:'Infinity'}]},{start_time:'bad'},{test_cases:[{input:'',expected:'ok',marks:1,time_limit:31}]}])assert.equal((await routes.POST(req('/api/faculty/practicals',{...body,...patch}))).status,400);
- assert.equal((await routes.POST(req('/api/faculty/practicals',body))).status,200);assert.equal(notifications.length,1);
- errorCode='23514';assert.equal((await routes.POST(req('/api/faculty/practicals',body))).status,409);assert.equal(notifications.length,1);errorCode=null;
- const page=await routes.GET(req('/api/faculty/practicals?limit=1&cursor=9'));assert.equal(page.headers.get('X-Next-Cursor'),'1');assert.match(observed.q,/LIMIT \$4/);assert.deepEqual(observed.p,[2,null,9,1]);
- assert.equal((await routes.GET(req('/api/faculty/practicals?limit=201'))).status,400);
+ assert.equal((await injectPractical('POST', '/api/faculty/practicals', body, 'student')).statusCode, 401);
+ assert.equal((await api.inject({ method: 'POST', url: '/api/faculty/practicals', headers: { authorization: `Bearer ${generateToken({ id: 2, role: 'faculty' })}`, 'content-type': 'application/json' }, payload: '{' })).statusCode, 400);
+ for (const patch of [{ course_id: '1junk' }, { test_cases: [] }, { test_cases: [{ input: '', expected: 'ok', marks: 'Infinity' }] }, { start_time: 'bad' }, { test_cases: [{ input: '', expected: 'ok', marks: 1, time_limit: 31 }] }]) {
+   assert.equal((await injectPractical('POST', '/api/faculty/practicals', { ...body, ...patch })).statusCode, 400);
+ }
+ assert.equal((await injectPractical('POST', '/api/faculty/practicals', body)).statusCode, 200);
+ assert.equal(notifications.length, 1);
+ errorCode = '23514';
+ assert.equal((await injectPractical('POST', '/api/faculty/practicals', body)).statusCode, 409);
+ assert.equal(notifications.length, 1);
+ errorCode = null;
+ const page = await injectPractical('GET', '/api/faculty/practicals?limit=1&cursor=9');
+ assert.equal(page.headers['x-next-cursor'], '1');
+ assert.match(observed.q, /LIMIT \$4/);
+ assert.deepEqual(observed.p, [2, null, 9, 1]);
+ assert.equal((await injectPractical('GET', '/api/faculty/practicals?limit=201')).statusCode, 400);
 });
 test('mapping adapter normalizes IDs and denies duplicate or unauthorized writes',async()=>{
  const postMapping = (payload, role) => api.inject({
