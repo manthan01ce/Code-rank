@@ -17,6 +17,18 @@
   "apps/api/src/modules/operations/operations.routes.js": [
     "GET"
   ],
+  "apps/api/src/modules/practicals/practicals.routes.js": [
+    "DELETE",
+    "GET",
+    "POST",
+    "PUT"
+  ],
+  "apps/api/src/modules/users/users.routes.js": [
+    "DELETE",
+    "GET",
+    "POST",
+    "PUT"
+  ],
   "apps/web/src/app/admin/courses/page.js": [
     "PAGE"
   ],
@@ -54,32 +66,8 @@
     "GET",
     "POST"
   ],
-  "apps/web/src/app/api/faculty/batches/route.js": [
-    "GET"
-  ],
-  "apps/web/src/app/api/faculty/courses/[id]/stats/route.js": [
-    "GET"
-  ],
-  "apps/web/src/app/api/faculty/courses/route.js": [
-    "GET"
-  ],
-  "apps/web/src/app/api/faculty/practicals/[id]/extra-time/route.js": [
-    "POST"
-  ],
-  "apps/web/src/app/api/faculty/practicals/[id]/route.js": [
-    "DELETE",
-    "GET",
-    "PUT"
-  ],
-  "apps/web/src/app/api/faculty/practicals/[id]/stats/route.js": [
-    "GET"
-  ],
   "apps/web/src/app/api/faculty/practicals/[id]/submissions/route.js": [
     "GET"
-  ],
-  "apps/web/src/app/api/faculty/practicals/route.js": [
-    "GET",
-    "POST"
   ],
   "apps/web/src/app/api/faculty/submissions/[id]/route.js": [
     "DELETE",
@@ -126,17 +114,11 @@
   "apps/web/src/app/api/stats/route.js": [
     "GET"
   ],
-  "apps/web/src/app/api/student/practicals/[id]/route.js": [
-    "GET"
-  ],
   "apps/web/src/app/api/student/practicals/[id]/submissions/route.js": [
     "GET"
   ],
   "apps/web/src/app/api/student/practicals/[id]/submit/route.js": [
     "POST"
-  ],
-  "apps/web/src/app/api/student/practicals/route.js": [
-    "GET"
   ],
   "apps/web/src/app/api/student/submissions/route.js": [
     "GET"
@@ -179,11 +161,5 @@
   ],
   "apps/web/src/app/student/practicals/page.js": [
     "PAGE"
-  ],
-  "apps/api/src/modules/users/users.routes.js": [
-    "DELETE",
-    "GET",
-    "POST",
-    "PUT"
   ]
 }

@@ -1,14 +1,14 @@
 # Architecture migration status
 
-Reviewed against master `a8425a352cc355c12906c8af93a517f136d610ec` and branch `refactor/cr-arch-09-3a` (CR-ARCH-09 / Issue 3A / #49).
+Reviewed against master `a8425a352cc355c12906c8af93a517f136d610ec` and branch `refactor/cr-arch-11b-3f` (CR-ARCH-11B / Issue 3F / #54).
 
 ## Current versus destination
 
 | Area | Current implementation | Recommendation and remaining work |
 | --- | --- | --- |
 | Applications | `apps/web`, `apps/worker`, `apps/api` | Fastify API workspace created; three application workspaces; complete separation remains scheduled for 3J |
-| HTTP | `/api/live`, auth, courses, departments, and mapping endpoints migrated to `apps/api`; 38 route files remain in `apps/web/src/app/api` | Continue moving feature adapters and API-only services into `apps/api/src/modules` per batch schedule (3D: users, 3F: practicals, etc.); preserve URLs, auth, headers and responses |
-| Realtime | Fastify API owns authoritative Socket.IO; Next.js server proxies `/socket.io` WebSocket upgrades | Web Socket.IO server completely eliminated; browser hooks and transitional publishers point to API |
+| HTTP | `/api/live`, auth, users, courses, departments, mapping, and practicals endpoints migrated to `apps/api`; 29 route files remain in `apps/web/src/app/api` | Continue moving feature adapters and API-only services into `apps/api/src/modules` per batch schedule (3G: execution, 3H: submissions/workspaces, etc.); preserve URLs, auth, headers and responses |
+| Realtime | Fastify API owns authoritative Socket.IO; Next.js server proxies `/socket.io` WebSocket upgrades; API publisher broadcasts practical/job changes | Web Socket.IO server completely eliminated; browser hooks and transitional publishers point to API |
 | Frontend features | Coding-workspace, practice, credential PDF and practical-authoring extractions landed | Finish submission/reports/user workflows as separate slices; route files assemble views |
 | Core | Browser PDF implementation removed; explicit runtime environment export added | Retain only genuinely shared backend rules; move API-only services, retire facades after consumers migrate |
 | Tooling | Root tooling includes explicit lint dependencies, backend correctness rules, and covers `apps/api` | Continue expanding checks as each module migrates |
@@ -25,8 +25,9 @@ Follow [ADR-0001](decisions/0001-api-runtime-and-hosting.md) and the [route inve
 | 2 | CR-ARCH-10A | Implementation in PR #60 (3B / #50); verification recorded in PR | Auth adapters/shared middleware and identity/password contracts |
 | 3 | CR-ARCH-14 | Merged in PR #61; lifecycle/deployment correction verified separately | Socket.IO moves from web to API, including worker transport and room/session ownership tests (Variant X) |
 | 4 | CR-ARCH-10B | Merged in PR #63 (3D / #52) | User-management, admin password and bulk ingestion HTTP slice; verified across direct Fastify API and gateway cutover |
-| 5 | CR-ARCH-11A | Implementation in PR #64 (3E / #53) | Course/department/mapping HTTP slices; coordinate shared-file edits |
-| 5 | CR-ARCH-11B and CR-ARCH-12A | Blocked on 14 + 11A (3F / #54, 3G / #55) | Practical-management and execution HTTP slices; preserve event publication and execution contracts |
+| 5 | CR-ARCH-11A | Merged in PR #64 (3E / #53) | Course/department/mapping HTTP slices; coordinate shared-file edits |
+| 5 | CR-ARCH-11B | Implementation in PR (3F / #54) | Practical management and reporting HTTP slice; preserve realtime publication and reporting snapshot integrity |
+| 5 | CR-ARCH-12A | In progress / next in schedule (3G / #55) | Execution orchestration HTTP slice; preserve runner and execution contracts |
 | 6 | CR-ARCH-12B | Blocked on 12A + 11B (3H / #56) | Submission/history/reset/workspace HTTP slice |
 | 7 | CR-ARCH-13 | Blocked on 10B + 12B (3I / #57) | Operations/profile remaining HTTP slice; preserve readiness without running migrations |
 | 8 | CR-ARCH-15 | Every slice complete (3J / #58) | Complete web/API separation; remove web backend imports/secrets/custom Socket.IO server only now |
@@ -49,9 +50,9 @@ Socket.IO server creation, authentication middleware, room authorization, period
 ### Realtime review correction
 The review of PR #61 removes forced-success test cleanup, exposes the API-local publisher through a declared Fastify plugin, closes WebSockets before HTTP drain without private server mutation, waits for in-flight socket authorization and closes the lazily allocated job-status queue, and scopes replica shutdown to local sockets. API container configuration includes the database, Redis adapter and allowed browser origin. Host launchers derive worker transport from API_PORT. Strict authenticated verification starts two real API processes and checks gateway/cross-replica fan-out, job ownership, hidden-output privacy, expiry/revocation and isolated replica drain. No SQL migration or grading/queue-admission contract changes are required.
 
-
 ### CR-ARCH-10B ownership and verification
 User management, bulk upload/create, and administrative password modification endpoints migrated to the Fastify API runtime (`apps/api/src/modules/users/`). Handlers removed from Next.js (`apps/web/src/app/api/admin/bulk-upload/route.js`, `apps/web/src/app/api/admin/password/route.js`, `apps/web/src/app/api/users/route.js`, `apps/web/src/app/api/users/[id]/route.js`, `apps/web/src/app/api/users/bulk/route.js`). Streaming multipart upload parsing registered in Fastify via `@fastify/multipart` with 5MB limits; CSV and Excel parsing dependencies declared directly in `apps/api/package.json` (`csv-parse`, `exceljs`) and unneeded entries removed from `apps/web/package.json`. Keyset cursor pagination (`X-Next-Cursor`), `Cache-Control: no-store`, `Server-Timing`, administrator authorization checks, batch transactions, and HTTP 405 Method Not Allowed handling with `Allow` headers are verified. Direct API and gateway cutover tested via `tests/api-users-runtime.test.mjs`, `tests/bulk-users-api.test.mjs`, `tests/api-input-contracts.test.mjs`, `tests/architecture.test.mjs`, `npm test` (all 291 unit tests passing), `npm run lint:critical`, and turbo build.
+
 ### CR-ARCH-11A ownership and verification
 Courses, departments, and faculty mapping APIs extracted to Fastify API runtime (`apps/api/src/modules/courses/` and `apps/api/src/modules/mapping/`).
 - **Exact endpoint ownership**:
@@ -76,4 +77,26 @@ Courses, departments, and faculty mapping APIs extracted to Fastify API runtime 
   - Unit and boundary checks in `tests/architecture.test.mjs`, `tests/admin-api.test.mjs`, `tests/api-input-contracts.test.mjs`, and `tests/api-live-runtime.test.mjs`.
   - Stack contract verification in `scripts/lib/courses-contracts.mjs` and `scripts/authenticated-stack.mjs`.
 
-Review correction: API-only catalog CRUD and mapping implementations now live only in API modules; core retains faculty course/batch reads and one shared pagination helper. PR #63 users routing/contracts are preserved. Real PostgreSQL acceptance also checks mapping membership, failed replacements, concurrent writes and keyset traversal through direct API and gateway.
+### CR-ARCH-11B ownership and verification
+Practical management, extra time extension, practical stats, and course marks reporting APIs extracted to Fastify API runtime (`apps/api/src/modules/practicals/`).
+- **Exact endpoint ownership (9 endpoints)**:
+  - `GET /api/faculty/batches`: returns list of distinct active student batches with `X-Next-Cursor` header.
+  - `GET /api/faculty/courses`: returns assigned courses for faculty or all courses for admin, with `X-Next-Cursor` header.
+  - `GET /api/faculty/courses/[id]/stats`: course marks report matrix and student score breakdown.
+  - `GET /api/faculty/practicals`: lists practicals for faculty with pagination cursor.
+  - `POST /api/faculty/practicals`: creates practical assignment via `coderank_mutate_practical` and emits `practical_added` to `course_${courseId}` room via `fastify.publisher.publishPracticalChange`.
+  - `GET /api/faculty/practicals/[id]`: returns detail with ordered test cases for authorized faculty.
+  - `PUT /api/faculty/practicals/[id]`: updates practical assignment and test cases, emits `practical_updated` via `fastify.publisher.publishPracticalChange`.
+  - `DELETE /api/faculty/practicals/[id]`: archives practical (`status='inactive'`) preserving grading history and attempts, emits `practical_deleted` via `fastify.publisher.publishPracticalChange`.
+  - `POST /api/faculty/practicals/[id]/extra-time`: grants deadline extension, emits `practical_updated` via `fastify.publisher.publishPracticalChange`.
+  - `GET /api/faculty/practicals/[id]/stats`: practical-level score distributions and submission statistics.
+  - `GET /api/student/practicals`: lists accessible active practicals matching student cohort and semester.
+  - `GET /api/student/practicals/[id]`: returns sanitized student practical details without hidden test cases.
+- **Gateway Cutover**:
+  - Removed old handlers: `apps/web/src/app/api/faculty/batches/route.js`, `apps/web/src/app/api/faculty/courses/route.js`, `apps/web/src/app/api/faculty/courses/[id]/stats/route.js`, `apps/web/src/app/api/faculty/practicals/route.js`, `apps/web/src/app/api/faculty/practicals/[id]/route.js`, `apps/web/src/app/api/faculty/practicals/[id]/extra-time/route.js`, `apps/web/src/app/api/faculty/practicals/[id]/stats/route.js`, `apps/web/src/app/api/student/practicals/route.js`, and `apps/web/src/app/api/student/practicals/[id]/route.js`.
+  - Gateway (`apps/web/src/lib/api-gateway.js`) explicitly routes all 9 practical management and reporting endpoints to `INTERNAL_API_URL`.
+  - Unmigrated submission and workspace endpoints (`/api/faculty/practicals/[id]/submissions`, `/api/faculty/submissions/[id]`, `/api/student/practicals/[id]/submit`, `/api/student/practicals/[id]/submissions`, `/api/student/submissions`, `/api/student/workspaces/*`) remain unproxied on Next.js for slice 3H.
+- **Verification**:
+  - Direct Fastify API contracts, realtime event emission, 401/403/404/405/OPTIONS handling, and gateway selective routing in `tests/api-practicals-runtime.test.mjs`.
+  - Architecture boundaries and route inventory alignment in `tests/architecture.test.mjs`.
+  - Unit test lane (`npm test`, 304 passing), linting (`npm run lint:critical`), and build checks (`@coderank/api` and `@coderank/web`) pass cleanly.

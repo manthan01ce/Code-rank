@@ -21,14 +21,26 @@ const migratedPaths = new Set([
   '/api/courses',
   '/api/departments',
   '/api/mapping',
+  '/api/faculty/batches',
+  '/api/faculty/courses',
+  '/api/faculty/practicals',
+  '/api/student/practicals',
 ]);
+
+const migratedPracticalPatterns = [
+  /^\/api\/faculty\/courses\/[^/]+\/stats$/,
+  /^\/api\/faculty\/practicals\/[^/]+$/,
+  /^\/api\/faculty\/practicals\/[^/]+\/(extra-time|stats)$/,
+  /^\/api\/student\/practicals\/[^/]+$/,
+];
 
 function isMigratedPath(pathname) {
   return migratedPaths.has(pathname) ||
     pathname.startsWith('/api/users/') ||
     pathname.startsWith('/api/courses/') ||
     pathname.startsWith('/api/departments/') ||
-    pathname === '/socket.io' || pathname.startsWith('/socket.io/');
+    pathname === '/socket.io' || pathname.startsWith('/socket.io/') ||
+    migratedPracticalPatterns.some(pattern => pattern.test(pathname));
 }
 
 export function createApiGateway({ origin = process.env.INTERNAL_API_URL || 'http://127.0.0.1:3001', timeoutMs = 10000 } = {}) {

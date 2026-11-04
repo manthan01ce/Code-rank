@@ -591,7 +591,7 @@
     },
     {
       "url": "/api/faculty/batches",
-      "file": "apps/web/src/app/api/faculty/batches/route.js",
+      "file": "apps/api/src/modules/practicals/practicals.routes.js",
       "methods": [
         "GET"
       ],
@@ -604,8 +604,8 @@
         500
       ],
       "services": [
-        "@coderank/core/services/CourseService",
-        "@coderank/core/security/active-actor"
+        "apps/api/src/modules/practicals/practicals.service.js",
+        "apps/api/src/middleware/authentication.js"
       ],
       "description": "List student divisions and batches for faculty assignment",
       "observedResponseHeaders": {
@@ -614,12 +614,14 @@
         ]
       },
       "contractSources": [
-        "apps/web/src/app/api/faculty/batches/route.js"
+        "apps/api/src/modules/practicals/practicals.routes.js",
+        "apps/api/src/modules/practicals/practicals.service.js",
+        "apps/api/src/middleware/authentication.js"
       ]
     },
     {
       "url": "/api/faculty/courses",
-      "file": "apps/web/src/app/api/faculty/courses/route.js",
+      "file": "apps/api/src/modules/practicals/practicals.routes.js",
       "methods": [
         "GET"
       ],
@@ -632,8 +634,8 @@
         500
       ],
       "services": [
-        "@coderank/core/services/CourseService",
-        "@coderank/core/security/active-actor"
+        "apps/api/src/modules/practicals/practicals.service.js",
+        "apps/api/src/middleware/authentication.js"
       ],
       "description": "List courses assigned to current faculty member",
       "observedResponseHeaders": {
@@ -642,12 +644,14 @@
         ]
       },
       "contractSources": [
-        "apps/web/src/app/api/faculty/courses/route.js"
+        "apps/api/src/modules/practicals/practicals.routes.js",
+        "apps/api/src/modules/practicals/practicals.service.js",
+        "apps/api/src/middleware/authentication.js"
       ]
     },
     {
       "url": "/api/faculty/courses/[id]/stats",
-      "file": "apps/web/src/app/api/faculty/courses/[id]/stats/route.js",
+      "file": "apps/api/src/modules/practicals/practicals.routes.js",
       "methods": [
         "GET"
       ],
@@ -663,8 +667,8 @@
         500
       ],
       "services": [
-        "@coderank/core/services/CourseReportService",
-        "@coderank/core/security/active-actor"
+        "apps/api/src/modules/practicals/practicals.service.js",
+        "apps/api/src/middleware/authentication.js"
       ],
       "description": "Course performance and submission statistics reporting for faculty",
       "observedResponseHeaders": {
@@ -673,12 +677,14 @@
         ]
       },
       "contractSources": [
-        "apps/web/src/app/api/faculty/courses/[id]/stats/route.js"
+        "apps/api/src/modules/practicals/practicals.routes.js",
+        "apps/api/src/modules/practicals/practicals.service.js",
+        "apps/api/src/middleware/authentication.js"
       ]
     },
     {
       "url": "/api/faculty/practicals",
-      "file": "apps/web/src/app/api/faculty/practicals/route.js",
+      "file": "apps/api/src/modules/practicals/practicals.routes.js",
       "methods": [
         "GET",
         "POST"
@@ -697,18 +703,24 @@
         500
       ],
       "services": [
-        "@coderank/core/services/PracticalManagementService",
-        "@coderank/core/security/active-actor"
+        "apps/api/src/modules/practicals/practicals.service.js",
+        "apps/api/src/middleware/authentication.js"
       ],
       "description": "List or create practical assignments for faculty",
-      "observedResponseHeaders": {},
+      "observedResponseHeaders": {
+        "cache-control": [
+          "no-store"
+        ]
+      },
       "contractSources": [
-        "apps/web/src/app/api/faculty/practicals/route.js"
+        "apps/api/src/modules/practicals/practicals.routes.js",
+        "apps/api/src/modules/practicals/practicals.service.js",
+        "apps/api/src/middleware/authentication.js"
       ]
     },
     {
       "url": "/api/faculty/practicals/[id]",
-      "file": "apps/web/src/app/api/faculty/practicals/[id]/route.js",
+      "file": "apps/api/src/modules/practicals/practicals.routes.js",
       "methods": [
         "DELETE",
         "GET",
@@ -728,18 +740,24 @@
         500
       ],
       "services": [
-        "@coderank/core/services/PracticalManagementService",
-        "@coderank/core/security/active-actor"
+        "apps/api/src/modules/practicals/practicals.service.js",
+        "apps/api/src/middleware/authentication.js"
       ],
       "description": "Fetch, update or delete practical assignment by ID",
-      "observedResponseHeaders": {},
+      "observedResponseHeaders": {
+        "cache-control": [
+          "no-store"
+        ]
+      },
       "contractSources": [
-        "apps/web/src/app/api/faculty/practicals/[id]/route.js"
+        "apps/api/src/modules/practicals/practicals.routes.js",
+        "apps/api/src/modules/practicals/practicals.service.js",
+        "apps/api/src/middleware/authentication.js"
       ]
     },
     {
       "url": "/api/faculty/practicals/[id]/extra-time",
-      "file": "apps/web/src/app/api/faculty/practicals/[id]/extra-time/route.js",
+      "file": "apps/api/src/modules/practicals/practicals.routes.js",
       "methods": [
         "POST"
       ],
@@ -756,18 +774,24 @@
         500
       ],
       "services": [
-        "@coderank/core/services/PracticalManagementService",
-        "@coderank/core/security/active-actor"
+        "apps/api/src/modules/practicals/practicals.service.js",
+        "apps/api/src/middleware/authentication.js"
       ],
       "description": "Grant extra time extension to students for a practical",
-      "observedResponseHeaders": {},
+      "observedResponseHeaders": {
+        "cache-control": [
+          "no-store"
+        ]
+      },
       "contractSources": [
-        "apps/web/src/app/api/faculty/practicals/[id]/extra-time/route.js"
+        "apps/api/src/modules/practicals/practicals.routes.js",
+        "apps/api/src/modules/practicals/practicals.service.js",
+        "apps/api/src/middleware/authentication.js"
       ]
     },
     {
       "url": "/api/faculty/practicals/[id]/stats",
-      "file": "apps/web/src/app/api/faculty/practicals/[id]/stats/route.js",
+      "file": "apps/api/src/modules/practicals/practicals.routes.js",
       "methods": [
         "GET"
       ],
@@ -783,8 +807,8 @@
         500
       ],
       "services": [
-        "@coderank/core/services/PracticalReportService",
-        "@coderank/core/security/active-actor"
+        "apps/api/src/modules/practicals/practicals.service.js",
+        "apps/api/src/middleware/authentication.js"
       ],
       "description": "Practical-level submission statistics and score distribution",
       "observedResponseHeaders": {
@@ -793,12 +817,14 @@
         ]
       },
       "contractSources": [
-        "apps/web/src/app/api/faculty/practicals/[id]/stats/route.js"
+        "apps/api/src/modules/practicals/practicals.routes.js",
+        "apps/api/src/modules/practicals/practicals.service.js",
+        "apps/api/src/middleware/authentication.js"
       ]
     },
     {
       "url": "/api/student/practicals",
-      "file": "apps/web/src/app/api/student/practicals/route.js",
+      "file": "apps/api/src/modules/practicals/practicals.routes.js",
       "methods": [
         "GET"
       ],
@@ -813,18 +839,24 @@
         500
       ],
       "services": [
-        "@coderank/core/services/StudentPracticalService",
-        "@coderank/core/security/active-actor"
+        "apps/api/src/modules/practicals/practicals.service.js",
+        "apps/api/src/middleware/authentication.js"
       ],
       "description": "List accessible practical labs for authenticated student",
-      "observedResponseHeaders": {},
+      "observedResponseHeaders": {
+        "cache-control": [
+          "no-store"
+        ]
+      },
       "contractSources": [
-        "apps/web/src/app/api/student/practicals/route.js"
+        "apps/api/src/modules/practicals/practicals.routes.js",
+        "apps/api/src/modules/practicals/practicals.service.js",
+        "apps/api/src/middleware/authentication.js"
       ]
     },
     {
       "url": "/api/student/practicals/[id]",
-      "file": "apps/web/src/app/api/student/practicals/[id]/route.js",
+      "file": "apps/api/src/modules/practicals/practicals.routes.js",
       "methods": [
         "GET"
       ],
@@ -840,8 +872,8 @@
         500
       ],
       "services": [
-        "@coderank/core/services/StudentPracticalService",
-        "@coderank/core/security/active-actor"
+        "apps/api/src/modules/practicals/practicals.service.js",
+        "apps/api/src/middleware/authentication.js"
       ],
       "description": "Get detailed practical instructions and configuration for student",
       "observedResponseHeaders": {
@@ -850,7 +882,9 @@
         ]
       },
       "contractSources": [
-        "apps/web/src/app/api/student/practicals/[id]/route.js"
+        "apps/api/src/modules/practicals/practicals.routes.js",
+        "apps/api/src/modules/practicals/practicals.service.js",
+        "apps/api/src/middleware/authentication.js"
       ]
     },
     {
@@ -1770,4 +1804,3 @@
     ]
   }
 }
-
