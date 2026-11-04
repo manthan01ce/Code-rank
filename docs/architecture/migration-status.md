@@ -7,7 +7,7 @@ Reviewed against master `a8425a352cc355c12906c8af93a517f136d610ec` and branch `r
 | Area | Current implementation | Recommendation and remaining work |
 | --- | --- | --- |
 | Applications | `apps/web`, `apps/worker`, `apps/api` | Fastify API workspace created; three application workspaces; complete separation remains scheduled for 3J |
-| HTTP | `/api/live` and auth endpoints migrated to `apps/api`; 43 route files remain in `apps/web/src/app/api` | Continue moving feature adapters and API-only services into `apps/api/src/modules` per batch schedule (3B: auth, etc.); preserve URLs, auth, headers and responses |
+| HTTP | `/api/live`, auth, courses, departments, and mapping endpoints migrated to `apps/api`; 38 route files remain in `apps/web/src/app/api` | Continue moving feature adapters and API-only services into `apps/api/src/modules` per batch schedule (3D: users, 3F: practicals, etc.); preserve URLs, auth, headers and responses |
 | Realtime | Fastify API owns authoritative Socket.IO; Next.js server proxies `/socket.io` WebSocket upgrades | Web Socket.IO server completely eliminated; browser hooks and transitional publishers point to API |
 | Frontend features | Coding-workspace, practice, credential PDF and practical-authoring extractions landed | Finish submission/reports/user workflows as separate slices; route files assemble views |
 | Core | Browser PDF implementation removed; explicit runtime environment export added | Retain only genuinely shared backend rules; move API-only services, retire facades after consumers migrate |
@@ -24,7 +24,7 @@ Follow [ADR-0001](decisions/0001-api-runtime-and-hosting.md) and the [route inve
 | 1 | CR-ARCH-09 | **Merged** (PR #59) | Fastify API workspace, bootstrap/lifecycle/container/gateway wiring; migrated `/api/live` with real direct and gateway contract tests; old Next handler removed |
 | 2 | CR-ARCH-10A | Implementation in PR #60 (3B / #50); verification recorded in PR | Auth adapters/shared middleware and identity/password contracts |
 | 3 | CR-ARCH-14 | Merged in PR #61; lifecycle/deployment correction verified separately | Socket.IO moves from web to API, including worker transport and room/session ownership tests (Variant X) |
-| 4 | CR-ARCH-10B and CR-ARCH-11A | After 10A (3D / #52, 3E / #53) | User-management and course/department/mapping HTTP slices; coordinate shared-file edits |
+| 4 | CR-ARCH-10B and CR-ARCH-11A | CR-ARCH-11A verified in PR #53 (3E); CR-ARCH-10B (3D / #52) | User-management and course/department/mapping HTTP slices; coordinate shared-file edits |
 | 5 | CR-ARCH-11B and CR-ARCH-12A | Blocked on 14 + 11A (3F / #54, 3G / #55) | Practical-management and execution HTTP slices; preserve event publication and execution contracts |
 | 6 | CR-ARCH-12B | Blocked on 12A + 11B (3H / #56) | Submission/history/reset/workspace HTTP slice |
 | 7 | CR-ARCH-13 | Blocked on 10B + 12B (3I / #57) | Operations/profile remaining HTTP slice; preserve readiness without running migrations |
@@ -47,3 +47,27 @@ Socket.IO server creation, authentication middleware, room authorization, period
 
 ### Realtime review correction
 The review of PR #61 removes forced-success test cleanup, exposes the API-local publisher through a declared Fastify plugin, closes WebSockets before HTTP drain without private server mutation, waits for in-flight socket authorization and closes the lazily allocated job-status queue, and scopes replica shutdown to local sockets. API container configuration includes the database, Redis adapter and allowed browser origin. Host launchers derive worker transport from API_PORT. Strict authenticated verification starts two real API processes and checks gateway/cross-replica fan-out, job ownership, hidden-output privacy, expiry/revocation and isolated replica drain. No SQL migration or grading/queue-admission contract changes are required.
+
+### CR-ARCH-11A ownership and verification
+Courses, departments, and faculty mapping APIs extracted to Fastify API runtime (`apps/api/src/modules/courses/` and `apps/api/src/modules/mapping/`).
+- **Exact endpoint ownership**:
+  - `GET /api/courses`: list courses with optional search, semester filter, cursor pagination, and `X-Next-Cursor` header.
+  - `POST /api/courses`: atomic course creation by administrator via `coderank_manage_catalog`.
+  - `PUT /api/courses/:id`: atomic course update by administrator.
+  - `DELETE /api/courses/:id`: atomic course deletion with practical history preservation check.
+  - `GET /api/departments`: list departments with search and cursor pagination.
+  - `POST /api/departments`: atomic department creation by administrator.
+  - `PUT /api/departments/:id`: atomic department update by administrator.
+  - `DELETE /api/departments/:id`: atomic department deletion with active user assignment check.
+  - `GET /api/mapping`: faculty-to-course mapping retrieval grouped by course ID.
+  - `POST /api/mapping`: atomic faculty mapping assignment via `coderank_replace_mapping`.
+- **Gateway Cutover**:
+  - Next.js handlers removed from `apps/web/src/app/api/courses/`, `departments/`, and `mapping/`.
+  - Same-origin gateway in `apps/web/src/lib/api-gateway.js` routes all courses, departments, and mapping requests directly to `INTERNAL_API_URL`.
+- **Backward Compatibility**:
+  - Retained faculty read queries (`getFacultyCourses`, `getBatches`) in `packages/core/src/modules/courses/CourseService.js` for upcoming CR-ARCH-11B (3F).
+  - Maintained single shared pagination helper in `packages/core/src/modules/courses/list-pagination.js` exported as `@coderank/core/pagination`.
+- **Verification**:
+  - Direct API and gateway runtime contracts in `tests/api-courses-runtime.test.mjs`.
+  - Unit and boundary checks in `tests/architecture.test.mjs`, `tests/admin-api.test.mjs`, `tests/api-input-contracts.test.mjs`, and `tests/api-live-runtime.test.mjs`.
+  - Stack contract verification in `scripts/lib/courses-contracts.mjs` and `scripts/authenticated-stack.mjs`.

@@ -4,6 +4,16 @@
     "POST",
     "PUT"
   ],
+  "apps/api/src/modules/courses/courses.routes.js": [
+    "DELETE",
+    "GET",
+    "POST",
+    "PUT"
+  ],
+  "apps/api/src/modules/mapping/mapping.routes.js": [
+    "GET",
+    "POST"
+  ],
   "apps/api/src/modules/operations/operations.routes.js": [
     "GET"
   ],
@@ -43,23 +53,7 @@
   "apps/web/src/app/api/c-run/route.js": [
     "POST"
   ],
-  "apps/web/src/app/api/courses/[id]/route.js": [
-    "DELETE",
-    "PUT"
-  ],
-  "apps/web/src/app/api/courses/route.js": [
-    "GET",
-    "POST"
-  ],
   "apps/web/src/app/api/cpp-run/route.js": [
-    "POST"
-  ],
-  "apps/web/src/app/api/departments/[id]/route.js": [
-    "DELETE",
-    "PUT"
-  ],
-  "apps/web/src/app/api/departments/route.js": [
-    "GET",
     "POST"
   ],
   "apps/web/src/app/api/execute/route.js": [
@@ -114,10 +108,6 @@
   ],
   "apps/web/src/app/api/logs/route.js": [
     "GET"
-  ],
-  "apps/web/src/app/api/mapping/route.js": [
-    "GET",
-    "POST"
   ],
   "apps/web/src/app/api/metrics/route.js": [
     "GET"

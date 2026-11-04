@@ -401,7 +401,7 @@
     },
     {
       "url": "/api/courses",
-      "file": "apps/web/src/app/api/courses/route.js",
+      "file": "apps/api/src/modules/courses/courses.routes.js",
       "methods": [
         "GET",
         "POST"
@@ -419,8 +419,8 @@
         500
       ],
       "services": [
-        "@coderank/core/services/CourseService",
-        "@coderank/core/security/active-actor"
+        "apps/api/src/modules/courses/courses.service.js",
+        "apps/api/src/middleware/authentication.js"
       ],
       "description": "List courses (authenticated) or create course (admin)",
       "observedResponseHeaders": {
@@ -429,12 +429,14 @@
         ]
       },
       "contractSources": [
-        "apps/web/src/app/api/courses/route.js"
+        "apps/api/src/modules/courses/courses.routes.js",
+        "apps/api/src/modules/courses/courses.service.js",
+        "apps/api/src/middleware/authentication.js"
       ]
     },
     {
       "url": "/api/courses/[id]",
-      "file": "apps/web/src/app/api/courses/[id]/route.js",
+      "file": "apps/api/src/modules/courses/courses.routes.js",
       "methods": [
         "DELETE",
         "PUT"
@@ -453,18 +455,20 @@
         500
       ],
       "services": [
-        "@coderank/core/services/CourseService",
-        "@coderank/core/security/active-actor"
+        "apps/api/src/modules/courses/courses.service.js",
+        "apps/api/src/middleware/authentication.js"
       ],
       "description": "Update or delete course by ID",
       "observedResponseHeaders": {},
       "contractSources": [
-        "apps/web/src/app/api/courses/[id]/route.js"
+        "apps/api/src/modules/courses/courses.routes.js",
+        "apps/api/src/modules/courses/courses.service.js",
+        "apps/api/src/middleware/authentication.js"
       ]
     },
     {
       "url": "/api/departments",
-      "file": "apps/web/src/app/api/departments/route.js",
+      "file": "apps/api/src/modules/courses/courses.routes.js",
       "methods": [
         "GET",
         "POST"
@@ -481,8 +485,8 @@
         500
       ],
       "services": [
-        "@coderank/core/services/CourseService",
-        "@coderank/core/security/active-actor"
+        "apps/api/src/modules/courses/courses.service.js",
+        "apps/api/src/middleware/authentication.js"
       ],
       "description": "List departments (authenticated) or create department (admin)",
       "observedResponseHeaders": {
@@ -491,12 +495,14 @@
         ]
       },
       "contractSources": [
-        "apps/web/src/app/api/departments/route.js"
+        "apps/api/src/modules/courses/courses.routes.js",
+        "apps/api/src/modules/courses/courses.service.js",
+        "apps/api/src/middleware/authentication.js"
       ]
     },
     {
       "url": "/api/departments/[id]",
-      "file": "apps/web/src/app/api/departments/[id]/route.js",
+      "file": "apps/api/src/modules/courses/courses.routes.js",
       "methods": [
         "DELETE",
         "PUT"
@@ -515,18 +521,20 @@
         500
       ],
       "services": [
-        "@coderank/core/services/CourseService",
-        "@coderank/core/security/active-actor"
+        "apps/api/src/modules/courses/courses.service.js",
+        "apps/api/src/middleware/authentication.js"
       ],
       "description": "Update or delete department by ID",
       "observedResponseHeaders": {},
       "contractSources": [
-        "apps/web/src/app/api/departments/[id]/route.js"
+        "apps/api/src/modules/courses/courses.routes.js",
+        "apps/api/src/modules/courses/courses.service.js",
+        "apps/api/src/middleware/authentication.js"
       ]
     },
     {
       "url": "/api/mapping",
-      "file": "apps/web/src/app/api/mapping/route.js",
+      "file": "apps/api/src/modules/mapping/mapping.routes.js",
       "methods": [
         "GET",
         "POST"
@@ -544,13 +552,15 @@
         500
       ],
       "services": [
-        "@coderank/core/services/MappingService",
-        "@coderank/core/security/active-actor"
+        "apps/api/src/modules/mapping/mapping.service.js",
+        "apps/api/src/middleware/authentication.js"
       ],
       "description": "Admin faculty-to-course mapping assignment and lookup",
       "observedResponseHeaders": {},
       "contractSources": [
-        "apps/web/src/app/api/mapping/route.js"
+        "apps/api/src/modules/mapping/mapping.routes.js",
+        "apps/api/src/modules/mapping/mapping.service.js",
+        "apps/api/src/middleware/authentication.js"
       ]
     },
     {

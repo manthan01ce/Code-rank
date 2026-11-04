@@ -1,5 +1,6 @@
 import { verifyRealtimeContracts } from './lib/realtime-contracts.mjs';
 import { verifyAuthContracts } from './lib/auth-contracts.mjs';
+import { verifyCoursesContracts } from './lib/courses-contracts.mjs';
 import '@coderank/core/config/env';
 import assert from "node:assert/strict";
 import { spawn, spawnSync, execFileSync } from "node:child_process";
@@ -405,6 +406,10 @@ try {
   await verifyRealtimeContracts({ base, apiBase, peerBase: 'http://127.0.0.1:3103', token, jobId, secret: env.JWT_SECRET,
     adminLogin: () => login(env.E2E_ADMIN_EMAIL), stopPeer: () => stop(apiPeer),
   });
+  const courseAdminToken = await login(env.E2E_ADMIN_EMAIL);
+  const courseStudentToken = await login(env.E2E_STUDENT_EMAIL, newPassword);
+  const courseFacultyToken = await login(env.E2E_FACULTY_EMAIL);
+  await verifyCoursesContracts({ base, apiBase, adminToken: courseAdminToken, studentToken: courseStudentToken, facultyToken: courseFacultyToken });
 
 
   // Crash one web process and require the cluster to replace it while the

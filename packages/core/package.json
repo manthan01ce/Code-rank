@@ -10,6 +10,7 @@
     "./config/env": "./src/config/env.js",
     "./services/UserService": "./src/services/UserService.js",
     "./services/CourseService": "./src/services/CourseService.js",
+    "./pagination": "./src/modules/courses/list-pagination.js",
     "./services/SubmissionService": "./src/services/SubmissionService.js",
     "./utils/logger": "./src/utils/logger.js",
     "./utils/auth": "./src/utils/auth.js",
