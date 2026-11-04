@@ -29,3 +29,5 @@ CI validates standalone frontend without backend services/secrets, API without f
 The old Vercel configs are retired. A Next.js preview alone does not deploy the long-running API/realtime, Docker worker, PostgreSQL and Redis. External hosting and existing provider integrations require separate decisions; this change provisions no cloud resources and does not certify them.
 
 Later work: frontend submission/marks/user/auth/layout decomposition, remaining core API-only feature/export cleanup, database asset relocation, runner/sandbox/warm-daemon consolidation, and remaining scripts/assets/docs/test organization.
+
+Vercel Git retirement: root `vercel.json` contains only the schema and `git.deploymentEnabled: false`. It disables obsolete automatic Git deployments; it contains no build/output/routes and does not claim cloud support. The competing infrastructure config is removed. Existing hosted deployments are not deleted; a supported cloud topology needs its own reviewed cutover.

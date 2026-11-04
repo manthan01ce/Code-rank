@@ -25,7 +25,8 @@ function imports(file) {
 test('all baseline endpoints belong to API and frontend source/config cannot import backend implementations or secrets', () => {
   assert.equal(inventory.endpoints.length, 47);
   for (const endpoint of inventory.endpoints) assert.ok(endpoint.file.startsWith('apps/api/src/modules/'), endpoint.url);
-  for (const path of ['apps/web/server.js', 'apps/web/cluster.js', 'vercel.json', 'infrastructure/vercel.json']) assert.equal(existsSync(path), false, path);
+  for (const path of ['apps/web/server.js', 'apps/web/cluster.js', 'infrastructure/vercel.json']) assert.equal(existsSync(path), false, path);
+  assert.deepEqual(JSON.parse(readFileSync('vercel.json', 'utf8')), { $schema: 'https://openapi.vercel.sh/vercel.json', git: { deploymentEnabled: false } }, 'retired Vercel integration must not retain build, routing or deployment ownership');
   const files = walk('apps/web').filter(file => /\.(?:m?js|tsx?)$/.test(file));
   for (const file of files) {
     for (const specifier of imports(file)) {
