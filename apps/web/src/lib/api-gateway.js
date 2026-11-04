@@ -10,10 +10,21 @@ function forwardedHeaders(headers) {
 
 // Transitional same-origin gateway. Only explicitly migrated URLs belong to API.
 // Resolve at process startup: the same built web artifact runs on host and Docker.
-const migratedPaths = new Set(['/api/live', '/api/auth/login', '/api/auth/change-password', '/api/auth/profile']);
+const migratedPaths = new Set([
+  '/api/live',
+  '/api/auth/login',
+  '/api/auth/change-password',
+  '/api/auth/profile',
+  '/api/admin/bulk-upload',
+  '/api/admin/password',
+  '/api/users',
+]);
 
 function isMigratedPath(pathname) {
-  return migratedPaths.has(pathname) || pathname === '/socket.io' || pathname.startsWith('/socket.io/');
+  return migratedPaths.has(pathname) ||
+    pathname.startsWith('/api/users/') ||
+    pathname === '/socket.io' ||
+    pathname.startsWith('/socket.io/');
 }
 
 export function createApiGateway({ origin = process.env.INTERNAL_API_URL || 'http://127.0.0.1:3001', timeoutMs = 10000 } = {}) {

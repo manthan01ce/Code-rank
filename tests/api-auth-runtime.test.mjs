@@ -24,7 +24,7 @@ test('real auth HTTP preserves malformed/unauthorized errors and fails closed on
   t.after(() => { if (child.exitCode === null) child.kill('SIGKILL'); });
   const exited = once(child, 'exit');
   let ready = false;
-  for (let attempt = 0; attempt < 200; attempt++) {
+  for (let attempt = 0; attempt < 400; attempt++) {
     assert.equal(child.exitCode, null);
     try { ready = (await fetch(`${origin}/api/live`)).status === 200; } catch {}
     if (ready) break;

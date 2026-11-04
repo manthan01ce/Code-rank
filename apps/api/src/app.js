@@ -4,6 +4,7 @@ import { SubmissionService } from '@coderank/core/services/SubmissionService';
 import { closeDatabase } from '@coderank/database';
 import { closeRateLimiter } from './middleware/rate-limiter.js';
 import authRoutes from './modules/auth/auth.routes.js';
+import usersRoutes from './modules/users/users.routes.js';
 import realtimePlugin from './realtime/server.js';
 
 export function buildApp(options = {}) {
@@ -21,6 +22,7 @@ export function buildApp(options = {}) {
   app.register(realtimePlugin, options.realtime || {});
   app.register(operationsRoutes, { prefix: '/api' });
   app.register(authRoutes, { prefix: '/api' });
+  app.register(usersRoutes, { prefix: '/api' });
 
   return app;
 }
