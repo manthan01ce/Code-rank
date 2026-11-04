@@ -310,7 +310,7 @@ test('administrator downloads a readable credential PDF through the real student
   assertNoErrors();
 });
 
-test('faculty authoring validates, creates, edits, extends and deletes a practical over real HTTP', async ({ page, context }) => {
+test('faculty authoring validates, creates, edits, extends and archives a practical over real HTTP', async ({ page, context }) => {
   const assertNoErrors = failOnPageErrors(page);
   const { headers } = await login(page, 'faculty');
   await page.getByRole('heading', { name: 'CI Course', exact: true }).click();
@@ -352,7 +352,16 @@ test('faculty authoring validates, creates, edits, extends and deletes a practic
   page.once('dialog', dialog => dialog.accept());
   const deletion = page.waitForResponse(response => response.url().endsWith(`/api/faculty/practicals/${id}`) && response.request().method() === 'DELETE');
   await row('CI Edited Practical').getByRole('button', { name: /Delete/ }).click();
-  expect((await deletion).status()).toBe(200);
-  await expect(row('CI Edited Practical')).toHaveCount(0);
+  const deleted = await deletion;
+  expect(deleted.status()).toBe(200);
+  expect((await deleted.json()).message).toBe('Practical archived. Existing grading history is preserved.');
+  // DELETE deliberately archives in the ledger-managed database contract.
+  // Row disappearance during the loading state is not evidence of deletion.
+  const archived = await getJson(context.request, `/api/faculty/practicals/${id}`, headers);
+  expect(archived.status).toBe('inactive');
+  expect(archived.test_cases.map(item => item.id)).toEqual(detail.test_cases.map(item => item.id));
+  await expect(row('CI Edited Practical')).toBeVisible();
+  await page.reload();
+  await expect(row('CI Edited Practical')).toBeVisible();
   assertNoErrors();
 });
