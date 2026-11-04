@@ -1,22 +1,12 @@
-# Containerized application services overlay for local lab deployment.
-# Extends infrastructure/docker-compose.yml with containerized web, api, and worker tiers.
-#
-# Usage:
-#   docker compose -f infrastructure/docker-compose.yml -f infrastructure/compose.containers.yaml up -d
-
+# Full local topology: standard Next.js web, API/realtime, worker, and infrastructure gateway.
 services:
   api:
-    profiles: []
+    profiles: !reset []
   web:
-    profiles: []
-    depends_on:
-      redis:
-        condition: service_healthy
-      api:
-        condition: service_started
-    environment:
-      INTERNAL_API_URL: ${INTERNAL_API_URL:-http://api:3001}
+    profiles: !reset []
+  gateway:
+    profiles: !reset []
   worker:
-    profiles: []
+    profiles: !reset []
     environment:
       REALTIME_URL: http://api:3001

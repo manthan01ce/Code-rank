@@ -28,8 +28,7 @@
     "./db-readiness": "./src/db/readiness.js",
     "./utils/request-timing": "./src/utils/request-timing.js",
     "./services/PracticalReportService": "./src/modules/reports/PracticalReportService.js",
-    "./services/StudentPracticalService": "./src/modules/practicals/StudentPracticalService.js",
-    "./practice/problems": "./src/modules/practice/problems.js"
+    "./services/StudentPracticalService": "./src/modules/practicals/StudentPracticalService.js"
   },
   "dependencies": {
     "@neondatabase/serverless": "^1.0.2",

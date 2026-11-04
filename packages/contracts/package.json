@@ -1,0 +1,9 @@
+{
+  "name": "@coderank/contracts",
+  "version": "1.1.0",
+  "private": true,
+  "type": "module",
+  "exports": {
+    "./practice": "./src/practice.js"
+  }
+}

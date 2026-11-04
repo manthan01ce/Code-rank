@@ -1,0 +1,19 @@
+# Disposable CI overlay. Only used with explicit random volume names/project name.
+services:
+  redis:
+    container_name: !reset null
+    ports: !override ['127.0.0.1:6389:6379']
+  postgres:
+    container_name: !reset null
+    ports: !override ['127.0.0.1:5439:5432']
+  api:
+    image: coderank-api:ci
+    ports: !override []
+  web:
+    image: coderank-web:ci
+  worker:
+    image: coderank-worker:ci
+    extra_hosts: !override []
+  gateway:
+    image: coderank-gateway:ci
+    ports: !override ['127.0.0.1:3310:3000']

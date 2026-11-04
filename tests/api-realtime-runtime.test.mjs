@@ -4,10 +4,10 @@ import http from 'node:http';
 import { io as connectClient } from 'socket.io-client';
 import { once } from 'node:events';
 import { buildApp } from '../apps/api/src/app.js';
-import { createApiGateway } from '../apps/web/src/lib/api-gateway.js';
+import { createApiGateway } from '../infrastructure/gateway/proxy.mjs';
 import { createServiceToken } from '../packages/core/src/security/service-token.js';
 import { generateToken, verifyToken } from '../packages/core/src/utils/auth.js';
-import { publishPractical } from '../apps/web/src/lib/practical-events.js';
+import { publishPractical } from './fixtures/practical-publisher.mjs';
 
 process.env.JWT_SECRET = 'test-realtime-secret-key-3c';
 

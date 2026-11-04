@@ -1,8 +1,11 @@
 # Architecture migration status
 
+Current implementation after the final separation change: all 47 baseline endpoint groups and Socket.IO are API-owned. Web uses standard Next.js serving without core/database/queue/runner imports or secrets. Public routing lives in infrastructure/gateway; only worker has Docker access. The browser-safe public practice catalog has two real consumers, so it resides in packages/contracts with no backend/environment dependencies. See [current topology](three-app-topology.md). Final PR CI provides completion evidence; historical stage notes below describe their implementation snapshots.
+
+
 Reviewed against master `a8425a352cc355c12906c8af93a517f136d610ec` and branch `refactor/cr-arch-13-3i` (CR-ARCH-13 / Issue 3I / #57).
 
-## Current versus destination
+## Historical status after 3I (before the final separation change)
 
 | Area | Current implementation | Recommendation and remaining work |
 | --- | --- | --- |
@@ -15,7 +18,7 @@ Reviewed against master `a8425a352cc355c12906c8af93a517f136d610ec` and branch `r
 | Database | SQL assets and lifecycle scripts still under root `database/` | Consolidate under database package without changing migration names/checksums |
 | Runtime/deployment | Fastify API service wired into same-origin gateway, root commands, Dockerfile, and Compose overlays | After all cutovers, standard Next.js web plus independent API/worker artifacts and gateway |
 
-## Next dependency order
+## Architecture batch dependency order
 
 Follow [ADR-0001](decisions/0001-api-runtime-and-hosting.md) and the [route inventory](route-inventory.json).
 
@@ -30,7 +33,7 @@ Follow [ADR-0001](decisions/0001-api-runtime-and-hosting.md) and the [route inve
 | 7 | CR-ARCH-12A | Merged in PR #66 (3G / #55) | Execution intake, language aliases and job status HTTP slice; verified across direct Fastify API and gateway cutover |
 | 8 | CR-ARCH-12B | Implementation in PR (3H / #56) | Submission/history/reset/workspace HTTP slice; verified across direct Fastify API and gateway cutover |
 | 9 | CR-ARCH-13 | Implementation in PR (3I / #57) | Operations/profile remaining HTTP slice; preserve readiness without running migrations |
-| 10 | CR-ARCH-15 | Every slice complete (3J / #58) | Complete web/API separation; remove web backend imports/secrets/custom Socket.IO server only now |
+| 10 | CR-ARCH-15 | Implementation prepared; final-head CI and merge pending (3J / #58) | Complete web/API separation; remove web backend imports/secrets/custom Socket.IO server only now |
 
 ## Completion evidence for CR-ARCH-09 (3A)
 
@@ -203,3 +206,9 @@ Operations, readiness, metrics, logs, queue statistics, admin stats, and usernam
   - Turborepo build (`turbo run build`) succeeds cleanly for all workspaces.
 
 PR #68 review correction: operations SQL and username profile reads now belong to API. Self-account mutation shared by auth, users and profile is implemented once in API auth/account.service.js; retired core methods/operations export are removed. Metrics record all registered API routes with bounded labels, without username/query leakage. Real PostgreSQL/Redis acceptance checks direct/gateway admin permissions, profile privacy/identity, database/Redis-unavailable readiness and an unchanged migration ledger. Final CI evidence is recorded on the PR.
+
+## CR-ARCH-15 (#58) separation evidence
+
+Implementation prepared for review; completion requires successful CI and merge of the final PR head. The web custom server/cluster and server-only compatibility helpers are removed. Standard Next.js and standalone packaging are independently tested without backend modules/services/secrets; API is independently tested without Next.js/React/runner. The infrastructure gateway routes all API paths exactly once and upgrades Socket.IO; host supervision retains frontend replica replacement and drain. All application images also run together against disposable Compose PostgreSQL/Redis, controlled migrations and real worker/Docker execution. Certification requires container-topology evidence in addition to all existing browser, security, capacity and recovery gates. Vercel configs are retired under ADR-0001; cloud hosting remains separate. Broad frontend decomposition, remaining core feature/facade cleanup, database assets, sandbox/warm mode and test/script organization remain later work.
+
+Vercel Git retirement: root `vercel.json` contains only the schema and `git.deploymentEnabled: false`. It disables obsolete automatic Git deployments; it contains no build/output/routes and does not claim cloud support. The competing infrastructure config is removed. Existing hosted deployments are not deleted; a supported cloud topology needs its own reviewed cutover.

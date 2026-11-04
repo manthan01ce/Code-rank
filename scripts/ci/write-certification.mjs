@@ -6,7 +6,8 @@ import { fileURLToPath } from 'node:url';
 import { testConfiguration } from './run-tests.mjs';
 import { verifyTap } from './verify-tap.mjs';
 
-export function validateSystemEvidence({ browser, capacity, recovery, database }) {
+export function validateSystemEvidence({ browser, capacity, recovery, database, topology }) {
+  if (topology?.status !== 'passed' || ['standardWeb','api','worker','gateway','websocket','guestOwnership'].some(key => topology[key] !== true)) throw Error('Container topology gate incomplete');
   if (!(browser?.stats?.expected > 0) || ['unexpected','flaky','skipped'].some(key => browser.stats[key] !== 0)) throw Error('Browser gate incomplete');
   if (capacity?.passed !== true || capacity.completed !== capacity.workload?.jobsRequested || capacity.failures?.length !== 0) throw Error('Capacity gate incomplete');
   if (![recovery?.webReplacementMs,recovery?.executionRecoveryMs].every(value => Number.isFinite(value) && value > 0)) throw Error('Process recovery gate incomplete');
@@ -30,11 +31,11 @@ export async function writeCertification(root, env = process.env) {
     suites[mode] = result.counts;
   }
   const evidence = {};
-  for (const [name,path] of Object.entries({ browser:'browser-results.json', capacity:'authenticated/capacity.json', recovery:'authenticated/process-recovery.json', database:'authenticated/database-recovery/manifest.json' })) evidence[name] = JSON.parse(await read(path));
+  for (const [name,path] of Object.entries({ topology:'container-topology.json', browser:'browser-results.json', capacity:'authenticated/capacity.json', recovery:'authenticated/process-recovery.json', database:'authenticated/database-recovery/manifest.json' })) evidence[name] = JSON.parse(await read(path));
   validateSystemEvidence(evidence);
   const report = {
     status: 'passed', commit: sha, testedAt: new Date().toISOString(),
-    scope: 'This commit on the CI test host: build, isolated Docker execution/recovery, PostgreSQL/Redis, two web replicas, browser workflows and measured test workload.',
+    scope: 'This commit on the CI test host: three independent application images through an infrastructure gateway, real container execution/WebSockets, PostgreSQL/Redis, two standard Next.js replicas, browser workflows, process/database recovery and measured workload.',
     productionCertified: false,
     run: `https://github.com/${env.GITHUB_REPOSITORY}/actions/runs/${env.GITHUB_RUN_ID}`,
     suites, evidenceSha256: files,

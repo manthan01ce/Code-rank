@@ -1,4 +1,5 @@
-import '@coderank/core/config/env';
+import path from 'node:path';
+import { fileURLToPath } from 'node:url';
 /** @type {import('next').NextConfig} */
 const nextConfig = {
   poweredByHeader: false,
@@ -16,8 +17,8 @@ const nextConfig = {
   // Optimize production builds
   // swcMinify: true, // Deprecated in Next.js 14+, SWC is default
   
-  // Note: output: 'standalone' removed - incompatible with custom server.js
-  // output: 'standalone',
+  output: 'standalone',
+  outputFileTracingRoot: path.resolve(path.dirname(fileURLToPath(import.meta.url)), '../..'),
   
   // Optimize images
   images: {

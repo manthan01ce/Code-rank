@@ -20,7 +20,8 @@
     "fastify": "^5.2.1",
     "fastify-plugin": "^5.1.0",
     "redis": "^6.2.1",
-    "socket.io": "^4.8.3"
+    "socket.io": "^4.8.3",
+    "@coderank/contracts": "1.1.0"
   },
   "devDependencies": {
     "eslint": "^9"

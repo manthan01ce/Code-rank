@@ -7,7 +7,7 @@
 | Foundation issues | #19 (01A), #20 (01B) |
 | Original foundation PRs | #21 (baseline), #23 (ADR draft) |
 | Source reviewed for this correction | `051a654e52d484bfaea5a72775841a618fb22881` |
-| Implementation status | Planned. This ADR does not create apps/api or deploy the target. |
+| Implementation status | Three application runtimes implemented; final separation verified through the #58 PR CI. External hosting is separate. |
 
 This decision replaces the earlier draft's blank owner fields and inconsistent alternatives. The owner reaffirmed the folder-structure review's three-application architecture. The initial implementation targets the local Linux lab; it does not assume a cloud subscription, domain, budget, remote credentials or staging access.
 
@@ -40,6 +40,8 @@ Use Fastify injection for focused adapter checks where useful, AND real listenin
 Do not invent plugin names or assume middleware cancels work. Issue09/feature PRs must verify documented parser/multipart/body-limit/error/timeout behavior and characterize current contracts first.
 
 ## 3. Same-origin gateway decision
+
+Final implementation: infrastructure/gateway routes every /api and /socket.io request to API; standard Next.js owns pages/static content. The original staged migration instructions below are retained as decision history.
 
 **Decision: one browser origin.** The gateway serves page traffic from web and routes migrated API paths to API, with exactly one /api prefix. Socket.IO upgrades go to the current realtime owner during migration and API after issue14.
 

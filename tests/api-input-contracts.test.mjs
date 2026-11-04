@@ -8,17 +8,9 @@ registerHooks({ resolve(specifier, context, next) {
 mock.module('@coderank/core/security/active-actor', { namedExports: { authenticateRequest: async () => ({ id: 1, role: 'admin' }), authenticateToken: async () => ({ id: 1, role: 'admin' }) } });
 const sql = Object.assign(async () => { throw Error('private database details'); }, { query: async () => { throw Error('private database details'); } });
 mock.module(new URL('../packages/core/src/db/client.js', import.meta.url).href, { defaultExport: sql });
+mock.module('@coderank/database', { defaultExport: sql, namedExports: { closeDatabase: async () => {} } });
 
 test('JSON mutation adapters reject malformed and non-object bodies with 400', async () => {
-  const cases = [];
-  for (const [name, method] of cases) {
-    const route = await import(`../apps/web/src/app/api/${name}/route.js`);
-    for (const body of ['{', 'null', '[]', '42', '"text"']) {
-      const response = await route[method](new Request('http://localhost/api/test', { method, body, headers: { 'Content-Type': 'application/json' } }), { params: Promise.resolve({ id: '1' }) });
-      assert.equal(response.status, 400, `${method} ${name}: ${body}`);
-    }
-  }
-
   const { buildApp } = await import('../apps/api/src/app.js');
   const api = buildApp();
   await api.ready();

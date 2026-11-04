@@ -1,4 +1,4 @@
-# Authoritative local infrastructure. Redis binds only to loopback.
+# Authoritative local services. Existing named database/Redis volumes are preserved.
 services:
   redis:
     image: redis:7-alpine
@@ -61,33 +61,19 @@ services:
     volumes:
     - /var/run/docker.sock:/var/run/docker.sock
     restart: unless-stopped
-    # Docker's default 10s stop timeout is shorter than one execution job.
     stop_grace_period: 150s
     profiles:
     - container-worker
     extra_hosts:
     - host.docker.internal:host-gateway
-  # Optional container web tier has no Docker socket, runner package or CLI.
   web:
     build:
       context: ..
       dockerfile: apps/web/Dockerfile
-    depends_on:
-      redis:
-        condition: service_healthy
     environment:
-    - REDIS_HOST=redis
-    - REDIS_PORT=6379
-    - DATABASE_URL=${DATABASE_URL}
-    - DATABASE_DRIVER=${DATABASE_DRIVER:-neon}
-    - JWT_SECRET=${JWT_SECRET}
-    - REALTIME_REDIS_ENABLED=true
-    - CLUSTER_ENABLED=true
-    - WEB_CONCURRENCY=${WEB_CONCURRENCY:-2}
-    - ALLOWED_ORIGIN=${ALLOWED_ORIGIN:-http://localhost:3000}
-    - INTERNAL_API_URL=${INTERNAL_API_URL:-http://api:3001}
-    ports:
-    - 127.0.0.1:3000:3000
+    - NODE_ENV=production
+    - HOSTNAME=0.0.0.0
+    - PORT=3000
     read_only: true
     tmpfs:
     - /tmp
@@ -100,7 +86,8 @@ services:
     restart: unless-stopped
     profiles:
     - container-web
-  # Optional container API tier has no Docker socket, runner package or Next.js/React.
+    expose:
+    - '3000'
   api:
     build:
       context: ..
@@ -142,10 +129,33 @@ services:
     image: coderank-base:latest
     profiles:
     - build-image
-
+  gateway:
+    build:
+      context: ..
+      dockerfile: infrastructure/gateway/Dockerfile
+    depends_on:
+      web:
+        condition: service_started
+      api:
+        condition: service_started
+    environment:
+    - INTERNAL_WEB_URL=http://web:3000
+    - INTERNAL_API_URL=http://api:3001
+    - PORT=3000
+    ports:
+    - 127.0.0.1:3000:3000
+    read_only: true
+    tmpfs:
+    - /tmp
+    cap_drop:
+    - ALL
+    security_opt:
+    - no-new-privileges:true
+    stop_grace_period: 30s
+    restart: unless-stopped
+    profiles:
+    - container-gateway
 volumes:
-  # Preserve the former infrastructure project defaults independently of cwd.
-  # Existing root-Compose users must select their actual old volume names first.
   redis_data:
     name: ${CODERANK_REDIS_VOLUME:-infrastructure_redis_data}
   postgres_data:

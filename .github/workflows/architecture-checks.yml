@@ -103,6 +103,30 @@ jobs:
       - name: Build isolated web deployment image
         run: docker build -t coderank-web:ci -f apps/web/Dockerfile .
 
+      - name: Verify independent artifacts and frontend without backend services or secrets
+        run: |
+          docker run --rm --entrypoint node coderank-web:ci -e "const fs=require('fs');for(const p of ['/app/packages/core','/app/packages/database','/app/packages/queue','/app/packages/runner'])if(fs.existsSync(p))throw Error(p);for(const p of ['pg','redis','bullmq','jsonwebtoken','@coderank/core']){try{require.resolve(p);throw Error('Forbidden backend module '+p)}catch(e){if(e.code!=='MODULE_NOT_FOUND')throw e}}"
+          docker run --rm --entrypoint node coderank-api:ci -e "for(const p of ['next','react','@coderank/runner']){try{require.resolve(p);throw Error('Forbidden API module '+p)}catch(e){if(e.code!=='MODULE_NOT_FOUND')throw e}}"
+          web_container_id=$(docker run --rm -d --read-only --tmpfs /tmp --tmpfs /app/apps/web/.next/cache:uid=1000,gid=1000 --cap-drop ALL -p 127.0.0.1:3300:3000 coderank-web:ci)
+          trap 'docker rm -f "$web_container_id" >/dev/null 2>&1 || true' EXIT
+          node --input-type=module <<'NODE'
+          import assert from 'node:assert/strict';
+          let response;
+          for (let attempt = 0; attempt < 60; attempt++) {
+            try { response = await fetch('http://127.0.0.1:3300/login', { signal: AbortSignal.timeout(1000) }); if (response.status === 200) break; } catch {}
+            await new Promise(resolve => setTimeout(resolve, 250));
+          }
+          assert.equal(response?.status, 200, 'Next.js must serve pages independently');
+          assert.equal((await fetch('http://127.0.0.1:3300/api/live')).status, 404, 'web must not implement an API');
+          NODE
+
+      - name: Build infrastructure gateway image
+        run: docker build -t coderank-gateway:ci -f infrastructure/gateway/Dockerfile .
+
+      - name: Verify all application artifacts together through the public gateway
+        run: node scripts/ci/container-topology.mjs
+        timeout-minutes: 8
+
       - name: Full web-to-worker execution round trip
         run: npm run test:stack
 

@@ -8,71 +8,18 @@ function forwardedHeaders(headers) {
   return result;
 }
 
-// Transitional same-origin gateway. Only explicitly migrated URLs belong to API.
-// Resolve at process startup: the same built web artifact runs on host and Docker.
-const migratedPaths = new Set([
-  '/api/live',
-  '/api/health',
-  '/api/health/detailed',
-  '/api/logs',
-  '/api/metrics',
-  '/api/queue/stats',
-  '/api/stats',
-  '/api/auth/login',
-  '/api/auth/change-password',
-  '/api/auth/profile',
-  '/api/admin/bulk-upload',
-  '/api/admin/password',
-  '/api/users',
-  '/api/courses',
-  '/api/departments',
-  '/api/mapping',
-  '/api/faculty/batches',
-  '/api/faculty/courses',
-  '/api/faculty/practicals',
-  '/api/student/practicals',
-  '/api/c-run',
-  '/api/cpp-run',
-  '/api/java-run',
-  '/api/javascript-run',
-  '/api/python-run',
-  '/api/run',
-  '/api/practice-run',
-  '/api/execute',
-  '/api/submit',
-  '/api/student/submissions',
-  '/api/student/workspaces/load',
-  '/api/student/workspaces/save',
-]);
-
-const migratedPracticalPatterns = [
-  /^\/api\/faculty\/courses\/[^/]+\/stats$/,
-  /^\/api\/faculty\/practicals\/[^/]+$/,
-  /^\/api\/faculty\/practicals\/[^/]+\/(extra-time|stats|submissions)$/,
-  /^\/api\/student\/practicals\/[^/]+$/,
-  /^\/api\/student\/practicals\/[^/]+\/(submit|submissions)$/,
-];
-
-function isMigratedPath(pathname) {
-  return migratedPaths.has(pathname) ||
-    pathname.startsWith('/api/users/') ||
-    pathname.startsWith('/api/courses/') ||
-    pathname.startsWith('/api/departments/') ||
-    pathname.startsWith('/api/jobs/') ||
-    pathname.startsWith('/api/faculty/submissions/') ||
-    pathname.startsWith('/api/profile/') ||
-    pathname === '/socket.io' || pathname.startsWith('/socket.io/') ||
-    migratedPracticalPatterns.some(pattern => pattern.test(pathname));
+function isApiPath(pathname) {
+  return pathname === '/api' || pathname.startsWith('/api/') || pathname === '/socket.io' || pathname.startsWith('/socket.io/');
 }
 
-export function createApiGateway({ origin = process.env.INTERNAL_API_URL || 'http://127.0.0.1:3001', timeoutMs = 10000 } = {}) {
+export function createProxy({ match = isApiPath, upgradeMatch = path => path === '/socket.io' || path.startsWith('/socket.io/'), origin = process.env.INTERNAL_API_URL || 'http://127.0.0.1:3001', timeoutMs = 10000 } = {}) {
   const target = new URL(origin);
   if (!['http:', 'https:'].includes(target.protocol) || target.username || target.password || target.pathname !== '/' || target.search || target.hash) {
     throw new Error('INTERNAL_API_URL must be an HTTP(S) origin without credentials or a path');
   }
 
   const proxy = (req, res) => {
-    if (!isMigratedPath(req.url.split('?')[0])) return false;
+    if (!match(req.url.split('?')[0])) return false;
     const fail = (status) => {
       if (res.destroyed) return;
       if (res.headersSent) { res.destroy(); return; }
@@ -83,7 +30,8 @@ export function createApiGateway({ origin = process.env.INTERNAL_API_URL || 'htt
     headers.host = target.host;
     headers['x-forwarded-host'] = req.headers.host;
     headers['x-forwarded-proto'] = req.socket.encrypted ? 'https' : 'http';
-    const upstream = (target.protocol === 'https:' ? https : http).request(new URL(req.url, target), { method: req.method, headers, agent: false }, response => {
+    headers['x-forwarded-for'] = req.socket.remoteAddress;
+    const upstream = (target.protocol === 'https:' ? https : http).request({ hostname: target.hostname, port: target.port, path: req.url, method: req.method, headers, agent: false }, response => {
       res.writeHead(response.statusCode, forwardedHeaders(response.headers));
       response.on('error', () => res.destroy());
       response.pipe(res);
@@ -112,13 +60,14 @@ export function createApiGateway({ origin = process.env.INTERNAL_API_URL || 'htt
 
   proxy.upgrade = (req, clientSocket, head) => {
     const pathname = req.url.split('?')[0];
-    if (pathname !== '/socket.io' && !pathname.startsWith('/socket.io/')) return false;
+    if (!upgradeMatch(pathname)) return false;
 
     track(clientSocket);
     const headers = { ...req.headers };
     headers.host = target.host;
     headers['x-forwarded-host'] = req.headers.host;
     headers['x-forwarded-proto'] = req.socket.encrypted ? 'https' : 'http';
+    headers['x-forwarded-for'] = req.socket.remoteAddress;
 
     const upstream = (target.protocol === 'https:' ? https : http).request({
       hostname: target.hostname,
@@ -165,3 +114,6 @@ export function createApiGateway({ origin = process.env.INTERNAL_API_URL || 'htt
 
   return proxy;
 }
+
+export const createApiGateway = options => createProxy(options);
+export const createWebGateway = options => createProxy({ ...options, match: () => true, upgradeMatch: path => path.startsWith('/_next/') });

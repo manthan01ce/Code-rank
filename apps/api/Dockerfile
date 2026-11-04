@@ -1,6 +1,7 @@
 FROM node:24-alpine
 WORKDIR /app
 COPY package.json package-lock.json turbo.json ./
+COPY packages/contracts ./packages/contracts
 COPY packages/core ./packages/core
 COPY packages/database ./packages/database
 COPY packages/queue ./packages/queue

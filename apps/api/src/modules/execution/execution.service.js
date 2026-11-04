@@ -1,7 +1,7 @@
 import { authenticateRequest } from '@coderank/core/security/active-actor';
 import { guestActor, GUEST_COOKIE, ALLOWED_LANGUAGES, validateExecution } from '@coderank/core/security/execution';
 import { PracticalService } from '@coderank/core/services/PracticalService';
-import { STATIC_PROBLEMS } from '@coderank/core/practice/problems';
+import { STATIC_PROBLEMS } from '@coderank/contracts/practice';
 import { SubmissionService } from '@coderank/core/services/SubmissionService';
 import { checkRateLimit } from '../../middleware/rate-limiter.js';
 
