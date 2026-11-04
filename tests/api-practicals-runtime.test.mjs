@@ -441,7 +441,7 @@ test('Fastify practicals and practical reporting HTTP contracts direct and via g
     assert.equal(gwStudentPracticalDetail.status, 200);
 
     // Unmigrated endpoints must NOT be proxied (must fall through to web / return 404 in test server)
-    const unmigratedStats = await fetch(gatewayAddress + '/api/stats');
+    const unmigratedStats = await fetch(gatewayAddress + '/api/unmigrated-sample');
     assert.equal(unmigratedStats.status, 404);
     assert.equal(await unmigratedStats.text(), 'web: not proxied');
   }

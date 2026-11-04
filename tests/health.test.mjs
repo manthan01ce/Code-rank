@@ -26,6 +26,10 @@ mock.module(
   new URL("../packages/core/src/db/client.js", import.meta.url).href,
   { defaultExport: db },
 );
+mock.module("@coderank/database", {
+  defaultExport: db,
+  namedExports: { closeDatabase: async () => {} },
+});
 mock.module("@coderank/core/services/SubmissionService", {
   namedExports: {
     SubmissionService: {
@@ -42,6 +46,7 @@ const { getUserFromRequest } = await import(
 );
 mock.module("@coderank/core/security/active-actor", {
   namedExports: {
+    authenticateToken: async () => ({ id: 1, role: "admin" }),
     authenticateRequest: async (request, { optional = false } = {}) => {
       const header = request?.headers?.get?.("authorization");
       if (optional && !header) return null;
@@ -51,34 +56,48 @@ mock.module("@coderank/core/security/active-actor", {
     },
   },
 });
-const { GET } = await import("../apps/web/src/app/api/health/route.js");
+const { buildApp } = await import("../apps/api/src/app.js");
 test("readiness becomes 503 after dependency failure and does not retain stale healthy state", async () => {
-  assert.equal((await GET()).status, 200);
-  schemaCurrent = false;
-  now += 11000;
-  const pending = await GET();
-  assert.equal(pending.status, 503);
-  assert.equal((await pending.json()).services.database.schema, "pending");
-  schemaCurrent = true;
-  dbHealthy = false;
-  now += 11000;
-  const failed = await GET();
-  assert.equal(failed.status, 503);
-  assert.equal((await failed.json()).services.database.status, "degraded");
-  dbHealthy = true;
-  queueHealthy = false;
-  now += 11000;
-  assert.equal((await GET()).status, 503);
-  queueHealthy = true;
-  workerHealthy = false;
-  now += 11000;
-  const missingWorker = await GET();
-  assert.equal(missingWorker.status, 503);
-  assert.equal(
-    (await missingWorker.json()).services.execution.status,
-    "degraded",
-  );
-  workerHealthy = true;
-  now += 11000;
-  assert.equal((await GET()).status, 200);
+  const app = buildApp();
+  await app.ready();
+  try {
+    const res1 = await app.inject({ method: "GET", url: "/api/health" });
+    assert.equal(res1.statusCode, 200);
+
+    schemaCurrent = false;
+    now += 11000;
+    const pending = await app.inject({ method: "GET", url: "/api/health" });
+    assert.equal(pending.statusCode, 503);
+    assert.equal(pending.json().services.database.schema, "pending");
+
+    schemaCurrent = true;
+    dbHealthy = false;
+    now += 11000;
+    const failed = await app.inject({ method: "GET", url: "/api/health" });
+    assert.equal(failed.statusCode, 503);
+    assert.equal(failed.json().services.database.status, "degraded");
+
+    dbHealthy = true;
+    queueHealthy = false;
+    now += 11000;
+    const degradedQueue = await app.inject({ method: "GET", url: "/api/health" });
+    assert.equal(degradedQueue.statusCode, 503);
+
+    queueHealthy = true;
+    workerHealthy = false;
+    now += 11000;
+    const missingWorker = await app.inject({ method: "GET", url: "/api/health" });
+    assert.equal(missingWorker.statusCode, 503);
+    assert.equal(
+      missingWorker.json().services.execution.status,
+      "degraded",
+    );
+
+    workerHealthy = true;
+    now += 11000;
+    const restored = await app.inject({ method: "GET", url: "/api/health" });
+    assert.equal(restored.statusCode, 200);
+  } finally {
+    await app.close();
+  }
 });

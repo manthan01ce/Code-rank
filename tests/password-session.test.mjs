@@ -9,11 +9,12 @@ const sql=Object.assign(async(strings,...values)=>{
  return (await db.query(query,values)).rows;
 },{query:async(q,p)=>{if(beforeWrite){const hook=beforeWrite;beforeWrite=null;await hook();}return (await db.query(q,p)).rows;}});
 mock.module(new URL('../packages/core/src/db/client.js',import.meta.url).href,{defaultExport:sql});
-const {UserService}=await import('../packages/core/src/services/UserService.js');
+mock.module('@coderank/database', { defaultExport: sql, namedExports: { closeDatabase: async () => {} } });
+const {AccountService: UserService}=await import('../apps/api/src/modules/auth/account.service.js');
 const {hashPassword,comparePassword}=await import('../packages/core/src/utils/auth.js');
 const {authenticateToken}=await import('../packages/core/src/security/active-actor.js');
 
-mock.module('@coderank/database', { defaultExport: sql, namedExports: { closeDatabase: async () => {} } });
+
 const { AuthService } = await import('../apps/api/src/modules/auth/auth.service.js');
 test('self-service password changes rotate sessions atomically and reject concurrent session changes',async()=>{
  try {

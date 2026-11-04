@@ -1,7 +1,7 @@
 import sql from '@coderank/database';
 import { comparePassword, hashPassword, generateToken } from '@coderank/core/utils/auth';
 import crypto from 'node:crypto';
-import { UserService } from '@coderank/core/services/UserService';
+import { AccountService } from './account.service.js';
 
 export class AuthService {
   /**
@@ -114,6 +114,6 @@ export class AuthService {
   // Transitional shared account mutations also serve unmigrated admin-password
   // and username-profile adapters. Their implementation stays once in core
   // until those consumers migrate in 3D/3I.
-  static changePassword(user, body) { return UserService.changePassword(user, body); }
-  static updateProfile(user, body) { return UserService.updateProfile(user, body); }
+  static changePassword(user, body) { return AccountService.changePassword(user, body); }
+  static updateProfile(user, body) { return AccountService.updateProfile(user, body); }
 }

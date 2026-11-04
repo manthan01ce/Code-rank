@@ -27,6 +27,10 @@
     "POST",
     "PUT"
   ],
+  "apps/api/src/modules/profile/profile.routes.js": [
+    "GET",
+    "PUT"
+  ],
   "apps/api/src/modules/submissions/submissions.routes.js": [
     "DELETE",
     "GET",
@@ -64,28 +68,6 @@
   ],
   "apps/web/src/app/admin/students/page.js": [
     "PAGE"
-  ],
-  "apps/web/src/app/api/health/detailed/route.js": [
-    "GET"
-  ],
-  "apps/web/src/app/api/health/route.js": [
-    "GET"
-  ],
-  "apps/web/src/app/api/logs/route.js": [
-    "GET"
-  ],
-  "apps/web/src/app/api/metrics/route.js": [
-    "GET"
-  ],
-  "apps/web/src/app/api/profile/[username]/route.js": [
-    "GET",
-    "PUT"
-  ],
-  "apps/web/src/app/api/queue/stats/route.js": [
-    "GET"
-  ],
-  "apps/web/src/app/api/stats/route.js": [
-    "GET"
   ],
   "apps/web/src/app/code/page.js": [
     "PAGE"

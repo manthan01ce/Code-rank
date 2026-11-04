@@ -1,4 +1,5 @@
 import Fastify from 'fastify';
+import { OperationsService } from './modules/operations/operations.service.js';
 import operationsRoutes from './modules/operations/operations.routes.js';
 import { SubmissionService } from '@coderank/core/services/SubmissionService';
 import { closeDatabase } from '@coderank/database';
@@ -11,11 +12,16 @@ import mappingRoutes from './modules/mapping/mapping.routes.js';
 import practicalsRoutes from './modules/practicals/practicals.routes.js';
 import executionRoutes from './modules/execution/execution.routes.js';
 import submissionsRoutes from './modules/submissions/submissions.routes.js';
+import profileRoutes from './modules/profile/profile.routes.js';
 
 export function buildApp(options = {}) {
   const app = Fastify({
     logger: false,
     ...options,
+  });
+
+  app.addHook('onResponse', async (request, reply) => {
+    OperationsService.recordHttpRequest({ url: request.routeOptions.url || '/unmatched', statusCode: reply.statusCode, durationMs: reply.elapsedTime });
   });
 
   app.addHook('onClose', async () => {
@@ -33,6 +39,7 @@ export function buildApp(options = {}) {
   app.register(practicalsRoutes, { prefix: '/api' });
   app.register(executionRoutes, { prefix: '/api' });
   app.register(submissionsRoutes, { prefix: '/api' });
+  app.register(profileRoutes, { prefix: '/api' });
 
   return app;
 }

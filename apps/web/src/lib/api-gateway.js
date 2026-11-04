@@ -12,6 +12,12 @@ function forwardedHeaders(headers) {
 // Resolve at process startup: the same built web artifact runs on host and Docker.
 const migratedPaths = new Set([
   '/api/live',
+  '/api/health',
+  '/api/health/detailed',
+  '/api/logs',
+  '/api/metrics',
+  '/api/queue/stats',
+  '/api/stats',
   '/api/auth/login',
   '/api/auth/change-password',
   '/api/auth/profile',
@@ -54,6 +60,7 @@ function isMigratedPath(pathname) {
     pathname.startsWith('/api/departments/') ||
     pathname.startsWith('/api/jobs/') ||
     pathname.startsWith('/api/faculty/submissions/') ||
+    pathname.startsWith('/api/profile/') ||
     pathname === '/socket.io' || pathname.startsWith('/socket.io/') ||
     migratedPracticalPatterns.some(pattern => pattern.test(pathname));
 }

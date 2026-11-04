@@ -122,6 +122,9 @@ mock.module('@coderank/core/services/UserService', {
   },
 });
 
+const { UserService: accountDouble } = await import('@coderank/core/services/UserService');
+mock.module('../apps/api/src/modules/auth/account.service.js', { namedExports: { AccountService: accountDouble } });
+
 const { generateToken, getUserFromRequest } = await import('../packages/core/src/utils/auth.js');
 
 mock.module('@coderank/core/security/active-actor', {
@@ -461,7 +464,7 @@ test('Fastify API and same-origin gateway user management runtime contracts', as
   });
 
   await t.test('Same-origin gateway bypasses unmigrated paths to web fallback (418)', async () => {
-    for (const unmigrated of ['/api/health', '/api/stats']) {
+    for (const unmigrated of ['/api/unmigrated-sample', '/api/other-unmigrated']) {
       const res = await fetch(`${gatewayAddress}${unmigrated}`);
       assert.equal(res.status, 418, `${unmigrated} must bypass API gateway`);
       assert.equal(await res.text(), 'web fallback');

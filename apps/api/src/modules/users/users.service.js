@@ -1,3 +1,4 @@
+import { AccountService } from '../auth/account.service.js';
 import { UserManagementService } from '@coderank/core/services/UserManagementService';
 import { UserService } from '@coderank/core/services/UserService';
 
@@ -11,7 +12,7 @@ export class UsersService {
   }
 
   static async changePassword(admin, body) {
-    return UserService.changePassword(admin, body);
+    return AccountService.changePassword(admin, body);
   }
 
   static async listUsers(options) {
