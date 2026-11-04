@@ -42,17 +42,12 @@ mock.module('@coderank/queue', { namedExports: { readExecutionWorkers: async () 
 } } });
 
 const { generateToken } = await import('../packages/core/src/utils/auth.js');
-const submitRoute = await import('../apps/web/src/app/api/submit/route.js');
-const studentSubmit = await import('../apps/web/src/app/api/student/practicals/[id]/submit/route.js');
 const { buildApp } = await import('../apps/api/src/app.js');
 const api = buildApp();
 await api.ready();
 test.after(async () => { await api.close(); });
 
 const token = generateToken({ id: 5, role: 'student' });
-function request(path, body, auth = token, cookie) {
-  return new Request(`http://localhost${path}`, { method: body ? 'POST' : 'GET', headers: { ...(auth ? { authorization: `Bearer ${auth}` } : {}), ...(cookie ? { cookie } : {}), 'Content-Type': 'application/json' }, ...(body ? { body: JSON.stringify(body) } : {}) });
-}
 
 async function apiCall(method, path, body, auth = token, cookie) {
   const headers = { 'content-type': 'application/json' };
@@ -81,13 +76,12 @@ test('all five language routes deny anonymous practical execution and accept ass
 
 test('both submission entry points enforce role and shared validation/rate limits', async () => {
   const faculty = generateToken({ id: 1, role: 'faculty' });
-  assert.equal((await submitRoute.POST(request('/api/submit', { code: 'x', language: 'python', problemId: 'practical_7' }, faculty))).status, 403);
-  const context = { params: Promise.resolve({ id: '7' }) };
-  assert.equal((await studentSubmit.POST(request('/api/student/practicals/7/submit', { code: 'x', language: 'invalid' }), context)).status, 400);
+  assert.equal((await apiCall('POST', '/api/submit', { code: 'x', language: 'python', problemId: 'practical_7' }, faculty)).status, 403);
+  assert.equal((await apiCall('POST', '/api/student/practicals/7/submit', { code: 'x', language: 'invalid' })).status, 400);
   rateAllowed = false;
-  assert.equal((await studentSubmit.POST(request('/api/student/practicals/7/submit', { code: 'x', language: 'python' }), context)).status, 429);
+  assert.equal((await apiCall('POST', '/api/student/practicals/7/submit', { code: 'x', language: 'python' })).status, 429);
   rateAllowed = true;
-  assert.equal((await studentSubmit.POST(request('/api/student/practicals/7/submit', { code: 'x', language: 'python' }), context)).status, 202);
+  assert.equal((await apiCall('POST', '/api/student/practicals/7/submit', { code: 'x', language: 'python' })).status, 202);
 });
 
 test('job endpoint denies cross-user reads and redacts hidden tests for the owner', async () => {
@@ -121,10 +115,9 @@ test('prototype-property problem identifiers cannot enqueue an empty test suite'
 });
 
 test('workspace routes enforce practical membership and bounded source input', async () => {
-  const save = await import('../apps/web/src/app/api/student/workspaces/save/route.js');
-  assert.equal((await save.POST(request('/api/student/workspaces/save', { practical_id: 7, language: 'python', code: 'print("你好")' }))).status, 200);
-  assert.equal((await save.POST(request('/api/student/workspaces/save', { practical_id: '7junk', language: 'python', code: '' }))).status, 400);
-  assert.equal((await save.POST(request('/api/student/workspaces/save', { practical_id: 7, language: 'unknown', code: '' }))).status, 400);
-  assert.equal((await save.POST(request('/api/student/workspaces/save', { practical_id: 7, language: 'python', code: 'x'.repeat(131073) }))).status, 400);
-  assert.equal((await save.POST(request('/api/student/workspaces/save', { practical_id: 7, language: 'python', code: '' }, null))).status, 401);
+  assert.equal((await apiCall('POST', '/api/student/workspaces/save', { practical_id: 7, language: 'python', code: 'print("你好")' })).status, 200);
+  assert.equal((await apiCall('POST', '/api/student/workspaces/save', { practical_id: '7junk', language: 'python', code: '' })).status, 400);
+  assert.equal((await apiCall('POST', '/api/student/workspaces/save', { practical_id: 7, language: 'unknown', code: '' })).status, 400);
+  assert.equal((await apiCall('POST', '/api/student/workspaces/save', { practical_id: 7, language: 'python', code: 'x'.repeat(131073) })).status, 400);
+  assert.equal((await apiCall('POST', '/api/student/workspaces/save', { practical_id: 7, language: 'python', code: '' }, null)).status, 401);
 });

@@ -27,6 +27,11 @@
     "POST",
     "PUT"
   ],
+  "apps/api/src/modules/submissions/submissions.routes.js": [
+    "DELETE",
+    "GET",
+    "POST"
+  ],
   "apps/api/src/modules/users/users.routes.js": [
     "DELETE",
     "GET",
@@ -60,13 +65,6 @@
   "apps/web/src/app/admin/students/page.js": [
     "PAGE"
   ],
-  "apps/web/src/app/api/faculty/practicals/[id]/submissions/route.js": [
-    "GET"
-  ],
-  "apps/web/src/app/api/faculty/submissions/[id]/route.js": [
-    "DELETE",
-    "GET"
-  ],
   "apps/web/src/app/api/health/detailed/route.js": [
     "GET"
   ],
@@ -88,24 +86,6 @@
   ],
   "apps/web/src/app/api/stats/route.js": [
     "GET"
-  ],
-  "apps/web/src/app/api/student/practicals/[id]/submissions/route.js": [
-    "GET"
-  ],
-  "apps/web/src/app/api/student/practicals/[id]/submit/route.js": [
-    "POST"
-  ],
-  "apps/web/src/app/api/student/submissions/route.js": [
-    "GET"
-  ],
-  "apps/web/src/app/api/student/workspaces/load/route.js": [
-    "GET"
-  ],
-  "apps/web/src/app/api/student/workspaces/save/route.js": [
-    "POST"
-  ],
-  "apps/web/src/app/api/submit/route.js": [
-    "POST"
   ],
   "apps/web/src/app/code/page.js": [
     "PAGE"
