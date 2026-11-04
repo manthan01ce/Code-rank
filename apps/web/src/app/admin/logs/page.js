@@ -2,7 +2,7 @@
 
 import { useCallback, useEffect, useState, useMemo } from 'react';
 import LoadingOverlay from '@/components/LoadingOverlay';
-import { useAdminAuth } from '@/hooks/useAdminAuth';
+import { useAdminAuth } from '@/features/auth/hooks/useAdminAuth';
 import { usePolling } from '@/hooks/usePolling';
 import { AdminDataTable, DataTableColumnHeader } from '@/components/ui/data-table';
 import {

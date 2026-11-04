@@ -3,7 +3,7 @@
 import { useState, useEffect, useRef, useMemo, useCallback } from 'react';
 import { fetchCollection } from '@/lib/fetch-collection';
 import LoadingOverlay from '@/components/LoadingOverlay';
-import { useAdminAuth } from '@/hooks/useAdminAuth';
+import { useAdminAuth } from '@/features/auth/hooks/useAdminAuth';
 import { useSocket } from '@/hooks/useSocket';
 import RefreshButton from '@/components/RefreshButton';
 import { AdminDataTable, DataTableColumnHeader, StatusBadge } from '@/components/ui/data-table';

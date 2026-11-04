@@ -4,7 +4,7 @@ import RefreshButton from '@/components/RefreshButton';
 import { useCallback, useEffect, useState } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
-import ChangePasswordModal from '@/components/ChangePasswordModal';
+import ChangePasswordModal from '@/features/auth/components/ChangePasswordModal';
 import styles from './profile.module.css';
 
 const destinations = [

@@ -2,7 +2,7 @@
  * apps/web/src/lib/api-utils.js
  * Client-side API fetch helper attaching Authorization token automatically
  */
-import { getClientAuth } from './auth-client.js';
+import { getClientAuth } from '../features/auth/api/auth-client.js';
 
 export async function fetchApi(url, options = {}) {
   const { token } = getClientAuth();

@@ -2,7 +2,7 @@ import test, {mock} from 'node:test';
 import assert from 'node:assert/strict';
 import {registerHooks} from 'node:module';
 import {retryRead} from '../packages/database/src/read-retry.js';
-import {signInRequest} from '../apps/web/src/lib/sign-in-request.js';
+import {signInRequest} from '../apps/web/src/features/auth/api/sign-in-request.js';
 
 test('safe read retry has one budget and does not retry permission failures', async (t) => {
   // Control the retry budget independently of scheduling delays on busy CI hosts.

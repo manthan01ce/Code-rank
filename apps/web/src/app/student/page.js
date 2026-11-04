@@ -1,7 +1,7 @@
 'use client';
 import WorkspaceReturn from '@/components/WorkspaceReturn';
 import styles from './overview.module.css';
-import { useAccountIdentity } from '@/hooks/useAccountIdentity';
+import { useAccountIdentity } from '@/features/auth/hooks/useAccountIdentity';
 import { StudentThemeToggle } from '@/components/student/StudentTheme';
 import Link from 'next/link';
 import QuestionList from '@/components/student/QuestionList';
