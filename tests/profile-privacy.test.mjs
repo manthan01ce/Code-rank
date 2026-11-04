@@ -17,10 +17,9 @@ mock.module(
   new URL("../packages/core/src/db/client.js", import.meta.url).href,
   { defaultExport: sql },
 );
-const { UserService } = await import(
-  "../packages/core/src/services/UserService.js"
-);
 mock.module('@coderank/database', { defaultExport: sql, namedExports: { closeDatabase: async () => {} } });
+const { ProfileService: UserService } = await import('../apps/api/src/modules/profile/profile.service.js');
+
 const { AuthService } = await import('../apps/api/src/modules/auth/auth.service.js');
 test("profile history is bounded and excludes source/secret grading fields; handles are literal", async () => {
   try {

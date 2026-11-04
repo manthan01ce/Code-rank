@@ -39,10 +39,7 @@ export default async function profileRoutes(fastify) {
   });
 
   // GET /profile/:username — public username profile lookup
-  fastify.get('/profile/:username', async (request, reply) => {
-    await requireActor(request, reply);
-    if (reply.sent) return;
-
+  fastify.get('/profile/:username', { onRequest: requireActor }, async (request, reply) => {
     try {
       const result = await ProfileService.getProfileByUsername(request.actor, request.params.username);
       reply.header('Cache-Control', 'no-store');
@@ -56,10 +53,7 @@ export default async function profileRoutes(fastify) {
   });
 
   // PUT /profile/:username — update caller profile
-  fastify.put('/profile/:username', async (request, reply) => {
-    await requireActor(request, reply);
-    if (reply.sent) return;
-
+  fastify.put('/profile/:username', { onRequest: requireActor }, async (request, reply) => {
     const body = request.body;
     if (!body || typeof body !== 'object' || Array.isArray(body)) {
       reply.header('Cache-Control', 'no-store');

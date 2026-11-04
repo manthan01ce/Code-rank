@@ -1709,7 +1709,7 @@
       ],
       "services": [
         "@coderank/core/security/active-actor",
-        "@coderank/core/services/OperationsService"
+        "apps/api/src/modules/operations/operations.service.js"
       ],
       "description": "Privileged detailed health diagnostics for administrators",
       "observedResponseHeaders": {
@@ -1742,7 +1742,7 @@
         500
       ],
       "services": [
-        "@coderank/core/services/OperationsService",
+        "apps/api/src/modules/operations/operations.service.js",
         "@coderank/core/security/active-actor"
       ],
       "description": "Administrator audit and activity log retrieval",
@@ -1770,7 +1770,7 @@
         500
       ],
       "services": [
-        "@coderank/core/services/OperationsService",
+        "apps/api/src/modules/operations/operations.service.js",
         "@coderank/core/security/active-actor"
       ],
       "description": "System operational metrics and performance telemetries",
@@ -1830,7 +1830,7 @@
         500
       ],
       "services": [
-        "@coderank/core/services/OperationsService",
+        "apps/api/src/modules/operations/operations.service.js",
         "@coderank/core/security/active-actor"
       ],
       "description": "Administrator system and active user counters",

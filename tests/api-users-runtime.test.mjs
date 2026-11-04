@@ -122,6 +122,9 @@ mock.module('@coderank/core/services/UserService', {
   },
 });
 
+const { UserService: accountDouble } = await import('@coderank/core/services/UserService');
+mock.module('../apps/api/src/modules/auth/account.service.js', { namedExports: { AccountService: accountDouble } });
+
 const { generateToken, getUserFromRequest } = await import('../packages/core/src/utils/auth.js');
 
 mock.module('@coderank/core/security/active-actor', {

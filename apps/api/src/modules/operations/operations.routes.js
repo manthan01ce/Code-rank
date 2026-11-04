@@ -4,14 +4,6 @@ import { requireAdmin } from '../../middleware/authentication.js';
 export default async function operationsRoutes(fastify) {
   fastify.decorateRequest('actor', null);
 
-  fastify.addHook('onResponse', async (request, reply) => {
-    OperationsService.recordHttpRequest({
-      url: request.raw.url,
-      statusCode: reply.statusCode,
-      durationMs: reply.elapsedTime,
-    });
-  });
-
   // GET /live — public, dependency-free liveness probe
   fastify.get('/live', async (request, reply) => {
     reply.header('Cache-Control', 'no-store');

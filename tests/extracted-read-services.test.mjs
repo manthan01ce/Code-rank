@@ -9,7 +9,8 @@ const sql = Object.assign((strings, ...params) => db.query(strings.reduce((text,
 mock.module(new URL('../packages/core/src/db/client.js', import.meta.url).href, { defaultExport: sql });
 const { StudentPracticalService } = await import('../packages/core/src/modules/practicals/StudentPracticalService.js');
 const { PracticalReportService } = await import('../packages/core/src/modules/reports/PracticalReportService.js');
-const { OperationsService } = await import('../packages/core/src/modules/reports/OperationsService.js');
+mock.module('@coderank/database', { defaultExport: sql });
+const { OperationsService } = await import('../apps/api/src/modules/operations/operations.service.js');
 const { SubmissionService } = await import('../packages/core/src/modules/submissions/SubmissionService.js');
 
 test('extracted reads preserve cohort visibility, reporting authority, ordering and validation', async () => {
@@ -63,10 +64,10 @@ test('extracted reads preserve cohort visibility, reporting authority, ordering 
       await assert.rejects(PracticalReportService.stats({ role: 'admin' }, id), error => error.status === 400);
       await assert.rejects(SubmissionService.getSubmission(student, id), error => error.status === 400);
     }
-    assert.deepEqual(await OperationsService.stats({ role: 'admin' }), { faculty: 1, students: 3, courses: 1 });
-    assert.equal((await OperationsService.logs({ role: 'admin' }, '1'))[0].id, 2);
-    for (const limit of ['1junk', '-1', '101', '1.5']) await assert.rejects(OperationsService.logs({ role: 'admin' }, limit), error => error.status === 400);
-    await assert.rejects(OperationsService.logs(student), error => error.status === 401);
+    assert.deepEqual(await OperationsService.getStats({ role: 'admin' }), { faculty: 1, students: 3, courses: 1 });
+    assert.equal((await OperationsService.getLogs({ role: 'admin' }, '1'))[0].id, 2);
+    for (const limit of ['1junk', '-1', '101', '1.5']) await assert.rejects(OperationsService.getLogs({ role: 'admin' }, limit), error => error.status === 400);
+    await assert.rejects(OperationsService.getLogs(student), error => error.status === 401);
     // Multiple bounded pages, non-overlap, full totals, and no count queries
     // outside the report's single authorization snapshot.
     await db.exec(`INSERT INTO users(id,name,email,role,status,extra_info) SELECT n,'Student'||n,'s'||n||'@test','student','active','{"division":"CE1","semester":1}' FROM generate_series(100,229) n;

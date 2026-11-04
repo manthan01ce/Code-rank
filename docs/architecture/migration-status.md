@@ -201,3 +201,5 @@ Operations, readiness, metrics, logs, queue statistics, admin stats, and usernam
   - All unit tests pass in `npm test`.
   - Critical lint passes (`npm run lint:critical` with 0 warnings).
   - Turborepo build (`turbo run build`) succeeds cleanly for all workspaces.
+
+PR #68 review correction: operations SQL and username profile reads now belong to API. Self-account mutation shared by auth, users and profile is implemented once in API auth/account.service.js; retired core methods/operations export are removed. Metrics record all registered API routes with bounded labels, without username/query leakage. Real PostgreSQL/Redis acceptance checks direct/gateway admin permissions, profile privacy/identity, database/Redis-unavailable readiness and an unchanged migration ledger. Final CI evidence is recorded on the PR.

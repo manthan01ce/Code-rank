@@ -1,4 +1,5 @@
 import Fastify from 'fastify';
+import { OperationsService } from './modules/operations/operations.service.js';
 import operationsRoutes from './modules/operations/operations.routes.js';
 import { SubmissionService } from '@coderank/core/services/SubmissionService';
 import { closeDatabase } from '@coderank/database';
@@ -17,6 +18,10 @@ export function buildApp(options = {}) {
   const app = Fastify({
     logger: false,
     ...options,
+  });
+
+  app.addHook('onResponse', async (request, reply) => {
+    OperationsService.recordHttpRequest({ url: request.routeOptions.url || '/unmatched', statusCode: reply.statusCode, durationMs: reply.elapsedTime });
   });
 
   app.addHook('onClose', async () => {

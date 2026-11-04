@@ -1,3 +1,4 @@
+import { verifyOperationsContracts } from './lib/operations-contracts.mjs';
 import { verifyRealtimeContracts } from './lib/realtime-contracts.mjs';
 import { verifyAuthContracts } from './lib/auth-contracts.mjs';
 import { verifyCoursesContracts } from './lib/courses-contracts.mjs';
@@ -417,6 +418,33 @@ try {
   const courseStudentToken = await login(courseStudentEmail);
   const courseFacultyToken = await login(courseFacultyEmail);
   await verifyCoursesContracts({ base, apiBase, adminToken: courseAdminToken, studentToken: courseStudentToken, facultyToken: courseFacultyToken, facultyId: (await sql.query('SELECT id FROM users WHERE email=$1', [courseFacultyEmail]))[0].id });
+
+  await verifyOperationsContracts({ base, apiBase, adminToken: courseAdminToken, studentToken: courseStudentToken,
+    username: courseStudentEmail, otherUsername: courseFacultyEmail,
+    ledger: () => sql.query('SELECT name,checksum FROM coderank_migrations ORDER BY name'),
+    probeOutage: async () => {
+      const badDatabase = new URL(appUrl.href); badDatabase.port = '1';
+      const probe = start('api-unavailable', 'apps/api/src/server.js', { API_PORT: '3104', DATABASE_URL: badDatabase.href, DB_QUERY_TIMEOUT_MS: '500', REDIS_HOST: '127.0.0.1', REDIS_PORT: '1', REALTIME_REDIS_ENABLED: 'false', DISABLE_CACHE: 'true' });
+      try {
+        let live;
+        const deadline = Date.now() + 15000;
+        while (Date.now() < deadline) {
+          try { live = await fetch('http://127.0.0.1:3104/api/live', { signal: AbortSignal.timeout(1000) }); if (live.status === 200) break; } catch {}
+          await pause(100);
+        }
+        assert.equal(live?.status, 200, 'liveness must work independently of database/Redis');
+        const response = await fetch('http://127.0.0.1:3104/api/health', { signal: AbortSignal.timeout(10000) });
+        assert.equal(response.status, 503);
+        assert.equal(response.headers.get('cache-control'), 'no-store');
+        assert.equal(response.headers.get('x-cache'), 'DISABLED');
+        const report = await response.json();
+        assert.equal(report.status, 'degraded');
+        assert.equal(report.services.database.status, 'degraded');
+        assert.equal(report.services.queue.status, 'degraded');
+        assert.ok(!JSON.stringify(report).includes(badDatabase.href));
+      } finally { await stop(probe); }
+    },
+  });
 
 
   // Crash one web process and require the cluster to replace it while the

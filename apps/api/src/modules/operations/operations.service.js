@@ -4,7 +4,6 @@ import sql from '@coderank/database';
 import { checkDatabaseReadiness } from '@coderank/database/readiness';
 import { withTimeout } from '@coderank/core/utils/timeout';
 import { SubmissionService } from '@coderank/core/services/SubmissionService';
-import { OperationsService as CoreOperationsService } from '@coderank/core/services/OperationsService';
 
 // In-memory cache for health checks
 let healthCache = null;
@@ -96,7 +95,7 @@ export class OperationsService {
     if (statusCode >= 500) current.errors += 1;
     current.durations.push(durationMs);
     if (current.durations.length > 256) current.durations.shift();
-    obsState.endpoints.set(endpoint, current);
+    if (obsState.endpoints.has(endpoint) || obsState.endpoints.size < 256) obsState.endpoints.set(endpoint, current);
   }
 
   static getHttpMetrics(admin) {
@@ -255,9 +254,9 @@ export class OperationsService {
           },
           connectionPools: {
             database: {
-              provider: 'Neon PostgreSQL',
-              status: 'managed by PgBouncer',
-              note: 'Connection pooling handled by Neon serverless driver',
+              provider: process.env.DATABASE_DRIVER === 'neon' ? 'Neon PostgreSQL' : 'PostgreSQL',
+              status: 'managed by database package',
+              note: 'Readiness is reported by /api/health; this diagnostic does not run migrations',
             },
             redis: {
               status: 'managed by internal modules',
@@ -288,18 +287,18 @@ export class OperationsService {
         try {
           const stats = await SubmissionService.getQueueStats();
           report.queueStats = stats;
-        } catch (err) {
-          report.queueStats.error = err.message;
+        } catch {
+          report.queueStats.error = 'Queue check failed';
         }
 
         detailedHealthCache = report;
         detailedHealthCacheTime = Date.now();
         return report;
-      } catch (error) {
+      } catch {
         const errorReport = {
           timestamp: new Date().toISOString(),
           error: 'Failed to generate health report',
-          message: error.message,
+          message: 'Internal server error',
           systemInfo: {
             nodeVersion: process.version,
             uptimeSeconds: Math.floor(process.uptime()),
@@ -352,12 +351,7 @@ export class OperationsService {
 
     refreshQueuePromise = (async () => {
       try {
-        const timeout = (ms) =>
-          new Promise((_, reject) => setTimeout(() => reject(new Error('Timeout')), ms));
-        const stats = await Promise.race([
-          SubmissionService.getQueueStats(),
-          timeout(1000),
-        ]);
+        const stats = await withTimeout(SubmissionService.getQueueStats(), 1000);
         queueStatsCache = stats || DEFAULT_QUEUE_STATS;
         queueStatsCacheTime = Date.now();
         return queueStatsCache;
@@ -420,13 +414,27 @@ export class OperationsService {
     if (!admin || admin.role !== 'admin') {
       throw { status: 401, message: 'Unauthorized' };
     }
-    return CoreOperationsService.stats(admin);
+    const [counts] = await sql`
+      SELECT (SELECT COUNT(*)::int FROM users WHERE role = 'faculty') as faculty,
+             (SELECT COUNT(*)::int FROM users WHERE role = 'student') as students,
+             (SELECT COUNT(*)::int FROM courses) as courses
+    `;
+    return counts;
   }
 
   static async getLogs(admin, limit) {
     if (!admin || admin.role !== 'admin') {
       throw { status: 401, message: 'Unauthorized' };
     }
-    return CoreOperationsService.logs(admin, limit);
+    const pageLimit = limit == null ? 50 : Number(limit);
+    if (!Number.isSafeInteger(pageLimit) || pageLimit < 1 || pageLimit > 100) throw { status: 400, message: 'Invalid log limit' };
+    return sql`
+      SELECT al.id, al.user_id, al.action, al.details, al.created_at,
+             u.name AS user_name, u.email AS user_email
+      FROM activity_logs al
+      LEFT JOIN users u ON u.id = al.user_id
+      ORDER BY al.created_at DESC, al.id DESC
+      LIMIT ${pageLimit}
+    `;
   }
 }
