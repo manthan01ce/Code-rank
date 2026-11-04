@@ -61,7 +61,7 @@ test('Fastify API direct runtime contracts for GET /api/live', async (t) => {
   });
 
   await t.test('Unmigrated routes are not authoritative on API runtime (return 404)', async () => {
-    for (const unmigratedPath of ['/api/health', '/api/stats']) {
+    for (const unmigratedPath of ['/api/unmigrated-sample', '/api/unmigrated-extra']) {
       const res = await fetch(`${address}${unmigratedPath}`);
       assert.equal(res.status, 404, `${unmigratedPath} must return 404 on API runtime`);
     }
@@ -138,7 +138,7 @@ test('Same-origin gateway routing and cutover contract', async (t) => {
   });
 
   await t.test('unmigrated paths bypass API forwarding', async () => {
-    for (const path of ['/api/health', '/api/live-extra']) {
+    for (const path of ['/api/unmigrated-sample', '/api/live-extra']) {
       const res = await fetch(`${gatewayAddress}${path}`);
       assert.equal(res.status, 418, 'Only the migrated exact path may be forwarded');
     }

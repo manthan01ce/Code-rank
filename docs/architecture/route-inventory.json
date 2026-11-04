@@ -1662,7 +1662,7 @@
     },
     {
       "url": "/api/health",
-      "file": "apps/web/src/app/api/health/route.js",
+      "file": "apps/api/src/modules/operations/operations.routes.js",
       "methods": [
         "GET"
       ],
@@ -1689,12 +1689,12 @@
         ]
       },
       "contractSources": [
-        "apps/web/src/app/api/health/route.js"
+        "apps/api/src/modules/operations/operations.routes.js"
       ]
     },
     {
       "url": "/api/health/detailed",
-      "file": "apps/web/src/app/api/health/detailed/route.js",
+      "file": "apps/api/src/modules/operations/operations.routes.js",
       "methods": [
         "GET"
       ],
@@ -1722,12 +1722,12 @@
         ]
       },
       "contractSources": [
-        "apps/web/src/app/api/health/detailed/route.js"
+        "apps/api/src/modules/operations/operations.routes.js"
       ]
     },
     {
       "url": "/api/logs",
-      "file": "apps/web/src/app/api/logs/route.js",
+      "file": "apps/api/src/modules/operations/operations.routes.js",
       "methods": [
         "GET"
       ],
@@ -1752,12 +1752,12 @@
         ]
       },
       "contractSources": [
-        "apps/web/src/app/api/logs/route.js"
+        "apps/api/src/modules/operations/operations.routes.js"
       ]
     },
     {
       "url": "/api/metrics",
-      "file": "apps/web/src/app/api/metrics/route.js",
+      "file": "apps/api/src/modules/operations/operations.routes.js",
       "methods": [
         "GET"
       ],
@@ -1780,12 +1780,12 @@
         ]
       },
       "contractSources": [
-        "apps/web/src/app/api/metrics/route.js"
+        "apps/api/src/modules/operations/operations.routes.js"
       ]
     },
     {
       "url": "/api/queue/stats",
-      "file": "apps/web/src/app/api/queue/stats/route.js",
+      "file": "apps/api/src/modules/operations/operations.routes.js",
       "methods": [
         "GET"
       ],
@@ -1812,12 +1812,12 @@
         ]
       },
       "contractSources": [
-        "apps/web/src/app/api/queue/stats/route.js"
+        "apps/api/src/modules/operations/operations.routes.js"
       ]
     },
     {
       "url": "/api/stats",
-      "file": "apps/web/src/app/api/stats/route.js",
+      "file": "apps/api/src/modules/operations/operations.routes.js",
       "methods": [
         "GET"
       ],
@@ -1840,12 +1840,12 @@
         ]
       },
       "contractSources": [
-        "apps/web/src/app/api/stats/route.js"
+        "apps/api/src/modules/operations/operations.routes.js"
       ]
     },
     {
       "url": "/api/profile/[username]",
-      "file": "apps/web/src/app/api/profile/[username]/route.js",
+      "file": "apps/api/src/modules/profile/profile.routes.js",
       "methods": [
         "GET",
         "PUT"
@@ -1870,7 +1870,7 @@
       "description": "Public username profile lookup and student biography update",
       "observedResponseHeaders": {},
       "contractSources": [
-        "apps/web/src/app/api/profile/[username]/route.js"
+        "apps/api/src/modules/profile/profile.routes.js"
       ]
     }
   ],

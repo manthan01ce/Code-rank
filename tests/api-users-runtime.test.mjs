@@ -461,7 +461,7 @@ test('Fastify API and same-origin gateway user management runtime contracts', as
   });
 
   await t.test('Same-origin gateway bypasses unmigrated paths to web fallback (418)', async () => {
-    for (const unmigrated of ['/api/health', '/api/stats']) {
+    for (const unmigrated of ['/api/unmigrated-sample', '/api/other-unmigrated']) {
       const res = await fetch(`${gatewayAddress}${unmigrated}`);
       assert.equal(res.status, 418, `${unmigrated} must bypass API gateway`);
       assert.equal(await res.text(), 'web fallback');

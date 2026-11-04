@@ -11,6 +11,7 @@ import mappingRoutes from './modules/mapping/mapping.routes.js';
 import practicalsRoutes from './modules/practicals/practicals.routes.js';
 import executionRoutes from './modules/execution/execution.routes.js';
 import submissionsRoutes from './modules/submissions/submissions.routes.js';
+import profileRoutes from './modules/profile/profile.routes.js';
 
 export function buildApp(options = {}) {
   const app = Fastify({
@@ -33,6 +34,7 @@ export function buildApp(options = {}) {
   app.register(practicalsRoutes, { prefix: '/api' });
   app.register(executionRoutes, { prefix: '/api' });
   app.register(submissionsRoutes, { prefix: '/api' });
+  app.register(profileRoutes, { prefix: '/api' });
 
   return app;
 }

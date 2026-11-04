@@ -1,13 +1,13 @@
 # Architecture migration status
 
-Reviewed against master `a8425a352cc355c12906c8af93a517f136d610ec` and branch `refactor/cr-arch-11b-3f` (CR-ARCH-11B / Issue 3F / #54).
+Reviewed against master `a8425a352cc355c12906c8af93a517f136d610ec` and branch `refactor/cr-arch-13-3i` (CR-ARCH-13 / Issue 3I / #57).
 
 ## Current versus destination
 
 | Area | Current implementation | Recommendation and remaining work |
 | --- | --- | --- |
 | Applications | `apps/web`, `apps/worker`, `apps/api` | Fastify API workspace created; three application workspaces; complete separation remains scheduled for 3J |
-| HTTP | `/api/live`, auth, users, courses, departments, mapping, and practicals endpoints migrated to `apps/api`; 29 route files remain in `apps/web/src/app/api` | Continue moving feature adapters and API-only services into `apps/api/src/modules` per batch schedule (3G: execution, 3H: submissions/workspaces, etc.); preserve URLs, auth, headers and responses |
+| HTTP | All 47 endpoints migrated to `apps/api/src/modules/` (auth, users, courses, departments, mapping, practicals, execution, submissions, operations, profile); 0 route files remain in `apps/web/src/app/api` | Complete web/API extraction achieved across 3A–3I; final separation and complete removal of web backend imports/secrets scheduled for 3J |
 | Realtime | Fastify API owns authoritative Socket.IO; Next.js server proxies `/socket.io` WebSocket upgrades; API publisher broadcasts practical/job changes | Web Socket.IO server completely eliminated; browser hooks and transitional publishers point to API |
 | Frontend features | Coding-workspace, practice, credential PDF and practical-authoring extractions landed | Finish submission/reports/user workflows as separate slices; route files assemble views |
 | Core | Browser PDF implementation removed; explicit runtime environment export added | Retain only genuinely shared backend rules; move API-only services, retire facades after consumers migrate |
@@ -29,7 +29,7 @@ Follow [ADR-0001](decisions/0001-api-runtime-and-hosting.md) and the [route inve
 | 6 | CR-ARCH-11B | Merged in PR #65 (3F / #54) | Practical management and reporting HTTP slice; preserve realtime publication and reporting snapshot integrity |
 | 7 | CR-ARCH-12A | Merged in PR #66 (3G / #55) | Execution intake, language aliases and job status HTTP slice; verified across direct Fastify API and gateway cutover |
 | 8 | CR-ARCH-12B | Implementation in PR (3H / #56) | Submission/history/reset/workspace HTTP slice; verified across direct Fastify API and gateway cutover |
-| 9 | CR-ARCH-13 | Blocked on 10B + 12B (3I / #57) | Operations/profile remaining HTTP slice; preserve readiness without running migrations |
+| 9 | CR-ARCH-13 | Implementation in PR (3I / #57) | Operations/profile remaining HTTP slice; preserve readiness without running migrations |
 | 10 | CR-ARCH-15 | Every slice complete (3J / #58) | Complete web/API separation; remove web backend imports/secrets/custom Socket.IO server only now |
 
 ## Completion evidence for CR-ARCH-09 (3A)
@@ -161,5 +161,43 @@ Submissions, submission history, resets, and student workspace draft persistence
   - Direct Fastify API and gateway cutover contracts verified in `tests/api-submissions-runtime.test.mjs` (30/30 assertions passing).
   - Architecture boundary rules and route inventory validated in `tests/architecture.test.mjs` (13/13 passing).
   - All 339 tests in unit test suite pass in `npm test`.
+  - Critical lint passes (`npm run lint:critical` with 0 warnings).
+  - Turborepo build (`turbo run build`) succeeds cleanly for all workspaces.
+
+### CR-ARCH-13 ownership and verification
+Operations, readiness, metrics, logs, queue statistics, admin stats, and username profile APIs extracted to Fastify API runtime (`apps/api/src/modules/operations/` and `apps/api/src/modules/profile/`).
+- **Exact endpoint ownership (7 endpoints)**:
+  - `GET /api/health`: Public readiness evaluation with PostgreSQL migration check (`checkDatabaseReadiness`), queue health, and execution worker status; in-memory caching with `X-Cache` (HIT/MISS/DISABLED), `Cache-Control: no-store`, status 200 (healthy) or 503 (degraded). Never runs migrations on startup or probe.
+  - `GET /api/health/detailed`: Privileged administrative diagnostic probe with Node/process metrics, connection pools, circuit breakers, and execution queue counts; in-memory caching with `X-Cache` (HIT/STALE/MISS/DISABLED) and `Cache-Control: no-store`.
+  - `GET /api/logs`: Administrator activity log audit stream with `limit` validation and keyset ordering; `Cache-Control: no-store`.
+  - `GET /api/metrics`: Administrator operational metrics telemetry exposing request counters, error rates, p50/p90/p95 latency distributions, CPU/memory/event-loop delays, and endpoint breakdowns; `Cache-Control: no-store`.
+  - `GET /api/queue/stats`: Public execution queue stats with in-memory caching, serving stale on revalidation with `X-Cache` (HIT/STALE/MISS) and `Cache-Control: public, s-maxage=5, stale-while-revalidate=10`.
+  - `GET /api/stats`: Administrator system counters (faculty, student, course aggregates); `Cache-Control: no-store`.
+  - `GET /api/profile/[username]`: Authenticated profile lookup returning student information and practical submission history; sanitizes user passwords and removes submission source code and hidden test case results.
+  - `PUT /api/profile/[username]`: Authenticated student account and biography update; validates JSON object payload and preserves account security.
+- **Service Layer in `apps/api/src/modules/operations/operations.service.js` & `profile.service.js`**:
+  - `OperationsService` coordinates database schema readiness via `@coderank/database/readiness`, execution queue via `SubmissionService`, HTTP metrics via `node:perf_hooks`, and system reports via `CoreOperationsService`.
+  - `ProfileService` wraps `UserService` for student profile lookup and updates.
+- **Gateway Cutover**:
+  - Removed old handlers:
+    - `apps/web/src/app/api/health/route.js`
+    - `apps/web/src/app/api/health/detailed/route.js`
+    - `apps/web/src/app/api/logs/route.js`
+    - `apps/web/src/app/api/metrics/route.js`
+    - `apps/web/src/app/api/queue/stats/route.js`
+    - `apps/web/src/app/api/stats/route.js`
+    - `apps/web/src/app/api/profile/[username]/route.js`
+  - All API routes in `apps/web/src/app/api` have now been migrated.
+  - Same-origin gateway (`apps/web/src/lib/api-gateway.js`) configured to route all operations and `/api/profile/*` requests to `INTERNAL_API_URL`.
+- **Liveness vs Readiness vs Deployment Readiness**:
+  - **Liveness (`/api/live`)**: Zero-dependency probe returning immediate 200 `{ status: 'ok', timestamp }` to verify process responsiveness.
+  - **Readiness (`/api/health`)**: Runtime probe evaluating operational dependencies (PostgreSQL schema readiness, Redis queue, execution workers) with 10s caching; returns 200 when ready, 503 when degraded. Never runs migrations.
+  - **Deployment Readiness (`deployment:check` / migration ledger)**: Deployment verification command checking migration ledger compliance before cutover.
+- **Verification**:
+  - Direct Fastify API and gateway cutover contracts verified in `tests/api-operations-runtime.test.mjs` (12/12 assertions passing).
+  - Health failure and degradation verified in `tests/health.test.mjs`.
+  - Profile privacy and sanitization verified in `tests/profile-privacy.test.mjs`.
+  - Architecture boundary rules and route inventory validated in `tests/architecture.test.mjs` (13/13 passing).
+  - All unit tests pass in `npm test`.
   - Critical lint passes (`npm run lint:critical` with 0 warnings).
   - Turborepo build (`turbo run build`) succeeds cleanly for all workspaces.

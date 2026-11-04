@@ -201,7 +201,7 @@ test('route inventory rejects unassigned, duplicate, or invalid endpoint allocat
   // 3. Reject missing endpoint from inventory
   assert.throws(() => {
     const bad = JSON.parse(JSON.stringify(inventory));
-    bad.endpoints = bad.endpoints.slice(1);
+    bad.endpoints = bad.endpoints.filter(e => e.file !== 'apps/api/src/modules/profile/profile.routes.js');
     validateInventory(bad, actualRoutes, actualPages);
   }, /missing from inventory/);
 
@@ -302,7 +302,9 @@ test('tooling package is resolved and critical lint uses tooling configuration',
 
 test('HTTP adapters delegate SQL and sandbox execution to packages', () => {
   const routeFiles = [
-    ...walk(fileURLToPath(new URL('apps/web/src/app/api/', root))).filter(file => file.endsWith('route.js')),
+    ...(existsSync(fileURLToPath(new URL('apps/web/src/app/api/', root)))
+      ? walk(fileURLToPath(new URL('apps/web/src/app/api/', root))).filter(file => file.endsWith('route.js'))
+      : []),
     ...(existsSync(fileURLToPath(new URL('apps/api/src/modules/', root)))
       ? walk(fileURLToPath(new URL('apps/api/src/modules/', root))).filter(file => file.endsWith('routes.js'))
       : []),
