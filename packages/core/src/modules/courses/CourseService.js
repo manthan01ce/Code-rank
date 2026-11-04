@@ -1,5 +1,5 @@
 import sql from '../../db/client.js';
-import { listPage } from './list-pagination.js';
+import { listPage } from '../../shared/pagination.js';
 
 export class CourseService {
   /**

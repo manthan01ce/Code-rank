@@ -20,15 +20,13 @@
     "./services/PracticalService": "./src/services/PracticalService.js",
     "./security/service-token": "./src/security/service-token.js",
     "./services/GradingService": "./src/modules/submissions/GradingService.js",
-    "./services/PracticalManagementService": "./src/modules/practicals/PracticalManagementService.js",
-    "./services/SubmissionHistoryService": "./src/modules/submissions/SubmissionHistoryService.js",
-    "./services/UserManagementService": "./src/modules/users/UserManagementService.js",
-    "./services/CourseReportService": "./src/modules/reports/CourseReportService.js",
     "./security/active-actor": "./src/security/active-actor.js",
     "./db-readiness": "./src/db/readiness.js",
     "./utils/request-timing": "./src/utils/request-timing.js",
-    "./services/PracticalReportService": "./src/modules/reports/PracticalReportService.js",
-    "./services/StudentPracticalService": "./src/modules/practicals/StudentPracticalService.js"
+    "./shared/identifiers": "./src/shared/identifiers.js",
+    "./shared/pagination": "./src/shared/pagination.js",
+    "./practicals": "./src/modules/practicals/PracticalService.js",
+    "./submissions": "./src/modules/submissions/SubmissionService.js"
   },
   "dependencies": {
     "@neondatabase/serverless": "^1.0.2",

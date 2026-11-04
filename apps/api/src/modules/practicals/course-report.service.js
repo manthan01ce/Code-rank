@@ -1,23 +1,24 @@
-import sql from "../../db/client.js";
-import { positiveId } from "../practicals/PracticalManagementService.js";
+import sql from '@coderank/core/db';
+import { positiveId } from '@coderank/core/shared/identifiers';
+
 export class CourseReportService {
   static async marks(user, id, params = new URLSearchParams()) {
-    if (!user || user.role !== "faculty")
-      throw { status: 401, message: "Unauthorized" };
+    if (!user || user.role !== 'faculty')
+      throw { status: 401, message: 'Unauthorized' };
     id = positiveId(id);
-    const limit = positiveId(params.get("limit") || 100),
-      practicalLimit = positiveId(params.get("practicalLimit") || 25);
+    const limit = positiveId(params.get('limit') || 100),
+      practicalLimit = positiveId(params.get('practicalLimit') || 25);
     if (limit > 200 || practicalLimit > 50)
-      throw { status: 400, message: "Report page exceeds maximum size" };
-    const studentCursor = params.get("studentCursor")
-        ? positiveId(params.get("studentCursor"))
+      throw { status: 400, message: 'Report page exceeds maximum size' };
+    const studentCursor = params.get('studentCursor')
+        ? positiveId(params.get('studentCursor'))
         : 0,
-      practicalCursor = params.get("practicalCursor")
-        ? positiveId(params.get("practicalCursor"))
+      practicalCursor = params.get('practicalCursor')
+        ? positiveId(params.get('practicalCursor'))
         : 0;
-    const department = params.get("department") || null;
+    const department = params.get('department') || null;
     if (department && department.length > 200)
-      throw { status: 400, message: "Invalid department" };
+      throw { status: 400, message: 'Invalid department' };
     // One statement gives authorization and every matrix slice one snapshot.
     const [row] = await sql.query(
       `WITH course AS (
@@ -52,7 +53,7 @@ export class CourseReportService {
     );
     const report = row.report;
     if (!report.course)
-      throw { status: 404, message: "Course not found or not allocated" };
+      throw { status: 404, message: 'Course not found or not allocated' };
     report.pagination = {
       studentCursor:
         report.students.length === limit

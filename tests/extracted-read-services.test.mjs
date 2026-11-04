@@ -7,9 +7,9 @@ const sql = Object.assign((strings, ...params) => db.query(strings.reduce((text,
   query: async (query, params) => { queryCount++; return (await db.query(query, params)).rows; },
 });
 mock.module(new URL('../packages/core/src/db/client.js', import.meta.url).href, { defaultExport: sql });
-const { StudentPracticalService } = await import('../packages/core/src/modules/practicals/StudentPracticalService.js');
-const { PracticalReportService } = await import('../packages/core/src/modules/reports/PracticalReportService.js');
 mock.module('@coderank/database', { defaultExport: sql });
+const { StudentPracticalService } = await import('../apps/api/src/modules/practicals/student-practical.service.js');
+const { PracticalReportService } = await import('../apps/api/src/modules/practicals/practical-report.service.js');
 const { OperationsService } = await import('../apps/api/src/modules/operations/operations.service.js');
 const { SubmissionService } = await import('../packages/core/src/modules/submissions/SubmissionService.js');
 
