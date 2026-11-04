@@ -105,6 +105,9 @@ FRONTEND_PID=""
 cleanup() {
     echo ""
     echo "🛑 Shutting down CodeRank lab server..."
+    if [ -n "$API_PID" ] && kill -0 "$API_PID" 2>/dev/null; then
+        kill "$API_PID" 2>/dev/null || true
+    fi
     if [ -n "$WORKER_PID" ] && kill -0 "$WORKER_PID" 2>/dev/null; then
         kill "$WORKER_PID" 2>/dev/null || true
     fi
@@ -116,6 +119,9 @@ cleanup() {
 }
 
 trap cleanup SIGINT SIGTERM EXIT
+
+npm run api &
+API_PID=$!
 
 # 8. Start Backend Worker
 echo "⚙️  [2/3] Starting BullMQ backend worker..."

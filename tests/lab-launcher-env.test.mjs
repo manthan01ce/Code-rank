@@ -86,3 +86,13 @@ test('launcher bridge passes resolved values to a real child and preserves its e
   assert.equal(result.status, 7, result.stderr);
   assert.match(result.stdout, /3099\|http:\/\/127\.0\.0\.1:3099/);
 });
+
+test('launcher derives a separate API origin and preserves explicit overrides', t => {
+  const root = fixture(t, { '.env': 'PORT=3010\nAPI_PORT=3110\n' });
+  const env = resolveLabEnvironment(root, {});
+  assert.equal(env.API_PORT, '3110');
+  assert.equal(env.INTERNAL_API_URL, 'http://127.0.0.1:3110');
+  assert.equal(env.API_HOST, '127.0.0.1');
+  assert.equal(resolveLabEnvironment(root, { API_PORT: '3210' }).INTERNAL_API_URL, 'http://127.0.0.1:3210');
+  assert.throws(() => resolveLabEnvironment(root, { API_PORT: '3010' }), /API_PORT/);
+});

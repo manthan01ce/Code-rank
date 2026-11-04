@@ -18,3 +18,5 @@ services:
       INTERNAL_API_URL: ${INTERNAL_API_URL:-http://api:3001}
   worker:
     profiles: []
+    environment:
+      REALTIME_URL: http://web:3000

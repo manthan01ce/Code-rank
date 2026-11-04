@@ -39,9 +39,9 @@ Review and adjust variables in `.env`:
     DATABASE_DRIVER=neon
     DATABASE_URL=postgresql://<user>:<password>@<endpoint>.neon.tech/neondb?sslmode=require&pgbouncer=true
     ```
-Launcher precedence for PORT, REALTIME_URL and ALLOWED_ORIGIN is: existing process environment → apps/web/.env.local → apps/web/.env → root .env.local → root .env → defaults. A shared Node bridge resolves these settings before either shell launcher applies defaults. It parses values as data, never sources/evaluates .env as shell code, and exports only these launcher settings; unrelated app-local configuration keeps its normal runtime-loading behavior. The canonical infrastructure wrappers use root .env explicitly.
+Launcher precedence for PORT, REALTIME_URL, ALLOWED_ORIGIN, API_PORT, API_HOST and INTERNAL_API_URL is: existing process environment → apps/web/.env.local → apps/web/.env → root .env.local → root .env → defaults. A shared Node bridge resolves these settings before either shell launcher applies defaults. It parses values as data, never sources/evaluates .env as shell code, and exports only these launcher settings; unrelated app-local configuration keeps its normal runtime-loading behavior. The canonical infrastructure wrappers use root .env explicitly.
 
-For direct `npm run web` / `npm run worker`, each workspace retains its existing dotenv loader. Keep shared lab settings in root .env; do not configure contradictory per-app port/realtime values. Direct web startup defaults to the localhost browser origin at its effective PORT; allow additional LAN/browser origins explicitly in ALLOWED_ORIGIN when not using a launcher.
+For direct `npm run api` / `npm run web` / `npm run worker`, each workspace retains its existing dotenv loader. Keep shared lab settings in root .env; do not configure contradictory per-app port/realtime values. Direct web startup defaults to the localhost browser origin at its effective PORT; allow additional LAN/browser origins explicitly in ALLOWED_ORIGIN when not using a launcher.
 
 - **JWT Secret**:
   - `JWT_SECRET=your_super_secret_jwt_key_here` (must be non-empty).
@@ -116,20 +116,25 @@ docker compose --env-file .env -f infrastructure/docker-compose.yml --profile bu
 
 ## 6. Running the Applications
 
-### Current Runtime Architecture (Two Deployable Apps)
-The platform currently consists of:
-1. **Web Platform (`apps/web`)**: Next.js frontend UI, HTTP API routes, and Socket.IO realtime server running on port `3000`.
-2. **Background Execution Worker (`apps/worker`)**: BullMQ consumer processing code execution jobs with Docker sandboxes.
+### Current Runtime Architecture (Three Application Workspaces)
+1. **Web (`apps/web`)**: Next.js pages, the 46 unmigrated HTTP handler files and Socket.IO. Public browser origin uses `PORT` (default 3000).
+2. **API (`apps/api`)**: Fastify owns `/api/live`; other endpoints migrate in later issues. Private `API_PORT` defaults to 3001 and is independent of web's `PORT`; `API_HOST` defaults to loopback.
+3. **Worker (`apps/worker`)**: BullMQ execution orchestration; the only application needing Docker-daemon access.
 
-*(Note: The target three-app architecture with a separate `apps/api` Fastify service is planned under the accepted ADR-0001 / CR-ARCH-09+, but not yet active.)*
+The web custom server forwards `/api/live` to `INTERNAL_API_URL` at startup (default `http://127.0.0.1:3001`). Configure this as an origin without a path. The same built web artifact can use host or container API addresses. Socket.IO remains on web until #51; complete frontend/backend isolation remains #58.
 
-### Terminal 1: Background Worker
+### Terminal 1: API
+```sh
+npm run api
+```
+
+### Terminal 2: Background Worker
 ```sh
 npm run worker
 ```
 *(Runs `node src/index.js` through the worker workspace's dev script. No automatic reload/watch mode is configured; restart after worker code changes.)*
 
-### Terminal 2: Web Platform
+### Terminal 3: Web Platform
 ```sh
 npm run web
 ```
@@ -170,6 +175,10 @@ docker compose --env-file .env -f infrastructure/docker-compose.yml -f infrastru
 ```
 And set `USE_WARM_DAEMONS=true` in the worker process environment.
 > **Security Warning**: Warm daemons reuse long-running containers per language (`coderank-<lang>-daemon`) for lower latency. They **do not** provide per-job filesystem or process isolation; do not use warm daemons for untrusted multi-tenant execution.
+
+### Containerized application mode
+
+Use `docker compose --env-file .env -f infrastructure/docker-compose.yml -f infrastructure/compose.containers.yaml --profile local-database up -d --build` after configuring DATABASE_URL with a container-reachable host (`postgres` for the local Compose database). The web gateway uses `http://api:3001`; worker realtime remains on web and should use `http://web:3000`. API has no Docker socket. Check existing volume identity before starting this mode.
 
 ### Containerized Worker Mode
 To run the worker in Docker with host Docker daemon access, first configure its database URL with a hostname reachable FROM the worker container (for local Compose PostgreSQL this is `postgres`, not `localhost`), and its REALTIME_URL with a reachable web host address. Do not reuse a host-only localhost database URL unchanged. The host-run web/worker and container-run worker can require different internal addresses. Start PostgreSQL with the local-database profile if needed before this mode:

@@ -80,6 +80,23 @@ jobs:
       - name: Build isolated API deployment image
         run: docker build -t coderank-api:ci -f apps/api/Dockerfile .
 
+      - name: Verify isolated API image without web or infrastructure
+        run: |
+          api_container_id=$(docker run --rm -d --read-only --tmpfs /tmp --cap-drop ALL -p 127.0.0.1:3301:3001 coderank-api:ci)
+          trap 'docker rm -f "$api_container_id" >/dev/null 2>&1 || true' EXIT
+          node --input-type=module <<'NODE'
+          import assert from 'node:assert/strict';
+          let live;
+          for (let attempt = 0; attempt < 40; attempt++) {
+            try {
+              const response = await fetch('http://127.0.0.1:3301/api/live', { signal: AbortSignal.timeout(1000) });
+              if (response.status === 200) { live = await response.json(); break; }
+            } catch {}
+            await new Promise(resolve => setTimeout(resolve, 250));
+          }
+          assert.equal(live?.status, 'ok', 'Isolated API container must serve liveness');
+          NODE
+
       - name: Build web application bundle
         run: npm run build --workspace=apps/web
 

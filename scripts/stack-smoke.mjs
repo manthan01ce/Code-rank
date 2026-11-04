@@ -26,6 +26,7 @@ const env = {
   HOSTNAME: "127.0.0.1",
   PORT: port,
   API_PORT: apiPort,
+  API_HOST: "127.0.0.1",
   INTERNAL_API_URL: apiBase,
   REALTIME_URL: base,
   ALLOWED_ORIGIN: base,
@@ -159,6 +160,18 @@ try {
   start("web", ["apps/web/server.js"]);
   start("worker", ["apps/worker/src/index.js"]);
   await waitReady();
+  // Cross the actual production web gateway, not a substitute test proxy.
+  const directLive = await fetch(`${apiBase}/api/live`);
+  const publicLive = await fetch(`${base}/api/live`);
+  assert.equal(directLive.status, 200);
+  assert.equal(publicLive.status, 200);
+  assert.equal(publicLive.headers.get('cache-control'), 'no-store');
+  assert.equal((await publicLive.json()).status, 'ok');
+  const unmigratedLogin = await fetch(`${base}/api/auth/login`, {
+    method: 'POST', headers: { 'Content-Type': 'application/json' }, body: '{}',
+  });
+  assert.equal(unmigratedLogin.status, 400, 'Unmigrated login still belongs to web');
+
 
   const first = await submit(
     "python",

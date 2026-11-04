@@ -2,7 +2,7 @@
 import assert from 'node:assert/strict';
 import {spawn,spawnSync} from 'node:child_process';
 import {randomBytes} from 'node:crypto';
-import {mkdirSync,openSync,closeSync} from 'node:fs';
+import {mkdirSync,openSync,closeSync,existsSync} from 'node:fs';
 import {once} from 'node:events';
 import pg from 'pg';
 import {createPostgresClient} from '../packages/database/src/postgres.js';
@@ -13,7 +13,7 @@ const target=new URL(process.env.TEST_DATABASE_URL || 'invalid:');
 assert.ok(['postgres:','postgresql:'].includes(target.protocol)&&['127.0.0.1','localhost'].includes(target.hostname)&&target.pathname.endsWith('_test'),'Requires disposable loopback *_test database');
 const name=`coderank_perf_${randomBytes(8).toString('hex')}`,dbUrl=new URL(target);dbUrl.pathname='/'+name;
 const password=randomBytes(24).toString('hex'),base='http://127.0.0.1:3102';
-const env={...process.env,NODE_ENV:'production',HOSTNAME:'127.0.0.1',PORT:'3102',DATABASE_DRIVER:'postgres',DATABASE_URL:dbUrl.href,DB_POOL_SIZE:'3',DB_QUERY_TIMEOUT_MS:'5000',JWT_SECRET:randomBytes(48).toString('hex'),REALTIME_URL:base,ALLOWED_ORIGIN:base,REALTIME_REDIS_ENABLED:'true',CLUSTER_ENABLED:'true',WEB_CONCURRENCY:'2',MAX_CONCURRENT_JOBS:'2',DISABLE_RATE_LIMIT:'false',BROWSER_BASE_URL:base,BROWSER_PERFORMANCE:'true',E2E_ADMIN_EMAIL:'admin@perf.test',E2E_ADMIN_PASSWORD:password};
+const env={...process.env,NODE_ENV:'production',HOSTNAME:'127.0.0.1',PORT:'3102',API_HOST:'127.0.0.1',API_PORT:'3112',INTERNAL_API_URL:'http://127.0.0.1:3112',DATABASE_DRIVER:'postgres',DATABASE_URL:dbUrl.href,DB_POOL_SIZE:'3',DB_QUERY_TIMEOUT_MS:'5000',JWT_SECRET:randomBytes(48).toString('hex'),REALTIME_URL:base,ALLOWED_ORIGIN:base,REALTIME_REDIS_ENABLED:'true',CLUSTER_ENABLED:'true',WEB_CONCURRENCY:'2',MAX_CONCURRENT_JOBS:'2',DISABLE_RATE_LIMIT:'false',BROWSER_BASE_URL:base,BROWSER_PERFORMANCE:'true',E2E_ADMIN_EMAIL:'admin@perf.test',E2E_ADMIN_PASSWORD:password};
 const admin=new pg.Pool({connectionString:target.href,max:1,connectionTimeoutMillis:5000});admin.on('error',()=>{});
 const children=[],fds=[];let sql,created=false;
 mkdirSync('test-results/authenticated',{recursive:true});
@@ -25,6 +25,8 @@ try{
  await migrate({query:(text,values)=>sql.query(text,values),apply:m=>sql.transaction(tx=>[tx.query('SELECT pg_advisory_xact_lock(20401017,1)'),...m.statements.map(text=>tx.query(text)),tx.query('INSERT INTO coderank_migrations(name,checksum) VALUES($1,$2)',[m.name,m.checksum])])},new URL('../database/migrations/',import.meta.url));
  await sql.query("INSERT INTO users(name,email,password,role,status) VALUES('Timing Admin',$1,$2,'admin','active')",[env.E2E_ADMIN_EMAIL,await hashPassword(password)]);
  await sql.query("INSERT INTO departments(name,institute_name) VALUES('CI Department','CI Institute')");
+ // The identical timing harness also runs on the pre-API baseline revision.
+ if(existsSync('apps/api/src/server.js')) start('apps/api/src/server.js','api');
  start('apps/web/cluster.js','web');start('apps/worker/src/index.js','worker');
  let ready=false;const deadline=Date.now()+60000;
  while(Date.now()<deadline){assert.ok(children.every(c=>c.exitCode===null&&c.signalCode===null),'Performance stack process exited');try{await checkDeployment(base);ready=true;break;}catch{}await new Promise(r=>setTimeout(r,500));}

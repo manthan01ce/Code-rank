@@ -106,7 +106,7 @@ services:
       context: ..
       dockerfile: apps/api/Dockerfile
     environment:
-    - HOSTNAME=0.0.0.0
+    - API_HOST=0.0.0.0
     - PORT=3001
     - API_PORT=3001
     - NODE_ENV=production

@@ -1,6 +1,6 @@
 # @coderank/api
 
-Fastify HTTP and Socket.IO API service for CodeRank.
+Fastify HTTP API service (Socket.IO migration is pending 3C) for CodeRank.
 
 ## Architecture and Ownership
 
@@ -15,10 +15,9 @@ Fastify HTTP and Socket.IO API service for CodeRank.
 - **Private API Address**:
   - Host development: `http://127.0.0.1:3001`
   - Container network: `http://api:3001`
-- **Port Resolution Precedence**:
-  1. `API_PORT` (explicit port for API runtime, prevents conflict with web's `PORT`)
-  2. `PORT` (fallback environment variable, standard in container runtimes)
-  3. `3001` (default fallback)
+- **API configuration**: `API_PORT` defaults to `3001`; `API_HOST` defaults to `127.0.0.1`. The web `PORT` and inherited machine `HOSTNAME` do not select API listening addresses. Containers explicitly set `API_HOST=0.0.0.0`.
+- **Gateway**: the current web custom server forwards exactly `/api/live` (including query strings) using `src/lib/api-gateway.js`. `INTERNAL_API_URL` is read at web process startup, defaults to `http://127.0.0.1:3001`, and must be an HTTP(S) origin. Container web uses `http://api:3001`. Changing it requires restarting web, not rebuilding. All other HTTP paths and Socket.IO stay on web until their slices migrate.
+- **Failure handling**: unavailable API returns uncached 502; upstream timeout returns uncached 504. Request cancellation closes upstream work. No second web liveness handler hides API outages.
 
 ## Migrated Endpoints
 
@@ -44,3 +43,5 @@ Build and lint:
 npm run build --workspace=@coderank/api
 npm run lint --workspace=@coderank/api
 ```
+
+The API build command validates every source file, resolves actual imports/plugins and checks route registration without a database or listener. Node runs the source directly; there is no generated bundle.

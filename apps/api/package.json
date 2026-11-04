@@ -7,8 +7,8 @@
   "scripts": {
     "dev": "node src/server.js",
     "start": "node src/server.js",
-    "build": "node -e \"process.exit(0)\"",
-    "lint": "eslint"
+    "build": "node scripts/verify-build.mjs",
+    "lint": "eslint --config ../../tooling/eslint.config.mjs ."
   },
   "dependencies": {
     "@coderank/core": "*",

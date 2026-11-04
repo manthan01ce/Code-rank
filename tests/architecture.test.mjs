@@ -380,3 +380,11 @@ test('runtime config is exported deliberately and no relative cross-workspace en
     }
   }
 });
+
+test('API artifact excludes runner source and web gateway has runtime configuration', () => {
+  const dockerfile = read('apps/api/Dockerfile');
+  assert.doesNotMatch(dockerfile, /COPY packages \.\/packages/);
+  assert.doesNotMatch(dockerfile, /packages\/runner|docker\.sock/);
+  assert.match(read('apps/web/server.js'), /createApiGateway/);
+  assert.doesNotMatch(read('apps/web/next.config.mjs'), /destination:.*api\/live/);
+});

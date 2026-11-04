@@ -1,6 +1,10 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import http from 'node:http';
+import { createApiGateway } from '../apps/web/src/lib/api-gateway.js';
+import { resolveApiEnvironment } from '../apps/api/src/config/env.js';
+import { spawn } from 'node:child_process';
+import { once } from 'node:events';
 import { buildApp } from '../apps/api/src/app.js';
 
 test('Fastify API direct runtime contracts for GET /api/live', async (t) => {
@@ -83,49 +87,17 @@ test('API server lifecycle and clean shutdown', async () => {
 test('Same-origin gateway routing and cutover contract', async (t) => {
   // 1. Start Fastify API backend
   const apiApp = buildApp();
+  let forwarded;
+  apiApp.addHook('onRequest', async (request, reply) => {
+    forwarded = { headers: request.headers, url: request.raw.url };
+    reply.header('Set-Cookie', ['gateway_probe=synthetic; HttpOnly; Path=/']);
+  });
   const apiAddress = await apiApp.listen({ host: '127.0.0.1', port: 0 });
-  const apiPort = new URL(apiAddress).port;
 
-  // 2. Start Gateway proxy representing the web origin
+  // Use the exact production gateway imported by apps/web/server.js.
+  const proxyApi = createApiGateway({ origin: apiAddress });
   const gateway = http.createServer((req, res) => {
-    const url = new URL(req.url, `http://${req.headers.host}`);
-    
-    // Migrated route: explicitly proxy /api/live to API backend
-    if (url.pathname === '/api/live') {
-      const proxyReq = http.request(
-        `http://127.0.0.1:${apiPort}${req.url}`,
-        {
-          method: req.method,
-          headers: req.headers,
-        },
-        (proxyRes) => {
-          res.writeHead(proxyRes.statusCode, proxyRes.headers);
-          proxyRes.pipe(res);
-        }
-      );
-      proxyReq.on('error', () => {
-        res.writeHead(502, { 'Content-Type': 'application/json' });
-        res.end(JSON.stringify({ error: 'Bad Gateway' }));
-      });
-      req.pipe(proxyReq);
-      return;
-    }
-
-    // Unmigrated route: handled locally on Web
-    if (url.pathname === '/api/auth/login') {
-      res.writeHead(400, { 'Content-Type': 'application/json' });
-      res.end(JSON.stringify({ error: 'Email and password required (handled by Web)' }));
-      return;
-    }
-
-    if (url.pathname === '/api/health') {
-      res.writeHead(200, { 'Content-Type': 'application/json', 'Cache-Control': 'no-store' });
-      res.end(JSON.stringify({ status: 'healthy', source: 'web' }));
-      return;
-    }
-
-    res.writeHead(404, { 'Content-Type': 'application/json' });
-    res.end(JSON.stringify({ error: 'Not Found' }));
+    if (!proxyApi(req, res)) { res.writeHead(418); res.end('web fallback'); }
   });
 
   await new Promise((resolve) => gateway.listen(0, '127.0.0.1', resolve));
@@ -146,6 +118,15 @@ test('Same-origin gateway routing and cutover contract', async (t) => {
     assert.ok(typeof body.timestamp === 'string');
   });
 
+  await t.test('production gateway preserves query, auth, cookies and response cookies', async () => {
+    const res = await fetch(`${gatewayAddress}/api/live?probe=1`, { headers: { Authorization: 'Bearer synthetic', Cookie: 'probe=synthetic' } });
+    assert.equal(res.status, 200);
+    assert.equal(forwarded.url, '/api/live?probe=1');
+    assert.equal(forwarded.headers.authorization, 'Bearer synthetic');
+    assert.equal(forwarded.headers.cookie, 'probe=synthetic');
+    assert.match(res.headers.get('set-cookie'), /gateway_probe=synthetic/);
+  });
+
   await t.test('Gateway forwards unsupported methods on /api/live to API runtime (405)', async () => {
     const res = await fetch(`${gatewayAddress}/api/live`, {
       method: 'POST',
@@ -156,19 +137,50 @@ test('Same-origin gateway routing and cutover contract', async (t) => {
     assert.equal(res.headers.get('cache-control'), 'no-store');
   });
 
-  await t.test('Gateway preserves unmigrated endpoints on web tier', async () => {
-    const loginRes = await fetch(`${gatewayAddress}/api/auth/login`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({}),
-    });
-    assert.equal(loginRes.status, 400);
-    const loginBody = await loginRes.json();
-    assert.match(loginBody.error, /handled by Web/);
-
-    const healthRes = await fetch(`${gatewayAddress}/api/health`);
-    assert.equal(healthRes.status, 200);
-    const healthBody = await healthRes.json();
-    assert.equal(healthBody.source, 'web');
+  await t.test('unmigrated paths bypass API forwarding', async () => {
+    for (const path of ['/api/auth/login', '/api/health', '/api/live-extra']) {
+      const res = await fetch(`${gatewayAddress}${path}`);
+      assert.equal(res.status, 418, 'Only the migrated exact path may be forwarded');
+    }
   });
+  await t.test('API outage is visible as an uncached 502', async () => {
+    await apiApp.close();
+    const res = await fetch(`${gatewayAddress}/api/live`);
+    assert.equal(res.status, 502);
+    assert.equal(res.headers.get('cache-control'), 'no-store');
+  });
+});
+
+test('API environment isolates the web port and ignores inherited machine HOSTNAME', () => {
+  assert.deepEqual(resolveApiEnvironment({ PORT: '3010', HOSTNAME: 'machine-name' }), { port: 3001, host: '127.0.0.1' });
+  assert.deepEqual(resolveApiEnvironment({ API_PORT: '3112', API_HOST: '0.0.0.0' }), { port: 3112, host: '0.0.0.0' });
+  for (const API_PORT of ['0', '65536', '3001junk']) assert.throws(() => resolveApiEnvironment({ API_PORT }), /API_PORT/);
+});
+
+test('actual API entry point handles SIGTERM and frees its listening port', async (t) => {
+  const reservation = http.createServer();
+  await new Promise(resolve => reservation.listen(0, '127.0.0.1', resolve));
+  const port = reservation.address().port;
+  await new Promise(resolve => reservation.close(resolve));
+  const child = spawn(process.execPath, ['apps/api/src/server.js'], {
+    env: { ...process.env, API_PORT: String(port), API_HOST: '127.0.0.1', PORT: '3010' },
+    stdio: ['ignore', 'pipe', 'pipe'],
+  });
+  t.after(() => { if (child.exitCode === null) child.kill('SIGKILL'); });
+  const exited = once(child, 'exit');
+  let ready = false;
+  for (let count = 0; count < 100; count++) {
+    assert.equal(child.exitCode, null, 'API process exited before readiness');
+    try { ready = (await fetch(`http://127.0.0.1:${port}/api/live`)).status === 200; } catch {}
+    if (ready) break;
+    await new Promise(resolve => setTimeout(resolve, 25));
+  }
+  assert.ok(ready, 'API must listen on the explicit runtime port');
+  child.kill('SIGTERM');
+  const deadline = setTimeout(() => child.kill('SIGKILL'), 5000);
+  const [code, signal] = await exited;
+  clearTimeout(deadline);
+  assert.equal(code, 0);
+  assert.equal(signal, null);
+  await assert.rejects(fetch(`http://127.0.0.1:${port}/api/live`));
 });
