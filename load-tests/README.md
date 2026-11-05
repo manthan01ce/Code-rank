@@ -118,7 +118,7 @@ k6 run \
   -e JWT_TOKEN=your_token \
   -e DISABLE_RATE_LIMIT=true \
   -e DISABLE_CACHE=true \
-  load-tests/max-users-test.js
+  load-tests/scenarios/max-users-test.js
 ```
 
 ### Step 3 — Restore rate limiting after test
@@ -182,19 +182,19 @@ Tests:
 
 ```bash
 # Smoke
-k6 run -e BASE_URL=http://localhost:3000 load-tests/smoke-test.js
+k6 run -e BASE_URL=http://localhost:3000 load-tests/scenarios/smoke-test.js
 
 # API Load
-k6 run -e BASE_URL=http://localhost:3000 -e JWT_TOKEN=token load-tests/api-load-test.js
+k6 run -e BASE_URL=http://localhost:3000 -e JWT_TOKEN=token load-tests/scenarios/api-load-test.js
 
 # Execution Stress
-k6 run -e BASE_URL=http://localhost:3000 load-tests/execution-stress-test.js
+k6 run -e BASE_URL=http://localhost:3000 load-tests/scenarios/execution-stress-test.js
 
 # WebSocket + Polling
-k6 run -e BASE_URL=http://localhost:3000 -e JWT_TOKEN=token load-tests/websocket-polling-test.js
+k6 run -e BASE_URL=http://localhost:3000 -e JWT_TOKEN=token load-tests/scenarios/websocket-polling-test.js
 
 # Rate Limit Validation
-k6 run -e BASE_URL=http://localhost:3000 load-tests/rate-limit-test.js
+k6 run -e BASE_URL=http://localhost:3000 load-tests/scenarios/rate-limit-test.js
 
 # Submission Load (full lab session)
 k6 run \
@@ -203,14 +203,14 @@ k6 run \
   -e FACULTY_TOKEN=faculty_token \
   -e PRACTICAL_ID=1 \
   -e COURSE_ID=1 \
-  load-tests/submission-load-test.js
+  load-tests/scenarios/submission-load-test.js
 
 # Max Capacity (disable rate limit first!)
 k6 run \
   -e BASE_URL=http://localhost:3000 \
   -e JWT_TOKEN=token \
   -e DISABLE_RATE_LIMIT=true \
-  load-tests/max-users-test.js
+  load-tests/scenarios/max-users-test.js
 ```
 
 ---
@@ -263,7 +263,7 @@ a multi-user capacity claim. Do not treat rate-limit/quota rejection as runner
 capacity or change those controls on a live deployment to make a test pass.
 
 ```sh
-k6 run -e BASE_URL=http://localhost:3000 -e VUS=2 -e DURATION=30s load-tests/runner-concurrency-benchmark.js
+k6 run -e BASE_URL=http://localhost:3000 -e VUS=2 -e DURATION=30s load-tests/scripts/runner-concurrency-benchmark.js
 ```
 
 No new target-host capacity result has been measured in this repair stage.

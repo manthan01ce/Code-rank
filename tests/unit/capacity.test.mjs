@@ -2,7 +2,7 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import http from 'node:http';
 import { once } from 'node:events';
-import { capacityOptions, runCapacity } from '../../load-tests/capacity.mjs';
+import { capacityOptions, runCapacity } from '../../load-tests/scripts/capacity.mjs';
 
 async function fixture(mode, run) {
   const jobs = new Map(); let active = 0, peak = 0;

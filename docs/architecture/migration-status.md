@@ -86,7 +86,7 @@ Courses, departments, and faculty mapping APIs extracted to Fastify API runtime 
 - **Verification**:
   - Direct API and gateway runtime contracts in `tests/unit/api-courses-runtime.test.mjs`.
   - Unit and boundary checks in `tests/architecture/architecture.test.mjs`, `tests/unit/admin-api.test.mjs`, `tests/unit/api-input-contracts.test.mjs`, and `tests/unit/api-live-runtime.test.mjs`.
-  - Stack contract verification in `scripts/lib/courses-contracts.mjs` and `scripts/authenticated-stack.mjs`.
+  - Stack contract verification in `scripts/lib/courses-contracts.mjs` and `scripts/ci/authenticated-stack.mjs`.
 
 ### CR-ARCH-11B ownership and verification
 Practical management, extra time extension, practical stats, and course marks reporting APIs extracted to Fastify API runtime (`apps/api/src/modules/practicals/`).

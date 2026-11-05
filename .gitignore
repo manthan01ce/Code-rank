@@ -1,7 +1,7 @@
 # See https://help.github.com/articles/ignoring-files/ for more about ignoring files.
 
 # dependencies
-/node_modules
+node_modules/
 /.pnp
 .pnp.*
 .yarn/*
@@ -61,21 +61,8 @@ next-env.d.ts
 scratch/
 test_vol/
 logs/
-!apps/web/src/app/api/logs/
-!apps/web/src/app/api/logs/**
 !apps/web/src/app/admin/logs/
 !apps/web/src/app/admin/logs/**
-
-# Frontend/Backend specific
-frontend/node_modules/
-frontend/.next/
-frontend/out/
-frontend/code-storage/
-code-storage/
-backend/node_modules/
-
-coderank-backend/
-coderank-frontend/
 
 # Temporary native harness test directories
 /.harness-*/
@@ -89,3 +76,6 @@ load-tests/students.local.json
 load-tests/reports/
 qualification-*-summary.json
 
+
+/code-storage/
+!docs/archive/2026-11/evidence/**/*.log

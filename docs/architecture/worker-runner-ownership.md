@@ -21,9 +21,9 @@ The former worker Executor and five language files were compatibility re-exports
 
 - `apps/worker/src/index.js`
 - `apps/worker/src/workers/submission.worker.js`
-- `docs/LOCAL_SETUP_VERIFIED.md`
+- `docs/archive/2026-11/LOCAL_SETUP_VERIFIED.md`
 - `docs/architecture/baseline-2026-11.md`
-- `scripts/reap-sandboxes.mjs`
+- `scripts/ops/reap-sandboxes.mjs`
 - `tests/docker/batch-execution.test.js`
 - `tests/fixtures/sandbox-owner.fixture.mjs`
 - `tests/unit/function-harness.test.mjs`

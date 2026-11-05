@@ -91,7 +91,7 @@ server.headersTimeout = 66000;
 
 ### 4. Smoke Test Improvements
 
-**File:** `load-tests/smoke-test.js`
+**File:** `load-tests/scenarios/smoke-test.js`
 
 Changes:
 - ✅ Added 3-stage load pattern (warmup → load → rampdown)
@@ -116,7 +116,7 @@ stages: [
 | `apps/web/src/app/api/queue/stats/route.js` | Added timeout handling, graceful degradation | 🟢 High |
 | `apps/web/next.config.mjs` | Added output mode, cache headers | 🟢 High |
 | `apps/web/server.js` | HTTP keep-alive, Socket.IO optimization | 🟡 Medium |
-| `load-tests/smoke-test.js` | Warmup phase, better load pattern | 🟢 High |
+| `load-tests/scenarios/smoke-test.js` | Warmup phase, better load pattern | 🟢 High |
 
 ## Expected Performance Improvements
 

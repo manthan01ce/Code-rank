@@ -1,7 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { expiredOwnedSandbox, reapExpiredSandboxes, startSandboxReaper } from '@coderank/runner/reaper';
-import { reapSandboxCommand } from '../../scripts/reap-sandboxes.mjs';
+import { reapSandboxCommand } from '../../scripts/ops/reap-sandboxes.mjs';
 import { Sandbox } from '@coderank/runner/sandbox';
 const id='a'.repeat(64),otherId='b'.repeat(64);
 const owner='12345678-1234-4123-8123-123456789012';
