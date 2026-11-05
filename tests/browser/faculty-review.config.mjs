@@ -7,6 +7,7 @@ import { fileURLToPath } from 'node:url';
 export default defineConfig({
   testDir: '.', testMatch: (await browserFiles('frontend')).map(file => '**/' + file.split('/').at(-1)), workers: 1, retries: 0,
   forbidOnly: Boolean(process.env.CI), timeout: 30_000,
+  outputDir: fileURLToPath(new URL('../../test-results/faculty-review/', import.meta.url)),
   reporter: [['list'], ['json', { outputFile: fileURLToPath(new URL('../../test-results/faculty-review-results.json', import.meta.url)) }]],
   use: {
     baseURL: 'http://127.0.0.1:3120', browserName: 'chromium', headless: true,

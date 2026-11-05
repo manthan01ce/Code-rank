@@ -9,7 +9,7 @@ import { fileURLToPath } from 'node:url';
 import { discoverLanes } from './test-lanes.mjs';
 import { verifyTap } from './verify-tap.mjs';
 import { testConfiguration } from './run-tests.mjs';
-import { assertCertifiableLanes, validateBrowserEvidence, validateSystemEvidence } from './write-certification.mjs';
+import { assertCertifiableLanes, validateBrowserEvidence, validateSystemEvidence, validateWarmEvidence } from './write-certification.mjs';
 
 const root = fileURLToPath(new URL('../../', import.meta.url));
 const digest = bytes => createHash('sha256').update(bytes).digest('hex');
@@ -117,7 +117,7 @@ export async function auditLocalLab(repository = root) {
   try {
     const certificate = await json('test-results/certification.json');
     if (certificate.status !== 'passed' || certificate.commit !== commit || !/^https:\/\/github\.com\/manthan01ce\/Code-rank\/actions\/runs\/\d+$/.test(certificate.run || '')) throw Error('CI evidence is not passing evidence for this exact commit');
-    const expected = ['unit.tap','unit.files.json','integration.tap','integration.files.json','docker.tap','docker.files.json','container-topology.json','browser-results.json','faculty-review-results.json','authenticated/capacity.json','authenticated/process-recovery.json','authenticated/database-recovery/manifest.json'];
+    const expected = ['unit.tap','unit.files.json','integration.tap','integration.files.json','docker.tap','docker.files.json','warm-disposition.json','container-topology.json','browser-results.json','faculty-review-results.json','authenticated/capacity.json','authenticated/process-recovery.json','authenticated/database-recovery/manifest.json'];
     for (const name of expected) {
       if (!certificate.evidenceSha256?.[name]) throw Error(`CI evidence lacks ${name}`);
       reportHashes[name] = await artifactHash(`test-results/${name}`, certificate.evidenceSha256[name], repository);
@@ -131,6 +131,7 @@ export async function auditLocalLab(repository = root) {
     const system = {};
     for (const [key,path] of Object.entries({topology:'container-topology.json',browser:'browser-results.json',frontend:'faculty-review-results.json',capacity:'authenticated/capacity.json',recovery:'authenticated/process-recovery.json',database:'authenticated/database-recovery/manifest.json'})) system[key] = await json(`test-results/${path}`);
     validateSystemEvidence(system);
+    validateWarmEvidence(await json('test-results/warm-disposition.json'), commit, certificate.evidenceSha256);
     validateBrowserEvidence(system.browser,lanes.browser,repository);
     validateBrowserEvidence(system.frontend,lanes.frontend,repository);
     finalHeadCertified = true;

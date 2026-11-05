@@ -7,6 +7,7 @@ import { once } from 'node:events';
 import { mkdirSync, writeFileSync } from 'node:fs';
 import { checkDeployment } from '../lib/deployment-readiness.mjs';
 import { successfulExecution } from '../../load-tests/lib/execution-result.js';
+import { verifyTopologyDurability } from '../lib/topology-durability.mjs';
 
 const suffix = randomBytes(6).toString('hex');
 const project = `coderank_ci_${suffix}`;
@@ -58,8 +59,10 @@ try {
   for (let attempt = 0; attempt < 20 && !event; attempt++) await pause(100);
   assert.ok(event, 'worker must publish real completion through gateway WebSocket');
   assert.equal((await fetch(`${base}/api/jobs/${job.jobId}`, { headers: { cookie: `coderank_execution_session=${randomBytes(32).toString('hex')}` } })).status, 403);
+  socket.disconnect();
+  const durability = await verifyTopologyDurability({ args, env, base, databaseUrl: hostDatabase.href, project });
   mkdirSync('test-results', { recursive: true });
-  writeFileSync('test-results/container-topology.json', JSON.stringify({ status: 'passed', standardWeb: true, api: true, worker: true, gateway: true, websocket: true, guestOwnership: true })+'\n');
+  writeFileSync('test-results/container-topology.json', JSON.stringify({ status: 'passed', standardWeb: true, api: true, worker: true, gateway: true, websocket: true, guestOwnership: true, durability })+'\n');
   console.log('Container topology passed: independent standard Next.js, API, worker, gateway, controlled migrations, real sandbox execution, WebSocket delivery and guest ownership');
 } catch (error) {
   compose(['logs', '--no-color', '--tail', '100']);

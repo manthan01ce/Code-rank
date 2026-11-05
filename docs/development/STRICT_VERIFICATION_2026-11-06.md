@@ -1,6 +1,6 @@
 # Strict verification follow-up — 6 November 2026
 
-**Overall verdict: BLOCKED, not fully certified.** College-server/intended-host/LAN/cloud acceptance remains deferred and excluded. Expensive GitHub Actions remain stopped. This report does not authorize deployment or certify real service correctness.
+**Initial local verdict: BLOCKED.** College-server/intended-host/LAN/cloud acceptance remains deferred and excluded. The owner subsequently explicitly authorized full-stack Actions on PR #111. Current real-CI results and the exact final certified source/artifact identities are recorded in [PR #111](https://github.com/manthan01ce/Code-rank/pull/111); the local observations below remain historical, not a statement that tools are unavailable on GitHub runners. This report never certifies production hosting.
 
 ## Source and actual fix
 
@@ -57,3 +57,13 @@ These gaps cannot be ignored to close #102. Reopen its acceptance tracking until
 ## How to finish
 
 On a disposable Docker-capable test machine, check out the exact reviewed PR head, install the declared tool versions, then run the existing integration, warm-disposition, Docker, stack, authenticated-browser and topology harnesses with their isolated environment setup. Complete missing replica, persistence, backup/recovery, rollback and capacity drills from the scoped #102 matrix. Keep every actual failed result visible and rerun affected checks after a fix. Do not add expensive Actions labels or dispatch stopped workflows without fresh explicit authorization. College-server acceptance remains outside this result.
+
+## Authorized real CI and evidence-gate fixes
+
+The owner explicitly authorized enabling `ci:full-stack` on PR #111. Initial real run [42108877809](https://github.com/manthan01ce/Code-rank/actions/runs/42108877809) passed all application stages: unit, PostgreSQL/Redis integration, Docker execution, all images and standard web build, Compose, gateway, web-to-worker execution, synthetic faculty UI, real authenticated role/browser workflows, two API replicas, capacity and process/database recovery. Certification failed because the faculty browser configuration used Playwright's default root test-results directory and deleted prior unit/integration/Docker file reports. The failure is preserved, not relabeled as a pass.
+
+The faculty browser artifacts now have an explicit nested output directory; a regression test checks both browser configurations cannot clean the shared evidence root. Strict certification additionally requires source/image/configuration-bound warm retirement evidence and real durability drills. The Docker lane runs once through the warm-disposition harness; no existing test is skipped or weakened.
+
+Added disposable container drills explicitly prove: only worker has Docker access; standard pages remain available during API outage; PostgreSQL/Redis graceful restart and SIGKILL recovery preserve sentinels and migration ledger; recreating application containers preserves named data volumes; rolling API back to an actual separately built prior-source image, then restoring the current image preserves data and readiness; real code still executes after recovery. The prior image is built from the PR base revision with a source label and must have a distinct image ID. No production/developer volumes or databases are selected.
+
+Certification rejects omitted drills, missing prior/current image identities, identical rollback/current artifacts, wrong/dirty warm source, missing configuration modes and mismatched Docker report hashes. Final certificate records source commit/tree, runner hardware/tool versions, artifact hashes and actual image identities. Host/LAN validators remain unchanged, and CI capacity is only qualified for the recorded runner. See the latest PR run/artifact rather than treating an earlier run's evidence as final-revision acceptance.

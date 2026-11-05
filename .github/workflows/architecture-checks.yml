@@ -36,9 +36,12 @@ jobs:
       NEXT_TELEMETRY_DISABLED: '1'
       PG_DUMP_BIN: /usr/lib/postgresql/16/bin/pg_dump
       PG_RESTORE_BIN: /usr/lib/postgresql/16/bin/pg_restore
+      ROLLBACK_SOURCE_SHA: ${{ github.event.pull_request.base.sha }}
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
 
       - name: Setup Node.js 24
         uses: actions/setup-node@v4
@@ -63,8 +66,8 @@ jobs:
       - name: Build base execution container
         run: docker build -t coderank-base:latest -f infrastructure/docker/runner/Dockerfile .
 
-      - name: Run Docker sandbox isolation tests
-        run: npm run test:docker
+      - name: Verify runner provenance, warm retirement and active Docker isolation tests
+        run: npm run test:warm-disposition
         timeout-minutes: 5
 
       - name: Validate authoritative Compose configuration
@@ -98,6 +101,15 @@ jobs:
           }
           assert.equal(live?.status, 'ok', 'Isolated API container must serve liveness');
           NODE
+
+      - name: Build prior API artifact for application-only rollback drill
+        run: |
+          set -euo pipefail
+          [[ "$ROLLBACK_SOURCE_SHA" =~ ^[a-f0-9]{40}$ ]]
+          rollback_context=$(mktemp -d)
+          trap 'rm -rf "$rollback_context"' EXIT
+          git archive "$ROLLBACK_SOURCE_SHA" | tar -xf - -C "$rollback_context"
+          docker build --label "org.opencontainers.image.revision=$ROLLBACK_SOURCE_SHA" -t coderank-api:rollback -f "$rollback_context/apps/api/Dockerfile" "$rollback_context"
 
       - name: Build web application bundle
         run: npm run build --workspace=apps/web

@@ -6,6 +6,7 @@ import { resolve, relative } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { testConfiguration } from './run-tests.mjs';
 import { verifyTap } from './verify-tap.mjs';
+import os from 'node:os';
 
 // Playwright's summary alone cannot prove that every discovered spec ran.
 export function validateBrowserEvidence(report, expectedFiles, root) {
@@ -34,6 +35,10 @@ export function validateBrowserEvidence(report, expectedFiles, root) {
 
 export function validateSystemEvidence({ browser, frontend, capacity, recovery, database, topology }) {
   if (topology?.status !== 'passed' || ['standardWeb','api','worker','gateway','websocket','guestOwnership'].some(key => topology[key] !== true)) throw Error('Container topology gate incomplete');
+  if (['apiOutageWebAvailable','serviceRestart','dependencyCrashRecovery','volumeContinuity','applicationRollback','executionAfterRecovery','workerOnlyDocker'].some(key => topology.durability?.[key] !== true)) throw Error('Container durability/rollback gate incomplete');
+  if (!/^[a-f0-9]{40}$/.test(topology.durability?.priorSource || '') || !/^sha256:[a-f0-9]{64}$/.test(topology.durability?.priorApiImage || '')) throw Error('Prior rollback artifact identity missing');
+  const currentApiImage = topology.durability.currentImages?.api?.image;
+  if (!/^sha256:[a-f0-9]{64}$/.test(currentApiImage || '') || currentApiImage === topology.durability.priorApiImage) throw Error('Rollback must use distinct prior/current API images');
   if (!(browser?.stats?.expected > 0) || ['unexpected','flaky','skipped'].some(key => browser.stats[key] !== 0)) throw Error('Browser gate incomplete');
   if (!(frontend?.stats?.expected > 0) || ['unexpected','flaky','skipped'].some(key => frontend.stats[key] !== 0)) throw Error('Faculty frontend gate incomplete');
   if (capacity?.passed !== true || capacity.completed !== capacity.workload?.jobsRequested || capacity.failures?.length !== 0) throw Error('Capacity gate incomplete');
@@ -43,6 +48,13 @@ export function validateSystemEvidence({ browser, frontend, capacity, recovery, 
 
 export function assertCertifiableLanes(lanes) {
   if (!Array.isArray(lanes?.quarantine) || lanes.quarantine.length || !lanes.docker?.includes('tests/docker/batch-execution.test.js')) throw Error('Cannot certify with quarantined coverage pending real Docker validation');
+}
+
+export function validateWarmEvidence(report, commit, hashes) {
+  if (report?.status !== 'passed' || report.commit !== commit || report.dirty !== false || report.imageCleanup !== 'removed' || !/^sha256:[a-f0-9]{64}$/.test(report.imageId || '')) throw Error('Warm retirement source/image acceptance incomplete');
+  if (JSON.stringify((report.configurations || []).map(item => item.name).sort()) !== JSON.stringify(['ci','cold','containers','local-database'])) throw Error('Warm retirement configuration coverage incomplete');
+  if (!report.commands?.length || report.commands.some(command => command.exitCode !== 0) || report.tests?.ok !== true) throw Error('Warm retirement commands/tests did not pass');
+  for (const file of ['docker.tap','docker.files.json']) if (report.artifacts?.[`test-results/${file}`] !== hashes[file]) throw Error('Warm retirement test hashes disagree');
 }
 
 export async function writeCertification(root, env = process.env) {
@@ -69,8 +81,10 @@ export async function writeCertification(root, env = process.env) {
   validateSystemEvidence(evidence);
   validateBrowserEvidence(evidence.browser, lanes.browser, root);
   validateBrowserEvidence(evidence.frontend, lanes.frontend, root);
+  validateWarmEvidence(JSON.parse(await read('warm-disposition.json')), sha, files);
   const report = {
-    status: 'passed', commit: sha, testedAt: new Date().toISOString(),
+    status: 'passed', commit: sha, tree: execFileSync('git',['rev-parse','HEAD^{tree}'],{cwd:root,encoding:'utf8'}).trim(), testedAt: new Date().toISOString(),
+    environment: { node: process.version, os: os.platform(), kernel: os.release(), arch: os.arch(), cpuModel: os.cpus()[0]?.model, logicalCPUs: os.cpus().length, memoryBytes: os.totalmem(), docker: execFileSync('docker',['--version'],{encoding:'utf8'}).trim(), compose: execFileSync('docker',['compose','version','--short'],{encoding:'utf8'}).trim() },
     scope: 'This commit on the CI test host: three independent application images through an infrastructure gateway, real container execution/WebSockets, PostgreSQL/Redis, two standard Next.js replicas, browser workflows, process/database recovery and measured workload.',
     productionCertified: false,
     run: `https://github.com/${env.GITHUB_REPOSITORY}/actions/runs/${env.GITHUB_RUN_ID}`,
