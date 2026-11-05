@@ -1,5 +1,5 @@
 'use client';
-import { useProgressRefresh } from './useProgressRefresh';
+import { useProgressRefresh } from '@/hooks/useProgressRefresh';
 import { useCallback, useEffect, useState } from 'react';
 
 // Each page/filter change aborts its predecessor; late responses cannot replace

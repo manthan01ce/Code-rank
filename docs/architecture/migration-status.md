@@ -1,5 +1,7 @@
 # Architecture migration status
 
+Remaining frontend route and workflow owners are reconciled in [the #74 ownership inventory](remaining-views-ownership.md); runtime/browser acceptance is tracked separately from these implementation moves.
+
 Current implementation after the final separation change: all 47 baseline endpoint groups and Socket.IO are API-owned. Web uses standard Next.js serving without core/database/queue/runner imports or secrets. Public routing lives in infrastructure/gateway; only worker has Docker access. The browser-safe public practice catalog has two real consumers, so it resides in packages/contracts with no backend/environment dependencies. See [current topology](three-app-topology.md). Final PR CI provides completion evidence; historical stage notes below describe their implementation snapshots.
 
 
