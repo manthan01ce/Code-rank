@@ -56,11 +56,14 @@ export async function verifyTopologyDurability({ args, env, base, databaseUrl, p
     const response = await fetch(`${base}${path}`, { signal: AbortSignal.timeout(5000) });
     assert.equal(response.status, 200, 'Pages must remain available during API outage');
   }
-  assert.ok([502, 503, 504].includes((await fetch(`${base}/api/live`, { signal: AbortSignal.timeout(5000) })).status));
+  // The gateway owns a 10-second timeout; the client must allow that response.
+  assert.ok([502, 503, 504].includes((await fetch(`${base}/api/live`, { signal: AbortSignal.timeout(15000) })).status));
   docker(['start', 'api']); await ready();
 
   // Restart actual durable services, then recreate applications without migrations or reseeding.
-  docker(['restart', 'postgres', 'redis']); await ready(); await unchanged();
+  docker(['restart', 'postgres', 'redis']);
+  docker(['up', '-d', '--no-build', '--wait', 'postgres', 'redis']);
+  await ready(); await unchanged();
   docker(['kill', '--signal', 'SIGKILL', 'postgres', 'redis']);
   docker(['up', '-d', '--no-build', '--wait', 'postgres', 'redis']);
   await ready(); await unchanged();

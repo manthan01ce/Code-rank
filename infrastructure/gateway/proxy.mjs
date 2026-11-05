@@ -36,6 +36,12 @@ export function createProxy({ match = isApiPath, upgradeMatch = path => path ===
       response.on('error', () => res.destroy());
       response.pipe(res);
     });
+    // Socket timeouts do not cover a stalled DNS lookup or connection setup.
+    const connectionDeadline = setTimeout(() => { fail(504); upstream.destroy(); }, timeoutMs);
+    connectionDeadline.unref();
+    upstream.once('response', () => clearTimeout(connectionDeadline));
+    upstream.once('error', () => clearTimeout(connectionDeadline));
+    res.once('close', () => clearTimeout(connectionDeadline));
     upstream.on('error', () => fail(502));
     upstream.setTimeout(timeoutMs, () => { fail(504); upstream.destroy(); });
     req.on('aborted', () => upstream.destroy());
