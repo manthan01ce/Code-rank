@@ -252,8 +252,8 @@ All smoke test improvements are in:
    - `apps/web/server.js`
 
 3. **Test Files**
-   - `load-tests/smoke-test.js`
-   - `load-tests/test-smoke.ps1` (new)
+   - `load-tests/scenarios/smoke-test.js`
+   - `load-tests/scripts/test-smoke.ps1` (new)
 
 4. **Documentation**
    - `SMOKE_TEST_FIXES.md`

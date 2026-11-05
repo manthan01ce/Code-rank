@@ -449,7 +449,7 @@ compress: true,
 ## File Changes Summary
 
 ### Modified
-- ✅ `load-tests/api-load-test.js`
+- ✅ `load-tests/scenarios/api-load-test.js`
   - Optimized load stages (400 → 150 peak VUs)
   - Added warmup function
   - Added request timeouts
@@ -459,7 +459,7 @@ compress: true,
 
 ### New Files
 - ✅ `load-tests/API_TEST_IMPROVEMENTS.md` (this file)
-- ✅ `load-tests/test-api.ps1` (coming next)
+- ✅ `load-tests/scripts/test-api.ps1` (coming next)
 
 ## Next Steps
 

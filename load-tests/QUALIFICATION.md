@@ -19,11 +19,11 @@ The example code only works for an echo practical. Supply known-correct solution
 Run from the repository root, gating larger tests on smoke:
 
 ```bash
-k6 run -e BASE_URL=https://YOUR-TARGET -e MODE=smoke load-tests/qualification.js
-k6 run -e BASE_URL=https://YOUR-TARGET -e MODE=api -e VUS=200 load-tests/qualification.js
-k6 run -e BASE_URL=https://YOUR-TARGET -e MODE=run -e VUS=200 load-tests/qualification.js
-k6 run -e BASE_URL=https://YOUR-TARGET -e MODE=submission -e VUS=200 load-tests/qualification.js
-k6 run -e BASE_URL=https://YOUR-TARGET -e MODE=concurrency -e VUS=200 load-tests/qualification.js
+k6 run -e BASE_URL=https://YOUR-TARGET -e MODE=smoke load-tests/scenarios/qualification.js
+k6 run -e BASE_URL=https://YOUR-TARGET -e MODE=api -e VUS=200 load-tests/scenarios/qualification.js
+k6 run -e BASE_URL=https://YOUR-TARGET -e MODE=run -e VUS=200 load-tests/scenarios/qualification.js
+k6 run -e BASE_URL=https://YOUR-TARGET -e MODE=submission -e VUS=200 load-tests/scenarios/qualification.js
+k6 run -e BASE_URL=https://YOUR-TARGET -e MODE=concurrency -e VUS=200 load-tests/scenarios/qualification.js
 ```
 
 Smoke runs samples and submits with one user. API tests authenticated practical-list reads. API/run/submission profiles ramp through 20/50/100/200 users and hold 200 for two minutes. Run checks sample outcomes; submission checks grading and persistence with a 15-second think time. Concurrency starts 200 VUs, one submission each, and waits for final results. This is 200 clients, not 200 worker slots; default worker concurrency remains 8.

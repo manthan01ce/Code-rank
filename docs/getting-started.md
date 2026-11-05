@@ -63,7 +63,19 @@ CodeRank uses `infrastructure/docker-compose.yml` as the authoritative Compose c
 
 ### Existing installations: protect the existing data volume
 
-Before `infra:up`, follow the [existing-installation volume mapping procedure](../README.md#existing-installations-preserve-the-actual-volume-identity). The retired root Compose file and the infrastructure file could use different project-prefixed volumes; identical YAML keys do not guarantee the same data.
+Run the npm infrastructure commands from the repository root after copying/configuring `.env`; the wrappers explicitly use that file. The canonical file is `infrastructure/docker-compose.yml`.
+
+The former root and infrastructure Compose files could create DIFFERENT project-prefixed named volumes. Keeping the YAML keys `redis_data` and `postgres_data` alone does not preserve that identity. The canonical defaults now explicitly use `infrastructure_redis_data` and `infrastructure_postgres_data` for users of the old infrastructure stack.
+
+**Before starting an existing root-Compose installation with the new configuration**, record the running containers' actual mount names (or inspect the old volumes if containers are stopped):
+
+```sh
+docker inspect coderank-postgres --format '{{range .Mounts}}{{println .Name .Destination}}{{end}}'
+docker inspect coderank-redis --format '{{range .Mounts}}{{println .Name .Destination}}{{end}}'
+docker volume ls
+```
+
+Set `CODERANK_POSTGRES_VOLUME` and `CODERANK_REDIS_VOLUME` in your root `.env` to those EXISTING names; do not guess a name from the repository folder. Confirm each chosen name exists with `docker volume inspect <actual-name>` before startup. If mounts are bind mounts, the old project uses custom names, or both stacks contain data, stop and reconcile that installation rather than selecting a new empty volume. After startup verify the same mount names and expected records. Never use `down -v`, `volume rm` or pruning as migration/rollback.
 
 Inspect the old PostgreSQL/Redis containers' mount names (or existing volumes if containers are stopped), set `CODERANK_POSTGRES_VOLUME` and `CODERANK_REDIS_VOLUME` in root .env to the actual names, and verify them with `docker volume inspect <actual-name>`. Do not guess or create an empty volume as a substitute. Stop and reconcile installations using bind mounts or multiple populated stacks. After startup, verify the same mounts and expected records.
 

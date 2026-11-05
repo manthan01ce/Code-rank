@@ -47,7 +47,7 @@ jobs:
           node-version: 24
       - name: Use the identical measurement harness for both revisions
         run: |
-          cp measurement/scripts/auth-performance-stack.mjs subject/scripts/auth-performance-stack.mjs
+          cp measurement/scripts/ci/auth-performance-stack.mjs subject/scripts/ci/auth-performance-stack.mjs
           cp measurement/scripts/ci/test-lanes.mjs subject/scripts/ci/test-lanes.mjs
           cp measurement/tests/lane-manifest.json subject/tests/lane-manifest.json
           cp measurement/scripts/ci/install-browser.mjs subject/scripts/ci/install-browser.mjs
@@ -62,7 +62,7 @@ jobs:
       - run: node scripts/ci/install-browser.mjs
         timeout-minutes: 14
         working-directory: subject
-      - run: node scripts/auth-performance-stack.mjs
+      - run: node scripts/ci/auth-performance-stack.mjs
         working-directory: subject
       - uses: actions/upload-artifact@v4
         if: always()

@@ -30,7 +30,7 @@
 - [ ] `apps/web/src/app/api/queue/stats/route.js` - Updated
 - [ ] `apps/web/next.config.mjs` - Updated
 - [ ] `apps/web/server.js` - Updated
-- [ ] `load-tests/smoke-test.js` - Updated
+- [ ] `load-tests/scenarios/smoke-test.js` - Updated
 
 ### 2. Build Process
 ```powershell

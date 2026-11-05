@@ -92,7 +92,7 @@ function Run-K6Test {
     Write-Host "    Script: $ScriptFile" -ForegroundColor DarkGray
     Write-Host ""
 
-    $fullPath = Join-Path $scriptDir $ScriptFile
+    $fullPath = Join-Path (Join-Path $scriptDir "scenarios") $ScriptFile
 
     # Build -e arguments
     $envArgs = "-e BASE_URL=$BaseUrl"

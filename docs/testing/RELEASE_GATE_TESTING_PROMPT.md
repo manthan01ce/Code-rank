@@ -27,7 +27,7 @@ Do not announce that the whole website works unless every required live workflow
 - Confirm PostgreSQL migrations/checksums and local identity. Confirm Redis readiness, queue readiness, available language images, non-root execution, memory/pid/CPU/network isolation, worker heartbeat and bounded queue behavior.
 - Confirm a genuine production build completes before production-browser acceptance. A dev-server success is not a production-build pass. A host error such as `uv_resident_set_memory` is a blocker, not an application pass.
 - Confirm the app, worker and realtime services are running and reachable from the test browser. Validate readiness rather than sleeping for an arbitrary interval.
-- Identify existing end-to-end tooling, especially `scripts/authenticated-stack.mjs`, browser role-workflow tests and integration tests. Read them before extending or executing them.
+- Identify existing end-to-end tooling, especially `scripts/ci/authenticated-stack.mjs`, browser role-workflow tests and integration tests. Read them before extending or executing them.
 
 ## Phase 2: controlled accounts and datasets
 
