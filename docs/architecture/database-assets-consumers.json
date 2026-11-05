@@ -95,49 +95,49 @@
       ]
     },
     {
-      "path": "tests/admin-transactions.test.mjs",
+      "path": "tests/unit/admin-transactions.test.mjs",
       "references": [
         "database/migrations/"
       ]
     },
     {
-      "path": "tests/api-courses-runtime.test.mjs",
+      "path": "tests/unit/api-courses-runtime.test.mjs",
       "references": [
         "database/migrations/"
       ]
     },
     {
-      "path": "tests/api-execution-runtime.test.mjs",
+      "path": "tests/unit/api-execution-runtime.test.mjs",
       "references": [
         "database/migrations/"
       ]
     },
     {
-      "path": "tests/api-operations-runtime.test.mjs",
+      "path": "tests/unit/api-operations-runtime.test.mjs",
       "references": [
         "database/migrations/"
       ]
     },
     {
-      "path": "tests/api-practicals-runtime.test.mjs",
+      "path": "tests/unit/api-practicals-runtime.test.mjs",
       "references": [
         "database/migrations/"
       ]
     },
     {
-      "path": "tests/api-submissions-runtime.test.mjs",
+      "path": "tests/unit/api-submissions-runtime.test.mjs",
       "references": [
         "database/migrations/"
       ]
     },
     {
-      "path": "tests/course-management-sql.test.mjs",
+      "path": "tests/unit/course-management-sql.test.mjs",
       "references": [
         "database/migrations/"
       ]
     },
     {
-      "path": "tests/course-report.test.mjs",
+      "path": "tests/unit/course-report.test.mjs",
       "references": [
         "database/migrations/"
       ]
@@ -161,49 +161,49 @@
       ]
     },
     {
-      "path": "tests/migration-errors.test.mjs",
+      "path": "tests/unit/migration-errors.test.mjs",
       "references": [
         "database/migrations/"
       ]
     },
     {
-      "path": "tests/migrations.test.mjs",
+      "path": "tests/unit/migrations.test.mjs",
       "references": [
         "database/migrations/"
       ]
     },
     {
-      "path": "tests/profile-privacy.test.mjs",
+      "path": "tests/unit/profile-privacy.test.mjs",
       "references": [
         "database/migrations/"
       ]
     },
     {
-      "path": "tests/schema-readiness.test.mjs",
+      "path": "tests/unit/schema-readiness.test.mjs",
       "references": [
         "database/migrations/"
       ]
     },
     {
-      "path": "tests/seed-safety.test.mjs",
+      "path": "tests/unit/seed-safety.test.mjs",
       "references": [
         "database/seed.js"
       ]
     },
     {
-      "path": "tests/submission-history.test.mjs",
+      "path": "tests/unit/submission-history.test.mjs",
       "references": [
         "database/migrations/"
       ]
     },
     {
-      "path": "tests/submission-reset.test.mjs",
+      "path": "tests/unit/submission-reset.test.mjs",
       "references": [
         "database/migrations/"
       ]
     },
     {
-      "path": "tests/user-management-sql.test.mjs",
+      "path": "tests/unit/user-management-sql.test.mjs",
       "references": [
         "database/migrations/"
       ]

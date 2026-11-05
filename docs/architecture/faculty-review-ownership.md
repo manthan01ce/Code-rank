@@ -18,7 +18,7 @@ The existing `fetchCollection` remains the all-pages helper for small selectors;
 ## Validation lanes
 
 - `npm ci`, `npm run lint:critical`, `npm test`, `npm run build --workspace=apps/web`.
-- `node --test tests/faculty-review-requests.test.mjs`: cancellation and public request/cursor/error contracts.
+- `node --test tests/unit/faculty-review-requests.test.mjs`: cancellation and public request/cursor/error contracts.
 - `npm run test:faculty-review`: production-browser tests with synthetic HTTP fixtures. Build web first. Optional `CHROMIUM_PATH` selects an installed Chromium executable.
 - Existing real-service `tests/browser/role-workflows.spec.mjs` remains unchanged, including PDF and faculty CRUD/archive/extra-time/delayed-course workflows. Integration, Docker, privacy, capacity and recovery checks are retained.
 

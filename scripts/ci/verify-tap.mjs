@@ -1,8 +1,15 @@
 // Validate Node's TAP reporter as a completed test gate, not just an exit code.
 // Invocation metadata matters: --test-only output can be indistinguishable from
 // an ordinary passing TAP stream, so callers must reject selection arguments.
-export function verifyTap(tap, { exitCode = 0, signal = null, timedOut = false, args = [], expectedFiles = [] } = {}) {
+export function verifyTap(tap, { exitCode = 0, signal = null, timedOut = false, args = [], expectedFiles = [], executedFiles, requireFileEvidence = false } = {}) {
   const errors = [];
+  if (requireFileEvidence && !Array.isArray(executedFiles)) errors.push('Missing executed file evidence');
+  if (Array.isArray(executedFiles)) {
+    const normalize = file => String(file).replaceAll('\\', '/');
+    const expected = [...expectedFiles].map(normalize).sort();
+    const actual = [...executedFiles].map(normalize).sort();
+    if (!expected.length || !actual.length || new Set(actual).size !== actual.length || JSON.stringify(expected) !== JSON.stringify(actual)) errors.push('Executed file evidence does not exactly match discovered test files');
+  }
   const reject = message => errors.push(message);
   if (timedOut) reject('Test subprocess exceeded its deadline');
   if (signal) reject(`Test subprocess terminated by ${signal}`);

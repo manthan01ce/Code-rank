@@ -24,20 +24,20 @@ The former worker Executor and five language files were compatibility re-exports
 - `docs/LOCAL_SETUP_VERIFIED.md`
 - `docs/architecture/baseline-2026-11.md`
 - `scripts/reap-sandboxes.mjs`
-- `tests/batch-execution.test.js`
+- `tests/docker/batch-execution.test.js`
 - `tests/fixtures/sandbox-owner.fixture.mjs`
-- `tests/function-harness.test.mjs`
-- `tests/integration/sandbox.test.mjs`
+- `tests/unit/function-harness.test.mjs`
+- `tests/docker/sandbox.test.mjs`
 - `tests/integration/worker-readiness.test.mjs`
 - `tests/integration/worker-recovery.test.mjs`
-- `tests/job-lifecycle.test.js`
-- `tests/runner.test.mjs`
-- `tests/sandbox-recovery.test.mjs`
-- `tests/sandbox.test.mjs`
-- `tests/static-runners.test.mjs`
-- `tests/worker-config.test.mjs`
-- `tests/worker-heartbeat.test.mjs`
-- `tests/worker-shutdown.test.mjs`
+- `tests/unit/job-lifecycle.test.js`
+- `tests/unit/runner.test.mjs`
+- `tests/unit/sandbox-recovery.test.mjs`
+- `tests/unit/sandbox.test.mjs`
+- `tests/unit/static-runners.test.mjs`
+- `tests/unit/worker-config.test.mjs`
+- `tests/unit/worker-heartbeat.test.mjs`
+- `tests/unit/worker-shutdown.test.mjs`
 
 All affected static/dynamic script/test imports are updated. The static runner module mock retains its exact implementation URL deliberately so the public language export resolves to the mocked Docker mechanism. The quarantined historical batch test only gets its import updated; its lane/quarantine and assertions are unchanged (modernization belongs to #79).
 

@@ -86,7 +86,7 @@ are pure file renames (tracked by git mv) with import-path updates only.
 ```
 npm ci                            # workspace-level install
 npm run lint:critical             # ESLint fast checks
-npm test -- tests/architecture.test.mjs
-npm test -- tests/final-separation.test.mjs
+npm test -- tests/architecture/architecture.test.mjs
+npm test -- tests/architecture/final-separation.test.mjs
 cd apps/web && npm run build      # production build
 ```

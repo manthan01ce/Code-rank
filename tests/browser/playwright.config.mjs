@@ -1,10 +1,11 @@
+import { browserFiles } from '../../scripts/ci/test-lanes.mjs';
 import { defineConfig } from "@playwright/test";
 import { fileURLToPath } from "node:url";
 const path = (value) => fileURLToPath(new URL(value, import.meta.url));
 
 export default defineConfig({
   testDir: ".",
-  testMatch: process.env.BROWSER_PERFORMANCE === "true" ? "**/auth-performance.spec.mjs" : "**/role-workflows.spec.mjs",
+  testMatch: (await browserFiles(process.env.BROWSER_PERFORMANCE === 'true' ? 'performance' : 'browser')).map(file => '**/' + file.split('/').at(-1)),
   timeout: 60_000,
   expect: { timeout: 15_000 },
   forbidOnly: Boolean(process.env.CI),
