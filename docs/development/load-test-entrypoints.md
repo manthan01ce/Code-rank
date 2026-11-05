@@ -27,7 +27,9 @@ Windows fast job. It checks the explicitly supported npm command shapes, this ru
 literal switch/ScriptFile convention, helper roots, profiler/diagnostic executable
 literals and current fenced guide command references. It deliberately does not attempt
 to parse arbitrary shell commands. The Windows job uses native PowerShell parsers for
-all load-test PS scripts and the public Windows PowerShell runner separately. Workflow
+all load-test PS scripts and the public Windows PowerShell runner separately. Native Windows PowerShell 5 initially failed to parse UTF-8 punctuation in the public
+runner without an encoding marker. Its UTF-8 BOM now preserves the same script text
+under both PowerShell versions; no selection or workload changes. Workflow
 triggers and expensive opt-in gates are unchanged.
 
 Local k6, pwsh and powershell executables are unavailable. No stress, maximum-capacity,

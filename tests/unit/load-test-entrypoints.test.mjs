@@ -28,6 +28,7 @@ test('public npm load commands retain arguments and point at existing owners', (
 
 test('PowerShell dispatch selects the intended scenarios and helper roots', () => {
   const source = read('load-tests/run-k6.ps1');
+  assert.equal(source.charCodeAt(0), 0xfeff, 'Windows PowerShell 5 must decode Unicode names as UTF-8');
   assert.ok(source.includes('Join-Path (Join-Path $scriptDir "scenarios") $ScriptFile'));
   // Check this runner's literal switch/ScriptFile convention, not arbitrary shell syntax.
   const blocks = [...source.matchAll(/^    "([\w-]+)" \{([\s\S]*?)(?=^    "[\w-]+" \{|^\}$)/gm)];
