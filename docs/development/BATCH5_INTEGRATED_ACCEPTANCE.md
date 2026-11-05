@@ -1,6 +1,6 @@
 # Batch 5G: scoped integrated acceptance (#102)
 
-**Status: BLOCKED / draft. Not a completion certificate.** Reviewed source: `29324a4b7690e8f71e356b121f568b091ba793c9` (latest master pulled before changes), tree `e759043cdb0e132efdbd6c9bf734a1941f9883d2`. Assessment date: 6 November 2026 (Asia/Calcutta). Raw command timestamps use the execution host clock and must not be used to infer the client date.
+**Historical initial attempt: BLOCKED.** Subsequent real disposable verification passed; see [the current evidence snapshot](../architecture/batch5-ci-acceptance.json) and current move-map matrix. The tables and command failures below describe the initial #110 attempt, not the latest CI result. College/intended-host acceptance remains deferred. Reviewed source: `29324a4b7690e8f71e356b121f568b091ba793c9` (latest master pulled before changes), tree `e759043cdb0e132efdbd6c9bf734a1941f9883d2`. Assessment date: 6 November 2026 (Asia/Calcutta). Raw command timestamps use the execution host clock and must not be used to infer the client date.
 
 ## Scope and prerequisite reconciliation
 

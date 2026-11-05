@@ -1,0 +1,171 @@
+{
+  "status": "passed",
+  "scope": "Disposable CI/test environment only; college/intended-host/LAN/cloud acceptance deferred",
+  "run": "https://github.com/manthan01ce/Code-rank/actions/runs/42110993208",
+  "testedCommit": "a82e0b079681b95df3fb25a27bdc781535551c8e",
+  "testedTree": "f9c0a1214d30fd92e186e2fafcf79036523cf931",
+  "prHead": "e43d7e2c76f8157e0abf8acf69fe1eca6717c1d1",
+  "suites": {
+    "unit": {
+      "tests": 405,
+      "suites": 1,
+      "pass": 405,
+      "fail": 0,
+      "cancelled": 0,
+      "skipped": 0,
+      "todo": 0
+    },
+    "integration": {
+      "tests": 13,
+      "suites": 0,
+      "pass": 13,
+      "fail": 0,
+      "cancelled": 0,
+      "skipped": 0,
+      "todo": 0
+    },
+    "docker": {
+      "tests": 18,
+      "suites": 0,
+      "pass": 18,
+      "fail": 0,
+      "cancelled": 0,
+      "skipped": 0,
+      "todo": 0
+    }
+  },
+  "browser": {
+    "startTime": "2026-11-05T21:20:59.947Z",
+    "duration": 20005.662,
+    "expected": 10,
+    "skipped": 0,
+    "unexpected": 0,
+    "flaky": 0
+  },
+  "frontend": {
+    "startTime": "2026-11-05T21:20:40.601Z",
+    "duration": 6272.147999999999,
+    "expected": 6,
+    "skipped": 0,
+    "unexpected": 0,
+    "flaky": 0
+  },
+  "environment": {
+    "node": "v24.22.2",
+    "os": "linux",
+    "kernel": "7.0.0-1017-azure",
+    "arch": "x64",
+    "cpuModel": "AMD EPYC 7763 64-Core Processor",
+    "logicalCPUs": 4,
+    "memoryBytes": 16760336384,
+    "docker": "Docker version 28.0.4, build b8034c0",
+    "compose": "2.38.2"
+  },
+  "artifact": {
+    "id": 13454152639,
+    "name": "strict-verification-a82e0b079681b95df3fb25a27bdc781535551c8e",
+    "digest": "sha256:ef41aa642bd87b9b86251745082fff2071b772607587edcc8224398591b99e4b",
+    "downloadedDigest": "sha256:ef41aa642bd87b9b86251745082fff2071b772607587edcc8224398591b99e4b",
+    "allRecordedHashesVerified": true
+  },
+  "evidenceSha256": {
+    "unit.files.json": "8ce46732abf0e738259f9443696761903193e43a09edf1599b0b05494c018a5a",
+    "unit.tap": "8e02b4e6a2718b4ebffea982c8cfb3fa26cf93c330d6c8a366b424f0a6290958",
+    "integration.files.json": "4bbe88b4bf3a3843a10618c036ce6164861a8f611662e5b22252fe0799274414",
+    "integration.tap": "7ef6c626edc90b32dd7ee8aae0629e7accc01ff763960791eeffe4978864a577",
+    "docker.files.json": "27fc1d2fd21b63d0668e57349a7f9635af9752a62b7b6a4508c8acc089df1de2",
+    "docker.tap": "2d5927f1d0c91c308ccdec0d9e1e123f8c1bda11aa3e67615a52946ba18ad625",
+    "container-topology.json": "84cf369aa2fe4c43f3f56f66c4236fb4f720fd58f2a22c026b583187666a8116",
+    "browser-results.json": "738d95e1a1029ea936b3863c75ba2e458e459afea17642edb77e804f540cf0a3",
+    "faculty-review-results.json": "3c93509328d07ae451393f1d090bedb22abd2265d4f4de8169789e5e701d3209",
+    "authenticated/capacity.json": "97712a781ff31a793229b0108b4fa61d85e07c68bf6f61e2a475564808371d17",
+    "authenticated/process-recovery.json": "2bb8a5a6a198e2a1e9166cffb007323ebeac98224a8a994e33e80e5650d28d6e",
+    "authenticated/database-recovery/manifest.json": "f7fa235673e2c764fd9de44094714e37b2e854f330a48f4fe5627f8f7f75089a",
+    "warm-disposition.json": "253cb2c44825f592953368d95d52e881a192365d4771f87130fd47f24d8aafcf"
+  },
+  "durability": {
+    "apiOutageWebAvailable": true,
+    "serviceRestart": true,
+    "dependencyCrashRecovery": true,
+    "volumeContinuity": true,
+    "applicationRollback": true,
+    "executionAfterRecovery": true,
+    "workerOnlyDocker": true,
+    "priorSource": "e3733ce61311739737580ad544f61bac5da5f057",
+    "priorApiImage": "sha256:c54db482416c8bcf2c18e206969645fad052bd405c795decb6f88034a9a0df7a",
+    "currentImages": {
+      "postgres": {
+        "image": "sha256:6a2e324ebe59af6031c4c1cd96c1d5072c2ebc36563d2196365e43b8297c062d",
+        "volumes": [
+          {
+            "name": "coderank_ci_df0805d9bfde_postgres",
+            "destination": "/var/lib/postgresql/data"
+          }
+        ]
+      },
+      "redis": {
+        "image": "sha256:e7b0b929eb5b1e7b18f4662e190ceeac481b72e35dfede063b09a4ce8beac79f",
+        "volumes": [
+          {
+            "name": "coderank_ci_df0805d9bfde_redis",
+            "destination": "/data"
+          }
+        ]
+      },
+      "api": {
+        "image": "sha256:1f011e86bd4cd3f881aefc137db2b82a0601378a133b29de4e621a70b3a3e98a",
+        "volumes": []
+      },
+      "web": {
+        "image": "sha256:a09bde55aab3f3d546c1846107a27d0c3cc58712c461f1223a1b9f08b373acd0",
+        "volumes": []
+      },
+      "worker": {
+        "image": "sha256:09823d9b33a6d8b71a6fb7b5e5c3f7c78982b87081fe93141ebdd6d38c4e6f14",
+        "volumes": []
+      },
+      "gateway": {
+        "image": "sha256:fc5e4a0a29f7cc9f0831988d9c8559e856998e20f812a9512f758d0dd26077e5",
+        "volumes": []
+      }
+    }
+  },
+  "runnerImage": {
+    "id": "sha256:7e63ca77dceb96f8e6f2b89f467ad6115730c42f4488e4bab0648072ae62c73e",
+    "dockerfileSha256": "2b1757720206b49deb8446d9127bc81f69d5aef61b721abac6c0dcf10852e27e",
+    "cleanup": "removed"
+  },
+  "capacity": {
+    "scope": "Measured execution smoke capacity for this target and workload only; not a production capacity guarantee.",
+    "target": "http://127.0.0.1:3101",
+    "readiness": {
+      "status": "healthy",
+      "healthyWorkers": 1,
+      "checkedAt": "2026-11-05T21:21:24.529Z"
+    },
+    "admissionPolicy": "Authenticated run limits remain enabled.",
+    "workload": {
+      "language": "python",
+      "jobsRequested": 12,
+      "concurrency": 2,
+      "maxDurationMs": 60000
+    },
+    "attempted": 12,
+    "completed": 12,
+    "failures": [],
+    "elapsedMs": 3131.028962000004,
+    "achievedRps": 3.8326058767386084,
+    "latencyMs": {
+      "p50": 521.3761040000027,
+      "p95": 524.6567880000002,
+      "max": 524.6567880000002
+    },
+    "thresholds": {
+      "allJobsCompleted": true,
+      "p95Ms": 15000,
+      "minimumRps": 0.1
+    },
+    "passed": true
+  },
+  "productionCertified": false
+}
