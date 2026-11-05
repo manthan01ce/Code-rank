@@ -37,7 +37,7 @@ Used in `.github/workflows/architecture-checks.yml` and `.github/workflows/auth-
 
 **Override image name:**  
 Set `RUNNER_IMAGE=<tag>` in the worker or health-check environment to use a custom tag.  
-Respected by `packages/runner/src/Sandbox.js` and `packages/runner/src/health.js`.
+Respected by `packages/runner/src/sandbox/Sandbox.js` and `packages/runner/src/sandbox/health.js`.
 
 ---
 
@@ -78,7 +78,7 @@ USE_WARM_DAEMONS=true
 > Use warm mode only in trusted single-tenant lab environments, never for
 > untrusted multi-tenant execution.
 
-Warm-mode behaviour in `packages/runner/src/Sandbox.js`:
+Warm-mode behaviour in `packages/runner/src/sandbox/Sandbox.js`:
 - `USE_WARM_DAEMONS=true` + a language set → `isWarm = true`
 - `start()` and `destroy()` are no-ops (the daemon is managed by Compose)
 - `script()` sends `docker exec` to `coderank-<lang>-daemon`

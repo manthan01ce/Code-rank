@@ -1,4 +1,4 @@
-import { Executor } from './Executor.js';
+import { Executor } from '../Executor.js';
 import { buildFunctionSource,functionCases,sameFunctionValue } from './function-harness.js';
 export async function runFunctionProblem(language,payload){
  const testCases=payload.testCases||[];

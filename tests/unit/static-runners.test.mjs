@@ -2,7 +2,7 @@ import test, { mock } from 'node:test';
 import assert from 'node:assert/strict';
 let failure = false;
 const calls = [];
-mock.module(new URL('../../packages/runner/src/docker.js', import.meta.url).href, { namedExports: { dockerCommand: async (args, options) => {
+mock.module(new URL('../../packages/runner/src/sandbox/docker.js', import.meta.url).href, { namedExports: { dockerCommand: async (args, options) => {
   calls.push({ args, options });
   if (args[0] === 'rm' || args[0] === 'run') return { stdout: '', stderr: '' };
   if (failure) throw Object.assign(new Error('timeout'), { code: 124 });

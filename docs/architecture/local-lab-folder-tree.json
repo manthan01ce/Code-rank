@@ -162,6 +162,8 @@
     "packages/queue/src",
     "packages/runner",
     "packages/runner/src",
+    "packages/runner/src/languages",
+    "packages/runner/src/sandbox",
     "scripts",
     "scripts/ci",
     "scripts/dev",

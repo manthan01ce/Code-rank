@@ -1,6 +1,6 @@
 import { randomUUID } from 'node:crypto';
 import { dockerCommand } from './docker.js';
-import { SANDBOX_OWNER, SANDBOX_VERSION, SANDBOX_PREFIX, sandboxScope } from './sandbox-metadata.js';
+import { SANDBOX_OWNER, SANDBOX_VERSION, SANDBOX_PREFIX, sandboxScope } from './metadata.js';
 export { reapExpiredSandboxes, startSandboxReaper } from './reaper.js';
 
 export function jobLifetime(value = process.env.JOB_TIMEOUT_MS) {

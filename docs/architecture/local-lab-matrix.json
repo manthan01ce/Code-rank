@@ -205,19 +205,22 @@
     {
       "id": "runner-grouping",
       "issue": 78,
-      "structuralState": "gap",
+      "structuralState": "implemented",
       "requirement": "Languages and sandbox lifecycle grouped behind public runner exports",
       "paths": [
-        "packages/runner/src/languages.js",
-        "packages/runner/src/Executor.js",
-        "packages/runner/src/Sandbox.js",
-        "packages/runner/src/reaper.js"
+        "packages/runner/src/languages",
+        "packages/runner/src/sandbox",
+        "packages/runner/src/Executor.js"
       ],
       "tests": [
         "tests/unit/worker-dispatch.test.mjs",
+        "tests/unit/runner.test.mjs",
+        "tests/unit/static-runners.test.mjs",
+        "tests/unit/sandbox.test.mjs",
+        "tests/unit/sandbox-recovery.test.mjs",
         "tests/docker/sandbox.test.mjs"
       ],
-      "finding": "Public exports exist, but implementations remain flat in packages/runner/src. The requested languages/ and sandbox/ grouping is absent; no justified deviation is recorded. Avoid renaming or changing execution mechanics during certification.",
+      "finding": "Language implementations are grouped under packages/runner/src/languages and container lifecycle, metadata, health, and reaping under packages/runner/src/sandbox. Public package exports are preserved, and shared Executor remains a single implementation.",
       "functionalAcceptance": "unverified"
     },
     {
