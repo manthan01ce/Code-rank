@@ -103,7 +103,7 @@ Check for:
 If smoke test still fails:
 
 ### Database Connection Pool
-Check `packages/core/src/db/index.js`:
+Check the current client owner `packages/database/src/client.js` (the earlier core database path is retired):
 ```javascript
 // Ensure connection pooling is optimized
 export const pool = neon(DATABASE_URL, {

@@ -4,7 +4,7 @@ import { PGlite } from '@electric-sql/pglite';
 import { migrate } from '../../packages/database/src/migrations.js';
 const db=new PGlite();
 const sql=Object.assign(async()=>[],{query:async(q,p)=>(await db.query(q,p)).rows});
-mock.module(new URL('../../packages/core/src/db/client.js',import.meta.url).href,{defaultExport:sql});
+mock.module('@coderank/database',{defaultExport:sql});
 const {SubmissionHistoryService:service,pageOptions}=await import('../../apps/api/src/modules/submissions/submission-history.service.js');
 test('submission keysets preserve ties and timestamp precision in every sort direction',async()=>{
  try{

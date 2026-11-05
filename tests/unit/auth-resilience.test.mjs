@@ -47,7 +47,7 @@ test('login fails closed on limiter outage, preserves 429 and only authenticates
 });
 
 test('timing headers accept only numeric durations and safe labels',async()=>{
- const {requestTiming}=await import('../../packages/core/src/utils/request-timing.js');
+ const {requestTiming}=await import('@coderank/core/shared/request-timing');
  const timing=requestTiming();timing.record('lookup',12.345);timing.record('bad label;token',1);timing.record('bad_value',NaN);
  assert.equal(timing.header(),'lookup;dur=12.35');
 });

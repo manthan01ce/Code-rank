@@ -2,8 +2,8 @@ import os from 'node:os';
 import { monitorEventLoopDelay } from 'node:perf_hooks';
 import sql from '@coderank/database';
 import { checkDatabaseReadiness } from '@coderank/database/readiness';
-import { withTimeout } from '@coderank/core/utils/timeout';
-import { SubmissionService } from '@coderank/core/services/SubmissionService';
+import { withTimeout } from '@coderank/core/shared/timeout';
+import { SubmissionService } from '@coderank/core/submissions';
 
 // In-memory cache for health checks
 let healthCache = null;

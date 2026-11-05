@@ -5,7 +5,7 @@ process.env.JWT_SECRET='admin-api-test-secret';
 registerHooks({resolve(specifier,context,next){if(specifier.startsWith('@/'))return next(new URL(`../../apps/web/src/${specifier.slice(2)}.js`,import.meta.url).href,context);if(specifier==='next/server')return next('next/server.js',context);return next(specifier,context);}});
 let observed,errorCode=null;const notifications=[];
 const sql=Object.assign(async()=>[],{query:async(q,p)=>{observed={q,p};if(errorCode)throw Object.assign(Error('database internal details'),{code:errorCode});if(q.includes('mutate_practical'))return [{practical:{id:1,course_id:1,title:'Test',end_time:'2027-01-01'}}];return [{id:1}];}});
-mock.module(new URL('../../packages/core/src/db/client.js',import.meta.url).href,{defaultExport:sql});
+
 mock.module('@coderank/database', { defaultExport: sql, namedExports: { closeDatabase: async () => {} } });
 const {generateToken, getUserFromRequest}=await import('../../packages/core/src/utils/auth.js');
 mock.module('@coderank/core/security/active-actor', { namedExports: {

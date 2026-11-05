@@ -1,5 +1,5 @@
 import { Worker } from 'bullmq';
-import { logger } from '@coderank/core/utils/logger';
+import { logger } from '@coderank/core/shared/logger';
 import { checkDockerHealth } from '@coderank/runner/health';
 
 export function createSystemWorker() {

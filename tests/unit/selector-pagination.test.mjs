@@ -1,14 +1,14 @@
 import test, { mock } from 'node:test';
 import assert from 'node:assert/strict';
 import { PGlite } from '@electric-sql/pglite';
-import { listPage } from '../../packages/core/src/modules/courses/list-pagination.js';
+import { listPage } from '@coderank/core/shared/pagination';
 const db = new PGlite();
 const sql = (strings, ...params) => db.query(strings.reduce((q, s, i) => q + s + (i < params.length ? `$${i + 1}` : ''), ''), params).then(r => r.rows);
-mock.module(new URL('../../packages/core/src/db/client.js', import.meta.url).href, { defaultExport: sql });
+
 mock.module('redis', { namedExports: { createClient: () => ({ on() {}, connect: async () => { throw Error('offline'); }, destroy() {} }) } });
 mock.module('@coderank/database', { defaultExport: sql });
 const { CoursesService: catalog } = await import('../../apps/api/src/modules/courses/courses.service.js');
-const { CourseService: service } = await import('../../packages/core/src/modules/courses/CourseService.js');
+const { CourseService: service } = await import('@coderank/core/courses');
 test('selector pagination rejects invalid bounds and cursors', () => {
   for (const limit of [0, -1, 501, 1.2, 'bad']) assert.throws(() => listPage({ limit }));
   for (const cursor of ['-1', '1x', '0', '999999999999999999']) assert.throws(() => listPage({ cursor }));

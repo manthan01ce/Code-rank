@@ -1,6 +1,6 @@
 /**
- * packages/core/src/utils/logger.js — Centralized structured logger
- * Used by both apps/web and apps/worker.
+ * packages/core/src/shared/logger.js — Centralized structured logger
+ * Backend structured logger used by worker bootstrap and system jobs.
  */
 export const logger = {
   info(message, meta = {}) {

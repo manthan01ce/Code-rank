@@ -2,7 +2,7 @@
  * packages/core/src/db/queries/index.js
  * Optimized SQL query fragments and query builders
  */
-import sql from '../client.js';
+import sql from '@coderank/database';
 
 export const Queries = {
   findUserById: (id) => sql`SELECT * FROM users WHERE id = ${id}`,

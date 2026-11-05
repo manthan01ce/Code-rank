@@ -1,6 +1,6 @@
-import sql from '@coderank/core/db';
+import sql from '@coderank/database';
 import { listPage } from '@coderank/core/shared/pagination';
-import { PracticalService } from '@coderank/core/services/PracticalService';
+import { PracticalService } from '@coderank/core/practicals';
 
 export class StudentPracticalService {
   static async detail(user, id) {

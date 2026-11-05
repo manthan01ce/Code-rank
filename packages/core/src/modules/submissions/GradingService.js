@@ -1,4 +1,4 @@
-import sql from '../../db/client.js';
+import sql from '@coderank/database';
 import { publicResult } from '../../security/execution.js';
 import { saveAttempt, findAttempt } from './SubmissionRepository.js';
 

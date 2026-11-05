@@ -1,6 +1,6 @@
 import { createServiceToken } from '@coderank/core/security/service-token';
 import { publicResult } from '@coderank/core/security/execution';
-import sql from '@coderank/core/db';
+import sql from '@coderank/database';
 import { io } from 'socket.io-client';
 
 export function createWorkerPublisher() {

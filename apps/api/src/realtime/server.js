@@ -1,5 +1,5 @@
 import fp from 'fastify-plugin';
-import { withTimeout } from '@coderank/core/utils/timeout';
+import { withTimeout } from '@coderank/core/shared/timeout';
 import { Server } from 'socket.io';
 import { createClient } from 'redis';
 import { createAdapter } from '@socket.io/redis-adapter';
