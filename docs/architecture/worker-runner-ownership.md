@@ -74,7 +74,7 @@ Language-specific implementations are grouped under `packages/runner/src/languag
 | `apps/worker/src/lifecycle/heartbeat.js` | `@coderank/runner/health` (`checkDockerHealth`) | Probes Docker daemon/image before advertising healthy worker |
 | `apps/worker/src/lifecycle/shutdown.js` | `@coderank/runner/sandbox` (`jobLifetime`) | Bounded drain timeout calculation |
 | `scripts/ops/reap-sandboxes.mjs` | `@coderank/runner/reaper` (`reapExpiredSandboxes`) | Ops CLI for manual/scheduled sandbox reaping |
-| `tests/docker/batch-execution.test.js` | `@coderank/runner`, `@coderank/runner/docker` | Quarantined batch execution test |
+| `tests/docker/batch-execution.test.js` | `@coderank/runner`, `@coderank/runner/docker` | Real cold Docker batch execution test |
 | `tests/docker/sandbox.test.mjs` | `@coderank/runner`, `@coderank/runner/sandbox`, `@coderank/runner/docker`, `@coderank/runner/languages`, `@coderank/runner/reaper` | Real cold Docker container isolation and execution verification |
 | `tests/fixtures/sandbox-owner.fixture.mjs` | `@coderank/runner/sandbox` (`Sandbox`) | Subprocess sandbox fixture for recovery drills |
 | `tests/unit/function-harness.test.mjs` | `@coderank/runner/function-harness` | Function problem code generation unit tests |

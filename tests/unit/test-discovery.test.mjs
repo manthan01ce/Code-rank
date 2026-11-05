@@ -13,14 +13,15 @@ test('bidirectional inventory rejects missing, orphan, duplicate and empty lane 
   assert.throws(() => validateTestInventory([...files, 'tests/unit/orphan.test.mjs'], manifest), /Unassigned/);
   assert.throws(() => validateTestInventory(files, { ...manifest, categories: { ...categories, docker: [...categories.docker, categories.unit[0]] } }), /Duplicate/);
   assert.throws(() => validateTestInventory(files, { ...manifest, categories: { ...categories, integration: [] } }), /Empty/);
-  assert.throws(() => validateTestInventory(files, { ...manifest, quarantine: {} }), /Quarantine/);
+  const qCategories = { ...categories, docker: categories.docker.slice(1), quarantine: [categories.docker[0]] };
+  assert.throws(() => validateTestInventory(files, { ...manifest, categories: qCategories, quarantine: {} }), /Quarantine/);
   assert.throws(() => validateTestInventory(files, { ...manifest, categories: { ...categories, unowned: [] } }), /Unknown/);
-  assert.throws(() => validateTestInventory(files, { ...manifest, quarantine: { [categories.quarantine[0]]: '' } }), /reason/);
+  assert.throws(() => validateTestInventory(files, { ...manifest, categories: qCategories, quarantine: { [categories.docker[0]]: '' } }), /reason/);
   assert.ok((await filesFor('unit')).includes('tests/unit/job-lifecycle.test.js'));
   assert.ok((await filesFor('unit')).includes('tests/unit/queue-script-contract.test.mjs'));
   assert.ok((await filesFor('integration')).includes('tests/integration/queue.test.mjs'));
   assert.throws(() => validateTestInventory([...files, files[0]], manifest), /Duplicate/);
-  assert.ok(!(await filesFor('docker')).includes('tests/docker/batch-execution.test.js'));
+  assert.ok((await filesFor('docker')).includes('tests/docker/batch-execution.test.js'));
 });
 
 test('missing, duplicate and empty executed-file evidence cannot certify a TAP stream', () => {
