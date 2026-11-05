@@ -39,9 +39,16 @@ test('dynamic dispatch binds actor, stable job identity and enqueue time; playgr
 test('runner implementations remain independent of application, core and database packages', async () => {
   const { readdir, readFile } = await import('node:fs/promises');
   const root = new URL('../../packages/runner/src/', import.meta.url);
-  for (const file of await readdir(root)) {
-    if (!file.endsWith('.js')) continue;
-    const source = await readFile(new URL(file, root), 'utf8');
-    assert.doesNotMatch(source, /(?:from\s*|import\s*\()\s*['"][^'"]*(?:@coderank\/(?:core|database)|apps\/)/, file);
+  async function check(dir) {
+    for (const entry of await readdir(dir, { withFileTypes: true })) {
+      const entryUrl = new URL(entry.name + (entry.isDirectory() ? '/' : ''), dir);
+      if (entry.isDirectory()) {
+        await check(entryUrl);
+      } else if (entry.name.endsWith('.js')) {
+        const source = await readFile(entryUrl, 'utf8');
+        assert.doesNotMatch(source, /(?:from\s*|import\s*\()\s*['"][^'"]*(?:@coderank\/(?:core|database)|apps\/)/, entry.name);
+      }
+    }
   }
+  await check(root);
 });

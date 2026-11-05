@@ -1,5 +1,5 @@
-import { Sandbox } from './Sandbox.js';
-import { dockerCommand } from './docker.js';
+import { Sandbox } from '../sandbox/Sandbox.js';
+import { dockerCommand } from '../sandbox/docker.js';
 import crypto from 'crypto';
 
 

@@ -1,56 +1,96 @@
-# Worker and runner ownership (#77)
+# Worker and runner ownership (#77, #78 runner-grouping follow-up)
 
-Baseline: master a1e7192ca8fb45862a873ea5a4f89dc1915fcf42, pulled successfully on a clean tree. #70 is merged; #77 is independent of frontend work and database asset relocation after that prerequisite. The merged #76 assets are preserved.
+Baseline: master 34c34006edd4a95efed68197e61dfdb81f98b049 (PR #95). #70–#80 predecessors merged; runner-grouping refactor is independent within batch 5.
 
 | Responsibility | Owner and actual consumers |
 | --- | --- |
-| Bootstrap/environment/signals | worker/src/index.js creates the two queue workers, heartbeat, reaper and bounded drain |
-| BullMQ execution processor and job dispatch | worker/src/jobs/execution/submission.worker.js and dispatch.js; index.js consumes the factory |
-| Dynamic practical orchestration | jobs/execution/dynamic.js injects runner Executor into core gradePractical |
-| Playground execution and public result shaping | jobs/execution/playground.js preserves compile/run/finally-cleanup; processor applies core publicResult |
-| System queue | jobs/system/system.worker.js, including health/log tasks |
-| Worker service-token refresh and completion/failure notifications | realtime/publisher.js; execution processor consumes it |
-| Heartbeat, readiness lease and bounded shutdown | lifecycle/heartbeat.js and shutdown.js; bootstrap consumes both |
-| Docker probing, sandbox, compilers, language/function harness, cleanup/reaping | packages/runner public root, languages, health, sandbox, docker, reaper, function-harness and function-runner exports; worker, maintenance script and runner tests consume them |
-| Grading, late/attempt rules, normalization and durable persistence | core/modules/submissions/GradingService.js and SubmissionRepository.js remain unchanged; worker imports the explicit core/grading entry |
-| Historical verdict helper | core/modules/submissions/legacy-verdict.js, consumed only by the existing job-lifecycle regression test; live grading uses GradingService, not this helper |
+| Bootstrap/environment/signals | `apps/worker/src/index.js` creates the two queue workers, heartbeat, reaper and bounded drain |
+| BullMQ execution processor and job dispatch | `apps/worker/src/jobs/execution/submission.worker.js` and `dispatch.js`; `index.js` consumes the factory |
+| Dynamic practical orchestration | `apps/worker/src/jobs/execution/dynamic.js` injects runner `Executor` into core `gradePractical` |
+| Playground execution and public result shaping | `apps/worker/src/jobs/execution/playground.js` preserves compile/run/finally-cleanup; processor applies core `publicResult` |
+| System queue | `apps/worker/src/jobs/system/system.worker.js`, including health/log tasks |
+| Worker service-token refresh and completion/failure notifications | `apps/worker/src/realtime/publisher.js`; execution processor consumes it |
+| Heartbeat, readiness lease and bounded shutdown | `apps/worker/src/lifecycle/heartbeat.js` and `shutdown.js`; bootstrap consumes both |
+| Shared single Executor | `packages/runner/src/Executor.js` provides single shared multi-language compile/execution engine |
+| Language implementations | `packages/runner/src/languages/` contains all language-specific execution and test harness logic |
+| Sandbox lifecycle, health and reaping | `packages/runner/src/sandbox/` encapsulates Docker transport, container lifecycle, metadata, health probing, and reaper |
+| Grading, late/attempt rules, normalization and durable persistence | `packages/core/src/modules/submissions/GradingService.js` and `SubmissionRepository.js` remain unchanged; worker imports explicit core/grading |
+| Historical verdict helper | `packages/core/src/modules/submissions/legacy-verdict.js`, consumed only by regression tests |
 
-The former worker Executor and five language files were compatibility re-exports, not duplicate implementations. Their callers now use public runner exports and the files are removed. The former execution/runners index becomes worker-owned playground orchestration, not another executor. Practice dispatch uses one frozen runner capability registry for all five language identifiers. API/core intake policy remains independent of runner imports; a parity test checks the two language sets. No core/database/application implementation is imported by runner, and API still cannot import runner/Docker.
+---
 
-## Consumer inventory before the move
+## Runner Package Architecture and Grouping
 
-- `apps/worker/src/index.js`
-- `apps/worker/src/workers/submission.worker.js`
-- `docs/archive/2026-11/LOCAL_SETUP_VERIFIED.md`
-- `docs/architecture/baseline-2026-11.md`
-- `scripts/ops/reap-sandboxes.mjs`
-- `tests/docker/batch-execution.test.js`
-- `tests/fixtures/sandbox-owner.fixture.mjs`
-- `tests/unit/function-harness.test.mjs`
-- `tests/docker/sandbox.test.mjs`
-- `tests/integration/worker-readiness.test.mjs`
-- `tests/integration/worker-recovery.test.mjs`
-- `tests/unit/job-lifecycle.test.js`
-- `tests/unit/runner.test.mjs`
-- `tests/unit/sandbox-recovery.test.mjs`
-- `tests/unit/sandbox.test.mjs`
-- `tests/unit/static-runners.test.mjs`
-- `tests/unit/worker-config.test.mjs`
-- `tests/unit/worker-heartbeat.test.mjs`
-- `tests/unit/worker-shutdown.test.mjs`
+`packages/runner` public exports are preserved in `packages/runner/package.json`:
+- `.` &rarr; `./src/Executor.js`
+- `./sandbox` &rarr; `./src/sandbox/Sandbox.js`
+- `./languages` &rarr; `./src/languages/index.js`
+- `./docker` &rarr; `./src/sandbox/docker.js`
+- `./reaper` &rarr; `./src/sandbox/reaper.js`
+- `./function-harness` &rarr; `./src/languages/function-harness.js`
+- `./function-runner` &rarr; `./src/languages/function-runner.js`
+- `./health` &rarr; `./src/sandbox/health.js`
 
-All affected static/dynamic script/test imports are updated. The static runner module mock retains its exact implementation URL deliberately so the public language export resolves to the mocked Docker mechanism. The quarantined historical batch test only gets its import updated; its lane/quarantine and assertions are unchanged (modernization belongs to #79).
+Language-specific implementations are grouped under `packages/runner/src/languages/` and container lifecycle/metadata/health/reaping under `packages/runner/src/sandbox/`. No manufactured compatibility files or stubs are left in `src/`. The shared `Executor` remains a single implementation at `packages/runner/src/Executor.js`.
 
-## Runtime contracts
+### Before and After File-to-Owner Map
 
-Queue names, payloads, processor concurrency, jobLifetime + 5000 lock duration and error/stall listeners are unchanged. Dispatch preserves stable job ID, actor and enqueue timestamp for core idempotent attempt persistence. Five-second execution caps, compiler/runtime budgets, sandbox resource isolation and deterministic cleanup/reaping are untouched. Core grading and repository implementations remain in place; no SQL or persistence rule changes.
+| Former flat path | New grouped path | Responsibility & Owner |
+|---|---|---|
+| `packages/runner/src/Executor.js` | `packages/runner/src/Executor.js` *(unchanged)* | Shared executor, budget enforcement, batch and playground runs |
+| `packages/runner/src/languages.js` | `packages/runner/src/languages/index.js` | Language registry and runner barrel export (`@coderank/runner/languages`) |
+| `packages/runner/src/c.js` | `packages/runner/src/languages/c.js` | C language function execution harness adapter |
+| `packages/runner/src/cpp.js` | `packages/runner/src/languages/cpp.js` | C++ language execution, compilation and test harness |
+| `packages/runner/src/java.js` | `packages/runner/src/languages/java.js` | Java language execution, compilation and JSON test runner |
+| `packages/runner/src/javascript.js` | `packages/runner/src/languages/javascript.js` | JavaScript language function execution harness adapter |
+| `packages/runner/src/python.js` | `packages/runner/src/languages/python.js` | Python language execution, AST check and test runner |
+| `packages/runner/src/function-harness.js` | `packages/runner/src/languages/function-harness.js` | Function problem code generator and test case generator |
+| `packages/runner/src/function-runner.js` | `packages/runner/src/languages/function-runner.js` | Function problem runner orchestration |
+| `packages/runner/src/Sandbox.js` | `packages/runner/src/sandbox/Sandbox.js` | Ephemeral container lifecycle, warm fallback, and deadline management |
+| `packages/runner/src/docker.js` | `packages/runner/src/sandbox/docker.js` | Docker process invocation over stdin (`dockerCommand`) |
+| `packages/runner/src/health.js` | `packages/runner/src/sandbox/health.js` | Docker daemon and runner image health inspection |
+| `packages/runner/src/sandbox-metadata.js` | `packages/runner/src/sandbox/metadata.js` | Sandbox labels, ownership UUID, prefix, and scope validation |
+| `packages/runner/src/reaper.js` | `packages/runner/src/sandbox/reaper.js` | Expired sandbox detection, batch reaping, and periodic cleanup loop |
 
-Publisher extraction preserves service-token callback refresh, explicit server-disconnect reconnection, shutdown reconnect suppression, public hidden-case redaction and actor-scoped submission notification lookup. Heartbeat TTLs, registry identifiers, drain/pause ordering and Redis cleanup are retained. Database close now runs after queue drain within the same finite shutdown deadline, before realtime disconnect. Repeated shutdown signals still share one promise. Existing failure/deadline tests retain their assertions; new tests check database cleanup ordering/deadline as well.
+### Naming Differences and Consumer Resolution
 
-The worker's unused direct dotenv dependency was removed after import analysis: bootstrap still loads core/config/env, whose owning package declares dotenv. npm regenerated the lockfile; the only lockfile change removes that worker declaration, with no unrelated versions changed. Existing Docker COPY packages/worker trees already include all new paths; no image or sandbox-image reorganization is introduced (#78).
+1. `languages.js` &rarr; `languages/index.js`: Standard folder barrel. Resolved via public export `@coderank/runner/languages`.
+2. `sandbox-metadata.js` &rarr; `sandbox/metadata.js`: Simplified name inside `src/sandbox/`. Consumed internally by `src/sandbox/Sandbox.js` and `src/sandbox/reaper.js`.
+3. `tests/unit/static-runners.test.mjs`: Node `mock.module` target updated from `../../packages/runner/src/docker.js` to `../../packages/runner/src/sandbox/docker.js` to match the exact module URL imported by language runners.
+4. `tests/unit/worker-dispatch.test.mjs`: Runner independence test updated to recursively verify all `.js` files across `src/`, `src/languages/`, and `src/sandbox/` against forbidden application/core/database imports.
 
-## Verification and limits
+---
 
-Clean npm ci, critical lint, the full unit lane and application builds are required. Existing grading, privacy, sandbox/reaping, static runner timeout, heartbeat/recovery, drain, worker configuration and queue tests remain registered with updated imports. New tests cover every language dispatch, actor/job/timestamp binding, invalid modes, runner boundaries, publication redaction and bounded database cleanup.
+## Consumer Inventory
 
-Real sandbox execution/compile/runtime errors/timeouts across every language/mode, live queue/worker recovery, resource leak/capacity acceptance and the full API-to-worker-to-database-to-browser flow remain pending on this revision: Docker is not installed here. The real integration/Docker/stack/browser lanes are retained, but are not replaced by unit mocks. Per explicit owner direction, full-stack and auth-performance CI stay stopped; no expensive opt-in labels are applied. No database operations, volume changes or deployment changes are performed. Rollback is an application revert.
+| Consumer | Imported Runner Public Export | Purpose |
+|---|---|---|
+| `apps/worker/src/index.js` | `@coderank/runner/sandbox` (`startSandboxReaper`) | Starts background reaper during worker startup |
+| `apps/worker/src/jobs/execution/dispatch.js` | `@coderank/runner/languages` (`practiceRunners`) | Dispatches practical jobs to appropriate language runner |
+| `apps/worker/src/jobs/execution/dynamic.js` | `@coderank/runner` (`Executor`) | Injects shared Executor into core `gradePractical` |
+| `apps/worker/src/jobs/execution/playground.js` | `@coderank/runner` (`Executor`), `@coderank/runner/languages` (`ALLOWED_LANGUAGES`) | Compiles and executes untrusted code for interactive playground |
+| `apps/worker/src/jobs/execution/submission.worker.js` | `@coderank/runner/sandbox` (`jobLifetime`) | Computes bounded lock and execution durations |
+| `apps/worker/src/jobs/system/system.worker.js` | `@coderank/runner/health` (`checkDockerHealth`) | Periodic health check job |
+| `apps/worker/src/lifecycle/heartbeat.js` | `@coderank/runner/health` (`checkDockerHealth`) | Probes Docker daemon/image before advertising healthy worker |
+| `apps/worker/src/lifecycle/shutdown.js` | `@coderank/runner/sandbox` (`jobLifetime`) | Bounded drain timeout calculation |
+| `scripts/ops/reap-sandboxes.mjs` | `@coderank/runner/reaper` (`reapExpiredSandboxes`) | Ops CLI for manual/scheduled sandbox reaping |
+| `tests/docker/batch-execution.test.js` | `@coderank/runner`, `@coderank/runner/docker` | Quarantined batch execution test |
+| `tests/docker/sandbox.test.mjs` | `@coderank/runner`, `@coderank/runner/sandbox`, `@coderank/runner/docker`, `@coderank/runner/languages`, `@coderank/runner/reaper` | Real cold Docker container isolation and execution verification |
+| `tests/fixtures/sandbox-owner.fixture.mjs` | `@coderank/runner/sandbox` (`Sandbox`) | Subprocess sandbox fixture for recovery drills |
+| `tests/unit/function-harness.test.mjs` | `@coderank/runner/function-harness` | Function problem code generation unit tests |
+| `tests/unit/runner.test.mjs` | `@coderank/runner` (`Executor`, `executionBudget`) | Executor workspace, budget, and test case unit tests |
+| `tests/unit/sandbox.test.mjs` | `@coderank/runner/sandbox` (`Sandbox`, `jobLifetime`), `@coderank/runner/docker` (`dockerCommand`) | Sandbox isolation, lifetime, and warm daemon tests |
+| `tests/unit/sandbox-recovery.test.mjs` | `@coderank/runner/reaper`, `@coderank/runner/sandbox` | Metadata validation, expiry checks, and reaper unit tests |
+| `tests/unit/static-runners.test.mjs` | `@coderank/runner/languages` | Mocked static language runner tests |
+| `tests/unit/worker-dispatch.test.mjs` | `@coderank/runner/languages` | Language capability registry and runner dependency boundary check |
+
+---
+
+## Runtime contracts preserved
+
+- Complete resource isolation (`--network none`, `--read-only`, `--cap-drop ALL`, `--security-opt no-new-privileges:true`, `--pids-limit 64`, `--memory 512m`, `--memory-swap 512m`, `--cpus 1`, UID 1000).
+- Ephemeral container cleanup via `finally { await sandbox.destroy(); }` and background reaping via `startSandboxReaper`.
+- Warm daemon execution and fallback (`isWarm` check, fallback on `No such container`).
+- Five-second execution caps, compiler budgets (10s), and bounded container lifetime (`sleep <lifetime>`).
+- Package boundary isolation: runner does not import from core, database, or applications.
+- API maintains zero runner and Docker dependencies.

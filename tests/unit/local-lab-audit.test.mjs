@@ -9,13 +9,19 @@ import { assessMatrix, assessPredecessors, assessHost, artifactHash, supportedCo
 
 test('local audit keeps actual merged ownership gaps visible and rejects omitted or empty move-map rows', () => {
   const errors = assessMatrix(matrix);
-  for (const id of ['shared-client-styles','runner-grouping','sandbox-warm','test-lanes-batch']) assert.ok(errors.some(e=>e.startsWith(id+':')),id);
+  for (const id of ['shared-client-styles','sandbox-warm','test-lanes-batch']) assert.ok(errors.some(e=>e.startsWith(id+':')),id);
   const core = matrix.rows.find(row => row.id === 'core-facades');
   assert.equal(core.structuralState, 'implemented');
   assert.equal(core.functionalAcceptance, 'unverified');
+  const runner = matrix.rows.find(row => row.id === 'runner-grouping');
+  assert.equal(runner.structuralState, 'implemented');
+  assert.equal(runner.functionalAcceptance, 'unverified');
   const regressed = structuredClone(matrix);
   regressed.rows.find(row => row.id === 'core-facades').structuralState = 'gap';
   assert.ok(assessMatrix(regressed).some(error => error.startsWith('core-facades:')));
+  const runnerRegressed = structuredClone(matrix);
+  runnerRegressed.rows.find(row => row.id === 'runner-grouping').structuralState = 'gap';
+  assert.ok(assessMatrix(runnerRegressed).some(error => error.startsWith('runner-grouping:')));
   for (const change of [m=>m.rows.pop(),m=>m.rows.push(m.rows[0]),m=>m.runtimeRequirements.pop(),m=>{m.rows[0].paths=[];}]) {
     const value=structuredClone(matrix);change(value);
     assert.ok(assessMatrix(value).length > errors.length);
@@ -53,8 +59,12 @@ test('audit hashes real nonempty test-owned artifacts and refuses tampering, tra
     await assert.rejects(artifactHash('test-results/empty.json',undefined,root),/Empty/);
     await assert.rejects(artifactHash('../outside',undefined,root),/inside test-results/);
     await writeFile(join(root,'outside'),'synthetic');
-    await symlink(join(root,'outside'),join(root,'test-results/link'));
-    await assert.rejects(artifactHash('test-results/link',undefined,root),/symlink escapes/);
+    try {
+      await symlink(join(root,'outside'),join(root,'test-results/link'));
+      await assert.rejects(artifactHash('test-results/link',undefined,root),/symlink escapes/);
+    } catch (err) {
+      if (err?.code !== 'EPERM' || process.platform !== 'win32') throw err;
+    }
   } finally { await rm(root,{recursive:true,force:true}); }
 });
 
