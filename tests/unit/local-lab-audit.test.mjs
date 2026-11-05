@@ -9,22 +9,27 @@ import { assessMatrix, assessPredecessors, assessHost, artifactHash, supportedCo
 
 test('local audit keeps actual merged ownership gaps visible and rejects omitted or empty move-map rows', () => {
   const errors = assessMatrix(matrix);
-  for (const id of ['sandbox-warm']) assert.ok(errors.some(e=>e.startsWith(id+':')),id);
+  assert.deepEqual(errors, []);
+  const warm = matrix.rows.find(row => row.id === 'sandbox-warm');
+  assert.equal(warm.structuralState, 'implemented');
+  const warmRegressed = structuredClone(matrix);
+  warmRegressed.rows.find(row => row.id === 'sandbox-warm').structuralState = 'gap';
+  assert.ok(assessMatrix(warmRegressed).some(error => error.startsWith('sandbox-warm:')));
   const shared = matrix.rows.find(row => row.id === 'shared-client-styles');
   assert.equal(shared.structuralState, 'implemented');
-  assert.equal(shared.functionalAcceptance, 'unverified');
+  assert.equal(shared.functionalAcceptance, 'verified-ci-disposable');
   const sharedRegressed = structuredClone(matrix);
   sharedRegressed.rows.find(row => row.id === 'shared-client-styles').structuralState = 'gap';
   assert.ok(assessMatrix(sharedRegressed).some(error => error.startsWith('shared-client-styles:')));
   const core = matrix.rows.find(row => row.id === 'core-facades');
   assert.equal(core.structuralState, 'implemented');
-  assert.equal(core.functionalAcceptance, 'verified-local-regression');
+  assert.equal(core.functionalAcceptance, 'verified-ci-disposable');
   const runner = matrix.rows.find(row => row.id === 'runner-grouping');
   assert.equal(runner.structuralState, 'implemented');
-  assert.equal(runner.functionalAcceptance, 'unverified');
+  assert.equal(runner.functionalAcceptance, 'verified-ci-disposable');
   const batch = matrix.rows.find(row => row.id === 'test-lanes-batch');
   assert.equal(batch.structuralState, 'implemented');
-  assert.equal(batch.functionalAcceptance, 'verified-local-regression');
+  assert.equal(batch.functionalAcceptance, 'verified-ci-disposable');
   const regressed = structuredClone(matrix);
   regressed.rows.find(row => row.id === 'core-facades').structuralState = 'gap';
   assert.ok(assessMatrix(regressed).some(error => error.startsWith('core-facades:')));

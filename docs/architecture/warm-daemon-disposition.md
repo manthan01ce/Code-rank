@@ -1,6 +1,6 @@
 # Warm-daemon retirement implementation (#99 / batch 5D)
 
-**Docker acceptance is blocked. Do not merge or close #99 on unit evidence.**
+**Disposable CI Docker acceptance passed.** See [the reviewed source/image evidence](batch5-ci-acceptance.json). The unavailable-tool observations below describe the original implementation environment, not the subsequent real-CI result. College/intended-host acceptance remains excluded.
 PR #108 merged explicit retirement of shared warm daemons while preserving the
 existing cold per-job sandbox as the sole execution mode. #98 is merged via #105
 (`3fb23e0`); work starts from latest master `502f4f530016b7ac53c4f2f981302d6913d5ff9e`.
@@ -85,9 +85,9 @@ timeout/resource confinement and cleanup. Unit tests and mocks do not replace th
 projections, Docker/Compose versions, actual image identities and TAP/file-report hashes.
 A missing CLI/daemon yields blocked status, nonzero exit and null image identity. This
 workspace has no Docker CLI/socket/configured host, so no resolved native Compose or image
-execution report exists yet. The matrix remains partial/unverified and #99 stays open.
+execution report existed in that original environment. The subsequent real-CI report now supplies exact-source clean configuration/image/lifecycle evidence; #99 is closed.
 College host/LAN/cloud/provisioning/production work is outside this issue.
 
 ## Current integration disposition
 
-PR #108 is merged and #99 is closed. Its original unavailable-tool observations above are historical evidence, not the present GitHub state. PR #109 reports all 18 Docker tests passing at its head, including retirement coverage; the full warm-disposition image/configuration report and final integrated checks still need exact-revision evidence for #102. See [the scoped integration report](../development/BATCH5_INTEGRATED_ACCEPTANCE.md).
+PR #108 is merged and #99 is closed. Its original unavailable-tool observations above are historical evidence, not the present GitHub state. PR #109 reports all 18 Docker tests passing at its head, including retirement coverage; the full warm-disposition image/configuration report and integrated checks subsequently passed in run 42110993208, with independently verified artifact hashes. See batch5-ci-acceptance.json for the tested revision and scope. See [the scoped integration report](../development/BATCH5_INTEGRATED_ACCEPTANCE.md).

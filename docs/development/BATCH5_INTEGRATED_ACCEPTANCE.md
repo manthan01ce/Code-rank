@@ -1,6 +1,6 @@
 # Batch 5G: scoped integrated acceptance (#102)
 
-**Status: BLOCKED / draft. Not a completion certificate.** Reviewed source: `29324a4b7690e8f71e356b121f568b091ba793c9` (latest master pulled before changes), tree `e759043cdb0e132efdbd6c9bf734a1941f9883d2`. Assessment date: 6 November 2026 (Asia/Calcutta). Raw command timestamps use the execution host clock and must not be used to infer the client date.
+**Historical initial attempt: BLOCKED.** Subsequent real disposable verification passed; see [the current evidence snapshot](../architecture/batch5-ci-acceptance.json) and current move-map matrix. The tables and command failures below describe the initial #110 attempt, not the latest CI result. College/intended-host acceptance remains deferred. Reviewed source: `29324a4b7690e8f71e356b121f568b091ba793c9` (latest master pulled before changes), tree `e759043cdb0e132efdbd6c9bf734a1941f9883d2`. Assessment date: 6 November 2026 (Asia/Calcutta). Raw command timestamps use the execution host clock and must not be used to infer the client date.
 
 ## Scope and prerequisite reconciliation
 
@@ -55,6 +55,10 @@ This table covers every one of the existing 18 concrete ownership rows. It suppl
 | final-head-ci | Expensive Actions remain STOPPED. Local equivalents and final tested/published/merged tree evidence are required for #102; they must be reported as local evidence, never forged as GitHub CI or host certification. Fast CI remains automatic. |
 
 Use the owning commands documented in LOCAL_LAB_CERTIFICATION.md: `test:integration`, `test:docker`, `test:stack`, `test:authenticated`, container-topology and `deployment:check`, plus the missing drills above. `test:warm-disposition` records actual Compose/image identities and the active Docker lane. A Docker-free environment cannot replace those checks with mocks. Preserve synthetic/disposable targets and never target live college/production data. No expensive workflow labels or dispatches were used.
+
+## Follow-up
+
+[The strict follow-up](STRICT_VERIFICATION_2026-11-06.md) fixes unavailable process-memory diagnostics and records a passing 401-test local unit/architecture gate. Real integrated service acceptance remains blocked. The command results below are the historical #110 attempt, not the follow-up results.
 
 ## Fresh verification
 

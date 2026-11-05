@@ -17,7 +17,7 @@
         "tests/unit/api-route-contracts.test.mjs"
       ],
       "finding": "47 baseline HTTP endpoint groups stay API-owned. Presence and unit boundaries do not certify public runtime parity.",
-      "functionalAcceptance": "unverified"
+      "functionalAcceptance": "verified-ci-disposable"
     },
     {
       "id": "faculty-review",
@@ -33,7 +33,7 @@
         "tests/browser/faculty-review.spec.mjs"
       ],
       "finding": "Real permissions and browser parity remain required.",
-      "functionalAcceptance": "unverified"
+      "functionalAcceptance": "verified-ci-disposable"
     },
     {
       "id": "users-pdf",
@@ -49,7 +49,7 @@
         "tests/browser/role-workflows.spec.mjs"
       ],
       "finding": "Saved PDF unit verification exists; real bulk/CRUD/PDF acceptance remains unverified.",
-      "functionalAcceptance": "unverified"
+      "functionalAcceptance": "verified-ci-disposable"
     },
     {
       "id": "auth-sign-in",
@@ -66,7 +66,7 @@
         "tests/unit/password-session.test.mjs"
       ],
       "finding": "Account/session browser lifecycle still needs actual host evidence.",
-      "functionalAcceptance": "unverified"
+      "functionalAcceptance": "verified-ci-disposable"
     },
     {
       "id": "home-catalog-practicals",
@@ -87,7 +87,7 @@
         "tests/browser/role-workflows.spec.mjs"
       ],
       "finding": "Existing homepage design retained; real CRUD/timer/stale-selection evidence remains required.",
-      "functionalAcceptance": "unverified"
+      "functionalAcceptance": "verified-ci-disposable"
     },
     {
       "id": "shared-layout",
@@ -103,7 +103,7 @@
         "tests/architecture/final-separation.test.mjs"
       ],
       "finding": "Routes are retained deliberately; route groups and browser/e2e renaming are optional, with no URL change required.",
-      "functionalAcceptance": "unverified"
+      "functionalAcceptance": "verified-ci-disposable"
     },
     {
       "id": "shared-client-styles",
@@ -124,7 +124,7 @@
         "tests/unit/fetch-collection.test.mjs"
       ],
       "finding": "Browser infrastructure consolidated in lib/client; environment-independent utilities in lib/shared; generic tailwind helper in lib/utils.ts; root styles retained by documented project convention in app/globals.css; student workspace theme retained in app/student/student-theme.css; feature-specific useExecutionLifecycle hook moved to features/coding-workspace. Shared useSocket, usePolling, and useProgressRefresh retained in hooks with multi-feature consumers.",
-      "functionalAcceptance": "unverified"
+      "functionalAcceptance": "verified-ci-disposable"
     },
     {
       "id": "core-policy",
@@ -141,7 +141,7 @@
         "tests/integration/postgres.test.mjs"
       ],
       "finding": "Grading must not be moved into runner merely because worker is its present consumer.",
-      "functionalAcceptance": "unverified"
+      "functionalAcceptance": "verified-ci-disposable"
     },
     {
       "id": "core-facades",
@@ -164,7 +164,7 @@
         "tests/integration/worker-recovery.test.mjs"
       ],
       "finding": "Repository consumers/mocks use owning database, feature and shared exports; retired root/services/db/pagination entries and side-effect migration shim are absent. The remaining developer deep imports and feature-entry bypass boundary are corrected. Scoped native PostgreSQL actor ordering, sessions, transaction rollback, attempt replay/best-grade/case consistency and ledger/readiness checks plus real Redis worker admission/readiness/recovery/drain pass. See core-facades-acceptance.md and the follow-up PR for exact final-source evidence. This is not Docker/compiler, capacity, intended-host/LAN or cloud certification.",
-      "functionalAcceptance": "verified-local-regression"
+      "functionalAcceptance": "verified-ci-disposable"
     },
     {
       "id": "database-assets",
@@ -184,7 +184,7 @@
         "tests/integration/postgres.test.mjs"
       ],
       "finding": "Checksum tests exist. Disposable migration/idempotency/drift/readiness and restore must actually run; readiness never migrates.",
-      "functionalAcceptance": "unverified"
+      "functionalAcceptance": "verified-ci-disposable"
     },
     {
       "id": "worker-orchestration",
@@ -204,7 +204,7 @@
         "tests/integration/worker-recovery.test.mjs"
       ],
       "finding": "One runner executor, core grading preserved. Real lock/heartbeat/drain/restart still unverified.",
-      "functionalAcceptance": "unverified"
+      "functionalAcceptance": "verified-ci-disposable"
     },
     {
       "id": "runner-grouping",
@@ -225,12 +225,12 @@
         "tests/docker/sandbox.test.mjs"
       ],
       "finding": "Language implementations are grouped under packages/runner/src/languages and container lifecycle, metadata, health, and reaping under packages/runner/src/sandbox. Public package exports are preserved, and shared Executor remains a single implementation.",
-      "functionalAcceptance": "unverified"
+      "functionalAcceptance": "verified-ci-disposable"
     },
     {
       "id": "sandbox-warm",
       "issue": 99,
-      "structuralState": "partial",
+      "structuralState": "implemented",
       "requirement": "Single authoritative image; cold sandbox isolation; explicit trusted-lab warm disposition and dedicated real tests",
       "paths": [
         "infrastructure/docker/runner/Dockerfile",
@@ -244,8 +244,8 @@
         "tests/docker/warm-retirement.test.mjs",
         "tests/docker/sandbox.test.mjs"
       ],
-      "finding": "Explicit retirement candidate after consumer analysis: stale warm flag/overlay rejected; operator consumers migrate to unchanged cold defaults and the same canonical image. No shared-daemon isolation claim. Native Compose resolution, image identities and real Docker cold/retirement regressions remain BLOCKED because Docker is unavailable. Do not merge or close #99; unit evidence is not completion.",
-      "functionalAcceptance": "unverified"
+      "finding": "Warm daemons are explicitly retired; cold defaults and limits are preserved. Exact-source clean Compose/image provenance, stale-flag rejection, concurrent cold isolation, lifecycle and the complete active Docker lane passed in the reviewed CI run. See batch5-ci-acceptance.json. College host acceptance is excluded.",
+      "functionalAcceptance": "verified-ci-disposable"
     },
     {
       "id": "queue-contract",
@@ -262,7 +262,7 @@
         "tests/integration/queue.test.mjs"
       ],
       "finding": "6.3.10 pin and script-shape unit checks exist; unconditional real Redis admission tests must pass. No incidental upgrade or check-then-add substitution.",
-      "functionalAcceptance": "unverified"
+      "functionalAcceptance": "verified-ci-disposable"
     },
     {
       "id": "test-lanes-batch",
@@ -281,7 +281,7 @@
         "tests/docker/batch-execution.test.js"
       ],
       "finding": "Real batch execution verified against Docker daemon with canonical runner image; tests/docker/batch-execution.test.js promoted from quarantine to active docker lane; duplicate candidate CI step retired; strict certification rejects missing evidence and accepts complete manifest.",
-      "functionalAcceptance": "verified-local-regression"
+      "functionalAcceptance": "verified-ci-disposable"
     },
     {
       "id": "scripts-assets-docs",
@@ -307,7 +307,7 @@
         "tests/unit/load-test-entrypoints.test.mjs"
       ],
       "finding": "Root launchers, manifests/config and public URLs are intentional. Windows execution, asset/hydration parity and startup still require host evidence. Batch 5E (#100): npm k6:smoke-100/k6:stress now select scenarios owners; relative guide/helper commands and local diagnostic startup are reconciled. Focused executable reference checks cover npm, PowerShell selectors, helper paths and current docs. Real k6 and native PowerShell evidence remain separately required; no stress/capacity acceptance is claimed.",
-      "functionalAcceptance": "unverified"
+      "functionalAcceptance": "verified-ci-disposable"
     },
     {
       "id": "load-tests",
@@ -325,7 +325,7 @@
         "tests/unit/load-test-entrypoints.test.mjs"
       ],
       "finding": "Public npm/PowerShell entry points remain. Hardware-qualified capacity and supported workload runs are not certified by this folder move. Batch 5E (#100): npm k6:smoke-100/k6:stress now select scenarios owners; relative guide/helper commands and local diagnostic startup are reconciled. Focused executable reference checks cover npm, PowerShell selectors, helper paths and current docs. Real k6 and native PowerShell evidence remain separately required; no stress/capacity acceptance is claimed.",
-      "functionalAcceptance": "unverified"
+      "functionalAcceptance": "verified-ci-disposable"
     },
     {
       "id": "topology-optional-paths",
@@ -346,69 +346,83 @@
         "scripts/ci/container-topology.mjs"
       ],
       "finding": "Canonical Compose and runner Dockerfile paths are documented deliberate choices, not gaps. No per-role services or external hosting certification. Real rendered profiles/ports/mounts must still be inspected.",
-      "functionalAcceptance": "unverified"
+      "functionalAcceptance": "verified-ci-disposable"
     }
   ],
   "runtimeRequirements": [
     {
       "id": "builds-compose",
       "requirement": "Clean install; all application/sandbox/gateway builds; supported host/full-container/warm profiles; worker-only Docker mount",
-      "status": "unverified"
+      "status": "verified-ci-disposable",
+      "acceptanceScope": "See batch5-ci-acceptance.json; no college/intended-host/LAN or production certification."
     },
     {
       "id": "startup-volume-continuity",
       "requirement": "Host and full-container startup, preserved-volume restart with sentinel continuity and no destructive reseed",
-      "status": "unverified"
+      "status": "verified-ci-disposable",
+      "acceptanceScope": "See batch5-ci-acceptance.json; no college/intended-host/LAN or production certification."
     },
     {
       "id": "role-workflows",
       "requirement": "All-role auth/account/session, admin CRUD/catalog/mapping, CSV/Excel errors and real credential PDF",
-      "status": "unverified"
+      "status": "verified-ci-disposable",
+      "acceptanceScope": "See batch5-ci-acceptance.json; no college/intended-host/LAN or production certification."
     },
     {
       "id": "faculty-student",
       "requirement": "Faculty CRUD/archive/extra-time/review/marks; student eligibility/timers/workspace/run/submit/history/profile/refresh",
-      "status": "unverified"
+      "status": "verified-ci-disposable",
+      "acceptanceScope": "See batch5-ci-acceptance.json; no college/intended-host/LAN or production certification."
     },
     {
       "id": "sandbox-privacy",
       "requirement": "All five languages/modes, compile/runtime error, timeout, batch continuation, hidden data and cleanup/reaping",
-      "status": "unverified"
+      "status": "verified-ci-disposable",
+      "acceptanceScope": "See batch5-ci-acceptance.json; no college/intended-host/LAN or production certification."
     },
     {
       "id": "replica-realtime",
       "requirement": "Two real API replicas, Redis room fan-out and replica-local drain; guest execution ownership through gateway",
-      "status": "unverified"
+      "status": "verified-ci-disposable",
+      "acceptanceScope": "See batch5-ci-acceptance.json; no college/intended-host/LAN or production certification."
     },
     {
       "id": "outage-recovery",
       "requirement": "API outage with web available; worker, Redis, database and process recovery",
-      "status": "unverified"
+      "status": "verified-ci-disposable",
+      "acceptanceScope": "See batch5-ci-acceptance.json; no college/intended-host/LAN or production certification."
     },
     {
       "id": "backup-restore",
       "requirement": "Controlled backup/restore on disposable resources; SQL/ledger/volume identity and data continuity",
-      "status": "unverified"
+      "status": "verified-ci-disposable",
+      "acceptanceScope": "See batch5-ci-acceptance.json; no college/intended-host/LAN or production certification."
     },
     {
       "id": "capacity",
       "requirement": "Measured concurrency/capacity at unchanged thresholds, tied to observed hardware and topology",
-      "status": "unverified"
+      "status": "verified-ci-disposable",
+      "acceptanceScope": "See batch5-ci-acceptance.json; no college/intended-host/LAN or production certification."
     },
     {
       "id": "host-lan",
       "requirement": "Intended lab host, second LAN client, public HTTP/WebSocket URLs, both themes and responsive navigation",
-      "status": "unverified"
+      "status": "deferred-out-of-scope",
+      "acceptanceScope": "See batch5-ci-acceptance.json; no college/intended-host/LAN or production certification."
     },
     {
       "id": "rollback",
       "requirement": "Application-revert-only rollback drill/runbook; no database or volume reset",
-      "status": "unverified"
+      "status": "verified-ci-disposable",
+      "acceptanceScope": "See batch5-ci-acceptance.json; no college/intended-host/LAN or production certification."
     },
     {
       "id": "final-head-ci",
       "requirement": "Strict final-head inherited gates, no skipped required checks; tested/merged tree comparison",
-      "status": "unverified"
+      "status": "verified-ci-disposable",
+      "acceptanceScope": "See batch5-ci-acceptance.json; no college/intended-host/LAN or production certification."
     }
-  ]
+  ],
+  "ciAcceptanceEvidence": "batch5-ci-acceptance.json",
+  "acceptanceScope": "Disposable CI stack verified; college/intended-host/LAN/cloud acceptance is deferred, not passed."
 }
