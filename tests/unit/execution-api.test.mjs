@@ -29,7 +29,7 @@ const sql = async (strings) => {
   if (query.includes('FROM users')) return [{ status: 'active', extra_info: { batch: 'A', semester: 3 } }];
   return [];
 };
-mock.module(new URL('../../packages/core/src/db/client.js', import.meta.url).href, { defaultExport: sql });
+
 mock.module('@coderank/database', { defaultExport: sql, namedExports: { closeDatabase: async () => {} } });
 mock.module(new URL('../../apps/api/src/middleware/rate-limiter.js', import.meta.url).href, { namedExports: { checkRateLimit: async () => ({ allowed: rateAllowed }), closeRateLimiter: async () => {} } });
 mock.module('@coderank/queue', { namedExports: { readExecutionWorkers: async () => ({ healthy: true, healthyWorkers: 1 }), createExecutionQueue: () => new class {

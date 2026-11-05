@@ -31,17 +31,11 @@ const sql = Object.assign(
     },
   },
 );
-mock.module(
-  new URL("../../packages/core/src/db/client.js", import.meta.url).href,
-  { defaultExport: sql },
-);
+
 sql.readQuery = async () => {
   if (offline) throw Error('offline');
   return user ? [user] : [];
 };
-const { UserService } = await import(
-  "../../packages/core/src/services/UserService.js"
-);
 const { verifyToken } = await import("../../packages/core/src/utils/auth.js");
 mock.module('@coderank/database', { defaultExport: sql, namedExports: { closeDatabase: async () => {} } });
 const { AuthService } = await import('../../apps/api/src/modules/auth/auth.service.js');

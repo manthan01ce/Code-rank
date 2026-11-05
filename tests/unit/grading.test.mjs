@@ -3,7 +3,7 @@ import assert from 'node:assert/strict';
 let failSave = false, replay = null, saved, cleanups = 0;
 const practical = { total_marks: 0, end_time: '2026-01-02' };
 const cases = [{id:1,input:'secret',expected:'answer',marks:0,is_hidden:true}];
-mock.module(new URL('../../packages/core/src/db/client.js',import.meta.url).href,{defaultExport: async strings => strings.join('').includes('FROM practicals p') ? [practical] : cases});
+mock.module('@coderank/database',{defaultExport: async strings => strings.join('').includes('FROM practicals p') ? [practical] : cases});
 mock.module(new URL('../../packages/core/src/modules/submissions/SubmissionRepository.js',import.meta.url).href,{namedExports:{findAttempt:async()=>replay,saveAttempt:async a=>{saved=a;if(failSave)throw Error('database unavailable');return a.result;}}});
 const { gradePractical } = await import('../../packages/core/src/modules/submissions/GradingService.js');
 const payload={language:'python',code:'source',dbId:1,userId:1,isSubmit:true,jobId:'job',enqueuedAt:Date.parse('2026-01-01')};

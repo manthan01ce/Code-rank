@@ -7,7 +7,7 @@ let unavailable = false;
 const sql = Object.assign(async () => { throw Error('Unexpected domain query'); }, {
   query: async () => { if (unavailable) throw Error('private connection details'); return []; },
 });
-mock.module(new URL('../../packages/core/src/db/client.js', import.meta.url).href, { defaultExport: sql });
+
 mock.module('@coderank/database', { defaultExport: sql, namedExports: { closeDatabase: async () => {} } });
 mock.module('../../apps/api/src/middleware/rate-limiter.js', { namedExports: {
   checkRateLimit: async () => ({ allowed: true }), closeRateLimiter: async () => {},

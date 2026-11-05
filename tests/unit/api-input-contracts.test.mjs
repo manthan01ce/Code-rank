@@ -7,7 +7,7 @@ registerHooks({ resolve(specifier, context, next) {
 } });
 mock.module('@coderank/core/security/active-actor', { namedExports: { authenticateRequest: async () => ({ id: 1, role: 'admin' }), authenticateToken: async () => ({ id: 1, role: 'admin' }) } });
 const sql = Object.assign(async () => { throw Error('private database details'); }, { query: async () => { throw Error('private database details'); } });
-mock.module(new URL('../../packages/core/src/db/client.js', import.meta.url).href, { defaultExport: sql });
+
 mock.module('@coderank/database', { defaultExport: sql, namedExports: { closeDatabase: async () => {} } });
 
 test('JSON mutation adapters reject malformed and non-object bodies with 400', async () => {

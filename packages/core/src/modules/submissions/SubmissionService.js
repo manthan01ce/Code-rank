@@ -1,8 +1,8 @@
 import { PracticalService } from '../practicals/PracticalService.js';
 import { ALLOWED_LANGUAGES } from '../../security/execution.js';
-import sql from '../../db/client.js';
+import sql from '@coderank/database';
 import { createExecutionQueue, readExecutionWorkers } from '@coderank/queue';
-import { withTimeout } from '../../utils/timeout.js';
+import { withTimeout } from '../../shared/timeout.js';
 import { randomUUID } from 'node:crypto';
 import { canReadJob, publicCase, publicResult } from '../../security/execution.js';
 

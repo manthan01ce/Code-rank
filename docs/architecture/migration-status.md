@@ -8,6 +8,8 @@ The older migration chronology below remains audit history; its earlier lists of
 
 # Architecture migration status
 
+Batch 5B (#97) retires core compatibility entries after repository caller migration; see [entry/consumer dispositions](core-public-entries.md). Shared logger/request-timing/timeout now live under `core/shared`; database and feature imports target their owning public entries. Structural work is implemented; disposable PostgreSQL and real worker acceptance remain pending, so #97 must remain open.
+
 Worker dispatch/lifecycle and public runner consumers are reconciled in [the #77 ownership map](worker-runner-ownership.md); live sandbox/recovery/capacity acceptance remains pending.
 
 Database assets/lifecycle ownership is reconciled in [the #76 inventory](database-assets-ownership.md); this move preserves SQL/ledger identity and leaves real container/recovery acceptance pending.

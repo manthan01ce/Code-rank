@@ -1,4 +1,4 @@
-import sql from '../../db/client.js';
+import sql from '@coderank/database';
 import { listPage } from '../../shared/pagination.js';
 
 export class CourseService {

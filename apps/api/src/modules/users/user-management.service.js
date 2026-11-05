@@ -1,4 +1,4 @@
-import sql from '@coderank/core/db';
+import sql from '@coderank/database';
 import { hashPassword, generateSecurePassword } from '@coderank/core/utils/auth';
 import { positiveId } from '@coderank/core/shared/identifiers';
 

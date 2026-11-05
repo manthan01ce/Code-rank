@@ -86,10 +86,12 @@
       "tests/unit/worker-config.test.mjs",
       "tests/unit/worker-dispatch.test.mjs",
       "tests/unit/worker-heartbeat.test.mjs",
+      "tests/unit/worker-import.test.mjs",
       "tests/unit/worker-shutdown.test.mjs"
     ],
     "architecture": [
       "tests/architecture/architecture.test.mjs",
+      "tests/architecture/core-public-entries.test.mjs",
       "tests/architecture/final-separation.test.mjs",
       "tests/architecture/practical-authoring.test.mjs",
       "tests/architecture/tooling-lint.test.mjs"

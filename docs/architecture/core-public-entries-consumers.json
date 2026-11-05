@@ -1,0 +1,325 @@
+{
+  "baseline": "34c34006edd4a95efed68197e61dfdb81f98b049",
+  "consumers": [
+    {
+      "path": "apps/api/src/app.js",
+      "line": 4,
+      "source": "import { SubmissionService } from '@coderank/core/services/SubmissionService';"
+    },
+    {
+      "path": "apps/api/src/middleware/rate-limiter.js",
+      "line": 3,
+      "source": "import { withTimeout } from '@coderank/core/utils/timeout';"
+    },
+    {
+      "path": "apps/api/src/modules/auth/auth.routes.js",
+      "line": 1,
+      "source": "import { requestTiming } from '@coderank/core/utils/request-timing';"
+    },
+    {
+      "path": "apps/api/src/modules/courses/courses.service.js",
+      "line": 2,
+      "source": "import { listPage } from '@coderank/core/pagination';"
+    },
+    {
+      "path": "apps/api/src/modules/execution/execution.service.js",
+      "line": 3,
+      "source": "import { PracticalService } from '@coderank/core/services/PracticalService';"
+    },
+    {
+      "path": "apps/api/src/modules/execution/execution.service.js",
+      "line": 5,
+      "source": "import { SubmissionService } from '@coderank/core/services/SubmissionService';"
+    },
+    {
+      "path": "apps/api/src/modules/operations/operations.service.js",
+      "line": 5,
+      "source": "import { withTimeout } from '@coderank/core/utils/timeout';"
+    },
+    {
+      "path": "apps/api/src/modules/operations/operations.service.js",
+      "line": 6,
+      "source": "import { SubmissionService } from '@coderank/core/services/SubmissionService';"
+    },
+    {
+      "path": "apps/api/src/modules/practicals/course-report.service.js",
+      "line": 1,
+      "source": "import sql from '@coderank/core/db';"
+    },
+    {
+      "path": "apps/api/src/modules/practicals/practical-management.service.js",
+      "line": 1,
+      "source": "import sql from '@coderank/core/db';"
+    },
+    {
+      "path": "apps/api/src/modules/practicals/practical-report.service.js",
+      "line": 1,
+      "source": "import sql from '@coderank/core/db';"
+    },
+    {
+      "path": "apps/api/src/modules/practicals/practicals.service.js",
+      "line": 5,
+      "source": "import { CourseService } from '@coderank/core/services/CourseService';"
+    },
+    {
+      "path": "apps/api/src/modules/practicals/student-practical.service.js",
+      "line": 1,
+      "source": "import sql from '@coderank/core/db';"
+    },
+    {
+      "path": "apps/api/src/modules/practicals/student-practical.service.js",
+      "line": 3,
+      "source": "import { PracticalService } from '@coderank/core/services/PracticalService';"
+    },
+    {
+      "path": "apps/api/src/modules/submissions/submission-history.service.js",
+      "line": 1,
+      "source": "import sql from '@coderank/core/db';"
+    },
+    {
+      "path": "apps/api/src/modules/submissions/submissions.service.js",
+      "line": 1,
+      "source": "import { SubmissionService } from '@coderank/core/services/SubmissionService';"
+    },
+    {
+      "path": "apps/api/src/modules/submissions/submissions.service.js",
+      "line": 4,
+      "source": "import { PracticalService } from '@coderank/core/services/PracticalService';"
+    },
+    {
+      "path": "apps/api/src/modules/submissions/submissions.service.js",
+      "line": 6,
+      "source": "import sql from '@coderank/core/db';"
+    },
+    {
+      "path": "apps/api/src/modules/users/user-management.service.js",
+      "line": 1,
+      "source": "import sql from '@coderank/core/db';"
+    },
+    {
+      "path": "apps/api/src/modules/users/users.routes.js",
+      "line": 6,
+      "source": "import { requestTiming } from '@coderank/core/utils/request-timing';"
+    },
+    {
+      "path": "apps/api/src/modules/users/users.service.js",
+      "line": 2,
+      "source": "import sql from '@coderank/core/db';"
+    },
+    {
+      "path": "apps/api/src/realtime/server.js",
+      "line": 2,
+      "source": "import { withTimeout } from '@coderank/core/utils/timeout';"
+    },
+    {
+      "path": "apps/api/src/realtime/sessions.js",
+      "line": 5,
+      "source": "import { PracticalService } from '@coderank/core/services/PracticalService';"
+    },
+    {
+      "path": "apps/api/src/realtime/sessions.js",
+      "line": 6,
+      "source": "import { SubmissionService } from '@coderank/core/services/SubmissionService';"
+    },
+    {
+      "path": "apps/worker/src/index.js",
+      "line": 2,
+      "source": "import { closeDatabase } from '@coderank/core/db';"
+    },
+    {
+      "path": "apps/worker/src/index.js",
+      "line": 6,
+      "source": "import { logger } from '@coderank/core/utils/logger';"
+    },
+    {
+      "path": "apps/worker/src/jobs/system/system.worker.js",
+      "line": 2,
+      "source": "import { logger } from '@coderank/core/utils/logger';"
+    },
+    {
+      "path": "apps/worker/src/realtime/publisher.js",
+      "line": 3,
+      "source": "import sql from '@coderank/core/db';"
+    },
+    {
+      "path": "packages/core/src/db/queries/index.js",
+      "line": 2,
+      "source": "* packages/core/src/db/queries/index.js"
+    },
+    {
+      "path": "packages/core/src/index.js",
+      "line": 2,
+      "source": "* packages/core/src/index.js"
+    },
+    {
+      "path": "packages/core/src/modules/courses/CourseService.js",
+      "line": 1,
+      "source": "import sql from '../../db/client.js';"
+    },
+    {
+      "path": "packages/core/src/modules/practicals/PracticalService.js",
+      "line": 1,
+      "source": "import sql from '../../db/client.js';"
+    },
+    {
+      "path": "packages/core/src/modules/submissions/GradingService.js",
+      "line": 1,
+      "source": "import sql from '../../db/client.js';"
+    },
+    {
+      "path": "packages/core/src/modules/submissions/SubmissionRepository.js",
+      "line": 1,
+      "source": "import sql from '../../db/client.js';"
+    },
+    {
+      "path": "packages/core/src/modules/submissions/SubmissionService.js",
+      "line": 3,
+      "source": "import sql from '../../db/client.js';"
+    },
+    {
+      "path": "packages/core/src/modules/users/UserService.js",
+      "line": 1,
+      "source": "import sql from \"../../db/client.js\";"
+    },
+    {
+      "path": "packages/core/src/security/active-actor.js",
+      "line": 1,
+      "source": "import sql from '../db/client.js';"
+    },
+    {
+      "path": "packages/core/src/utils/logger.js",
+      "line": 2,
+      "source": "* packages/core/src/utils/logger.js \u2014 Centralized structured logger"
+    },
+    {
+      "path": "packages/core/src/utils/timeout.js",
+      "line": 2,
+      "source": "* packages/core/src/utils/timeout.js \u2014 Timeout wrapper utility"
+    },
+    {
+      "path": "packages/database/src/timeout.js",
+      "line": 2,
+      "source": "* packages/core/src/utils/timeout.js \u2014 Timeout wrapper utility"
+    },
+    {
+      "path": "scripts/dev/check_user.mjs",
+      "line": 6,
+      "source": "import { SubmissionService } from '../../packages/core/src/services/SubmissionService.js';"
+    },
+    {
+      "path": "tests/unit/admin-api.test.mjs",
+      "line": 8,
+      "source": "mock.module(new URL('../../packages/core/src/db/client.js',import.meta.url).href,{defaultExport:sql});"
+    },
+    {
+      "path": "tests/unit/admin-bootstrap.test.mjs",
+      "line": 35,
+      "source": "new URL(\"../../packages/core/src/db/client.js\", import.meta.url).href,"
+    },
+    {
+      "path": "tests/unit/admin-bootstrap.test.mjs",
+      "line": 43,
+      "source": "\"../../packages/core/src/services/UserService.js\""
+    },
+    {
+      "path": "tests/unit/api-input-contracts.test.mjs",
+      "line": 10,
+      "source": "mock.module(new URL('../../packages/core/src/db/client.js', import.meta.url).href, { defaultExport: sql });"
+    },
+    {
+      "path": "tests/unit/api-operations-runtime.test.mjs",
+      "line": 77,
+      "source": "test.mock.module(new URL('../../packages/core/src/db/client.js', import.meta.url).href, {"
+    },
+    {
+      "path": "tests/unit/api-route-contracts.test.mjs",
+      "line": 10,
+      "source": "mock.module(new URL('../../packages/core/src/db/client.js', import.meta.url).href, { defaultExport: sql });"
+    },
+    {
+      "path": "tests/unit/auth-resilience.test.mjs",
+      "line": 50,
+      "source": "const {requestTiming}=await import('../../packages/core/src/utils/request-timing.js');"
+    },
+    {
+      "path": "tests/unit/course-report.test.mjs",
+      "line": 8,
+      "source": "new URL(\"../../packages/core/src/db/client.js\", import.meta.url).href,"
+    },
+    {
+      "path": "tests/unit/execution-api.test.mjs",
+      "line": 32,
+      "source": "mock.module(new URL('../../packages/core/src/db/client.js', import.meta.url).href, { defaultExport: sql });"
+    },
+    {
+      "path": "tests/unit/extracted-read-services.test.mjs",
+      "line": 9,
+      "source": "mock.module(new URL('../../packages/core/src/db/client.js', import.meta.url).href, { defaultExport: sql });"
+    },
+    {
+      "path": "tests/unit/faculty-mapping-authority.test.mjs",
+      "line": 5,
+      "source": "test.mock.module('../../packages/core/src/db/client.js', { defaultExport: async strings => {"
+    },
+    {
+      "path": "tests/unit/grading.test.mjs",
+      "line": 6,
+      "source": "mock.module(new URL('../../packages/core/src/db/client.js',import.meta.url).href,{defaultExport: async strings => strings.join('').includes('FROM practicals p') ? [practical] : cases});"
+    },
+    {
+      "path": "tests/unit/health.test.mjs",
+      "line": 26,
+      "source": "new URL(\"../../packages/core/src/db/client.js\", import.meta.url).href,"
+    },
+    {
+      "path": "tests/unit/health.test.mjs",
+      "line": 33,
+      "source": "mock.module(\"@coderank/core/services/SubmissionService\", {"
+    },
+    {
+      "path": "tests/unit/password-session.test.mjs",
+      "line": 11,
+      "source": "mock.module(new URL('../../packages/core/src/db/client.js',import.meta.url).href,{defaultExport:sql});"
+    },
+    {
+      "path": "tests/unit/profile-privacy.test.mjs",
+      "line": 17,
+      "source": "new URL(\"../../packages/core/src/db/client.js\", import.meta.url).href,"
+    },
+    {
+      "path": "tests/unit/request-revocation.test.mjs",
+      "line": 9,
+      "source": "mock.module(new URL('../../packages/core/src/db/client.js',import.meta.url).href,{defaultExport:sql});"
+    },
+    {
+      "path": "tests/unit/selector-pagination.test.mjs",
+      "line": 4,
+      "source": "import { listPage } from '../../packages/core/src/modules/courses/list-pagination.js';"
+    },
+    {
+      "path": "tests/unit/selector-pagination.test.mjs",
+      "line": 7,
+      "source": "mock.module(new URL('../../packages/core/src/db/client.js', import.meta.url).href, { defaultExport: sql });"
+    },
+    {
+      "path": "tests/unit/submission-history.test.mjs",
+      "line": 7,
+      "source": "mock.module(new URL('../../packages/core/src/db/client.js',import.meta.url).href,{defaultExport:sql});"
+    },
+    {
+      "path": "tests/unit/user-management-api.test.mjs",
+      "line": 12,
+      "source": "new URL(\"../../packages/core/src/db/client.js\", import.meta.url).href,"
+    },
+    {
+      "path": "tests/unit/user-pagination.test.mjs",
+      "line": 6,
+      "source": "mock.module(new URL('../../packages/core/src/db/client.js',import.meta.url).href,{defaultExport:sql});"
+    },
+    {
+      "path": "tests/unit/user-pagination.test.mjs",
+      "line": 7,
+      "source": "const { UserService } = await import('../../packages/core/src/services/UserService.js');"
+    }
+  ]
+}

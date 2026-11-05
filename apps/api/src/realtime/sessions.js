@@ -2,8 +2,8 @@ import sql from '@coderank/database';
 import { authenticateToken } from '@coderank/core/security/active-actor';
 import { verifyServiceToken } from '@coderank/core/security/service-token';
 import { guestActor } from '@coderank/core/security/execution';
-import { PracticalService } from '@coderank/core/services/PracticalService';
-import { SubmissionService } from '@coderank/core/services/SubmissionService';
+import { PracticalService } from '@coderank/core/practicals';
+import { SubmissionService } from '@coderank/core/submissions';
 
 /**
  * Socket.IO authentication middleware.

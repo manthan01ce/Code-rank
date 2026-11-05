@@ -9,7 +9,7 @@ const dbMock = {
   },
 };
 mock.module(
-  new URL("../../packages/core/src/db/client.js", import.meta.url).href,
+  '@coderank/database',
   {
     defaultExport: dbMock,
   },

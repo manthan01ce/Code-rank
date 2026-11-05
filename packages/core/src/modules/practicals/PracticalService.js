@@ -1,4 +1,4 @@
-import sql from '../../db/client.js';
+import sql from '@coderank/database';
 import { assertPracticalPolicy } from '../../security/execution.js';
 
 export class PracticalService {

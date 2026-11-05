@@ -1,6 +1,6 @@
 import { createClient } from 'redis';
 import { randomUUID } from 'crypto';
-import { withTimeout } from '@coderank/core/utils/timeout';
+import { withTimeout } from '@coderank/core/shared/timeout';
 import { CircuitBreaker } from '@coderank/core/utils/circuit-breaker';
 
 let redis = null;

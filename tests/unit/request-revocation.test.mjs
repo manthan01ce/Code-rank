@@ -6,7 +6,7 @@ registerHooks({resolve(specifier,context,next){if(specifier.startsWith('@/'))ret
 const users=new Map([[1,{id:1,role:'student',status:'active',session_token:'one'}],[2,{id:2,role:'faculty',status:'active',session_token:'two'}]]);
 let unavailable=false;
 const sql=Object.assign(async()=>[],{query:async(query,params)=>{if(unavailable)throw Error('database unavailable');if(query.startsWith('SELECT id,name,email,role,status,session_token'))return users.has(params[0])?[users.get(params[0])]:[];return [];}});
-mock.module(new URL('../../packages/core/src/db/client.js',import.meta.url).href,{defaultExport:sql});
+
 mock.module('@coderank/database', { defaultExport: sql, namedExports: { closeDatabase: async () => {} } });
 mock.module('@coderank/queue',{namedExports:{readExecutionWorkers:async()=>({healthy:true,healthyWorkers:1}),createExecutionQueue:()=>({getJob:async()=>({id:'job',data:{userId:1},getState:async()=>'completed',returnvalue:{status:'accepted'}}),close:async()=>{},disconnect:async()=>{}})}});
 const {generateToken}=await import('../../packages/core/src/utils/auth.js');

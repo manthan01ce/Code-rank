@@ -1,5 +1,5 @@
 /**
- * packages/core/src/utils/timeout.js — Timeout wrapper utility
+ * packages/database/src/timeout.js — Timeout wrapper utility
  * -------------------------------------------------------------
  * Wraps async operations with configurable timeout to prevent hanging requests.
  * Optionally returns a fallback value instead of throwing on timeout.
