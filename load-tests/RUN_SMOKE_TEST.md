@@ -1,5 +1,6 @@
 # Quick Start - Run Smoke Test
 
+> Historical tuning observations are retained below. For the current three-app startup and repository-root commands, use [the load-test guide](README.md). Relative scenario/helper examples here run from `load-tests/`.
 ## Prerequisites
 
 1. **Install k6** (if not already installed)
@@ -48,10 +49,10 @@ Wait for:
 cd load-tests
 
 # Option A: Run with PowerShell script (recommended)
-.\test-smoke.ps1
+.\scripts\test-smoke.ps1
 
 # Option B: Run k6 directly
-k6 run smoke-test.js
+k6 run scenarios/smoke-test.js
 ```
 
 ## What to Expect
@@ -157,7 +158,7 @@ Start-Sleep -Seconds 10
 
 # Run test again
 cd ..\..\load-tests
-.\test-smoke.ps1
+.\scripts\test-smoke.ps1
 ```
 
 ### Issue: Database errors
@@ -212,13 +213,13 @@ curl -I http://localhost:3000/api/health
 ### Run Specific Test Groups
 ```powershell
 # Run only health checks
-k6 run --stage 10s:10 smoke-test.js
+k6 run --stage 10s:10 scenarios/smoke-test.js
 
 # Run with custom duration
-k6 run --duration 30s smoke-test.js
+k6 run --duration 30s scenarios/smoke-test.js
 
 # Run with more users
-k6 run --vus 30 --duration 20s smoke-test.js
+k6 run --vus 30 --duration 20s scenarios/smoke-test.js
 ```
 
 ## Performance Targets
@@ -299,4 +300,4 @@ After smoke test passes:
 
 ---
 
-**Ready to test?** Run: `.\test-smoke.ps1` 🚀
+**Ready to test?** Run: `.\scripts\test-smoke.ps1` 🚀

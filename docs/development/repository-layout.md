@@ -11,3 +11,5 @@
 The root retains README, workspace manifests and lockfile, tooling and platform configuration, the environment template and both lab launchers. The canonical Compose file is `infrastructure/docker-compose.yml`. The web, API and worker each retain their own app entry points.
 
 See the [test inventory](test-inventory.md) for the current lanes and [load qualification](../../load-tests/QUALIFICATION.md) for current workloads.
+
+Load-test executable entry points and platform dispositions are reconciled in [the batch 5E audit](load-test-entrypoints.md).

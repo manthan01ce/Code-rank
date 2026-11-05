@@ -1,5 +1,6 @@
 # Smoke Test Performance Improvements
 
+> Historical tuning observations are retained below. For the current three-app startup and repository-root commands, use [the load-test guide](README.md). Relative scenario/helper examples here run from `load-tests/`.
 ## Issues Identified
 
 From the test results (`01-smoke-test-results.txt`):
@@ -88,7 +89,7 @@ npm run start
 ### 3. Run Smoke Test
 ```bash
 cd ../../load-tests
-k6 run smoke-test.js
+k6 run scenarios/smoke-test.js
 ```
 
 ### 4. Verify Metrics
