@@ -1,10 +1,10 @@
 'use client';
 import { useState, useEffect, useMemo } from 'react';
 import { fetchCollection } from '@/lib/fetch-collection';
-import LoadingOverlay from '@/components/LoadingOverlay';
+import LoadingOverlay from '@/components/ui/LoadingOverlay';
 import { useAdminAuth } from '@/features/auth/hooks/useAdminAuth';
 import { useSocket } from '@/hooks/useSocket';
-import RefreshButton from '@/components/RefreshButton';
+import RefreshButton from '@/components/ui/RefreshButton';
 import { AdminDataTable, DataTableColumnHeader } from '@/components/ui/data-table';
 import {
   IconSearch,

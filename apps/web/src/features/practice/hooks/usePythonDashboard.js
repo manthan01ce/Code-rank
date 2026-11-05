@@ -1,6 +1,6 @@
 'use client';
 import { practiceRequest } from '../api/practice-api';
-import WorkspaceReturn from '@/components/WorkspaceReturn';
+import WorkspaceReturn from '@/components/layout/WorkspaceReturn';
 
 import { waitForJob } from '@/lib/wait-for-job';
 import { useState, useEffect, useRef, useCallback } from 'react';

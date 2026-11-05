@@ -3,7 +3,7 @@ import { createRequestScope } from '@/lib/http-client';
 import { logsRequest } from '../api/operations-api';
 
 import { useCallback, useEffect, useState, useMemo } from 'react';
-import LoadingOverlay from '@/components/LoadingOverlay';
+import LoadingOverlay from '@/components/ui/LoadingOverlay';
 import { useAdminAuth } from '@/features/auth/hooks/useAdminAuth';
 import { usePolling } from '@/hooks/usePolling';
 import { AdminDataTable, DataTableColumnHeader } from '@/components/ui/data-table';

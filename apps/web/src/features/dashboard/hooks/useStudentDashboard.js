@@ -1,8 +1,8 @@
 'use client';
-import WorkspaceReturn from '@/components/WorkspaceReturn';
+import WorkspaceReturn from '@/components/layout/WorkspaceReturn';
 import styles from '@/features/dashboard/components/overview.module.css';
 import { useAccountIdentity } from '@/features/auth/hooks/useAccountIdentity';
-import { StudentThemeToggle } from '@/components/student/StudentTheme';
+import { StudentThemeToggle } from '@/components/layout/StudentTheme';
 import Link from 'next/link';
 import QuestionList from '@/components/student/QuestionList';
 import { practicalDestination, practicalHasStarted, practicalBelongsToCourse } from '@/lib/practical-navigation';
@@ -11,8 +11,8 @@ import { fetchCollection } from '@/lib/fetch-collection';
 
 import { useRouter } from 'next/navigation';
 import { useEffect, useState } from 'react';
-import LoadingOverlay from '@/components/LoadingOverlay';
-import LogoutConfirmModal from '@/components/LogoutConfirmModal';
+import LoadingOverlay from '@/components/ui/LoadingOverlay';
+import LogoutConfirmModal from '@/components/ui/LogoutConfirmModal';
 import { useSocket } from '@/hooks/useSocket';
 import { usePolling } from '@/hooks/usePolling';
 

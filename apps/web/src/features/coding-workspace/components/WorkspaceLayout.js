@@ -1,7 +1,7 @@
 'use client';
-import WorkspaceReturn from '@/components/WorkspaceReturn';
+import WorkspaceReturn from '@/components/layout/WorkspaceReturn';
 import { notifyProgressChanged } from '@/lib/progress-updates';
-import { StudentThemeToggle, useStudentTheme } from '@/components/student/StudentTheme';
+import { StudentThemeToggle, useStudentTheme } from '@/components/layout/StudentTheme';
 import { usePracticalPage } from '@/features/practicals/hooks/usePracticalPage';
 import { fetchCollection } from '@/lib/fetch-collection';
 import { useState, useEffect, useRef } from 'react';

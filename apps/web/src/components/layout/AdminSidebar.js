@@ -19,7 +19,7 @@ import {
 import { Sidebar, SidebarBody, SidebarLink, useSidebar } from '@/components/ui/sidebar';
 import { useAccountIdentity } from '@/features/auth/hooks/useAccountIdentity';
 import ChangePasswordModal from '@/features/auth/components/ChangePasswordModal';
-import LogoutConfirmModal from './LogoutConfirmModal';
+import LogoutConfirmModal from '../ui/LogoutConfirmModal';
 
 // Preserving the exact existing admin destinations and labels
 const links = [

@@ -1,9 +1,9 @@
 'use client';
 import { StudentFormDialog } from './StudentFormDialog';
 
-import LoadingOverlay from '@/components/LoadingOverlay';
+import LoadingOverlay from '@/components/ui/LoadingOverlay';
 
-import RefreshButton from '@/components/RefreshButton';
+import RefreshButton from '@/components/ui/RefreshButton';
 import { AdminDataTable } from '@/components/ui/data-table';
 import { IconSearch, IconPlus, IconUpload, IconX, IconChevronDown } from '@tabler/icons-react';
 

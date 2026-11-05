@@ -7,7 +7,7 @@ import Image from 'next/image';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { IconLayoutDashboard, IconInbox, IconChartBar, IconUser, IconKey, IconLogout } from '@tabler/icons-react';
 import ChangePasswordModal from '@/features/auth/components/ChangePasswordModal';
-import LogoutConfirmModal from './LogoutConfirmModal';
+import LogoutConfirmModal from '../ui/LogoutConfirmModal';
 
 const links = [['Dashboard', '/faculty?tab=practicals', IconLayoutDashboard], ['Student submissions', '/faculty?tab=submissions', IconInbox], ['Marks overview', '/faculty?tab=marks', IconChartBar]];
 export default function FacultySidebar() {

@@ -1,5 +1,5 @@
 'use client';
-import WorkspaceReturn from '@/components/WorkspaceReturn';
+import WorkspaceReturn from '@/components/layout/WorkspaceReturn';
 import { waitForJob } from '@/lib/wait-for-job';
 import { useState, useEffect, useRef, useCallback } from 'react';
 import { Panel, Group as PanelGroup, Separator as PanelResizeHandle } from 'react-resizable-panels';

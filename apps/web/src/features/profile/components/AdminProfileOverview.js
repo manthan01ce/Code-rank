@@ -1,5 +1,5 @@
 'use client';
-import RefreshButton from '@/components/RefreshButton';
+import RefreshButton from '@/components/ui/RefreshButton';
 
 import { useCallback, useEffect, useState } from 'react';
 import Link from 'next/link';
