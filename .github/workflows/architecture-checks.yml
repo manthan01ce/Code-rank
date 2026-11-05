@@ -77,7 +77,6 @@ jobs:
         run: |
           docker compose -f infrastructure/docker-compose.yml config --quiet
           docker compose -f infrastructure/docker-compose.yml --profile local-database config --quiet
-          docker compose -f infrastructure/docker-compose.yml -f infrastructure/compose.warm-daemons.yaml --profile local-database config --quiet
           docker compose -f infrastructure/docker-compose.yml -f infrastructure/compose.containers.yaml --profile local-database config --quiet
 
       - name: Build worker deployment image

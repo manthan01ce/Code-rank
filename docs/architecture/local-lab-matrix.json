@@ -229,19 +229,22 @@
     },
     {
       "id": "sandbox-warm",
-      "issue": 78,
+      "issue": 99,
       "structuralState": "partial",
       "requirement": "Single authoritative image; cold sandbox isolation; explicit trusted-lab warm disposition and dedicated real tests",
       "paths": [
         "infrastructure/docker/runner/Dockerfile",
-        "infrastructure/compose.warm-daemons.yaml",
-        "docs/architecture/sandbox-image-ownership.md"
+        "packages/runner/src/sandbox/Sandbox.js",
+        "docs/architecture/warm-daemon-disposition.md",
+        "scripts/ci/warm-mode-acceptance.mjs"
       ],
       "tests": [
+        "tests/unit/warm-retirement.test.mjs",
         "tests/unit/sandbox.test.mjs",
+        "tests/docker/warm-retirement.test.mjs",
         "tests/docker/sandbox.test.mjs"
       ],
-      "finding": "Warm mode is retained with documented shared-isolation limits. Dedicated real warm concurrency, per-job cleanup and process-lifetime evidence is absent. Cold Docker validation also remains unperformed here.",
+      "finding": "Explicit retirement candidate after consumer analysis: stale warm flag/overlay rejected; operator consumers migrate to unchanged cold defaults and the same canonical image. No shared-daemon isolation claim. Native Compose resolution, image identities and real Docker cold/retirement regressions remain BLOCKED because Docker is unavailable. Do not merge or close #99; unit evidence is not completion.",
       "functionalAcceptance": "unverified"
     },
     {

@@ -24,7 +24,8 @@ try {
 
 # 2. Check Docker Containers
 Write-Host "`n--- Docker Containers ---" -ForegroundColor Yellow
-$containers = @("coderank-redis", "coderank-python-daemon", "coderank-cpp-daemon", "coderank-c-daemon", "coderank-java-daemon", "coderank-javascript-daemon")
+$containers = @("coderank-redis")
+# Runner containers are per-job and expire; no permanent language daemons are required.
 
 foreach ($container in $containers) {
     try {

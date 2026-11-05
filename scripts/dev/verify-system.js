@@ -170,7 +170,7 @@ async function runVerification() {
 
   // --- PART 5: E2E CODE EXECUTION PIPELINE (CPP) ---
   console.log('\n--- 5. E2E Code Execution Pipeline (C++) ---');
-  const cppCode = '#include <iostream>\nint main() { std::cout << "C++ Daemon Working!" << std::endl; return 0; }';
+  const cppCode = '#include <iostream>\nint main() { std::cout << "C++ Cold Sandbox Working!" << std::endl; return 0; }';
   const cppPostRes = await fetch(`${BASE_URL}/api/execute`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
@@ -195,7 +195,7 @@ async function runVerification() {
     });
 
     assert(
-      cppResult && cppResult.success && cppResult.stdout.includes('C++ Daemon Working!'),
+      cppResult && cppResult.success && cppResult.stdout.includes('C++ Cold Sandbox Working!'),
       'E2E C++ Execution Result received via WebSocket job_complete',
       `Stdout: "${cppResult ? cppResult.stdout : ''}"`
     );

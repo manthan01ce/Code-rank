@@ -6,7 +6,9 @@ import { createSystemWorker } from './jobs/system/system.worker.js';
 import { logger } from '@coderank/core/shared/logger';
 import { createShutdown } from './lifecycle/shutdown.js';
 import { startExecutionHeartbeat } from './lifecycle/heartbeat.js';
-import { startSandboxReaper } from '@coderank/runner/sandbox';
+import { startSandboxReaper, assertColdSandboxConfiguration } from '@coderank/runner/sandbox';
+
+assertColdSandboxConfiguration();
 
 console.log('⚡ CodeRank Execution Worker Starting...');
 

@@ -56,33 +56,16 @@ runner-image:
   profiles: [build-image]
 ```
 
-### Warm-daemon overlay (opt-in)
-`infrastructure/compose.warm-daemons.yaml` extends the main Compose file with five
-long-running daemon containers — one per language — all using `coderank-base:latest`.
+### Warm-daemon retirement candidate (#99)
 
-**Usage:**
-```bash
-docker compose -f infrastructure/docker-compose.yml \
-               -f infrastructure/compose.warm-daemons.yaml \
-               --profile local-database up -d
-```
+The shared-daemon overlay and global opt-in are explicitly retired in this candidate.
+See [consumer analysis and operator migration](warm-daemon-disposition.md). Existing
+operators must drain first, remove the legacy flag/overlay and adopt the same canonical
+image with cold per-job sandboxes. Enabled stale configuration fails clearly; it does
+not silently fall back. No shared-daemon filesystem/process isolation is claimed.
 
-Enable warm mode in the worker process:
-```
-USE_WARM_DAEMONS=true
-```
-
-> [!WARNING]
-> Warm daemons **do not provide per-job filesystem or process isolation**.  
-> Multiple jobs share the same container and can observe each other's `/app` state.  
-> Use warm mode only in trusted single-tenant lab environments, never for
-> untrusted multi-tenant execution.
-
-Warm-mode behaviour in `packages/runner/src/sandbox/Sandbox.js`:
-- `USE_WARM_DAEMONS=true` + a language set → `isWarm = true`
-- `start()` and `destroy()` are no-ops (the daemon is managed by Compose)
-- `script()` sends `docker exec` to `coderank-<lang>-daemon`
-- If the daemon is offline (`No such container`): `isWarm` is cleared, a fresh UUID container is started, and the script is retried automatically
+**Real Docker retirement/cold regression acceptance is blocked in this workspace.**
+Keep #99 open; unit checks are not native Docker evidence.
 
 ---
 
@@ -126,11 +109,11 @@ The sandbox `docker run` command issued by `Sandbox.js` retains all isolation fl
 ```bash
 npm ci
 npm run lint:critical
-npm test                    # unit tests including warm-daemon tests
-# Full Docker acceptance (requires ci:full-stack label):
+npm test                    # unit tests including stale warm-config rejection
+# Real local Docker acceptance (does not enable expensive Actions):
+npm run test:warm-disposition
 docker build -t coderank-base:latest -f infrastructure/docker/runner/Dockerfile .
 npm run test:docker         # real sandbox isolation, all 5 languages
 docker compose -f infrastructure/docker-compose.yml config --quiet
-docker compose -f infrastructure/docker-compose.yml -f infrastructure/compose.warm-daemons.yaml --profile local-database config --quiet
 docker compose -f infrastructure/docker-compose.yml -f infrastructure/compose.ci.yaml --profile local-database config --quiet
 ```
