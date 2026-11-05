@@ -50,6 +50,7 @@
       "tests/unit/job-wait.test.mjs",
       "tests/unit/lab-launcher-env.test.mjs",
       "tests/unit/load-result.test.mjs",
+      "tests/unit/local-lab-audit.test.mjs",
       "tests/unit/migration-errors.test.mjs",
       "tests/unit/migrations.test.mjs",
       "tests/unit/password-session.test.mjs",

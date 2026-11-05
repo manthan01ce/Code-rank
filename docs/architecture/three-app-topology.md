@@ -1,6 +1,6 @@
 # CodeRank three-application topology
 
-The architecture batch separates frontend, HTTP/realtime and background execution. It does not finish every directory move in the original folder-structure proposal.
+The architecture separates frontend, HTTP/realtime and background execution. Follow-on ownership PRs #70–#80 are merged, but concrete move-map gaps and runtime acceptance remain unresolved. See the [current matrix](local-lab-matrix.json) and [local lab acceptance runbook](../deployment/LOCAL_LAB_CERTIFICATION.md). Merge status is not lab certification.
 
 | Component | Ownership | Host default | Container address |
 | --- | --- | --- | --- |
@@ -26,8 +26,8 @@ The public practice catalog is used by frontend rendering and API execution vali
 
 CI validates standalone frontend without backend services/secrets, API without frontend/runner, and a disposable complete image topology through gateway with real sandbox execution, WebSocket events and guest ownership. Container topology evidence is mandatory for certification alongside the existing unit/integration/Docker/browser, capacity and database/process recovery evidence. The full-container overlay explicitly resets base service profiles; Compose 2.24.4+ is required for the supported overlays. `compose.ci.yaml` is test-only and overrides published ports. It uses random project/volume names and never selects operator volumes.
 
-The old Vercel configs are retired. A Next.js preview alone does not deploy the long-running API/realtime, Docker worker, PostgreSQL and Redis. External hosting and existing provider integrations require separate decisions; this change provisions no cloud resources and does not certify them.
+Vercel Git deployment is enabled for master in the root and web workspace configs. It is frontend-only: a Next.js preview does not deploy or certify the long-running API/realtime, Docker worker, PostgreSQL and Redis. External hosting remains separately gated under #82; no full cloud topology is certified here.
 
-Later work: frontend submission/marks/user/auth/layout decomposition, remaining core API-only feature/export cleanup, database asset relocation, runner/sandbox/warm-daemon consolidation, and remaining scripts/assets/docs/test organization.
+The [requirement matrix](local-lab-matrix.json) distinguishes implemented feature/database/worker/script ownership from remaining shared-client/styles, core-facade, runner-grouping, warm-mode and batch-restoration gaps. Actual lab host/LAN and complete strict runtime verification remain pending.
 
-Vercel Git retirement: root `vercel.json` contains only the schema and `git.deploymentEnabled: false`. It disables obsolete automatic Git deployments; it contains no build/output/routes and does not claim cloud support. The competing infrastructure config is removed. Existing hosted deployments are not deleted; a supported cloud topology needs its own reviewed cutover.
+Current frontend Git policy permits master and disables other branches. This policy takes no API/socket routing ownership and does not certify external hosting. The earlier Git-retirement policy is historical; current root/web configuration and architecture assertions are authoritative.

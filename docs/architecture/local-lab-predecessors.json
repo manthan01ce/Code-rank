@@ -1,0 +1,543 @@
+{
+  "observedAt": "2026-11-05T11:38:37.076Z",
+  "repository": "manthan01ce/Code-rank",
+  "base": "7f6c3e6badfbeb4b3a3f5527de633cf244d784ad",
+  "predecessors": [
+    {
+      "issue": 70,
+      "pr": 86,
+      "merged": true,
+      "head": "e55fe6f6b7ca9244f15761c33252c8383892c282",
+      "merge": "d968f7c6311f8eae278110a269d98e0a81e4e13e",
+      "runs": [
+        {
+          "id": 41910865357,
+          "name": "Authentication performance comparison",
+          "status": "completed",
+          "conclusion": "skipped",
+          "url": "https://github.com/manthan01ce/Code-rank/actions/runs/41910865357"
+        },
+        {
+          "id": 41910865750,
+          "name": "Architecture checks",
+          "status": "completed",
+          "conclusion": "skipped",
+          "url": "https://github.com/manthan01ce/Code-rank/actions/runs/41910865750"
+        },
+        {
+          "id": 41910865715,
+          "name": "Fast PR & Commit Checks",
+          "status": "completed",
+          "conclusion": "success",
+          "url": "https://github.com/manthan01ce/Code-rank/actions/runs/41910865715"
+        }
+      ],
+      "headTree": "8b92b40e75c52e4ccce67a5e167a294ac2fe47a7",
+      "mergedTree": "45a1e01725e2799a01fbe0e807440083fca9453d",
+      "treeMatches": false,
+      "mergeDifferences": [
+        "M\t.github/workflows/architecture-checks.yml",
+        "M\tapps/web/src/app/admin/courses/page.js",
+        "M\tapps/web/src/app/admin/departments/page.js",
+        "M\tapps/web/src/app/admin/faculty/page.js",
+        "M\tapps/web/src/app/admin/logs/page.js",
+        "M\tapps/web/src/app/admin/mapping/page.js",
+        "M\tapps/web/src/app/admin/page.js",
+        "M\tapps/web/src/app/admin/profile/page.js",
+        "M\tapps/web/src/app/admin/settings/page.js",
+        "M\tapps/web/src/app/admin/students/page.js",
+        "M\tapps/web/src/app/faculty/page.js",
+        "M\tapps/web/src/app/login/page.js",
+        "M\tapps/web/src/app/profile/[username]/page.js",
+        "M\tapps/web/src/app/signup/page.tsx",
+        "M\tapps/web/src/app/student/page.js",
+        "M\tapps/web/src/app/student/practicals/page.js",
+        "M\tapps/web/src/components/AdminSidebar.js",
+        "M\tapps/web/src/components/FacultySidebar.js",
+        "R082\tapps/web/src/lib/auth-client.js\tapps/web/src/features/auth/api/auth-client.js",
+        "A\tapps/web/src/features/auth/api/role-session.js",
+        "R100\tapps/web/src/lib/sign-in-request.js\tapps/web/src/features/auth/api/sign-in-request.js",
+        "A\tapps/web/src/features/auth/components/AccountAccess.tsx",
+        "A\tapps/web/src/features/auth/components/AccountSettings.js",
+        "R100\tapps/web/src/components/ChangePasswordModal.js\tapps/web/src/features/auth/components/ChangePasswordModal.js",
+        "A\tapps/web/src/features/auth/components/Login.js",
+        "R100\tapps/web/src/components/ui/sign-in.tsx\tapps/web/src/features/auth/components/SignIn.tsx",
+        "R100\tapps/web/src/hooks/useAccountIdentity.js\tapps/web/src/features/auth/hooks/useAccountIdentity.js",
+        "A\tapps/web/src/features/auth/hooks/useAccountSettings.js",
+        "A\tapps/web/src/features/auth/hooks/useAdminAuth.js",
+        "A\tapps/web/src/features/auth/hooks/useFacultyAuth.js",
+        "A\tapps/web/src/features/auth/hooks/useLogin.js",
+        "A\tapps/web/src/features/auth/hooks/useRoleSession.js",
+        "A\tapps/web/src/features/profile/api/profile-api.js",
+        "A\tapps/web/src/features/profile/components/AdminProfile.js",
+        "R098\tapps/web/src/app/profile/[username]/AdminProfileOverview.js\tapps/web/src/features/profile/components/AdminProfileOverview.js",
+        "A\tapps/web/src/features/profile/components/UsernameProfile.js",
+        "R100\tapps/web/src/app/profile/[username]/profile.module.css\tapps/web/src/features/profile/components/profile.module.css",
+        "A\tapps/web/src/features/profile/hooks/useAdminProfile.js",
+        "A\tapps/web/src/features/profile/hooks/useUsernameProfile.js",
+        "A\tapps/web/src/features/reports/api/reports-api.js",
+        "A\tapps/web/src/features/reports/components/MarksOverview.js",
+        "R058\tapps/web/src/components/PracticalGradeReport.js\tapps/web/src/features/reports/components/PracticalGradeReport.js",
+        "A\tapps/web/src/features/reports/hooks/useMarksOverview.js",
+        "A\tapps/web/src/features/reports/hooks/usePracticalGradeReport.js",
+        "A\tapps/web/src/features/submissions/api/submissions-api.js",
+        "A\tapps/web/src/features/submissions/components/SubmissionDetailDialog.js",
+        "A\tapps/web/src/features/submissions/components/SubmissionReview.js",
+        "A\tapps/web/src/features/submissions/hooks/useSubmissionReview.js",
+        "D\tapps/web/src/hooks/useAdminAuth.js",
+        "D\tapps/web/src/hooks/useFacultyAuth.js",
+        "M\tapps/web/src/lib/api-utils.js",
+        "A\tapps/web/src/lib/http-client.js",
+        "A\tdocs/architecture/auth-profile-ownership.md",
+        "A\tdocs/architecture/faculty-review-ownership.md",
+        "M\tdocs/architecture/migration-status.md",
+        "M\tpackage.json",
+        "A\ttests/auth-feature-ownership.test.mjs",
+        "M\ttests/auth-resilience.test.mjs",
+        "A\ttests/browser/faculty-review.config.mjs",
+        "A\ttests/browser/faculty-review.spec.mjs",
+        "A\ttests/browser/fixtures/faculty-review.mjs",
+        "A\ttests/faculty-review-fixtures.test.mjs",
+        "A\ttests/faculty-review-requests.test.mjs"
+      ]
+    },
+    {
+      "issue": 71,
+      "pr": 84,
+      "merged": true,
+      "head": "242ce68423e5d545bfd9741b35d96d0ba23b2304",
+      "merge": "2171ad11131a588fbbdcc21843921d659462aa36",
+      "runs": [
+        {
+          "id": 41906645057,
+          "name": "Architecture checks",
+          "status": "completed",
+          "conclusion": "skipped",
+          "url": "https://github.com/manthan01ce/Code-rank/actions/runs/41906645057"
+        },
+        {
+          "id": 41906645195,
+          "name": "Authentication performance comparison",
+          "status": "completed",
+          "conclusion": "skipped",
+          "url": "https://github.com/manthan01ce/Code-rank/actions/runs/41906645195"
+        },
+        {
+          "id": 41906644965,
+          "name": "Fast PR & Commit Checks",
+          "status": "completed",
+          "conclusion": "success",
+          "url": "https://github.com/manthan01ce/Code-rank/actions/runs/41906644965"
+        }
+      ],
+      "headTree": "793cf9645412fc1265058e0b3d4869470621110d",
+      "mergedTree": "793cf9645412fc1265058e0b3d4869470621110d",
+      "treeMatches": true
+    },
+    {
+      "issue": 72,
+      "pr": 88,
+      "merged": true,
+      "head": "ddd87ecb21648b18e5c48842c3418d1940a9b61b",
+      "merge": "6f75a1804a90c866fb60e982e14e31f6971a2691",
+      "runs": [
+        {
+          "id": 41976741717,
+          "name": "Architecture checks",
+          "status": "completed",
+          "conclusion": "skipped",
+          "url": "https://github.com/manthan01ce/Code-rank/actions/runs/41976741717"
+        },
+        {
+          "id": 41976741803,
+          "name": "Authentication performance comparison",
+          "status": "completed",
+          "conclusion": "skipped",
+          "url": "https://github.com/manthan01ce/Code-rank/actions/runs/41976741803"
+        },
+        {
+          "id": 41976741718,
+          "name": "Fast PR & Commit Checks",
+          "status": "completed",
+          "conclusion": "success",
+          "url": "https://github.com/manthan01ce/Code-rank/actions/runs/41976741718"
+        }
+      ],
+      "headTree": "398fa514e2b5e058535c21a19c789147b1c31a9b",
+      "mergedTree": "398fa514e2b5e058535c21a19c789147b1c31a9b",
+      "treeMatches": true
+    },
+    {
+      "issue": 73,
+      "pr": 85,
+      "merged": true,
+      "head": "7959c9ebdf6f1d951c4fcd1e186f96ea5fe30f0b",
+      "merge": "2ca210e8bd56a06acaab76b5374279303886e8db",
+      "runs": [
+        {
+          "id": 41910034418,
+          "name": "Fast PR & Commit Checks",
+          "status": "completed",
+          "conclusion": "success",
+          "url": "https://github.com/manthan01ce/Code-rank/actions/runs/41910034418"
+        },
+        {
+          "id": 41910034346,
+          "name": "Authentication performance comparison",
+          "status": "completed",
+          "conclusion": "skipped",
+          "url": "https://github.com/manthan01ce/Code-rank/actions/runs/41910034346"
+        },
+        {
+          "id": 41910034336,
+          "name": "Architecture checks",
+          "status": "completed",
+          "conclusion": "skipped",
+          "url": "https://github.com/manthan01ce/Code-rank/actions/runs/41910034336"
+        }
+      ],
+      "headTree": "5a3171a95d5541476256ac399235dcdbfc34affc",
+      "mergedTree": "5a3171a95d5541476256ac399235dcdbfc34affc",
+      "treeMatches": true
+    },
+    {
+      "issue": 74,
+      "pr": 87,
+      "merged": true,
+      "head": "038ef63e2ed97304d8305dc404ed13632103230d",
+      "merge": "a4e788314aad85adb2bb0cc9897eba2ca6d53e88",
+      "runs": [
+        {
+          "id": 41975268932,
+          "name": "Authentication performance comparison",
+          "status": "completed",
+          "conclusion": "skipped",
+          "url": "https://github.com/manthan01ce/Code-rank/actions/runs/41975268932"
+        },
+        {
+          "id": 41975269078,
+          "name": "Architecture checks",
+          "status": "completed",
+          "conclusion": "skipped",
+          "url": "https://github.com/manthan01ce/Code-rank/actions/runs/41975269078"
+        },
+        {
+          "id": 41975268811,
+          "name": "Fast PR & Commit Checks",
+          "status": "completed",
+          "conclusion": "success",
+          "url": "https://github.com/manthan01ce/Code-rank/actions/runs/41975268811"
+        }
+      ],
+      "headTree": "2edec4dfc9e54fa39dd3f90d4ab499031b1aedb1",
+      "mergedTree": "2edec4dfc9e54fa39dd3f90d4ab499031b1aedb1",
+      "treeMatches": true
+    },
+    {
+      "issue": 75,
+      "pr": 90,
+      "merged": true,
+      "head": "cba6fd8c0e2663b01d84c9bad197538bb7b0f867",
+      "merge": "3a17f829cd26c9c40ce05b8e6e0d7a019ac06182",
+      "runs": [
+        {
+          "id": 41981794487,
+          "name": "Authentication performance comparison",
+          "status": "completed",
+          "conclusion": "skipped",
+          "url": "https://github.com/manthan01ce/Code-rank/actions/runs/41981794487"
+        },
+        {
+          "id": 41981794754,
+          "name": "Architecture checks",
+          "status": "completed",
+          "conclusion": "skipped",
+          "url": "https://github.com/manthan01ce/Code-rank/actions/runs/41981794754"
+        },
+        {
+          "id": 41981794609,
+          "name": "Fast PR & Commit Checks",
+          "status": "completed",
+          "conclusion": "success",
+          "url": "https://github.com/manthan01ce/Code-rank/actions/runs/41981794609"
+        }
+      ],
+      "headTree": "23df6aaa97e1a582bf82c0be475992eb8f7e4d73",
+      "mergedTree": "665ae36d2464020f4d5d031f5418fa0f3712d4fc",
+      "treeMatches": false,
+      "mergeDifferences": [
+        "M\tARCHITECTURE.md",
+        "M\tLOCAL_DB_MIGRATION_GUIDE.md",
+        "M\tREADME.md",
+        "D\tdatabase/check-index-progress.js",
+        "D\tdatabase/check-schema.mjs",
+        "D\tdatabase/create-indexes-direct.js",
+        "D\tdatabase/create-indexes-final.mjs",
+        "D\tdatabase/create-indexes-sync.js",
+        "D\tdatabase/create-indexes-sync.mjs",
+        "D\tdatabase/debug-indexes.mjs",
+        "D\tdatabase/list-all-indexes.js",
+        "D\tdatabase/verify-indexes.js",
+        "M\tdocs/DEPLOYMENT_SUCCESS.md",
+        "M\tdocs/PERFORMANCE_OPTIMIZATIONS.md",
+        "M\tdocs/SCALABILITY_STATUS_REPORT.md",
+        "A\tdocs/architecture/database-assets-consumers.json",
+        "A\tdocs/architecture/database-assets-ownership.md",
+        "M\tdocs/architecture/migration-status.md",
+        "M\tdocs/getting-started.md",
+        "M\tinfrastructure/docker-compose.yml",
+        "M\tpackage.json",
+        "M\tpackages/core/src/db/migrate.js",
+        "R100\tdatabase/init.sql\tpackages/database/bootstrap/init.sql",
+        "R100\tdatabase/migrations/000_baseline.sql\tpackages/database/migrations/000_baseline.sql",
+        "R100\tdatabase/migrations/001_add_performance_indexes.sql\tpackages/database/migrations/001_add_performance_indexes.sql",
+        "R100\tdatabase/migrations/002_submission_attempts.sql\tpackages/database/migrations/002_submission_attempts.sql",
+        "R100\tdatabase/migrations/003_admin_transactions.sql\tpackages/database/migrations/003_admin_transactions.sql",
+        "R100\tdatabase/migrations/004_user_management.sql\tpackages/database/migrations/004_user_management.sql",
+        "R100\tdatabase/migrations/005_course_department_management.sql\tpackages/database/migrations/005_course_department_management.sql",
+        "R100\tdatabase/migrations/006_authorized_submission_reset.sql\tpackages/database/migrations/006_authorized_submission_reset.sql",
+        "R100\tdatabase/migrations/007_retention_and_report_indexes.sql\tpackages/database/migrations/007_retention_and_report_indexes.sql",
+        "R100\tdatabase/migrations/README.md\tpackages/database/migrations/README.md",
+        "M\tpackages/database/package.json",
+        "A\tpackages/database/scripts/inspect-schema.js",
+        "R092\tdatabase/preflight.js\tpackages/database/scripts/preflight.js",
+        "R079\tdatabase/run-migration.js\tpackages/database/scripts/run-migration.js",
+        "R066\tdatabase/update-readiness-manifest.js\tpackages/database/scripts/update-readiness-manifest.js",
+        "R089\tdatabase/seed.js\tpackages/database/seeds/seed.js",
+        "A\tpackages/database/sql-assets.sha256.json",
+        "A\tpackages/database/src/assets.js",
+        "M\tpackages/database/src/migrations.js",
+        "M\tscripts/auth-performance-stack.mjs",
+        "M\tscripts/authenticated-stack.mjs",
+        "M\tscripts/ci/container-topology.mjs",
+        "M\tscripts/lib/database-ops.mjs",
+        "M\ttests/admin-transactions.test.mjs",
+        "M\ttests/api-courses-runtime.test.mjs",
+        "M\ttests/api-execution-runtime.test.mjs",
+        "M\ttests/api-operations-runtime.test.mjs",
+        "M\ttests/api-practicals-runtime.test.mjs",
+        "M\ttests/api-submissions-runtime.test.mjs",
+        "M\ttests/architecture.test.mjs",
+        "M\ttests/course-management-sql.test.mjs",
+        "M\ttests/course-report.test.mjs",
+        "A\ttests/database-assets.test.mjs",
+        "A\ttests/database-inspection.test.mjs",
+        "M\ttests/final-separation.test.mjs",
+        "M\ttests/integration/neon-upgrade.test.mjs",
+        "M\ttests/integration/neon.test.mjs",
+        "M\ttests/integration/postgres.test.mjs",
+        "M\ttests/migration-errors.test.mjs",
+        "M\ttests/migrations.test.mjs",
+        "M\ttests/profile-privacy.test.mjs",
+        "M\ttests/schema-readiness.test.mjs",
+        "M\ttests/seed-safety.test.mjs",
+        "M\ttests/submission-history.test.mjs",
+        "M\ttests/submission-reset.test.mjs",
+        "M\ttests/user-management-sql.test.mjs"
+      ]
+    },
+    {
+      "issue": 76,
+      "pr": 89,
+      "merged": true,
+      "head": "a42e9f554e40ec7bdc9632c834798a17f6989e98",
+      "merge": "a1e7192ca8fb45862a873ea5a4f89dc1915fcf42",
+      "runs": [
+        {
+          "id": 41980554182,
+          "name": "Architecture checks",
+          "status": "completed",
+          "conclusion": "skipped",
+          "url": "https://github.com/manthan01ce/Code-rank/actions/runs/41980554182"
+        },
+        {
+          "id": 41980553149,
+          "name": "Fast PR & Commit Checks",
+          "status": "completed",
+          "conclusion": "success",
+          "url": "https://github.com/manthan01ce/Code-rank/actions/runs/41980553149"
+        },
+        {
+          "id": 41980553234,
+          "name": "Authentication performance comparison",
+          "status": "completed",
+          "conclusion": "skipped",
+          "url": "https://github.com/manthan01ce/Code-rank/actions/runs/41980553234"
+        }
+      ],
+      "headTree": "4903afc3cfbf3e4b607b32c3437e932ad9ba817a",
+      "mergedTree": "4903afc3cfbf3e4b607b32c3437e932ad9ba817a",
+      "treeMatches": true
+    },
+    {
+      "issue": 77,
+      "pr": 91,
+      "merged": true,
+      "head": "2090ec0a58f74fff400e022d9425e7fa19f37a02",
+      "merge": "b091def4990b9e754241468662f8daea5867965d",
+      "runs": [
+        {
+          "id": 41982520384,
+          "name": "Fast PR & Commit Checks",
+          "status": "completed",
+          "conclusion": "success",
+          "url": "https://github.com/manthan01ce/Code-rank/actions/runs/41982520384"
+        },
+        {
+          "id": 41982520352,
+          "name": "Authentication performance comparison",
+          "status": "completed",
+          "conclusion": "skipped",
+          "url": "https://github.com/manthan01ce/Code-rank/actions/runs/41982520352"
+        },
+        {
+          "id": 41982520491,
+          "name": "Architecture checks",
+          "status": "completed",
+          "conclusion": "skipped",
+          "url": "https://github.com/manthan01ce/Code-rank/actions/runs/41982520491"
+        }
+      ],
+      "headTree": "e8269ebb5c8aef265e9c1abbaddeda80846f6e9d",
+      "mergedTree": "42fbf7da641a609038fc3fa4608e73e2bac4221e",
+      "treeMatches": false,
+      "mergeDifferences": [
+        "M\tapps/web/src/app/admin/layout.js",
+        "M\tapps/web/src/app/faculty/layout.js",
+        "M\tapps/web/src/app/faculty/page.js",
+        "M\tapps/web/src/app/profile/[username]/layout.js",
+        "M\tapps/web/src/app/student/layout.js",
+        "R098\tapps/web/src/components/AdminSidebar.js\tapps/web/src/components/layout/AdminSidebar.js",
+        "R097\tapps/web/src/components/FacultySidebar.js\tapps/web/src/components/layout/FacultySidebar.js",
+        "R100\tapps/web/src/components/student/StudentTheme.js\tapps/web/src/components/layout/StudentTheme.js",
+        "R100\tapps/web/src/components/WorkspaceReturn.js\tapps/web/src/components/layout/WorkspaceReturn.js",
+        "R100\tapps/web/src/components/WorkspaceReturn.module.css\tapps/web/src/components/layout/WorkspaceReturn.module.css",
+        "R100\tapps/web/src/components/LoadingOverlay.js\tapps/web/src/components/ui/LoadingOverlay.js",
+        "R100\tapps/web/src/components/LogoutConfirmModal.js\tapps/web/src/components/ui/LogoutConfirmModal.js",
+        "R100\tapps/web/src/components/RefreshButton.js\tapps/web/src/components/ui/RefreshButton.js",
+        "R100\tapps/web/src/components/RefreshButton.module.css\tapps/web/src/components/ui/RefreshButton.module.css",
+        "M\tapps/web/src/features/auth/components/AccountSettings.js",
+        "M\tapps/web/src/features/coding-workspace/components/WorkspaceLayout.js",
+        "M\tapps/web/src/features/coding-workspace/hooks/useCodingWorkspace.js",
+        "M\tapps/web/src/features/courses/components/CoursesManagement.js",
+        "M\tapps/web/src/features/courses/components/DepartmentMaster.js",
+        "M\tapps/web/src/features/courses/hooks/useCoursesManagement.js",
+        "M\tapps/web/src/features/courses/hooks/useDepartmentsManagement.js",
+        "M\tapps/web/src/features/dashboard/components/StudentDashboard.js",
+        "M\tapps/web/src/features/dashboard/hooks/useStudentDashboard.js",
+        "M\tapps/web/src/features/mapping/components/CourseMapping.js",
+        "M\tapps/web/src/features/mapping/hooks/useCourseMapping.js",
+        "M\tapps/web/src/features/operations/components/ActivityLogsPage.js",
+        "M\tapps/web/src/features/operations/hooks/useActivityLogs.js",
+        "M\tapps/web/src/features/practicals/components/StudentPracticals.js",
+        "M\tapps/web/src/features/practicals/hooks/useStudentPracticals.js",
+        "M\tapps/web/src/features/practice/components/PythonDashboard.js",
+        "M\tapps/web/src/features/practice/hooks/usePythonDashboard.js",
+        "M\tapps/web/src/features/profile/components/AdminProfile.js",
+        "M\tapps/web/src/features/profile/components/AdminProfileOverview.js",
+        "M\tapps/web/src/features/users/components/FacultyManagement.js",
+        "M\tapps/web/src/features/users/components/StudentManagement.js",
+        "A\tdocs/architecture/layout-ownership.md"
+      ]
+    },
+    {
+      "issue": 78,
+      "pr": 92,
+      "merged": true,
+      "head": "2704bcd74755be0209ce4298fdd2e996e957f907",
+      "merge": "0d7679850a8346cf545c096b57ee23d02fbf586f",
+      "runs": [
+        {
+          "id": 41987675364,
+          "name": "Architecture checks",
+          "status": "completed",
+          "conclusion": "skipped",
+          "url": "https://github.com/manthan01ce/Code-rank/actions/runs/41987675364"
+        },
+        {
+          "id": 41987675083,
+          "name": "Authentication performance comparison",
+          "status": "completed",
+          "conclusion": "skipped",
+          "url": "https://github.com/manthan01ce/Code-rank/actions/runs/41987675083"
+        },
+        {
+          "id": 41987674984,
+          "name": "Fast PR & Commit Checks",
+          "status": "completed",
+          "conclusion": "success",
+          "url": "https://github.com/manthan01ce/Code-rank/actions/runs/41987674984"
+        }
+      ],
+      "headTree": "aafb27a1a7b36542d257be7e387b0e8f8f6b62fe",
+      "mergedTree": "aafb27a1a7b36542d257be7e387b0e8f8f6b62fe",
+      "treeMatches": true
+    },
+    {
+      "issue": 79,
+      "pr": 93,
+      "merged": true,
+      "head": "64f909194f9782e0c5a237bf9abbc70b191887a0",
+      "merge": "e0136387c6730442790d862bf643fb9b0cdf28e4",
+      "runs": [
+        {
+          "id": 41996282876,
+          "name": "Authentication performance comparison",
+          "status": "completed",
+          "conclusion": "skipped",
+          "url": "https://github.com/manthan01ce/Code-rank/actions/runs/41996282876"
+        },
+        {
+          "id": 41996282880,
+          "name": "Architecture checks",
+          "status": "completed",
+          "conclusion": "skipped",
+          "url": "https://github.com/manthan01ce/Code-rank/actions/runs/41996282880"
+        },
+        {
+          "id": 41996283114,
+          "name": "Fast PR & Commit Checks",
+          "status": "completed",
+          "conclusion": "success",
+          "url": "https://github.com/manthan01ce/Code-rank/actions/runs/41996283114"
+        }
+      ],
+      "headTree": "2ebae0a1050db670ea6aec18506fcc65ea5a2632",
+      "mergedTree": "2ebae0a1050db670ea6aec18506fcc65ea5a2632",
+      "treeMatches": true
+    },
+    {
+      "issue": 80,
+      "pr": 94,
+      "merged": true,
+      "head": "89a7563bc012cc852a4b637ea4c7bb1fed2499bf",
+      "merge": "7f6c3e6badfbeb4b3a3f5527de633cf244d784ad",
+      "runs": [
+        {
+          "id": 42002753934,
+          "name": "Fast PR & Commit Checks",
+          "status": "completed",
+          "conclusion": "success",
+          "url": "https://github.com/manthan01ce/Code-rank/actions/runs/42002753934"
+        },
+        {
+          "id": 42002753935,
+          "name": "Authentication performance comparison",
+          "status": "completed",
+          "conclusion": "skipped",
+          "url": "https://github.com/manthan01ce/Code-rank/actions/runs/42002753935"
+        },
+        {
+          "id": 42002753946,
+          "name": "Architecture checks",
+          "status": "completed",
+          "conclusion": "skipped",
+          "url": "https://github.com/manthan01ce/Code-rank/actions/runs/42002753946"
+        }
+      ],
+      "headTree": "8c5ff700dc99354a22deb2d99367c6a38e55082c",
+      "mergedTree": "8c5ff700dc99354a22deb2d99367c6a38e55082c",
+      "treeMatches": true
+    }
+  ]
+}

@@ -1,0 +1,397 @@
+{
+  "schemaVersion": 1,
+  "base": "7f6c3e6badfbeb4b3a3f5527de633cf244d784ad",
+  "scope": "CR-ARCH-26A / #81; structural audit is not functional, lab-host or cloud certification",
+  "rows": [
+    {
+      "id": "api-features",
+      "issue": 70,
+      "structuralState": "implemented",
+      "requirement": "API-only business services owned by API; shared backend policy in core",
+      "paths": [
+        "apps/api/src/modules",
+        "packages/core/src/modules"
+      ],
+      "tests": [
+        "tests/architecture/final-separation.test.mjs",
+        "tests/unit/api-route-contracts.test.mjs"
+      ],
+      "finding": "47 baseline HTTP endpoint groups stay API-owned. Presence and unit boundaries do not certify public runtime parity.",
+      "functionalAcceptance": "unverified"
+    },
+    {
+      "id": "faculty-review",
+      "issue": 71,
+      "structuralState": "implemented",
+      "requirement": "Review, marks, report views and request hooks have feature owners",
+      "paths": [
+        "apps/web/src/features/submissions",
+        "apps/web/src/features/reports"
+      ],
+      "tests": [
+        "tests/unit/faculty-review-requests.test.mjs",
+        "tests/browser/faculty-review.spec.mjs"
+      ],
+      "finding": "Real permissions and browser parity remain required.",
+      "functionalAcceptance": "unverified"
+    },
+    {
+      "id": "users-pdf",
+      "issue": 72,
+      "structuralState": "implemented",
+      "requirement": "Admin user views, CRUD/upload hooks and one browser credential PDF owner",
+      "paths": [
+        "apps/web/src/features/users"
+      ],
+      "tests": [
+        "tests/unit/users-ui-api.test.mjs",
+        "tests/unit/credential-pdf.test.mjs",
+        "tests/browser/role-workflows.spec.mjs"
+      ],
+      "finding": "Saved PDF unit verification exists; real bulk/CRUD/PDF acceptance remains unverified.",
+      "functionalAcceptance": "unverified"
+    },
+    {
+      "id": "auth-sign-in",
+      "issue": 73,
+      "structuralState": "implemented",
+      "requirement": "Auth/profile views, sign-in component and role hooks",
+      "paths": [
+        "apps/web/src/features/auth/components/SignIn.tsx",
+        "apps/web/src/features/auth",
+        "apps/web/src/features/profile"
+      ],
+      "tests": [
+        "tests/unit/auth-feature-ownership.test.mjs",
+        "tests/unit/password-session.test.mjs"
+      ],
+      "finding": "Account/session browser lifecycle still needs actual host evidence.",
+      "functionalAcceptance": "unverified"
+    },
+    {
+      "id": "home-catalog-practicals",
+      "issue": 74,
+      "structuralState": "implemented",
+      "requirement": "Home implementation; courses/departments; mapping, dashboards, practical discovery and workspace owners",
+      "paths": [
+        "apps/web/src/features/home",
+        "apps/web/src/features/courses",
+        "apps/web/src/features/mapping",
+        "apps/web/src/features/dashboard",
+        "apps/web/src/features/practicals",
+        "apps/web/src/features/practice",
+        "apps/web/src/features/coding-workspace"
+      ],
+      "tests": [
+        "tests/unit/remaining-views-api.test.mjs",
+        "tests/browser/role-workflows.spec.mjs"
+      ],
+      "finding": "Existing homepage design retained; real CRUD/timer/stale-selection evidence remains required.",
+      "functionalAcceptance": "unverified"
+    },
+    {
+      "id": "shared-layout",
+      "issue": 75,
+      "structuralState": "implemented",
+      "requirement": "Shared role shells/navigation and generic UI",
+      "paths": [
+        "apps/web/src/components/layout",
+        "apps/web/src/components/ui"
+      ],
+      "tests": [
+        "tests/browser/role-workflows.spec.mjs",
+        "tests/architecture/final-separation.test.mjs"
+      ],
+      "finding": "Routes are retained deliberately; route groups and browser/e2e renaming are optional, with no URL change required.",
+      "functionalAcceptance": "unverified"
+    },
+    {
+      "id": "shared-client-styles",
+      "issue": 75,
+      "structuralState": "gap",
+      "requirement": "Browser infrastructure in lib/client, environment-independent utilities in lib/shared, common style tokens in styles after consumer analysis",
+      "paths": [
+        "apps/web/src/lib",
+        "apps/web/src/app/globals.css",
+        "apps/web/src/app/student/student-theme.css"
+      ],
+      "tests": [
+        "tests/unit/browser-socket-auth.test.mjs",
+        "tests/unit/student-theme.test.mjs"
+      ],
+      "finding": "Current client/shared helpers remain mixed in flat lib; global/theme styles remain under app. No completed consumer-based disposition is documented. Do not create empty target folders or move feature CSS blindly.",
+      "functionalAcceptance": "unverified"
+    },
+    {
+      "id": "core-policy",
+      "issue": 70,
+      "structuralState": "implemented",
+      "requirement": "Grading, attempt rules, shared persistence and policy remain in core",
+      "paths": [
+        "packages/core/src/modules/submissions/GradingService.js",
+        "packages/core/src/modules/submissions/SubmissionRepository.js",
+        "packages/core/src/shared/pagination.js"
+      ],
+      "tests": [
+        "tests/unit/grading.test.mjs",
+        "tests/integration/postgres.test.mjs"
+      ],
+      "finding": "Grading must not be moved into runner merely because worker is its present consumer.",
+      "functionalAcceptance": "unverified"
+    },
+    {
+      "id": "core-facades",
+      "issue": 70,
+      "structuralState": "gap",
+      "requirement": "Trace and justify retained compatibility facades and pagination aliases",
+      "paths": [
+        "packages/core/src/db",
+        "packages/core/src/services",
+        "packages/core/src/modules/courses/list-pagination.js",
+        "packages/core/src/index.js"
+      ],
+      "tests": [
+        "tests/unit/selector-pagination.test.mjs",
+        "tests/unit/user-pagination.test.mjs"
+      ],
+      "finding": "API and worker still consume @coderank/core/db and service exports; tests still consume deprecated course pagination. These are re-exports, not duplicate implementations. Keep working importers; owner-approved retention/retirement and consumer migration remain unresolved.",
+      "functionalAcceptance": "unverified"
+    },
+    {
+      "id": "database-assets",
+      "issue": 76,
+      "structuralState": "implemented",
+      "requirement": "SQL filenames/bytes/ledger; bootstrap, migrations, seeds and lifecycle tools owned by database package",
+      "paths": [
+        "packages/database/bootstrap",
+        "packages/database/migrations",
+        "packages/database/seeds",
+        "packages/database/scripts",
+        "packages/database/sql-assets.sha256.json"
+      ],
+      "tests": [
+        "tests/unit/database-assets.test.mjs",
+        "tests/unit/seed-safety.test.mjs",
+        "tests/integration/postgres.test.mjs"
+      ],
+      "finding": "Checksum tests exist. Disposable migration/idempotency/drift/readiness and restore must actually run; readiness never migrates.",
+      "functionalAcceptance": "unverified"
+    },
+    {
+      "id": "worker-orchestration",
+      "issue": 77,
+      "structuralState": "implemented",
+      "requirement": "Bootstrap, execution/system jobs, realtime publisher and lifecycle separation",
+      "paths": [
+        "apps/worker/src/index.js",
+        "apps/worker/src/jobs/execution",
+        "apps/worker/src/jobs/system",
+        "apps/worker/src/realtime",
+        "apps/worker/src/lifecycle"
+      ],
+      "tests": [
+        "tests/unit/worker-dispatch.test.mjs",
+        "tests/unit/worker-shutdown.test.mjs",
+        "tests/integration/worker-recovery.test.mjs"
+      ],
+      "finding": "One runner executor, core grading preserved. Real lock/heartbeat/drain/restart still unverified.",
+      "functionalAcceptance": "unverified"
+    },
+    {
+      "id": "runner-grouping",
+      "issue": 78,
+      "structuralState": "gap",
+      "requirement": "Languages and sandbox lifecycle grouped behind public runner exports",
+      "paths": [
+        "packages/runner/src/languages.js",
+        "packages/runner/src/Executor.js",
+        "packages/runner/src/Sandbox.js",
+        "packages/runner/src/reaper.js"
+      ],
+      "tests": [
+        "tests/unit/worker-dispatch.test.mjs",
+        "tests/docker/sandbox.test.mjs"
+      ],
+      "finding": "Public exports exist, but implementations remain flat in packages/runner/src. The requested languages/ and sandbox/ grouping is absent; no justified deviation is recorded. Avoid renaming or changing execution mechanics during certification.",
+      "functionalAcceptance": "unverified"
+    },
+    {
+      "id": "sandbox-warm",
+      "issue": 78,
+      "structuralState": "partial",
+      "requirement": "Single authoritative image; cold sandbox isolation; explicit trusted-lab warm disposition and dedicated real tests",
+      "paths": [
+        "infrastructure/docker/runner/Dockerfile",
+        "infrastructure/compose.warm-daemons.yaml",
+        "docs/architecture/sandbox-image-ownership.md"
+      ],
+      "tests": [
+        "tests/unit/sandbox.test.mjs",
+        "tests/docker/sandbox.test.mjs"
+      ],
+      "finding": "Warm mode is retained with documented shared-isolation limits. Dedicated real warm concurrency, per-job cleanup and process-lifetime evidence is absent. Cold Docker validation also remains unperformed here.",
+      "functionalAcceptance": "unverified"
+    },
+    {
+      "id": "queue-contract",
+      "issue": 79,
+      "structuralState": "implemented",
+      "requirement": "Isolated BullMQ internal script contract, pinned direct versions and atomic admission",
+      "paths": [
+        "packages/queue/src/bullmq-scripts.js",
+        "packages/queue/src/index.js"
+      ],
+      "tests": [
+        "tests/unit/queue-script-contract.test.mjs",
+        "tests/integration/queue-script-admission.test.mjs",
+        "tests/integration/queue.test.mjs"
+      ],
+      "finding": "6.3.10 pin and script-shape unit checks exist; unconditional real Redis admission tests must pass. No incidental upgrade or check-then-add substitution.",
+      "functionalAcceptance": "unverified"
+    },
+    {
+      "id": "test-lanes-batch",
+      "issue": 79,
+      "structuralState": "gap",
+      "requirement": "Bidirectional discovery, active job lifecycle and restored real batch lifecycle in Docker lane",
+      "paths": [
+        "tests/lane-manifest.json",
+        "scripts/ci/run-tests.mjs",
+        "scripts/ci/verify-tap.mjs",
+        "scripts/ci/write-certification.mjs"
+      ],
+      "tests": [
+        "tests/unit/job-lifecycle.test.js",
+        "tests/unit/test-discovery.test.mjs",
+        "tests/docker/batch-execution.test.js"
+      ],
+      "finding": "Batch candidate is still quarantined in merged master. No real Docker pass or quarantine retirement is recorded; strict certification must reject this state.",
+      "functionalAcceptance": "unverified"
+    },
+    {
+      "id": "scripts-assets-docs",
+      "issue": 80,
+      "structuralState": "implemented",
+      "requirement": "Dev/CI/ops scripts; served public assets; current versus historical guides; intentional root commands",
+      "paths": [
+        "scripts/dev",
+        "scripts/ci",
+        "scripts/ops",
+        "scripts/lib",
+        "apps/web/public",
+        "docs/getting-started.md",
+        "docs/deployment",
+        "docs/archive/2026-11",
+        "README.md",
+        "start-lab.sh",
+        "start-lab.bat"
+      ],
+      "tests": [
+        "tests/unit/lab-launcher-env.test.mjs",
+        "tests/unit/seed-safety.test.mjs"
+      ],
+      "finding": "Root launchers, manifests/config and public URLs are intentional. Windows execution, asset/hydration parity and startup still require host evidence.",
+      "functionalAcceptance": "unverified"
+    },
+    {
+      "id": "load-tests",
+      "issue": 80,
+      "structuralState": "implemented",
+      "requirement": "Workload scenarios, tooling and shared workload helpers have separate owners",
+      "paths": [
+        "load-tests/scenarios",
+        "load-tests/scripts",
+        "load-tests/lib",
+        "load-tests/run-k6.ps1"
+      ],
+      "tests": [
+        "tests/unit/capacity.test.mjs"
+      ],
+      "finding": "Public npm/PowerShell entry points remain. Hardware-qualified capacity and supported workload runs are not certified by this folder move.",
+      "functionalAcceptance": "unverified"
+    },
+    {
+      "id": "topology-optional-paths",
+      "issue": 81,
+      "structuralState": "retained-documented",
+      "requirement": "Three independent apps; infrastructure-owned canonical Compose/image; route/browser naming remains stable",
+      "paths": [
+        "apps/web/Dockerfile",
+        "apps/api/Dockerfile",
+        "apps/worker/Dockerfile",
+        "infrastructure/gateway/Dockerfile",
+        "infrastructure/docker-compose.yml",
+        "infrastructure/compose.containers.yaml",
+        "infrastructure/compose.ci.yaml"
+      ],
+      "tests": [
+        "tests/architecture/final-separation.test.mjs",
+        "scripts/ci/container-topology.mjs"
+      ],
+      "finding": "Canonical Compose and runner Dockerfile paths are documented deliberate choices, not gaps. No per-role services or external hosting certification. Real rendered profiles/ports/mounts must still be inspected.",
+      "functionalAcceptance": "unverified"
+    }
+  ],
+  "runtimeRequirements": [
+    {
+      "id": "builds-compose",
+      "requirement": "Clean install; all application/sandbox/gateway builds; supported host/full-container/warm profiles; worker-only Docker mount",
+      "status": "unverified"
+    },
+    {
+      "id": "startup-volume-continuity",
+      "requirement": "Host and full-container startup, preserved-volume restart with sentinel continuity and no destructive reseed",
+      "status": "unverified"
+    },
+    {
+      "id": "role-workflows",
+      "requirement": "All-role auth/account/session, admin CRUD/catalog/mapping, CSV/Excel errors and real credential PDF",
+      "status": "unverified"
+    },
+    {
+      "id": "faculty-student",
+      "requirement": "Faculty CRUD/archive/extra-time/review/marks; student eligibility/timers/workspace/run/submit/history/profile/refresh",
+      "status": "unverified"
+    },
+    {
+      "id": "sandbox-privacy",
+      "requirement": "All five languages/modes, compile/runtime error, timeout, batch continuation, hidden data and cleanup/reaping",
+      "status": "unverified"
+    },
+    {
+      "id": "replica-realtime",
+      "requirement": "Two real API replicas, Redis room fan-out and replica-local drain; guest execution ownership through gateway",
+      "status": "unverified"
+    },
+    {
+      "id": "outage-recovery",
+      "requirement": "API outage with web available; worker, Redis, database and process recovery",
+      "status": "unverified"
+    },
+    {
+      "id": "backup-restore",
+      "requirement": "Controlled backup/restore on disposable resources; SQL/ledger/volume identity and data continuity",
+      "status": "unverified"
+    },
+    {
+      "id": "capacity",
+      "requirement": "Measured concurrency/capacity at unchanged thresholds, tied to observed hardware and topology",
+      "status": "unverified"
+    },
+    {
+      "id": "host-lan",
+      "requirement": "Intended lab host, second LAN client, public HTTP/WebSocket URLs, both themes and responsive navigation",
+      "status": "unverified"
+    },
+    {
+      "id": "rollback",
+      "requirement": "Application-revert-only rollback drill/runbook; no database or volume reset",
+      "status": "unverified"
+    },
+    {
+      "id": "final-head-ci",
+      "requirement": "Strict final-head inherited gates, no skipped required checks; tested/merged tree comparison",
+      "status": "unverified"
+    }
+  ]
+}

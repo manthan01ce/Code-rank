@@ -1,3 +1,11 @@
+# Current batch acceptance status (#81 / CR-ARCH-26A)
+
+All #70–#80 implementation PRs are merged. **The completed local lab architecture is not certified.** Their final-head fast checks passed, while every strict Architecture checks run was skipped under the owner budget policy. The merged tree still retains quarantined batch execution and unresolved concrete ownership rows. Closed issues are scheduling/merge facts, not runtime acceptance evidence.
+
+The [current move-map matrix](local-lab-matrix.json), [predecessor SHA/workflow snapshot](local-lab-predecessors.json) and [local acceptance runbook](../deployment/LOCAL_LAB_CERTIFICATION.md) are authoritative for this follow-on assessment. `npm run lab:audit` records observed folders, hardware, report hashes and blockers without starting/migrating services or issuing a certificate. Intended host/LAN access and real runtime evidence remain required; keep #81 open. External hosting belongs to #82.
+
+The older migration chronology below remains audit history; its earlier lists of future work are not current completion claims.
+
 # Architecture migration status
 
 Worker dispatch/lifecycle and public runner consumers are reconciled in [the #77 ownership map](worker-runner-ownership.md); live sandbox/recovery/capacity acceptance remains pending.
