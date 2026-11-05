@@ -4,21 +4,21 @@ The sole file-membership authority is tests/lane-manifest.json. scripts/ci/test-
 
 | Category | Files |
 | --- | --- |
-| unit | 86 |
-| architecture | 4 |
+| unit | 89 |
+| architecture | 5 |
 | integration | 6 |
-| docker | 1 |
+| docker | 3 |
 | neon | 2 |
 | browser | 1 |
 | frontend | 1 |
 | performance | 1 |
-| quarantine | 1 |
+| quarantine | 0 |
 
 ## Active lanes
 
 - npm test runs tests/unit plus tests/architecture. Existing job-lifecycle.test.js stays active; extensions are preserved.
 - npm run test:integration runs six explicit local PostgreSQL/Redis service files. The original Redis admission-contract scenarios now always register in queue-script-admission.test.mjs; missing Redis fails integration rather than silently omitting tests from the unit file.
-- npm run test:docker runs tests/docker/sandbox.test.mjs. Real Docker/runner image is required.
+- npm run test:docker runs sandbox.test.mjs, batch-execution.test.js and warm-retirement.test.mjs from tests/docker exactly once. Real Docker/runner image is required; quarantine is empty.
 - tests/browser stays in place: role-workflows is real authenticated browser coverage; faculty-review is the separate synthetic frontend lane; auth-performance remains opt-in. Playwright reads the same manifest. The performance harness copies the registry/module onto historical baselines and validates its selected browser files there, rather than requiring the baseline to adopt this directory tree.
 - test:redis and test:postgres select service subsets from the integration category; test:neon selects the explicitly opt-in isolated-schema Neon category. The selected-service launcher preserves their original process environment and does not execute them in unit discovery. No live Neon run was requested or performed.
 
@@ -36,11 +36,11 @@ BullMQ stays pinned at 6.3.10 across direct consumers. A unit contract checks th
 
 Full-stack/auth-performance CI is stopped per explicit owner direction; no expensive labels are applied. Full strict certification and real integration/Docker/browser/security/PDF/faculty/realtime/capacity/recovery acceptance remain pending. Unit mocks do not replace runtime evidence. Strict certification rejects missing or stale evidence and requires all lanes to pass cleanly without quarantine.
 
-## Validation and merge gate
+## Historical batch 4 validation and merge gate
 
 Implementation base: `0d7679850a8346cf545c096b57ee23d02fbf586f`. Work is isolated on `refactor/batch4-tests`; the pre-existing dirty checkout was preserved. No application feature, SQL, dependency version, runtime resource limit or expensive-CI label is changed.
 
-Run `npm ci`, `npm run lint:critical`, `npm test`, and `npm run build`. On a disposable service host also run `npm run test:integration`, build `infrastructure/docker/runner/Dockerfile`, run the batch candidate command above, then `npm run test:docker` and the authenticated browser/full certification workflows. Integration requires isolated PostgreSQL/Redis; no live Neon commands are authorized by this refactor. Full strict certification remains blocked until batch is active in the Docker lane and all final-head runtime evidence passes. Record the tested source SHA and command exit codes in the PR; a green fast lane is not full certification.
+Run `npm ci`, `npm run lint:critical`, `npm test`, and `npm run build`. On a disposable service host also run `npm run test:integration`, build `infrastructure/docker/runner/Dockerfile`, run the batch candidate command above, then `npm run test:docker` and the authenticated browser/full certification workflows. Integration requires isolated PostgreSQL/Redis; no live Neon commands are authorized by this refactor. Batch is now active in the Docker lane; full strict certification still requires all final-head runtime evidence. Record the tested source SHA and command exit codes in the PR; a green fast lane is not full certification.
 
 The #81 evidence-audit unit tests cover missing move-map/runtime rows, skipped predecessor gates, wrong host/source/hardware, pending commands, artifact tampering/escape and the Compose minimum. They validate rejection behavior and are not lab runtime evidence.
 
@@ -52,4 +52,8 @@ Batch 5E adds `tests/unit/load-test-entrypoints.test.mjs` to normal discovery an
 
 The #97 follow-up extends the existing `tests/integration/postgres.test.mjs` with real public-client actor ordering, rollback, sessions, readiness/ledger and attempt-persistence coverage. It stays in the existing PostgreSQL/integration lanes; no mock, lane, threshold or quarantine substitution. Native PostgreSQL/Redis acceptance and its limits are recorded in `docs/architecture/core-facades-acceptance.md`.
 
-#99 retirement candidate adds active `tests/docker/warm-retirement.test.mjs` and `tests/unit/warm-retirement.test.mjs` to their owning lanes. Existing warm behavior unit cases are replaced because the mode is explicitly retired; cold isolation/lifetime/timeout checks remain. `npm run test:warm-disposition` records real Compose/image identities and strict Docker evidence or a nonzero blocked report. No new quarantine, skip, threshold change or expensive workflow opt-in. See `docs/architecture/warm-daemon-disposition.md`; Docker evidence is still required before merge.
+#99 retirement candidate adds active `tests/docker/warm-retirement.test.mjs` and `tests/unit/warm-retirement.test.mjs` to their owning lanes. Existing warm behavior unit cases are replaced because the mode is explicitly retired; cold isolation/lifetime/timeout checks remain. `npm run test:warm-disposition` records real Compose/image identities and strict Docker evidence or a nonzero blocked report. No new quarantine, skip, threshold change or expensive workflow opt-in. See `docs/architecture/warm-daemon-disposition.md`; The implementation is merged; exact-revision Docker evidence is still required for integrated acceptance.
+
+## Batch 5G scope (#102)
+
+The [scoped integrated report](BATCH5_INTEGRATED_ACCEPTANCE.md) separates fresh checks, predecessor claims, blocked local runtime checks and deferred college/intended-host acceptance. #95 implemented an evidence auditor, not completed #81 acceptance. Do not interpret historical sections below as current quarantine or branch state. Existing host and strict CI validators are unchanged; expensive Actions remain stopped.

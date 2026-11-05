@@ -2,7 +2,7 @@
 
 **Not certified.** This is the current acceptance runbook and gap record, not a certificate. The [move-map matrix](../architecture/local-lab-matrix.json) records 18 concrete ownership rows and 12 runtime evidence groups. The [predecessor snapshot](../architecture/local-lab-predecessors.json) records exact PR heads, merged trees and actual workflow conclusions observed on 5 November 2026. The [tracked folder tree](../architecture/local-lab-folder-tree.json) records the actual directory set; it excludes generated output/dependencies. All #70–#80 PRs are merged; all final-head fast runs passed; every strict Architecture checks run was skipped. A closed issue does not prove its acceptance ran.
 
-Current structural blockers are shared browser client/shared utility/styles ownership, retained core compatibility/pagination dispositions, flat runner implementations, real retained-warm-mode acceptance, and quarantined batch execution. Keep working consumers intact; complete the owning migrations or record a reviewed concrete retention decision. Do not create empty folders or treat file length as evidence. Home and sign-in feature owners exist. Route groups, browser/e2e naming and the canonical Compose/runner Dockerfile names are optional path choices already justified by their consumers.
+Current source after batch 5 has shared browser ownership, retired core facades, grouped runner implementations and active batch Docker coverage. Warm-daemon support is retired in source; its matrix row remains partial pending exact-revision Compose/image acceptance. This document retains the broader intended-host requirements. For #102, college/intended-host/LAN/cloud acceptance is deferred out of scope; use the [separate local integrated report](../development/BATCH5_INTEGRATED_ACCEPTANCE.md). No host validator or certification flag is relaxed.
 
 PR heads and merged trees differ for #70, #75 and #77 because the merged tree includes other changes; the snapshot lists the exact differing paths. This is not evidence of a regression or permission to discard merged work. It makes a strict run on the complete final tree necessary. Matching trees for the other predecessors still do not establish runtime parity.
 
@@ -35,7 +35,7 @@ The authoritative strict sequence is [.github/workflows/architecture-checks.yml]
 | --- | --- | --- |
 | PostgreSQL/Redis, transactions, atomic admission, leases, recovery | `npm run test:integration` | Six service files; no optional registration or live Neon substitution |
 | Sandbox build | `docker build -t coderank-base:latest -f infrastructure/docker/runner/Dockerfile .` | All five languages and unchanged isolation/capacity limits |
-| Batch candidate | `npm run test:batch` | Real Docker pass required before moving its sole manifest membership from quarantine to docker |
+| Active batch execution | `npm run test:batch` or unified `npm run test:docker` | #109 restored manifest membership to docker; require real final-revision evidence, with no duplicate CI execution |
 | Cold sandbox contracts | `npm run test:docker` | No mocks; compilation/error/timeout/privacy/cleanup/reaping |
 | Application/gateway images | Build `apps/worker/Dockerfile`, `apps/api/Dockerfile`, `apps/web/Dockerfile`, `infrastructure/gateway/Dockerfile` with the workflow's image tags | Worker alone receives Docker; web/API dependency and secret isolation |
 | Full-container topology | `node scripts/ci/container-topology.mjs` | Uses generated test project/volume names; gateway, readiness, guest ownership and WebSocket evidence |
@@ -45,7 +45,7 @@ The authoritative strict sequence is [.github/workflows/architecture-checks.yml]
 | Public readiness | `npm run deployment:check -- <lab-public-url>` | HTTP/readiness smoke only; does not certify host/LAN or all workflows |
 | Complete CI evidence | `node scripts/ci/write-certification.mjs` | Existing GitHub Actions provenance and all strict gates remain required; never spoof GITHUB_* variables locally |
 
-The #99 warm retirement candidate requires operator migration, stale-configuration rejection and real cold Compose/image/regression evidence before merge. Run `npm run test:warm-disposition` on a disposable Docker host. Its missing-Docker blocked report and unit mocks are not acceptance. Historical warm mode had no per-job filesystem/process isolation and was never suitable for untrusted submissions.
+The #99 warm retirement implementation merged in #108. Operator migration, stale-configuration rejection and real cold Compose/image/regression evidence still require exact-revision review for integrated acceptance. Run `npm run test:warm-disposition` on a disposable Docker host. Its missing-Docker blocked report and unit mocks are not acceptance. Historical warm mode had no per-job filesystem/process isolation and was never suitable for untrusted submissions.
 
 Render the base, local-database, full-container/CI combinations with `docker compose ... config --quiet` before startup. Inspect profiles, ports and mount projections; assert only worker mounts `/var/run/docker.sock`. Keep expanded environment configuration private: do not publish raw `config` output, `.env` or credentials. The full-container profile reset must be verified on the installed Compose version. Record unchanged volume names and mount destinations.
 
