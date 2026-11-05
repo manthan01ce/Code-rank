@@ -8,7 +8,7 @@ import {
   downloadFacultyCredentialsPDF,
   downloadStudentCredentialsPDF,
 } from '../apps/web/src/features/users/credential-pdf.js';
-import * as pdfFacade from '../apps/web/src/lib/pdfGenerator.js';
+import * as pdfFeature from '../apps/web/src/features/users/credential-pdf.js';
 
 test('credential PDF functions reject execution outside of a browser window', async () => {
   const originalWindow = globalThis.window;
@@ -36,10 +36,10 @@ test('credential PDF functions reject execution outside of a browser window', as
   }
 });
 
-test('credential PDF facade re-exports all feature methods', () => {
-  assert.equal(typeof pdfFacade.generateUserCredentialsPDF, 'function');
-  assert.equal(typeof pdfFacade.downloadFacultyCredentialsPDF, 'function');
-  assert.equal(typeof pdfFacade.downloadStudentCredentialsPDF, 'function');
+test('credential PDF feature exposes the authoritative browser methods', () => {
+  assert.equal(typeof pdfFeature.generateUserCredentialsPDF, 'function');
+  assert.equal(typeof pdfFeature.downloadFacultyCredentialsPDF, 'function');
+  assert.equal(typeof pdfFeature.downloadStudentCredentialsPDF, 'function');
 });
 
 test('credential PDF generation constructs valid document with synthetic non-sensitive data', async () => {
@@ -103,6 +103,15 @@ test('credential PDF generation constructs valid document with synthetic non-sen
     assert.ok(studentPdf.startsWith('%PDF'), 'Student PDF should start with PDF magic number');
     assert.ok(studentPdf.includes('Student Credentials'), 'PDF should include Student Credentials title');
     assert.ok(studentPdf.includes('CE1'), 'PDF should include division');
+    // Inspect the files actually saved by the download functions, not just the
+    // returned document. This directory is uniquely created and test-owned.
+    const downloads = fs.readdirSync(outputDir).filter(name => name.endsWith('.pdf'));
+    assert.equal(downloads.length, 3);
+    const binaries = downloads.map(name => fs.readFileSync(path.join(outputDir, name)));
+    assert.ok(binaries.every(bytes => bytes.subarray(0, 4).toString() === '%PDF'));
+    for (const title of ['User Credentials', 'Faculty Credentials', 'Student Credentials']) {
+      assert.ok(binaries.some(bytes => bytes.toString('latin1').includes(title)), `Saved PDF contains ${title}`);
+    }
   } finally {
     if (originalWindow === undefined) delete globalThis.window;
     else globalThis.window = originalWindow;
