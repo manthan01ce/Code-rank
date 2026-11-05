@@ -159,8 +159,8 @@
         "tests/integration/postgres.test.mjs",
         "tests/integration/worker-recovery.test.mjs"
       ],
-      "finding": "Repository consumers and mocks migrated to owning database, feature and shared exports. Root/services/db/pagination aliases and side-effect migration shim retired after caller inventory; duplicate unused core users implementation removed. See core-public-entries.md and core-public-entries-consumers.json. Structural implementation is not acceptance: disposable PostgreSQL actor ordering/ledger/readiness/grading and real worker regressions remain unverified; #97 stays open.",
-      "functionalAcceptance": "unverified"
+      "finding": "Repository consumers/mocks use owning database, feature and shared exports; retired root/services/db/pagination entries and side-effect migration shim are absent. The remaining developer deep imports and feature-entry bypass boundary are corrected. Scoped native PostgreSQL actor ordering, sessions, transaction rollback, attempt replay/best-grade/case consistency and ledger/readiness checks plus real Redis worker admission/readiness/recovery/drain pass. See core-facades-acceptance.md and the follow-up PR for exact final-source evidence. This is not Docker/compiler, capacity, intended-host/LAN or cloud certification.",
+      "functionalAcceptance": "verified-local-regression"
     },
     {
       "id": "database-assets",

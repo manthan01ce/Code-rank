@@ -1,10 +1,10 @@
-import sql from '../../packages/database/src/client.js';
+import sql from '@coderank/database';
 
 import { comparePassword } from '../../packages/core/src/utils/auth.js';
 
 import { generateToken } from '../../packages/core/src/utils/auth.js';
 import { SubmissionService } from '@coderank/core/submissions';
-import { PracticalService } from '../../packages/core/src/modules/practicals/PracticalService.js';
+import { PracticalService } from '@coderank/core/practicals';
 
 async function main() {
   const testCases = await sql`
