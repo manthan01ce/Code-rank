@@ -1,6 +1,6 @@
 import '@coderank/core/config/env';
-import sql, { closeDatabase } from "../packages/database/src/client.js";
-import { loadMigrations } from "../packages/database/src/migrations.js";
+import sql, { closeDatabase } from "../src/client.js";
+import { loadMigrations } from "../src/migrations.js";
 const required = {
   users: ["id", "role", "status", "session_token", "extra_info"],
   courses: ["id", "semester", "assigned_faculty"],
@@ -42,7 +42,7 @@ try {
       )
     : [];
   const migrations = await loadMigrations(
-    new URL("./migrations/", import.meta.url),
+    new URL("../migrations/", import.meta.url),
   );
   const altered = applied
     .filter(

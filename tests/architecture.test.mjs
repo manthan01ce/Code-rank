@@ -389,7 +389,7 @@ test('runtime config is exported deliberately and no relative cross-workspace en
     ...walk(fileURLToPath(new URL('apps/', root))),
     ...walk(fileURLToPath(new URL('packages/', root))),
     ...walk(fileURLToPath(new URL('scripts/', root))),
-    ...walk(fileURLToPath(new URL('database/', root))),
+    ...walk(fileURLToPath(new URL('packages/database/', root))),
     ...walk(fileURLToPath(new URL('tests/', root))),
   ].filter(f => /\.(?:m?js|tsx?)$/.test(f));
 

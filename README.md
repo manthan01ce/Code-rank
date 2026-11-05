@@ -44,8 +44,8 @@ Start PostgreSQL and Redis in the background:
 ```sh
 npm run infra:up
 ```
-> **Automatic Dataset Initialization:** When PostgreSQL boots up with an empty volume, `database/init.sql` automatically populates the database with all 91 users, 3 courses, 10 practicals, test cases, and department mappings.
-> 
+> **Automatic Dataset Initialization:** When PostgreSQL boots up with an empty volume, `packages/database/bootstrap/init.sql` automatically populates the database with all 91 users, 3 courses, 10 practicals, test cases, and department mappings.
+>
 > **Destructive development fixture restore:** `db:seed` executes SQL that drops/recreates tables and the migration ledger. It refuses without `npm run db:seed -- --allow-destructive-reset`. Use only against an explicitly selected disposable database after backup; never use it to update an existing lab database. Normal upgrades use `npm run db:migrate`. See the [setup guide](docs/getting-started.md#initial-data--schema).
 
 ### 4. Build Runner Sandbox Image
@@ -75,14 +75,14 @@ Open **[http://localhost:3000](http://localhost:3000)** in your browser.
 
 ## Default Login Credentials (Pre-seeded)
 
-All pre-seeded test accounts use the standard local password: `LoadTest@2024` (or fallback `adminpassword123`).
+All pre-seeded test accounts use the standard local password:Operator-supplied password
 
 | Role | Email | Password | Access / Scope |
 |---|---|---|---|
-| **Admin** | `admin@example.com` | `adminpassword123` | Full administrative control, system metrics, users, courses |
-| **Faculty** | `hardi.agola@charusat.ac.in` | `LoadTest@2024` | Course 5 coordinator, practical creation, grade inspection |
-| **Student** | `26ce001@charusat.edu.in` | `LoadTest@2024` | Lab practicals, code workspace, test execution & submission |
-| **Student** | `26ce002@charusat.edu.in` ... `26ce074@charusat.edu.in` | `LoadTest@2024` | 73 additional pre-configured lab student accounts |
+| **Admin** | `OPERATOR_SUPPLIED` | `OPERATOR_SUPPLIED` | Full administrative control, system metrics, users, courses |
+| **Faculty** | `OPERATOR_SUPPLIED` | Operator-supplied password | Course 5 coordinator, practical creation, grade inspection |
+| **Student** | `OPERATOR_SUPPLIED` | Operator-supplied password | Lab practicals, code workspace, test execution & submission |
+| **Student** | `OPERATOR_SUPPLIED` ... `OPERATOR_SUPPLIED` | Operator-supplied password | 73 additional pre-configured lab student accounts |
 
 ---
 
@@ -114,7 +114,7 @@ docker volume ls
 
 Set `CODERANK_POSTGRES_VOLUME` and `CODERANK_REDIS_VOLUME` in your root `.env` to those EXISTING names; do not guess a name from the repository folder. Confirm each chosen name exists with `docker volume inspect <actual-name>` before startup. If mounts are bind mounts, the old project uses custom names, or both stacks contain data, stop and reconcile that installation rather than selecting a new empty volume. After startup verify the same mount names and expected records. Never use `down -v`, `volume rm` or pruning as migration/rollback.
 
-First-run `database/init.sql` runs only on an empty PostgreSQL data directory. It is not an upgrade mechanism for existing volumes. Run ledger-managed migrations explicitly using the documented root database commands; health checks never run migrations. The PostgreSQL healthcheck uses the configured container user/database.
+First-run `packages/database/bootstrap/init.sql` runs only on an empty PostgreSQL data directory. It is not an upgrade mechanism for existing volumes. Run ledger-managed migrations explicitly using the documented root database commands; health checks never run migrations. The PostgreSQL healthcheck uses the configured container user/database.
 
 Ordinary service container names are temporarily retained for existing lab/operator integrations, including the mount-inspection commands above. Language daemon names remain required by `Sandbox.js`. No API service is introduced in this issue.
 

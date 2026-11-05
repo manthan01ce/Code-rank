@@ -73,7 +73,7 @@ test("Neon upgrade on copied deployed table definitions preserves compatibility"
             ),
           ]),
       },
-      new URL("../../database/migrations/", import.meta.url),
+      new URL("../../packages/database/migrations/", import.meta.url),
     );
     await query(
       "INSERT INTO users(name,email,password,role) VALUES('Admin','a@test','x','admin'),('Faculty','f@test','x','faculty'),('Student','s@test','x','student')",

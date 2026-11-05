@@ -11,7 +11,7 @@ This guide provides the exact, reproducible steps to migrate CodeRank from Neon 
 | **Database Driver** | `pg` (`pg.Pool`) & `@neondatabase/serverless` | Supported natively via `packages/database/src/client.js` and `postgres.js` |
 | **Driver Selection** | Environment Variable | `DATABASE_DRIVER=postgres` (local) vs `DATABASE_DRIVER=neon` (cloud) |
 | **Local SSL Mode** | `sslmode=disable` | Required for local connections without TLS certs |
-| **Migrations** | Versioned SQL scripts | `database/migrations/000_baseline.sql` through `006_authorized_submission_reset.sql` |
+| **Migrations** | Versioned SQL scripts | `packages/database/migrations/000_baseline.sql` through `006_authorized_submission_reset.sql` |
 | **Queue & Cache** | Redis 7+ & BullMQ | `127.0.0.1:6379` (Docker container active) |
 | **Execution Sandboxes**| Docker (`coderank-base`) | Python, C++, C, Java, JavaScript daemon containers active |
 
@@ -46,7 +46,7 @@ Use `pg_dump` with `--clean --if-exists --no-owner --no-privileges` to export a 
 
 ```bash
 # Export schema + data from Neon:
-pg_dump "postgresql://neondb_owner:npg_xfyu3nXC9EeJ@ep-shy-star-a4cmtjl2-pooler.us-east-1.aws.neon.tech/neondb?sslmode=require" \
+pg_dump "postgresql://USER:PASSWORD@HOST/DATABASE?sslmode=require" \
   --no-owner \
   --no-privileges \
   --clean \

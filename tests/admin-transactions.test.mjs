@@ -5,7 +5,7 @@ import { migrate } from '../packages/database/src/migrations.js';
 test('mapping and practical changes commit audit/cases atomically and preserve graded history',async()=>{
  const db=new PGlite();
  try{
- await migrate({query:async(q,p)=>(await db.query(q,p)).rows,apply:m=>db.transaction(async tx=>{for(const s of m.statements)await tx.exec(s);await tx.query('INSERT INTO coderank_migrations(name,checksum) VALUES($1,$2)',[m.name,m.checksum]);})},new URL('../database/migrations/',import.meta.url));
+ await migrate({query:async(q,p)=>(await db.query(q,p)).rows,apply:m=>db.transaction(async tx=>{for(const s of m.statements)await tx.exec(s);await tx.query('INSERT INTO coderank_migrations(name,checksum) VALUES($1,$2)',[m.name,m.checksum]);})},new URL('../packages/database/migrations/',import.meta.url));
  await db.exec("INSERT INTO users(name,email,password,role) VALUES('Admin','a@test','x','admin'),('Faculty','f@test','x','faculty'),('Student','s@test','x','student'); INSERT INTO courses(course_code,name,semester) VALUES('CS','CS',1)");
  const mapping=(ids,co=2)=>db.query('SELECT coderank_replace_mapping(1,1,$1::int[],$2)',[ids,co]);
  await mapping([2]);await assert.rejects(mapping([3],3));

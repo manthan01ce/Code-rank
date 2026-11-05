@@ -6,7 +6,7 @@ import { migrate } from '../packages/database/src/migrations.js';
 test('catalog mutations preserve history, department references and audit atomicity', async () => {
  const db = new PGlite();
  try {
-  await migrate({ query: async(q,p)=>(await db.query(q,p)).rows, apply: m=>db.transaction(async tx=>{ for(const s of m.statements) await tx.exec(s); await tx.query('INSERT INTO coderank_migrations(name,checksum) VALUES($1,$2)',[m.name,m.checksum]); }) },new URL('../database/migrations/',import.meta.url));
+  await migrate({ query: async(q,p)=>(await db.query(q,p)).rows, apply: m=>db.transaction(async tx=>{ for(const s of m.statements) await tx.exec(s); await tx.query('INSERT INTO coderank_migrations(name,checksum) VALUES($1,$2)',[m.name,m.checksum]); }) },new URL('../packages/database/migrations/',import.meta.url));
   await db.exec("INSERT INTO users(name,email,password,role,extra_info) VALUES('Admin','admin@test','x','admin','{}'),('Faculty','faculty@test','x','faculty','{\"department\":\"CE\",\"other\":true}')");
   const mutate = async(entity,id,action,body={},actor=1)=>(await db.query('SELECT coderank_manage_catalog($1,$2,$3,$4,$5::jsonb) item',[actor,entity,id,action,JSON.stringify(body)])).rows[0].item;
   const course=await mutate('course',null,'create',{name:' CS ',course_code:'CS1',semester:1});

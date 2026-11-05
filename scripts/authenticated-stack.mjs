@@ -210,7 +210,7 @@ try {
   });
   assert.equal(
     initialMigration.appliedMigrations.length,
-    (await loadMigrations(new URL("../database/migrations/", import.meta.url)))
+    (await loadMigrations(new URL("../packages/database/migrations/", import.meta.url)))
       .length,
     "Fresh database must receive every migration after verified backup/rehearsal",
   );
@@ -227,9 +227,9 @@ try {
         ),
       ]),
   };
-  await migrate(adapter, new URL("../database/migrations/", import.meta.url));
+  await migrate(adapter, new URL("../packages/database/migrations/", import.meta.url));
   assert.deepEqual(
-    await migrate(adapter, new URL("../database/migrations/", import.meta.url)),
+    await migrate(adapter, new URL("../packages/database/migrations/", import.meta.url)),
     [],
   );
   const hashed = await hashPassword(password);

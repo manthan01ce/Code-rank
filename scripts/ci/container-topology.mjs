@@ -23,7 +23,7 @@ try {
   for (const service of ['api', 'web', 'worker', 'gateway']) assert.equal(resolved.services[service].profiles?.length || 0, 0, `${service} must start without an extra profile in full-container mode`);
   compose(['up', '-d', '--no-build', '--wait', 'redis', 'postgres']);
   const hostDatabase = new URL(env.DATABASE_URL); hostDatabase.hostname = '127.0.0.1'; hostDatabase.port = '5439';
-  const migration = spawnSync(process.execPath, ['database/run-migration.js'], { env: { ...env, DATABASE_URL: hostDatabase.href }, stdio: 'inherit', timeout: 60000 });
+  const migration = spawnSync(process.execPath, ['packages/database/scripts/run-migration.js'], { env: { ...env, DATABASE_URL: hostDatabase.href }, stdio: 'inherit', timeout: 60000 });
   assert.equal(migration.status, 0, 'controlled release migration must finish before applications start');
   compose(['up', '-d', '--no-build', 'api', 'web', 'worker', 'gateway']);
   const running = execFileSync('docker', [...args, 'ps', '--services', '--status', 'running'], { env, encoding: 'utf8' }).trim().split(/\s+/);

@@ -43,7 +43,7 @@ flowchart TD
 | `packages/database` | Neon client, migration loader and version ledger |
 | `packages/queue` | BullMQ producer and atomic Redis admission |
 | `packages/runner` | Language runtimes, Docker transport and sandbox lifecycle |
-| `database/migrations` | Baseline schema, indexes and transactional grading functions |
+| `packages/database/migrations` | Baseline schema, indexes and transactional grading functions |
 | `infrastructure` | Authoritative image and Compose definitions |
 
 Core has no dependency on the runner package. Grading receives an executor factory

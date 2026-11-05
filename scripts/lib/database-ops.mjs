@@ -50,7 +50,7 @@ async function applyMigrations(url) {
     return await migrate({ query: sql.query, apply: migration => sql.transaction(tx => [
       tx.query('SELECT pg_advisory_xact_lock(20401017,1)'), ...migration.statements.map(text => tx.query(text)),
       tx.query('INSERT INTO coderank_migrations(name,checksum) VALUES($1,$2)', [migration.name, migration.checksum]),
-    ]) }, new URL('../../database/migrations/', import.meta.url));
+    ]) }, new URL('../../packages/database/migrations/', import.meta.url));
   } finally { await sql.close(); }
 }
 

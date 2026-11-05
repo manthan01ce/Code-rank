@@ -8,7 +8,7 @@ mock.module(new URL('../packages/core/src/db/client.js',import.meta.url).href,{d
 const {SubmissionHistoryService:service,pageOptions}=await import('../apps/api/src/modules/submissions/submission-history.service.js');
 test('submission keysets preserve ties and timestamp precision in every sort direction',async()=>{
  try{
- await migrate({query:sql.query,apply:m=>db.transaction(async tx=>{for(const s of m.statements)await tx.exec(s);await tx.query('INSERT INTO coderank_migrations(name,checksum) VALUES($1,$2)',[m.name,m.checksum]);})},new URL('../database/migrations/',import.meta.url));
+ await migrate({query:sql.query,apply:m=>db.transaction(async tx=>{for(const s of m.statements)await tx.exec(s);await tx.query('INSERT INTO coderank_migrations(name,checksum) VALUES($1,$2)',[m.name,m.checksum]);})},new URL('../packages/database/migrations/',import.meta.url));
  await db.exec("INSERT INTO users(name,email,password,role) VALUES('Faculty','f@test','x','faculty'); INSERT INTO courses(course_code,name,semester) VALUES('CS','CS',1); INSERT INTO course_faculty(course_id,faculty_id,is_co_coordinator) VALUES(1,1,true); INSERT INTO practicals(faculty_id,course_id,title) VALUES(1,1,'Test')");
  for(let i=0;i<7;i++){
   const [{id}]=await sql.query("INSERT INTO users(name,email,password,role) VALUES($1,$2,'x','student') RETURNING id",[i<4?'Same':'Zed',`s${i}@test`]);

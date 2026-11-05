@@ -28,7 +28,7 @@ services:
       POSTGRES_DB: ${POSTGRES_DB:-coderank_local}
     volumes:
     - postgres_data:/var/lib/postgresql/data
-    - ../database/init.sql:/docker-entrypoint-initdb.d/01-init.sql:ro
+    - ../packages/database/bootstrap/init.sql:/docker-entrypoint-initdb.d/01-init.sql:ro
     restart: unless-stopped
     healthcheck:
       test:
