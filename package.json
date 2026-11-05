@@ -49,7 +49,8 @@
     "web:production": "node scripts/dev/web-runtime.mjs --production",
     "test:faculty-review": "playwright test --config tests/browser/faculty-review.config.mjs",
     "db:inspect": "node packages/database/scripts/inspect-schema.js",
-    "test:batch": "node scripts/ci/run-tests.mjs batch"
+    "test:batch": "node scripts/ci/run-tests.mjs batch",
+    "lab:audit": "node scripts/ci/local-lab-audit.mjs"
   },
   "devDependencies": {
     "@electric-sql/pglite": "0.5.10",

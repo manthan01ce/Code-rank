@@ -4,7 +4,7 @@ The sole file-membership authority is tests/lane-manifest.json. scripts/ci/test-
 
 | Category | Files |
 | --- | --- |
-| unit | 85 |
+| unit | 86 |
 | architecture | 4 |
 | integration | 6 |
 | docker | 1 |
@@ -43,3 +43,5 @@ Full-stack/auth-performance CI is stopped per explicit owner direction; no expen
 Implementation base: `0d7679850a8346cf545c096b57ee23d02fbf586f`. Work is isolated on `refactor/batch4-tests`; the pre-existing dirty checkout was preserved. No application feature, SQL, dependency version, runtime resource limit or expensive-CI label is changed.
 
 Run `npm ci`, `npm run lint:critical`, `npm test`, and `npm run build`. On a disposable service host also run `npm run test:integration`, build `infrastructure/docker/runner/Dockerfile`, run the batch candidate command above, then `npm run test:docker` and the authenticated browser/full certification workflows. Integration requires isolated PostgreSQL/Redis; no live Neon commands are authorized by this refactor. Full strict certification remains blocked until batch is active in the Docker lane and all final-head runtime evidence passes. Record the tested source SHA and command exit codes in the PR; a green fast lane is not full certification.
+
+The #81 evidence-audit unit tests cover missing move-map/runtime rows, skipped predecessor gates, wrong host/source/hardware, pending commands, artifact tampering/escape and the Compose minimum. They validate rejection behavior and are not lab runtime evidence.

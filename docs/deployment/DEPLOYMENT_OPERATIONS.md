@@ -1,6 +1,6 @@
 # Deployment, capacity and recovery
 
-These tools are implemented and exercised on disposable CI infrastructure.
+These tools have prior disposable-CI coverage; that history does not certify the current batch or intended lab hardware. See [local lab acceptance](LOCAL_LAB_CERTIFICATION.md) for current blockers and evidence requirements.
 They do not automatically select a public deployment or migrate the Neon database.
 Use a deployment-specific SANDBOX_SCOPE consistently across worker replicas and
 recovery commands. Existing API paths and response contracts are preserved.
