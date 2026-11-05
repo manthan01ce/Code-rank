@@ -13,8 +13,8 @@ if s=='error': sys.exit(3)
 print(s,end='')
 `;
 function disposableExecutor(language, code) {
-  // A forwarding adapter uses real Docker while preventing the optional shared
-  // warm-daemon path, even if the caller has enabled it in their environment.
+  // The forwarding adapter uses real Docker. Cold-only policy is enforced by
+  // Sandbox; stale enabled warm configuration now fails explicitly.
   const executor = new Executor(language, code, 5000, null, { runDocker: (args, options) => dockerCommand(args, options) });
   assert.equal(executor.sandbox.isWarm, false);
   assert.match(executor.sandbox.name, /^coderank-job-/);

@@ -8,8 +8,19 @@ export function jobLifetime(value = process.env.JOB_TIMEOUT_MS) {
   return Number.isFinite(duration) && duration > 0 ? Math.min(120000, Math.max(1000, duration)) : 30000;
 }
 
+// Warm daemons shared a UID, filesystem and process namespace with no admission
+// lock or trusted-input authority. Reject old opt-ins instead of silently changing
+// an operator's mode. Explicit false/unset retains the existing cold default.
+export function assertColdSandboxConfiguration(env = process.env) {
+  const value = env.USE_WARM_DAEMONS;
+  if (value !== undefined && value !== '' && String(value).trim().toLowerCase() !== 'false') {
+    throw Object.assign(new Error('Warm daemons are retired. Remove USE_WARM_DAEMONS and the warm Compose overlay; use per-job cold sandboxes. See docs/architecture/warm-daemon-disposition.md.'), { code: 'WARM_DAEMONS_RETIRED', infrastructure: true });
+  }
+}
+
 export class Sandbox {
   constructor(runDocker = dockerCommand, { scope = sandboxScope(), language = null } = {}) {
+    assertColdSandboxConfiguration();
     this.runDocker = runDocker;
     this.language = language ? String(language).toLowerCase().trim() : null;
     this.lifetime = jobLifetime();
@@ -17,19 +28,12 @@ export class Sandbox {
     this.destroyed = false;
     this.scope = sandboxScope(scope);
 
-    // Warm daemon container support for local development / lab mode
-    const daemon = this.language ? `coderank-${this.language}-daemon` : null;
-    this.isWarm = Boolean(
-      daemon &&
-      runDocker === dockerCommand &&
-      process.env.USE_WARM_DAEMONS === 'true'
-    );
-    this.name = this.isWarm ? daemon : `coderank-job-${randomUUID()}`;
+    this.isWarm = false;
+    this.name = `coderank-job-${randomUUID()}`;
   }
 
   async start() {
     if (this.destroyed) throw new Error('Sandbox is closed');
-    if (this.isWarm) return;
     const createdAt = Date.now();
     if (!this.starting) this.starting = this.runDocker([
       'run', '-d', '--rm', '--name', this.name, '--label', 'coderank.sandbox=true',
@@ -54,22 +58,14 @@ export class Sandbox {
   }
 
   async script(input, budget) {
-    if (!this.isWarm) await this.start();
+    await this.start();
     const remaining = Math.min(Number.isFinite(budget) && budget > 0 ? budget : this.lifetime, this.deadline - Date.now());
     if (remaining <= 0) { await this.destroy(); throw Object.assign(new Error('Job deadline exceeded'), { code: 124 }); }
     try {
       return await this.runDocker(['exec', '--user', '1000:1000', '-i', this.name, 'timeout', '-k', '1s', `${(remaining / 1000).toFixed(3)}s`, 'bash', '-s'], { input, timeout: remaining + 2000 });
     } catch (error) {
-      // If warm daemon is missing or offline, fall back to ephemeral container on next attempt
-      const errStr = (error.message || '') + (error.stderr || '');
-      if (this.isWarm && errStr.includes('No such container')) {
-        this.isWarm = false;
-        this.name = `coderank-job-${randomUUID()}`;
-        this.starting = null;
-        return this.script(input, budget);
-      }
       // Kill the whole container on timeout/output overflow, including detached children.
-      if (!this.isWarm && (error.killed || error.code === 124 || error.code === 137 || error.code === 'ERR_CHILD_PROCESS_STDIO_MAXBUFFER')) {
+      if (error.killed || error.code === 124 || error.code === 137 || error.code === 'ERR_CHILD_PROCESS_STDIO_MAXBUFFER') {
         await this.destroy();
       }
       throw error;
@@ -79,7 +75,6 @@ export class Sandbox {
   async destroy() {
     if (this.destroyed) return;
     this.destroyed = true;
-    if (this.isWarm) return;
     if (!this.starting) return;
     await this.starting.catch(() => {});
     await this.runDocker(['rm', '-f', this.name], { timeout: 3000 }).catch(() => {

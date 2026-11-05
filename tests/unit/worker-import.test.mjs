@@ -15,7 +15,7 @@ mock.module('../../apps/worker/src/lifecycle/heartbeat.js', {
   namedExports: { startExecutionHeartbeat: () => ({ stop: async () => {} }) },
 });
 mock.module('@coderank/runner/sandbox', {
-  namedExports: { startSandboxReaper: () => ({ stop: async () => {} }) },
+  namedExports: { assertColdSandboxConfiguration: () => {}, startSandboxReaper: () => ({ stop: async () => {} }) },
 });
 mock.module('../../apps/worker/src/lifecycle/shutdown.js', {
   namedExports: { createShutdown: options => { shutdownOptions = options; return async () => 0; } },

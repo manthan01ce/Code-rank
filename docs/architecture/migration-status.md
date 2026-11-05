@@ -8,6 +8,8 @@ The older migration chronology below remains audit history; its earlier lists of
 
 # Architecture migration status
 
+Batch 5D (#99) proposes [explicit warm-daemon retirement](warm-daemon-disposition.md) after consumer analysis. Cold defaults and limits are preserved; enabled legacy warm configuration fails clearly and operators have a migration path. Real Compose/image/Docker evidence is unavailable, so this disposition is not accepted or merged and #99 remains open.
+
 Batch 5B (#97) retires core compatibility entries after repository caller migration; see [entry/consumer dispositions](core-public-entries.md). Shared logger/request-timing/timeout now live under `core/shared`; database and feature imports target their owning public entries. The follow-up [native PostgreSQL/Redis regression acceptance](core-facades-acceptance.md) closes the scoped actor/session/ledger/readiness/persistence and worker regression gap. Docker/compiler and broader host/LAN/cloud certification remain separate and unverified.
 
 Worker dispatch/lifecycle and public runner consumers are reconciled in [the #77 ownership map](worker-runner-ownership.md); live sandbox/recovery/capacity acceptance remains pending.

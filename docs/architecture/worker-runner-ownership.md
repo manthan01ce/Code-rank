@@ -46,7 +46,7 @@ Language-specific implementations are grouped under `packages/runner/src/languag
 | `packages/runner/src/python.js` | `packages/runner/src/languages/python.js` | Python language execution, AST check and test runner |
 | `packages/runner/src/function-harness.js` | `packages/runner/src/languages/function-harness.js` | Function problem code generator and test case generator |
 | `packages/runner/src/function-runner.js` | `packages/runner/src/languages/function-runner.js` | Function problem runner orchestration |
-| `packages/runner/src/Sandbox.js` | `packages/runner/src/sandbox/Sandbox.js` | Ephemeral container lifecycle, warm fallback, and deadline management |
+| `packages/runner/src/Sandbox.js` | `packages/runner/src/sandbox/Sandbox.js` | Ephemeral container lifecycle, retired warm-config rejection, and deadline management |
 | `packages/runner/src/docker.js` | `packages/runner/src/sandbox/docker.js` | Docker process invocation over stdin (`dockerCommand`) |
 | `packages/runner/src/health.js` | `packages/runner/src/sandbox/health.js` | Docker daemon and runner image health inspection |
 | `packages/runner/src/sandbox-metadata.js` | `packages/runner/src/sandbox/metadata.js` | Sandbox labels, ownership UUID, prefix, and scope validation |
@@ -79,7 +79,7 @@ Language-specific implementations are grouped under `packages/runner/src/languag
 | `tests/fixtures/sandbox-owner.fixture.mjs` | `@coderank/runner/sandbox` (`Sandbox`) | Subprocess sandbox fixture for recovery drills |
 | `tests/unit/function-harness.test.mjs` | `@coderank/runner/function-harness` | Function problem code generation unit tests |
 | `tests/unit/runner.test.mjs` | `@coderank/runner` (`Executor`, `executionBudget`) | Executor workspace, budget, and test case unit tests |
-| `tests/unit/sandbox.test.mjs` | `@coderank/runner/sandbox` (`Sandbox`, `jobLifetime`), `@coderank/runner/docker` (`dockerCommand`) | Sandbox isolation, lifetime, and warm daemon tests |
+| `tests/unit/sandbox.test.mjs` | `@coderank/runner/sandbox` (`Sandbox`, `jobLifetime`), `@coderank/runner/docker` (`dockerCommand`) | Sandbox isolation, lifetime, and retired warm-config tests |
 | `tests/unit/sandbox-recovery.test.mjs` | `@coderank/runner/reaper`, `@coderank/runner/sandbox` | Metadata validation, expiry checks, and reaper unit tests |
 | `tests/unit/static-runners.test.mjs` | `@coderank/runner/languages` | Mocked static language runner tests |
 | `tests/unit/worker-dispatch.test.mjs` | `@coderank/runner/languages` | Language capability registry and runner dependency boundary check |
@@ -90,7 +90,7 @@ Language-specific implementations are grouped under `packages/runner/src/languag
 
 - Complete resource isolation (`--network none`, `--read-only`, `--cap-drop ALL`, `--security-opt no-new-privileges:true`, `--pids-limit 64`, `--memory 512m`, `--memory-swap 512m`, `--cpus 1`, UID 1000).
 - Ephemeral container cleanup via `finally { await sandbox.destroy(); }` and background reaping via `startSandboxReaper`.
-- Warm daemon execution and fallback (`isWarm` check, fallback on `No such container`).
+- Cold per-job execution; enabled legacy warm configuration is rejected explicitly. See the #99 retirement candidate and pending real Docker acceptance.
 - Five-second execution caps, compiler budgets (10s), and bounded container lifetime (`sleep <lifetime>`).
 - Package boundary isolation: runner does not import from core, database, or applications.
 - API maintains zero runner and Docker dependencies.

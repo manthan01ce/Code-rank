@@ -182,13 +182,14 @@ Verify platform operational status using the health endpoints:
 
 ## 9. Alternative Runtime Modes
 
-### Warm Daemons Mode (Local Development Only)
-For faster local interactive development, long-running language containers can be started via the warm overlay:
-```sh
-docker compose --env-file .env -f infrastructure/docker-compose.yml -f infrastructure/compose.warm-daemons.yaml --profile local-database up -d
-```
-And set `USE_WARM_DAEMONS=true` in the worker process environment.
-> **Security Warning**: Warm daemons reuse long-running containers per language (`coderank-<lang>-daemon`) for lower latency. They **do not** provide per-job filesystem or process isolation; do not use warm daemons for untrusted multi-tenant execution.
+### Warm daemon retirement candidate
+
+Shared warm execution is being retired in #99; Docker acceptance is still blocked.
+Before adopting that change, drain old workers, remove `USE_WARM_DAEMONS` from their
+environment and remove the old warm overlay from startup configuration. An enabled
+legacy flag now fails explicitly instead of silently selecting another execution mode.
+Use the existing cold per-job sandbox topology. See the [consumer analysis, operator
+migration and required Docker evidence](architecture/warm-daemon-disposition.md).
 
 ### Containerized application mode
 
