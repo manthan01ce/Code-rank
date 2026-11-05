@@ -47,6 +47,9 @@ test('apps, packages, scripts and tests resolve public entries without retired f
       if (/^@coderank\/(?:core|database)(?:\/|$)/.test(specifier)) {
         assert.ok(existsSync(require.resolve(specifier)), `${relative(root, file)}: unresolved ${specifier}`);
       }
+      if (/^(?:apps|scripts)\//.test(relative(root, file))) {
+        assert.doesNotMatch(target, /packages\/core\/src\/modules\//, `${file}: consume the public feature entry`);
+      }
       if (file.includes('/src/')) {
         assert.doesNotMatch(target, /(?:packages\/database\/(?:scripts\/run-migration|src\/migrations)\.js|@coderank\/database\/migrations)$/, `${file}: runtime must not import migration entry`);
       }

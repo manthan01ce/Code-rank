@@ -12,7 +12,7 @@ test('local audit keeps actual merged ownership gaps visible and rejects omitted
   for (const id of ['shared-client-styles','sandbox-warm','test-lanes-batch']) assert.ok(errors.some(e=>e.startsWith(id+':')),id);
   const core = matrix.rows.find(row => row.id === 'core-facades');
   assert.equal(core.structuralState, 'implemented');
-  assert.equal(core.functionalAcceptance, 'unverified');
+  assert.equal(core.functionalAcceptance, 'verified-local-regression');
   const runner = matrix.rows.find(row => row.id === 'runner-grouping');
   assert.equal(runner.structuralState, 'implemented');
   assert.equal(runner.functionalAcceptance, 'unverified');
