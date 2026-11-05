@@ -1,0 +1,47 @@
+[
+  {
+    "original": "database/init.sql",
+    "destination": "packages/database/bootstrap/init.sql",
+    "sha256": "f5572042949473472035eb9489689cac7c5acd0537cc244bdaf937089acd13f9"
+  },
+  {
+    "original": "database/migrations/000_baseline.sql",
+    "destination": "packages/database/migrations/000_baseline.sql",
+    "sha256": "1f86d97708422cdf734c3d451e0f778e0096070501dac102ffec8353ee62e204"
+  },
+  {
+    "original": "database/migrations/001_add_performance_indexes.sql",
+    "destination": "packages/database/migrations/001_add_performance_indexes.sql",
+    "sha256": "933bb28909503dcdc4757bdfb48ffd71de028bb02c90efb74b67f038e56ca66b"
+  },
+  {
+    "original": "database/migrations/002_submission_attempts.sql",
+    "destination": "packages/database/migrations/002_submission_attempts.sql",
+    "sha256": "a745d76ad672e31d820be3433a1b05bb763f236d48379efddda1928fc6a784ff"
+  },
+  {
+    "original": "database/migrations/003_admin_transactions.sql",
+    "destination": "packages/database/migrations/003_admin_transactions.sql",
+    "sha256": "a5ea50806058fba51305babac9a228ec85b0c4f007e18b18f40bfc2eddbb7359"
+  },
+  {
+    "original": "database/migrations/004_user_management.sql",
+    "destination": "packages/database/migrations/004_user_management.sql",
+    "sha256": "dacec7d60838604067a2fc3610a6dcd7625cfd7bd80c734f215aff8c5cdfcd16"
+  },
+  {
+    "original": "database/migrations/005_course_department_management.sql",
+    "destination": "packages/database/migrations/005_course_department_management.sql",
+    "sha256": "e5598ee011e3b4131fb19442e97e477281cf290f19d81a0d109f59373122ee2c"
+  },
+  {
+    "original": "database/migrations/006_authorized_submission_reset.sql",
+    "destination": "packages/database/migrations/006_authorized_submission_reset.sql",
+    "sha256": "44a25034144095c56b0fab5c858911812e1472de0b0c8810159494e486b28ae5"
+  },
+  {
+    "original": "database/migrations/007_retention_and_report_indexes.sql",
+    "destination": "packages/database/migrations/007_retention_and_report_indexes.sql",
+    "sha256": "049ae70c7f29492f94489d832afa66649147db2027c7d13a473db317e9b54c31"
+  }
+]

@@ -1,0 +1,212 @@
+{
+  "baseline": "84d273e",
+  "note": "Historical pre-move consumer inventory; references below describe the original tree, not supported current paths.",
+  "consumers": [
+    {
+      "path": "LOCAL_DB_MIGRATION_GUIDE.md",
+      "references": [
+        "database/migrations/000_baseline.sql",
+        "database/migrations/"
+      ]
+    },
+    {
+      "path": "README.md",
+      "references": [
+        "database/init.sql"
+      ]
+    },
+    {
+      "path": "database/seed.js",
+      "references": [
+        "database/init.sql"
+      ]
+    },
+    {
+      "path": "docs/DEPLOYMENT_SUCCESS.md",
+      "references": [
+        "database/migrations/001_add_performance_indexes.sql",
+        "database/migrations/"
+      ]
+    },
+    {
+      "path": "docs/PERFORMANCE_OPTIMIZATIONS.md",
+      "references": [
+        "database/migrations/001_add_performance_indexes.sql",
+        "database/migrations/README.md",
+        "database/migrations/"
+      ]
+    },
+    {
+      "path": "docs/SCALABILITY_STATUS_REPORT.md",
+      "references": [
+        "database/migrations/001_add_performance_indexes.sql",
+        "database/migrations/"
+      ]
+    },
+    {
+      "path": "docs/getting-started.md",
+      "references": [
+        "database/init.sql"
+      ]
+    },
+    {
+      "path": "infrastructure/docker-compose.yml",
+      "references": [
+        "database/init.sql"
+      ]
+    },
+    {
+      "path": "package.json",
+      "references": [
+        "database/preflight.js",
+        "database/run-migration.js",
+        "database/seed.js",
+        "database/update-readiness-manifest.js"
+      ]
+    },
+    {
+      "path": "packages/core/src/db/migrate.js",
+      "references": [
+        "database/run-migration.js"
+      ]
+    },
+    {
+      "path": "scripts/auth-performance-stack.mjs",
+      "references": [
+        "database/migrations/"
+      ]
+    },
+    {
+      "path": "scripts/authenticated-stack.mjs",
+      "references": [
+        "database/migrations/"
+      ]
+    },
+    {
+      "path": "scripts/ci/container-topology.mjs",
+      "references": [
+        "database/run-migration.js"
+      ]
+    },
+    {
+      "path": "scripts/lib/database-ops.mjs",
+      "references": [
+        "database/migrations/"
+      ]
+    },
+    {
+      "path": "tests/admin-transactions.test.mjs",
+      "references": [
+        "database/migrations/"
+      ]
+    },
+    {
+      "path": "tests/api-courses-runtime.test.mjs",
+      "references": [
+        "database/migrations/"
+      ]
+    },
+    {
+      "path": "tests/api-execution-runtime.test.mjs",
+      "references": [
+        "database/migrations/"
+      ]
+    },
+    {
+      "path": "tests/api-operations-runtime.test.mjs",
+      "references": [
+        "database/migrations/"
+      ]
+    },
+    {
+      "path": "tests/api-practicals-runtime.test.mjs",
+      "references": [
+        "database/migrations/"
+      ]
+    },
+    {
+      "path": "tests/api-submissions-runtime.test.mjs",
+      "references": [
+        "database/migrations/"
+      ]
+    },
+    {
+      "path": "tests/course-management-sql.test.mjs",
+      "references": [
+        "database/migrations/"
+      ]
+    },
+    {
+      "path": "tests/course-report.test.mjs",
+      "references": [
+        "database/migrations/"
+      ]
+    },
+    {
+      "path": "tests/integration/neon-upgrade.test.mjs",
+      "references": [
+        "database/migrations/"
+      ]
+    },
+    {
+      "path": "tests/integration/neon.test.mjs",
+      "references": [
+        "database/migrations/"
+      ]
+    },
+    {
+      "path": "tests/integration/postgres.test.mjs",
+      "references": [
+        "database/migrations/"
+      ]
+    },
+    {
+      "path": "tests/migration-errors.test.mjs",
+      "references": [
+        "database/migrations/"
+      ]
+    },
+    {
+      "path": "tests/migrations.test.mjs",
+      "references": [
+        "database/migrations/"
+      ]
+    },
+    {
+      "path": "tests/profile-privacy.test.mjs",
+      "references": [
+        "database/migrations/"
+      ]
+    },
+    {
+      "path": "tests/schema-readiness.test.mjs",
+      "references": [
+        "database/migrations/"
+      ]
+    },
+    {
+      "path": "tests/seed-safety.test.mjs",
+      "references": [
+        "database/seed.js"
+      ]
+    },
+    {
+      "path": "tests/submission-history.test.mjs",
+      "references": [
+        "database/migrations/"
+      ]
+    },
+    {
+      "path": "tests/submission-reset.test.mjs",
+      "references": [
+        "database/migrations/"
+      ]
+    },
+    {
+      "path": "tests/user-management-sql.test.mjs",
+      "references": [
+        "database/migrations/"
+      ]
+    }
+  ]
+}

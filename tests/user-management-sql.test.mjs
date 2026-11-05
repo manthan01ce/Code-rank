@@ -19,7 +19,7 @@ test("user transactions preserve coordinator consistency, audit atomicity and pr
             );
           }),
       },
-      new URL("../database/migrations/", import.meta.url),
+      new URL("../packages/database/migrations/", import.meta.url),
     );
     await db.exec(
       "INSERT INTO users(name,email,password,role) VALUES('Admin','a@test','x','admin'),('Faculty','f@test','x','faculty'),('Other','o@test','x','faculty'); INSERT INTO courses(course_code,name,semester) VALUES('CS','CS',1); SELECT coderank_replace_mapping(1,1,ARRAY[2,3],2)",

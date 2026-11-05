@@ -26,7 +26,8 @@ test('all baseline endpoints belong to API and frontend source/config cannot imp
   assert.equal(inventory.endpoints.length, 47);
   for (const endpoint of inventory.endpoints) assert.ok(endpoint.file.startsWith('apps/api/src/modules/'), endpoint.url);
   for (const path of ['apps/web/server.js', 'apps/web/cluster.js', 'infrastructure/vercel.json']) assert.equal(existsSync(path), false, path);
-  assert.deepEqual(JSON.parse(readFileSync('vercel.json', 'utf8')), { $schema: 'https://openapi.vercel.sh/vercel.json', git: { deploymentEnabled: false } }, 'retired Vercel integration must not retain build, routing or deployment ownership');
+  assert.deepEqual(JSON.parse(readFileSync('vercel.json', 'utf8')), { $schema: 'https://openapi.vercel.sh/vercel.json', git: { deploymentEnabled: { master: true, '*': false } } }, 'root Vercel policy must enable only master without taking API routing ownership');
+  assert.deepEqual(JSON.parse(readFileSync('apps/web/vercel.json', 'utf8')), { $schema: 'https://openapi.vercel.sh/vercel.json', framework: 'nextjs', buildCommand: 'npm run build', git: { deploymentEnabled: { master: true, '*': false } } }, 'workspace deployment stays standard Next.js without backend routes or secrets');
   const files = walk('apps/web').filter(file => /\.(?:m?js|tsx?)$/.test(file));
   for (const file of files) {
     for (const specifier of imports(file)) {

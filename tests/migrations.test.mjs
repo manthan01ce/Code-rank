@@ -2,7 +2,7 @@ import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { PGlite } from '@electric-sql/pglite';
 import { migrate, loadMigrations, LEDGER_SQL } from '../packages/database/src/migrations.js';
-const directory = new URL('../database/migrations/', import.meta.url);
+const directory = new URL('../packages/database/migrations/', import.meta.url);
 test('migrations and grading are transactional, idempotent and preserve best grades', async () => {
  const db = new PGlite();
  const adapter = { query: async (q,p) => (await db.query(q,p)).rows, apply: m => db.transaction(async tx => {

@@ -10,7 +10,7 @@ import {
 
 test("bundled readiness manifest matches every versioned migration checksum", async () => {
   const migrations = await loadMigrations(
-    new URL("../database/migrations/", import.meta.url),
+    new URL("../packages/database/migrations/", import.meta.url),
   );
   assert.deepEqual(
     required,

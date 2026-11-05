@@ -5,7 +5,7 @@ import { fileURLToPath } from 'node:url';
 
 for (const args of [[], ['--force'], ['--allow-destructive-reset', '--unexpected']]) {
   test('seed refuses unacknowledged or ambiguous destructive reset: ' + JSON.stringify(args), () => {
-    const script = fileURLToPath(new URL('../database/seed.js', import.meta.url));
+    const script = fileURLToPath(new URL('../packages/database/seeds/seed.js', import.meta.url));
     const result = spawnSync(process.execPath, [script, ...args], {
       env: { ...process.env, DATABASE_URL: 'postgresql://invalid:invalid@127.0.0.1:1/disposable' },
       encoding: 'utf8', timeout: 5000,

@@ -68,7 +68,7 @@ test("isolated Neon schema: migrations, concurrent grades and transactional admi
               throw error;
             }),
       },
-      new URL("../../database/migrations/", import.meta.url),
+      new URL("../../packages/database/migrations/", import.meta.url),
     );
     await query(
       "INSERT INTO users(name,email,password,role) VALUES('Admin','a@test','x','admin'),('Faculty','f@test','x','faculty'),('Student','s@test','x','student');",
@@ -194,7 +194,7 @@ test("isolated Neon schema: migrations, concurrent grades and transactional admi
             throw Error("must not reapply");
           },
         },
-        new URL("../../database/migrations/", import.meta.url),
+        new URL("../../packages/database/migrations/", import.meta.url),
       ),
       [],
     );

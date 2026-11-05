@@ -1,7 +1,8 @@
+import { migrationDirectory } from './assets.js';
 import { createHash } from 'node:crypto';
 import { readdir, readFile } from 'node:fs/promises';
 
-export async function loadMigrations(directory) {
+export async function loadMigrations(directory = migrationDirectory) {
   const files = (await readdir(directory)).filter(name => /^\d+.*\.sql$/.test(name)).sort();
   return Promise.all(files.map(async name => {
     const source = await readFile(new URL(name, directory), 'utf8');

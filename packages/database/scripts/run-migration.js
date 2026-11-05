@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 import '@coderank/core/config/env';
-import sql, {closeDatabase} from '../packages/database/src/client.js';
-import { migrate } from '../packages/database/src/migrations.js';
+import sql, {closeDatabase} from '../src/client.js';
+import { migrate } from '../src/migrations.js';
 
 if (!process.env.DATABASE_URL || /YOUR_PASSWORD|your-database-id/.test(process.env.DATABASE_URL)) {
   throw new Error('Configure a real DATABASE_URL before running migrations');
@@ -15,7 +15,7 @@ const adapter = {
   ]),
 };
 try {
-  const applied = await migrate(adapter, new URL('./migrations/', import.meta.url));
+  const applied = await migrate(adapter, new URL('../migrations/', import.meta.url));
   console.log(applied.length ? `Applied: ${applied.join(', ')}` : 'Database migrations are current');
 } catch (error) {
   console.error('Migration failed; its transaction was rolled back:', error.message);

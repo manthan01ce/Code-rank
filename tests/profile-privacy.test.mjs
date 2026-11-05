@@ -35,7 +35,7 @@ test("profile history is bounded and excludes source/secret grading fields; hand
             );
           }),
       },
-      new URL("../database/migrations/", import.meta.url),
+      new URL("../packages/database/migrations/", import.meta.url),
     );
     await db.exec(
       "INSERT INTO users(name,email,password,role) VALUES('Wrong','studentX1@test','secret','student'),('Student','student_1@test','secret','student'); INSERT INTO courses(course_code,name,semester) VALUES('CS','CS',1); INSERT INTO practicals(faculty_id,course_id,title) SELECT 1,1,'P'||n FROM generate_series(1,150) n; INSERT INTO practical_submissions(student_id,practical_id,code,language,status) SELECT 2,id,convert_to('private-source','UTF8'),'python','Accepted' FROM practicals",

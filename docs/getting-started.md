@@ -37,7 +37,7 @@ Review and adjust variables in `.env`:
   - For Neon Serverless Postgres:
     ```env
     DATABASE_DRIVER=neon
-    DATABASE_URL=postgresql://<user>:<password>@<endpoint>.neon.tech/neondb?sslmode=require&pgbouncer=true
+    DATABASE_URL=postgresql://USER:PASSWORD@HOST/DATABASE?sslmode=require
     ```
 Launcher precedence for PORT, REALTIME_URL, ALLOWED_ORIGIN, API_PORT, API_HOST, INTERNAL_API_URL and public web replica/port settings is: existing process environment → apps/web/.env.local → apps/web/.env → root .env.local → root .env → defaults. A shared Node bridge resolves these settings before either shell launcher applies defaults. It parses values as data, never sources/evaluates .env as shell code, and exports only these launcher settings; unrelated app-local configuration keeps its normal runtime-loading behavior. The canonical infrastructure wrappers use root .env explicitly.
 
@@ -80,13 +80,13 @@ docker compose --env-file .env -f infrastructure/docker-compose.yml --profile lo
 ```
 
 ### Initial Data & Schema
-- **Fresh Volumes**: On the first start of PostgreSQL with an empty data directory, `database/init.sql` automatically populates the schema, 3 courses, 10 practicals, and 91 pre-seeded user accounts.
+- **Fresh Volumes**: On the first start of PostgreSQL with an empty data directory, `packages/database/bootstrap/init.sql` automatically populates the schema, 3 courses, 10 practicals, and 91 pre-seeded user accounts.
 - **Ledger-Managed Migrations**: For existing databases or after schema changes, run:
   ```sh
   npm run db:migrate
   ```
   *(Readiness checks and health endpoints never run migrations automatically.)*
-- **Destructive fixture restore — disposable development databases only**: `db:seed` executes `database/init.sql`, which drops/recreates application tables and the migration ledger. It is NOT an incremental seed or upgrade. Never run it against a lab/production database whose records must be retained. Take a backup and verify the target before any deliberate reset. The command refuses to proceed without the explicit acknowledgement:
+- **Destructive fixture restore — disposable development databases only**: `db:seed` executes `packages/database/bootstrap/init.sql`, which drops/recreates application tables and the migration ledger. It is NOT an incremental seed or upgrade. Never run it against a lab/production database whose records must be retained. Take a backup and verify the target before any deliberate reset. The command refuses to proceed without the explicit acknowledgement:
   ```sh
   npm run db:seed -- --allow-destructive-reset
   ```

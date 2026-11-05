@@ -9,7 +9,6 @@ await import('@coderank/core/config/env');
 const { default: pg } = await import('pg');
 import fs from 'node:fs';
 import { fileURLToPath } from 'node:url';
-import { resolve } from 'node:path';
 
 const url = process.env.DATABASE_URL;
 if (!url || /placeholder/.test(url)) {
@@ -17,17 +16,16 @@ if (!url || /placeholder/.test(url)) {
   process.exit(1);
 }
 
-const root = fileURLToPath(new URL('../', import.meta.url));
-const sqlPath = resolve(root, 'database/init.sql');
+const sqlPath = fileURLToPath(new URL('../bootstrap/init.sql', import.meta.url));
 
 if (!fs.existsSync(sqlPath)) {
-  console.error('ERROR: database/init.sql not found at', sqlPath);
+  console.error('ERROR: packages/database/bootstrap/init.sql not found at', sqlPath);
   process.exit(1);
 }
 
 const sql = fs.readFileSync(sqlPath, 'utf8');
 
-console.warn('DESTRUCTIVE RESET: replacing database contents from database/init.sql...');
+console.warn('DESTRUCTIVE RESET: replacing database contents from packages/database/bootstrap/init.sql...');
 const client = new pg.Client({ connectionString: url });
 
 try {

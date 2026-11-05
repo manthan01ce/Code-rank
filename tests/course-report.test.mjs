@@ -25,7 +25,7 @@ test("marks matrix bounds both dimensions, ignores malformed semesters and scope
             );
           }),
       },
-      new URL("../database/migrations/", import.meta.url),
+      new URL("../packages/database/migrations/", import.meta.url),
     );
     await db.exec(
       "INSERT INTO users(name,email,password,role) VALUES('Faculty','f@test','x','faculty'); INSERT INTO courses(course_code,name,semester) VALUES('CS','CS',1); INSERT INTO course_faculty VALUES(1,1,true)",

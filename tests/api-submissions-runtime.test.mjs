@@ -18,7 +18,7 @@ await migrate(
         await tx.query('INSERT INTO coderank_migrations(name,checksum) VALUES($1,$2)', [m.name, m.checksum]);
       }),
   },
-  new URL('../database/migrations/', import.meta.url)
+  new URL('../packages/database/migrations/', import.meta.url)
 );
 
 await db.exec(`
