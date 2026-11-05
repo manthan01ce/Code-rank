@@ -35,7 +35,7 @@ export async function discoverLanes(root = repositoryRoot) {
 }
 export async function filesFor(mode, root = repositoryRoot) {
   const categories = await discoverLanes(root);
-  // Explicit candidate command does not retire quarantine or count as Docker certification.
+  // Explicit developer command runs batch execution directly without full Docker lane.
   if (mode === 'batch') {
     const files = [...categories.docker, ...(categories.quarantine || [])].filter(file => file === 'tests/docker/batch-execution.test.js');
     if (files.length !== 1) throw Error('Missing batch-execution candidate');

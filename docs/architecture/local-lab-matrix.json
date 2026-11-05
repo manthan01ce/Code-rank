@@ -267,7 +267,7 @@
     {
       "id": "test-lanes-batch",
       "issue": 79,
-      "structuralState": "gap",
+      "structuralState": "implemented",
       "requirement": "Bidirectional discovery, active job lifecycle and restored real batch lifecycle in Docker lane",
       "paths": [
         "tests/lane-manifest.json",
@@ -280,8 +280,8 @@
         "tests/unit/test-discovery.test.mjs",
         "tests/docker/batch-execution.test.js"
       ],
-      "finding": "Batch candidate is still quarantined in merged master. No real Docker pass or quarantine retirement is recorded; strict certification must reject this state.",
-      "functionalAcceptance": "unverified"
+      "finding": "Real batch execution verified against Docker daemon with canonical runner image; tests/docker/batch-execution.test.js promoted from quarantine to active docker lane; duplicate candidate CI step retired; strict certification rejects missing evidence and accepts complete manifest.",
+      "functionalAcceptance": "verified-local-regression"
     },
     {
       "id": "scripts-assets-docs",

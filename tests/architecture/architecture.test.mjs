@@ -368,8 +368,8 @@ test('unit test discovery includes both .test.mjs and .test.js files and respect
   const js  = config.files.filter(f => f.endsWith('.test.js'));
   assert.ok(mjs.length > 0, 'unit lane must discover at least one .test.mjs file');
   assert.ok(js.length > 0,  'unit lane must discover at least one .test.js file');
-  // The quarantined Docker test must not appear in the unit lane
-  assert.ok(!config.files.includes('tests/docker/batch-execution.test.js'), 'batch-execution.test.js must be quarantined from unit lane');
+  // The Docker test must not appear in the unit lane
+  assert.ok(!config.files.includes('tests/docker/batch-execution.test.js'), 'batch-execution.test.js must not appear in unit lane');
   // The job-lifecycle test must appear in the unit lane
   assert.ok(config.files.includes('tests/unit/job-lifecycle.test.js'), 'job-lifecycle.test.js must be in unit lane');
   // No fixture or non-test helper scripts should appear

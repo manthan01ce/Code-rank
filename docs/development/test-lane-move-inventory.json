@@ -534,7 +534,7 @@
       "destinations": [
         {
           "path": "tests/docker/batch-execution.test.js",
-          "lane": "quarantine",
+          "lane": "docker",
           "sha256": "8918275344161a6163886fa6ce723f7f876f96802b4346858e35d0da864a4d3a",
           "assertionScope": [
             "'real batch framing/marks survives an ordinary case error and continues'",
@@ -544,7 +544,7 @@
           ]
         }
       ],
-      "status": "Reimplemented; quarantine retained pending real Docker pass"
+      "status": "Restored to active Docker lane after real container verification"
     },
     {
       "before": "tests/browser-socket-auth.test.mjs",

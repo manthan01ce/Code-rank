@@ -63,12 +63,6 @@ jobs:
       - name: Build base execution container
         run: docker build -t coderank-base:latest -f infrastructure/docker/runner/Dockerfile .
 
-      # Candidate validation is explicit; certification still rejects quarantine.
-      # Retire this separate step once batch passes and joins the Docker manifest lane.
-      - name: Validate real batch-execution candidate (CR-ARCH-24)
-        run: npm run test:batch
-        timeout-minutes: 5
-
       - name: Run Docker sandbox isolation tests
         run: npm run test:docker
         timeout-minutes: 5

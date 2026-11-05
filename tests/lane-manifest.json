@@ -108,7 +108,8 @@
     ],
     "docker": [
       "tests/docker/sandbox.test.mjs",
-      "tests/docker/warm-retirement.test.mjs"
+      "tests/docker/warm-retirement.test.mjs",
+      "tests/docker/batch-execution.test.js"
     ],
     "neon": [
       "tests/integration/neon-upgrade.test.mjs",
@@ -123,11 +124,7 @@
     "performance": [
       "tests/browser/auth-performance.spec.mjs"
     ],
-    "quarantine": [
-      "tests/docker/batch-execution.test.js"
-    ]
+    "quarantine": []
   },
-  "quarantine": {
-    "tests/docker/batch-execution.test.js": "CR-ARCH-24 / #79: modernized real-Sandbox candidate; retain quarantine until real Docker validation passes. Docker unavailable in implementation workspace."
-  }
+  "quarantine": {}
 }

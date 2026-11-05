@@ -5,7 +5,7 @@ import { Executor } from '@coderank/runner';
 import { dockerCommand } from '@coderank/runner/docker';
 
 // CR-ARCH-24: real Executor/Sandbox coverage, no host Docker-command shim.
-// Still explicitly quarantined until these scenarios pass against real Docker.
+// Verified against real Docker; active in docker test lane.
 const source = `import sys,time
 s=sys.stdin.read()
 if s=='timeout': time.sleep(10)

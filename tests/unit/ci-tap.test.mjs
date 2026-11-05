@@ -38,7 +38,7 @@ test('strict test configurations cannot recurse into fixtures or forward caller 
  assert.ok(unit.args.includes('--test-timeout=30000'));
  const integration=await testConfiguration('integration');assert.equal(integration.files.length,6);
  assert.ok(!integration.files.some(file=>file.includes('neon')));
- assert.deepEqual((await testConfiguration('docker')).files,['tests/docker/sandbox.test.mjs','tests/docker/warm-retirement.test.mjs']);
+ assert.deepEqual((await testConfiguration('docker')).files,['tests/docker/sandbox.test.mjs','tests/docker/warm-retirement.test.mjs','tests/docker/batch-execution.test.js']);
  assert.deepEqual((await testConfiguration('batch')).files,['tests/docker/batch-execution.test.js']);
  await assert.rejects(testConfiguration('--test-only'));
 });
