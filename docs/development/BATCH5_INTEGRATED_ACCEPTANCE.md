@@ -56,6 +56,10 @@ This table covers every one of the existing 18 concrete ownership rows. It suppl
 
 Use the owning commands documented in LOCAL_LAB_CERTIFICATION.md: `test:integration`, `test:docker`, `test:stack`, `test:authenticated`, container-topology and `deployment:check`, plus the missing drills above. `test:warm-disposition` records actual Compose/image identities and the active Docker lane. A Docker-free environment cannot replace those checks with mocks. Preserve synthetic/disposable targets and never target live college/production data. No expensive workflow labels or dispatches were used.
 
+## Follow-up
+
+[The strict follow-up](STRICT_VERIFICATION_2026-11-06.md) fixes unavailable process-memory diagnostics and records a passing 401-test local unit/architecture gate. Real integrated service acceptance remains blocked. The command results below are the historical #110 attempt, not the follow-up results.
+
 ## Fresh verification
 
 | Check | Exit / result | Limit |

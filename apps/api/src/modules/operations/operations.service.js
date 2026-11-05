@@ -4,6 +4,7 @@ import sql from '@coderank/database';
 import { checkDatabaseReadiness } from '@coderank/database/readiness';
 import { withTimeout } from '@coderank/core/shared/timeout';
 import { SubmissionService } from '@coderank/core/submissions';
+import { readProcessMemory } from './process-memory.js';
 
 // In-memory cache for health checks
 let healthCache = null;
@@ -127,7 +128,7 @@ export class OperationsService {
         p95: percentile(obsState.durations, 0.95),
       },
       process: {
-        memory: process.memoryUsage(),
+        memory: readProcessMemory(),
         cpuUserMicrosSinceLastRead: cpu.user,
         cpuSystemMicrosSinceLastRead: cpu.system,
         eventLoopDelayMs: {
@@ -247,7 +248,7 @@ export class OperationsService {
           systemInfo: {
             nodeVersion: process.version,
             uptimeSeconds: Math.floor(process.uptime()),
-            memoryUsage: process.memoryUsage(),
+            memoryUsage: readProcessMemory(),
             cpuCount: os.cpus().length,
             platform: os.platform(),
             arch: os.arch(),

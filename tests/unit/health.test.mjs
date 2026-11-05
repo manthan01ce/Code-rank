@@ -1,6 +1,17 @@
 import test, { mock } from "node:test";
 import assert from "node:assert/strict";
+import { readProcessMemory } from "../../apps/api/src/modules/operations/process-memory.js";
 import { registerHooks } from "node:module";
+test('memory diagnostics preserve actual measurements and explicitly mark unavailable OS probes', () => {
+  const measured = { rss: 123, heapTotal: 90, heapUsed: 60, external: 12, arrayBuffers: 3 };
+  assert.equal(readProcessMemory(() => measured), measured);
+  const unavailable = readProcessMemory(() => { throw Object.assign(new Error('private OS detail'), { code: 'ENOENT' }); });
+  assert.deepEqual(unavailable, {
+    rss: null, heapTotal: null, heapUsed: null, external: null, arrayBuffers: null,
+    available: false, error: 'PROCESS_MEMORY_UNAVAILABLE',
+  });
+  assert.equal(JSON.stringify(unavailable).includes('private OS detail'), false);
+});
 import required from "../../packages/database/src/required-migrations.json" with { type: "json" };
 process.env.JWT_SECRET = "health-api-test-secret";
 registerHooks({
