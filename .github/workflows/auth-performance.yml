@@ -48,6 +48,8 @@ jobs:
       - name: Use the identical measurement harness for both revisions
         run: |
           cp measurement/scripts/auth-performance-stack.mjs subject/scripts/auth-performance-stack.mjs
+          cp measurement/scripts/ci/test-lanes.mjs subject/scripts/ci/test-lanes.mjs
+          cp measurement/tests/lane-manifest.json subject/tests/lane-manifest.json
           cp measurement/scripts/ci/install-browser.mjs subject/scripts/ci/install-browser.mjs
           cp measurement/tests/browser/auth-performance.spec.mjs subject/tests/browser/auth-performance.spec.mjs
           cp measurement/tests/browser/playwright.config.mjs subject/tests/browser/playwright.config.mjs

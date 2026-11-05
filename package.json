@@ -26,11 +26,11 @@
     "test": "node scripts/ci/run-tests.mjs unit",
     "db:migrate": "node packages/database/scripts/run-migration.js",
     "db:seed": "node packages/database/seeds/seed.js",
-    "test:redis": "node --test tests/integration/queue.test.mjs tests/integration/realtime.test.mjs tests/integration/worker-readiness.test.mjs tests/integration/worker-recovery.test.mjs",
-    "test:postgres": "node --test tests/integration/postgres.test.mjs",
+    "test:redis": "node scripts/ci/run-selected-tests.mjs redis",
+    "test:postgres": "node scripts/ci/run-selected-tests.mjs postgres",
     "test:docker": "node scripts/ci/run-tests.mjs docker",
     "db:preflight": "node packages/database/scripts/preflight.js",
-    "test:neon": "node --test tests/integration/neon.test.mjs tests/integration/neon-upgrade.test.mjs",
+    "test:neon": "node scripts/ci/run-selected-tests.mjs neon",
     "test:stack": "node scripts/stack-smoke.mjs",
     "deployment:check": "node scripts/check-deployment.mjs",
     "db:manifest": "node packages/database/scripts/update-readiness-manifest.js",
@@ -48,7 +48,8 @@
     "retention": "node scripts/retention.mjs",
     "web:production": "node scripts/dev/web-runtime.mjs --production",
     "test:faculty-review": "playwright test --config tests/browser/faculty-review.config.mjs",
-    "db:inspect": "node packages/database/scripts/inspect-schema.js"
+    "db:inspect": "node packages/database/scripts/inspect-schema.js",
+    "test:batch": "node scripts/ci/run-tests.mjs batch"
   },
   "devDependencies": {
     "@electric-sql/pglite": "0.5.10",

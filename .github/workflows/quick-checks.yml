@@ -89,4 +89,4 @@ jobs:
           node-version: 24
       # Built-in Node modules only; no DB/Docker or secrets are used by these tests.
       - name: Verify CMD environment handoff and destructive seed guard
-        run: node --test tests/lab-launcher-env.test.mjs tests/seed-safety.test.mjs
+        run: node --test tests/unit/lab-launcher-env.test.mjs tests/unit/seed-safety.test.mjs

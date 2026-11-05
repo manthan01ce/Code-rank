@@ -1,240 +1,45 @@
-# CodeRank Test Inventory
+# CodeRank test inventory (#79 / CR-ARCH-24)
 
-**Issue:** CR-ARCH-23
-**Last updated:** 2026-11-03
-**Inventory source revision:** master `3d4ce2f97e1ece2686b25d4ce02587c7e0889378` plus the tooling lint regression file in this correction. Counts describe files, not assertions.
+The sole file-membership authority is tests/lane-manifest.json. scripts/ci/test-lanes.mjs reconciles it with recursively discovered .test.js/.test.mjs and .spec.js/.spec.mjs files in both directions. Missing files, orphan tests, duplicate membership, empty active categories and mismatched quarantine reasons fail before execution. File counts below describe this snapshot, not fixed pass thresholds. Add new files to the manifest deliberately.
 
-This document records the intended test file inventory, suite routing, tools, quarantine list, and the before/after change summary introduced by CR-ARCH-23. It is the authoritative reference for understanding which tests belong to which CI lane and why.
+| Category | Files |
+| --- | --- |
+| unit | 85 |
+| architecture | 4 |
+| integration | 6 |
+| docker | 1 |
+| neon | 2 |
+| browser | 1 |
+| frontend | 1 |
+| performance | 1 |
+| quarantine | 1 |
 
----
+## Active lanes
 
-## 1. Test Suites and Lane Routing
+- npm test runs tests/unit plus tests/architecture. Existing job-lifecycle.test.js stays active; extensions are preserved.
+- npm run test:integration runs six explicit local PostgreSQL/Redis service files. The original Redis admission-contract scenarios now always register in queue-script-admission.test.mjs; missing Redis fails integration rather than silently omitting tests from the unit file.
+- npm run test:docker runs tests/docker/sandbox.test.mjs. Real Docker/runner image is required.
+- tests/browser stays in place: role-workflows is real authenticated browser coverage; faculty-review is the separate synthetic frontend lane; auth-performance remains opt-in. Playwright reads the same manifest. The performance harness copies the registry/module onto historical baselines and validates its selected browser files there, rather than requiring the baseline to adopt this directory tree.
+- test:redis and test:postgres select service subsets from the integration category; test:neon selects the explicitly opt-in isolated-schema Neon category. The selected-service launcher preserves their original process environment and does not execute them in unit discovery. No live Neon run was requested or performed.
 
-| Lane | npm script | Runner | Discovery |
-|---|---|---|---|
-| **unit** | `npm test` | `scripts/ci/run-tests.mjs unit` | All `tests/*.test.mjs` and `tests/*.test.js` except explicitly quarantined files |
-| **integration** | `npm run test:integration` | `scripts/ci/run-tests.mjs integration` | Explicit list: `queue`, `realtime`, `worker-readiness`, `worker-recovery`, `postgres` |
-| **docker** | `npm run test:docker` | `scripts/ci/run-tests.mjs docker` | Single file: `tests/integration/sandbox.test.mjs` |
-| **redis** | `npm run test:redis` | `node --test` (direct) | `queue`, `realtime`, `worker-readiness`, `worker-recovery` |
-| **postgres** | `npm run test:postgres` | `node --test` (direct) | `tests/integration/postgres.test.mjs` |
-| **neon** | `npm run test:neon` | `node --test` (direct) | `neon.test.mjs`, `neon-upgrade.test.mjs` |
-| **browser** | `npm run test:authenticated` | Playwright via `scripts/authenticated-stack.mjs` | `tests/browser/*.spec.mjs` |
-| **stack** | `npm run test:stack` | `scripts/stack-smoke.mjs` | Full web-to-worker round-trip (not node:test) |
+The strict Node runner records actual test:pass/test:fail file events in test-results/<lane>.files.json alongside <lane>.tap. TAP verification still rejects failed, skipped, cancelled, TODO, focused, empty-wrapper, truncated and forged-count evidence. Active gates require the executed set to match discovered files exactly; the reporter file is cleared before each run, so stale/missing evidence fails. Certification hashes both TAP and file reports and rejects pending quarantine, missing runtime/browser/faculty/capacity/recovery evidence or a wrong commit. Playwright certification reconciles actual spec-file results against the manifest and rejects empty suites, omitted specs, retries, skipped/expected-failure tests and report errors. Faculty frontend evidence is saved separately as faculty-review-results.json. CI summaries continue to use actual outcomes; no hard-coded passing rows/counts are added. Workflow triggers remain PR-only, expensive jobs remain opt-in and disabled by owner direction.
 
----
+## Before/after coverage reconciliation
 
-## 2. Unit Lane — Intended File Inventory
+See test-lane-move-inventory.json for every original file, original and destination paths, AST-extracted test declarations, source/destination lanes and before/after hashes. All 100 original files are mapped to 102 current files: one new discovery test and one split of the Redis admission contract. The batch reimplementation is the sole declared test-declaration replacement; every other original declaration is retained across its destinations. Imports, module mocks, file URLs, repository cwd calculations, fixtures, subprocess paths, Windows fast checks, browser configs and maintenance/profiling references moved together. No active test was removed, skipped or reclassified as quarantined. Architecture tests remain in the ordinary unit execution evidence. Fixtures are helpers, never discovered as tests.
 
-At the recorded source revision plus this correction, 71 root `.test.mjs` files plus `job-lifecycle.test.js` give 72 discovered unit test files. `batch-execution.test.js` is the one explicitly quarantined root test; it is not counted as executed. This file count is separate from the number of assertions reported by TAP.
+BullMQ stays pinned at 6.3.10 across direct consumers. A unit contract checks the worker/core/queue manifests, all lockfile installations and the installed script package for exact alignment. queue-script-contract and queue/atomic-admission coverage remain present, with no check-then-add replacement or dependency upgrade. No runtime execution or grading implementation changes.
 
-Discovery rule: `tests/` root directory, `*.test.mjs` OR `*.test.js`, excluding files in `UNIT_QUARANTINE` (defined in `scripts/ci/run-tests.mjs`).
+## Existing quarantine: NOT restored/certified yet
 
-### 2.1 `.test.mjs` files (71 files)
+The one existing quarantine is now tests/docker/batch-execution.test.js. Its host PATH/docker shim is removed. The real Executor/Sandbox candidate checks framed batch output/marks/metrics; runtime-error continuation; per-case timeout and fail-closed continuation after sandbox destruction; compile failure; malformed cases; bounded elapsed execution and real container cleanup. It uses disposable containers and no mocks. Run explicitly with `npm run test:batch` on a Docker-equipped test host. It uses the same strict TAP/file reporter and writes batch.tap/batch.files.json; this explicit candidate command does not count as the active Docker lane. The existing opt-in full-stack workflow includes a named candidate-validation step, without changing labels or triggers. Retire that separate step after a real pass and Docker-lane activation to avoid running the candidate twice.
 
-| File | What it covers |
-|---|---|
-| `tests/credential-pdf.test.mjs` | Browser PDF ownership and isolated synthetic document output |
-| `tests/practical-authoring.test.mjs` | Practical feature boundaries and HTTP client contracts |
-| `tests/queue-script-contract.test.mjs` | BullMQ internal script compatibility and Redis contract |
-| `tests/runtime-config.test.mjs` | Public export, actual loader precedence and import evaluation order |
-| `tests/tooling-lint.test.mjs` | Backend lint defect detection and frontend rule severity |
-| `tests/api-realtime-runtime.test.mjs` | Actual Socket.IO/gateway protocol and natural close with connected sockets |
-| `tests/api-auth-runtime.test.mjs` | Real auth direct/gateway HTTP errors, Redis outage and clean shutdown |
-| `tests/api-live-runtime.test.mjs` | Real API, production forwarding, ownership/error contracts and process shutdown |
-| `tests/active-actor.test.mjs` | JWT authentication middleware, actor resolution |
-| `tests/admin-api.test.mjs` | Admin HTTP route contracts |
-| `tests/admin-bootstrap.test.mjs` | Admin account initialization logic |
-| `tests/admin-transactions.test.mjs` | Admin database transaction helpers |
-| `tests/api-input-contracts.test.mjs` | Input validation for API routes |
-| `tests/api-route-contracts.test.mjs` | Route fixture parity check against `tests/fixtures/routes.json` |
-| `tests/architecture.test.mjs` | Route inventory validation, dependency boundaries, HTTP method checks, discovery coverage |
-| `tests/auth-resilience.test.mjs` | Auth retry and session resilience |
-| `tests/browser-socket-auth.test.mjs` | Browser socket auth helper contract |
-| `tests/bulk-users-api.test.mjs` | Bulk user import API contracts |
-| `tests/capacity.test.mjs` | Execution queue capacity gate |
-| `tests/certification.test.mjs` | CI certification artifact validation |
-| `tests/ci-summary.test.mjs` | Outcome-based CI summary and dynamic count reporting |
-| `tests/ci-tap.test.mjs` | TAP validator unit tests |
-| `tests/cluster-config.test.mjs` | Cluster/worker process config validation |
-| `tests/course-management-service.test.mjs` | Course management service logic |
-| `tests/course-management-sql.test.mjs` | Course management SQL queries |
-| `tests/course-report.test.mjs` | Course report generation |
-| `tests/database-client.test.mjs` | Database client connection/pool contract |
-| `tests/database-no-replay.test.mjs` | Database migration replay guard |
-| `tests/database-ops.test.mjs` | Database operations helper functions |
-| `tests/deployment-readiness.test.mjs` | Deployment readiness manifest checks |
-| `tests/execution-api.test.mjs` | Execution API helper contracts (enqueueExecution, practiceHandler) |
-| `tests/execution-security.test.mjs` | Execution payload validation and security guards |
-| `tests/extracted-read-services.test.mjs` | Read-only service extraction contracts |
-| `tests/faculty-mapping-authority.test.mjs` | Faculty-to-course mapping authority checks |
-| `tests/fetch-collection.test.mjs` | Fetch collection utility |
-| `tests/function-harness.test.mjs` | Function harness execution contracts |
-| `tests/grading.test.mjs` | Submission grading logic |
-| `tests/health.test.mjs` | Health endpoint logic |
-| `tests/job-wait.test.mjs` | Job polling wait utility |
-| `tests/lab-launcher-env.test.mjs` | Dotenv precedence, literal values, native launcher handoff and exit-code propagation |
-| `tests/load-result.test.mjs` | Load test result parsing |
-| `tests/migration-errors.test.mjs` | Migration error handling |
-| `tests/migrations.test.mjs` | Migration checksum and ordering |
-| `tests/password-session.test.mjs` | Password change and session rotation |
-| `tests/postgres-client.test.mjs` | PostgreSQL client contracts |
-| `tests/practical-navigation.test.mjs` | Practical page navigation helper |
-| `tests/profile-privacy.test.mjs` | Profile privacy and visibility rules |
-| `tests/progress-updates.test.mjs` | Progress update broadcasting |
-| `tests/rate-limit.test.mjs` | Rate limiter contracts |
-| `tests/realtime-membership.test.mjs` | Room membership authorization |
-| `tests/realtime-revocation.test.mjs` | Session revocation on token expiry |
-| `tests/realtime-session.test.mjs` | Session guard timer and revalidation logic |
-| `tests/realtime.test.mjs` | Realtime event handler unit contracts |
-| `tests/request-revocation.test.mjs` | In-flight request revocation |
-| `tests/retention.test.mjs` | Data retention utility |
-| `tests/runner.test.mjs` | Runner language dispatch |
-| `tests/sandbox-recovery.test.mjs` | Sandbox container recovery after crash |
-| `tests/sandbox.test.mjs` | Sandbox lifetime bounds and isolation flags using an injected Docker command adapter |
-| `tests/schema-readiness.test.mjs` | Schema readiness manifest validation |
-| `tests/seed-safety.test.mjs` | Destructive seed refusal before configuration or database connection |
-| `tests/selector-pagination.test.mjs` | Keyset pagination selector |
-| `tests/static-runners.test.mjs` | Static language runner contracts |
-| `tests/student-theme.test.mjs` | Student theme utility |
-| `tests/submission-history.test.mjs` | Submission history retrieval |
-| `tests/submission-reset.test.mjs` | Submission reset authorization |
-| `tests/user-management-api.test.mjs` | User management HTTP route contracts |
-| `tests/user-management-sql.test.mjs` | User management SQL queries |
-| `tests/user-pagination.test.mjs` | User list keyset pagination |
-| `tests/worker-config.test.mjs` | Worker concurrency and config validation |
-| `tests/worker-heartbeat.test.mjs` | Worker heartbeat monitor |
-| `tests/worker-shutdown.test.mjs` | Worker graceful shutdown |
+Docker is unavailable in this workspace. Therefore this file has NOT passed real Docker validation, is NOT in the active Docker gate, and its original named quarantine is retained. Do not describe coverage as restored. After a real passing run, move its single manifest entry from quarantine to docker and remove its quarantine reason atomically, rerun all four lanes and complete strict final-head certification. Until then certification fails rather than concealing the incomplete CR-ARCH-24 obligation.
 
-### 2.2 `.test.js` files in unit lane (1 file)
+Full-stack/auth-performance CI is stopped per explicit owner direction; no expensive labels are applied. Full strict certification and real integration/Docker/browser/security/PDF/faculty/realtime/capacity/recovery acceptance remain pending. Unit mocks do not replace runtime evidence. This implementation is a draft and must not merge/close #79 until the real batch run, quarantine removal, active Docker registration and final-head certification pass.
 
-| File | What it covers | Extension rationale |
-|---|---|---|
-| `tests/job-lifecycle.test.js` | `waitForJob`, `boundedFetch`, `responseError` (job polling lifecycle), `practicalPassed` (verdict helper). No Docker or network dependencies. 11 assertions, all passing. | Pre-dates the `.mjs` convention; uses ESM `import` syntax. Extension retained deliberately; both extensions are supported by the unit lane. |
+## Validation and merge gate
 
----
+Implementation base: `0d7679850a8346cf545c096b57ee23d02fbf586f`. Work is isolated on `refactor/batch4-tests`; the pre-existing dirty checkout was preserved. No application feature, SQL, dependency version, runtime resource limit or expensive-CI label is changed.
 
-## 3. Quarantine List
-
-Files explicitly excluded from the unit lane, with documented reason, owner, and restoration condition.
-
-| File | Quarantine reason | Suite it belongs to | Restoration condition | Owner |
-|---|---|---|---|---|
-| `tests/batch-execution.test.js` | Legacy test creates a fake docker executable intended to run generated shell locally, but its command shim predates the current Sandbox run/exec lifecycle. Its failure is not sufficient evidence that merely installing Docker fixes it. Batch framing, per-case errors/timeouts and continued execution still need restoration against the current Executor. | Intended future docker lane; NOT currently selected by any lane | CR-ARCH-24 must modernize this test against the current Executor, run it with real disposable Docker, register it in the docker lane, and only then remove quarantine. File relocation alone is insufficient. | CR-ARCH-24 |
-
----
-
-## 4. Integration Lane — File Inventory
-
-Run by `npm run test:integration` → `scripts/ci/run-tests.mjs integration`.
-
-| File | Services required |
-|---|---|
-| `tests/integration/queue.test.mjs` | Redis |
-| `tests/integration/realtime.test.mjs` | Redis |
-| `tests/integration/worker-readiness.test.mjs` | Redis |
-| `tests/integration/worker-recovery.test.mjs` | Redis, PostgreSQL |
-| `tests/integration/postgres.test.mjs` | PostgreSQL |
-
-Not in the integration lane (separate scripts):
-
-| File | Script | Services required |
-|---|---|---|
-| `tests/integration/neon.test.mjs` | `npm run test:neon` | Neon cloud DB |
-| `tests/integration/neon-upgrade.test.mjs` | `npm run test:neon` | Neon cloud DB |
-
----
-
-## 5. Docker Lane — File Inventory
-
-Run by `npm run test:docker` → `scripts/ci/run-tests.mjs docker`.
-
-| File | Services required |
-|---|---|
-| `tests/integration/sandbox.test.mjs` | Docker daemon, `coderank-base:latest` image |
-
-**Quarantined (pending move to this lane):**
-
-| File | Notes |
-|---|---|
-| `tests/batch-execution.test.js` | See Section 3 above |
-
----
-
-## 6. Browser Lane — File Inventory
-
-Run by `npm run test:authenticated` → `scripts/authenticated-stack.mjs`.
-
-| File | Services required |
-|---|---|
-| `tests/browser/auth-performance.spec.mjs` | Running web + worker stack, Playwright browser |
-| `tests/browser/role-workflows.spec.mjs` | Running web + worker stack, Playwright browser |
-
-Config: `tests/browser/playwright.config.mjs`
-
----
-
-## 7. Fixture and Helper Files (not test entry points)
-
-These files live in `tests/` but are not test entry points and must not appear in any discovery lane.
-
-| File | Role |
-|---|---|
-| `tests/fixtures/routes.json` | Legacy route fixture consumed by `api-route-contracts.test.mjs` |
-| `tests/fixtures/crashing-worker.mjs` | Worker crash fixture imported by `worker-recovery.test.mjs` |
-| `tests/fixtures/sandbox-owner.fixture.mjs` | Sandbox ownership fixture |
-| `tests/fixtures/ci/protocol.fixture.mjs` | CI protocol fixture |
-
----
-
-## 8. Before / After: CR-ARCH-23
-
-### Before (original discovery baseline at `051a654e`)
-
-| Aspect | State |
-|---|---|
-| Unit lane discovery | `tests/*.test.mjs` only |
-| `tests/job-lifecycle.test.js` | Not discovered — silently omitted from all suites |
-| `tests/batch-execution.test.js` | Not discovered — silently omitted from all suites |
-| Quarantine documentation | None — omission was undocumented |
-| Test inventory document | Did not exist |
-| Architecture test coverage | No test verifying discovery rules |
-
-### After (this PR)
-
-| Aspect | State |
-|---|---|
-| Unit lane discovery | `tests/*.test.mjs` AND `tests/*.test.js`, minus `UNIT_QUARANTINE` |
-| `tests/job-lifecycle.test.js` | **Included** in unit lane; 11 assertions pass |
-| `tests/batch-execution.test.js` | **Quarantined** with explicit reason, owner (CR-ARCH-24), and restoration condition |
-| Quarantine documentation | Declared in `scripts/ci/run-tests.mjs` as `UNIT_QUARANTINE` set |
-| Test inventory document | This file (`docs/development/test-inventory.md`) |
-| Architecture test coverage | `tests/architecture.test.mjs` has a new test verifying both extensions discovered, quarantine respected, no fixtures/integration/browser files leaked |
-
----
-
-## 9. Tools
-
-| Tool | Version pinned in | Purpose |
-|---|---|---|
-| Node.js test runner (`node:test`) | `engines.node: ">=24.0.0"` in root `package.json` | Native test runner for all `.test.mjs` and `.test.js` files |
-| TAP validator | `scripts/ci/verify-tap.mjs` | Strict TAP output validation; no skips/todos/failures permitted |
-| Playwright | `@playwright/test@1.56.1` in root `devDependencies` | Browser end-to-end tests |
-| ESLint | `apps/web/eslint.config.mjs` | Lint critical paths (not a test runner) |
-
----
-
-## 10. Invariants (must be preserved by all future issues)
-
-1. `UNIT_QUARANTINE` in `scripts/ci/run-tests.mjs` is the single authoritative exclusion list for the unit lane. Never silently omit a test file — either include it or add it to `UNIT_QUARANTINE` with a documented reason.
-2. Fixture files and integration/browser specs must never appear in unit lane discovery.
-3. The architecture test `unit test discovery includes both .test.mjs and .test.js files and respects explicit quarantine` must continue to pass after any change to test discovery.
-4. No gate weakening: `verifyTap` strict validation, timeout, zero-failure policy remain unchanged.
-5. CR-ARCH-24 owns the move of `batch-execution.test.js` to the docker lane. Until that PR merges, the file stays quarantined here.
-
-The authenticated browser lane also holds a real course-list HTTP response across a course switch and verifies that stale practical rows cannot replace the selected course. The second course/practical exists only in its disposable database fixture.
-
-Browser acceptance also creates a synthetic student through the real admin form and inspects its downloaded PDF, and exercises faculty authoring validation/create/edit/extra-time/delete against the real API. These mutations are confined to the authenticated harness disposable database.
-
-The authenticated disposable stack runs scripts/lib/auth-contracts.mjs against both the direct API and actual public gateway, verifying session/expiry/role authority, profile/password changes, deactivation and real Redis throttling.
-
-The disposable authenticated lane also runs scripts/lib/realtime-contracts.mjs with two actual API processes sharing PostgreSQL/Redis, checking fan-out, owner-only job results, service/browser boundaries, expiry/revocation and replica-local drain.
+Run `npm ci`, `npm run lint:critical`, `npm test`, and `npm run build`. On a disposable service host also run `npm run test:integration`, build `infrastructure/docker/runner/Dockerfile`, run the batch candidate command above, then `npm run test:docker` and the authenticated browser/full certification workflows. Integration requires isolated PostgreSQL/Redis; no live Neon commands are authorized by this refactor. Full strict certification remains blocked until batch is active in the Docker lane and all final-head runtime evidence passes. Record the tested source SHA and command exit codes in the PR; a green fast lane is not full certification.

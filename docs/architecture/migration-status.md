@@ -50,19 +50,19 @@ Follow [ADR-0001](decisions/0001-api-runtime-and-hosting.md) and the [route inve
 - **Authoritative Liveness Route**: `GET /api/live` implemented in `apps/api/src/modules/operations/operations.routes.js` with HTTP 200, `{ status: 'ok', timestamp: <ISO> }`, and `Cache-Control: no-store`. Unsupported methods (`POST`, `PUT`, `DELETE`, `PATCH`) return HTTP 405 Method Not Allowed with `Allow: GET, HEAD` and `Cache-Control: no-store`.
 - **Cutover**: Next.js handler `apps/web/src/app/api/live/route.js` removed; runtime gateway in `apps/web/server.js` and `src/lib/api-gateway.js` forwarding `/api/live` to `INTERNAL_API_URL` while preserving unmigrated routes on web.
 - **Compose and Deployment**: `apps/api/Dockerfile` created (no runner/Docker socket); `infrastructure/docker-compose.yml` and `infrastructure/compose.containers.yaml` wired with `api` service.
-- **Verification**: Real listening direct API and gateway contract tests in `tests/api-live-runtime.test.mjs`, full architecture boundary tests in `tests/architecture.test.mjs`, unit tests (`npm test`), critical lint (`npm run lint:critical`), and build checks pass cleanly.
+- **Verification**: Real listening direct API and gateway contract tests in `tests/unit/api-live-runtime.test.mjs`, full architecture boundary tests in `tests/architecture/architecture.test.mjs`, unit tests (`npm test`), critical lint (`npm run lint:critical`), and build checks pass cleanly.
 
 ### CR-ARCH-10A ownership and verification
 Login and authenticated profile loading move to the API auth service, with API middleware authenticating before protected JSON parsing. Shared self-account mutations remain in core temporarily because the unmigrated admin-password and username-profile adapters still consume them; 3D/3I must retire that compatibility usage. The API closes its Redis and database resources after HTTP drain. Real direct/gateway contracts cover auth errors, session rotation, expiry, database role authority, profile/password changes, deactivation and Redis throttling/outage, including clean shutdown. See PR #60 for final tested SHA and CI evidence.
 
 ### CR-ARCH-14 ownership and verification
-Socket.IO server creation, authentication middleware, room authorization, periodic session revalidation, and worker/service realtime publisher moved from Next.js custom server (apps/web/server.js) into Fastify API runtime (apps/api/src/realtime/). Next.js server now exclusively forwards WebSocket upgrade requests via same-origin gateway (proxyApi.upgrade). Removed obsolete server realtime files (apps/web/src/lib/realtime.js, realtime-session.js, realtime-adapter.js) and removed socket.io and @socket.io/redis-adapter dependencies from apps/web. Updated worker, stack smoke tests, and Docker compose configurations to point REALTIME_URL to the API server at http://api:3001. Verified with direct API Socket.IO and gateway upgrade proxy contracts in tests/api-realtime-runtime.test.mjs, unit tests, lint, and full build.
+Socket.IO server creation, authentication middleware, room authorization, periodic session revalidation, and worker/service realtime publisher moved from Next.js custom server (apps/web/server.js) into Fastify API runtime (apps/api/src/realtime/). Next.js server now exclusively forwards WebSocket upgrade requests via same-origin gateway (proxyApi.upgrade). Removed obsolete server realtime files (apps/web/src/lib/realtime.js, realtime-session.js, realtime-adapter.js) and removed socket.io and @socket.io/redis-adapter dependencies from apps/web. Updated worker, stack smoke tests, and Docker compose configurations to point REALTIME_URL to the API server at http://api:3001. Verified with direct API Socket.IO and gateway upgrade proxy contracts in tests/unit/api-realtime-runtime.test.mjs, unit tests, lint, and full build.
 
 ### Realtime review correction
 The review of PR #61 removes forced-success test cleanup, exposes the API-local publisher through a declared Fastify plugin, closes WebSockets before HTTP drain without private server mutation, waits for in-flight socket authorization and closes the lazily allocated job-status queue, and scopes replica shutdown to local sockets. API container configuration includes the database, Redis adapter and allowed browser origin. Host launchers derive worker transport from API_PORT. Strict authenticated verification starts two real API processes and checks gateway/cross-replica fan-out, job ownership, hidden-output privacy, expiry/revocation and isolated replica drain. No SQL migration or grading/queue-admission contract changes are required.
 
 ### CR-ARCH-10B ownership and verification
-User management, bulk upload/create, and administrative password modification endpoints migrated to the Fastify API runtime (`apps/api/src/modules/users/`). Handlers removed from Next.js (`apps/web/src/app/api/admin/bulk-upload/route.js`, `apps/web/src/app/api/admin/password/route.js`, `apps/web/src/app/api/users/route.js`, `apps/web/src/app/api/users/[id]/route.js`, `apps/web/src/app/api/users/bulk/route.js`). Streaming multipart upload parsing registered in Fastify via `@fastify/multipart` with 5MB limits; CSV and Excel parsing dependencies declared directly in `apps/api/package.json` (`csv-parse`, `exceljs`) and unneeded entries removed from `apps/web/package.json`. Keyset cursor pagination (`X-Next-Cursor`), `Cache-Control: no-store`, `Server-Timing`, administrator authorization checks, batch transactions, and HTTP 405 Method Not Allowed handling with `Allow` headers are verified. Direct API and gateway cutover tested via `tests/api-users-runtime.test.mjs`, `tests/bulk-users-api.test.mjs`, `tests/api-input-contracts.test.mjs`, `tests/architecture.test.mjs`, `npm test` (all 291 unit tests passing), `npm run lint:critical`, and turbo build.
+User management, bulk upload/create, and administrative password modification endpoints migrated to the Fastify API runtime (`apps/api/src/modules/users/`). Handlers removed from Next.js (`apps/web/src/app/api/admin/bulk-upload/route.js`, `apps/web/src/app/api/admin/password/route.js`, `apps/web/src/app/api/users/route.js`, `apps/web/src/app/api/users/[id]/route.js`, `apps/web/src/app/api/users/bulk/route.js`). Streaming multipart upload parsing registered in Fastify via `@fastify/multipart` with 5MB limits; CSV and Excel parsing dependencies declared directly in `apps/api/package.json` (`csv-parse`, `exceljs`) and unneeded entries removed from `apps/web/package.json`. Keyset cursor pagination (`X-Next-Cursor`), `Cache-Control: no-store`, `Server-Timing`, administrator authorization checks, batch transactions, and HTTP 405 Method Not Allowed handling with `Allow` headers are verified. Direct API and gateway cutover tested via `tests/unit/api-users-runtime.test.mjs`, `tests/unit/bulk-users-api.test.mjs`, `tests/unit/api-input-contracts.test.mjs`, `tests/architecture/architecture.test.mjs`, `npm test` (all 291 unit tests passing), `npm run lint:critical`, and turbo build.
 
 ### CR-ARCH-11A ownership and verification
 Courses, departments, and faculty mapping APIs extracted to Fastify API runtime (`apps/api/src/modules/courses/` and `apps/api/src/modules/mapping/`).
@@ -84,8 +84,8 @@ Courses, departments, and faculty mapping APIs extracted to Fastify API runtime 
   - Retained faculty read queries (`getFacultyCourses`, `getBatches`) in `packages/core/src/modules/courses/CourseService.js` for upcoming CR-ARCH-11B (3F).
   - Maintained single shared pagination helper in `packages/core/src/modules/courses/list-pagination.js` exported as `@coderank/core/pagination`.
 - **Verification**:
-  - Direct API and gateway runtime contracts in `tests/api-courses-runtime.test.mjs`.
-  - Unit and boundary checks in `tests/architecture.test.mjs`, `tests/admin-api.test.mjs`, `tests/api-input-contracts.test.mjs`, and `tests/api-live-runtime.test.mjs`.
+  - Direct API and gateway runtime contracts in `tests/unit/api-courses-runtime.test.mjs`.
+  - Unit and boundary checks in `tests/architecture/architecture.test.mjs`, `tests/unit/admin-api.test.mjs`, `tests/unit/api-input-contracts.test.mjs`, and `tests/unit/api-live-runtime.test.mjs`.
   - Stack contract verification in `scripts/lib/courses-contracts.mjs` and `scripts/authenticated-stack.mjs`.
 
 ### CR-ARCH-11B ownership and verification
@@ -108,8 +108,8 @@ Practical management, extra time extension, practical stats, and course marks re
   - Gateway (`apps/web/src/lib/api-gateway.js`) explicitly routes all 9 practical management and reporting endpoints to `INTERNAL_API_URL`.
   - Unmigrated submission and workspace endpoints (`/api/faculty/practicals/[id]/submissions`, `/api/faculty/submissions/[id]`, `/api/student/practicals/[id]/submit`, `/api/student/practicals/[id]/submissions`, `/api/student/submissions`, `/api/student/workspaces/*`) remain unproxied on Next.js for slice 3H.
 - **Verification**:
-  - Direct Fastify API contracts, realtime event emission, 401/403/404/405/OPTIONS handling, and gateway selective routing in `tests/api-practicals-runtime.test.mjs`.
-  - Architecture boundaries and route inventory alignment in `tests/architecture.test.mjs`.
+  - Direct Fastify API contracts, realtime event emission, 401/403/404/405/OPTIONS handling, and gateway selective routing in `tests/unit/api-practicals-runtime.test.mjs`.
+  - Architecture boundaries and route inventory alignment in `tests/architecture/architecture.test.mjs`.
   - Unit test lane (`npm test`, 304 passing), linting (`npm run lint:critical`), and build checks (`@coderank/api` and `@coderank/web`) pass cleanly.
 
 ### CR-ARCH-12A ownership and verification
@@ -134,8 +134,8 @@ Execution intake, language aliases, and job status polling endpoints migrated to
   - Same-origin gateway (`apps/web/src/lib/api-gateway.js`) configured to route all 9 endpoints and dynamic `/api/jobs/*` paths to `INTERNAL_API_URL`.
   - Unmigrated practical submission and workspace endpoints remain on Next.js for slice 3H.
 - **Verification**:
-  - Direct Fastify API contracts, guest session cookies (`coderank_execution_session`), job ownership authorization, hidden test case output sanitization, rate limits (429), queue saturation (503 with Retry-After: 5), validation errors (400, 413, 404), and 405 Method Not Allowed handling verified in `tests/api-execution-runtime.test.mjs`.
-  - Architecture boundaries and route inventory validated in `tests/architecture.test.mjs` (13/13 passing).
+  - Direct Fastify API contracts, guest session cookies (`coderank_execution_session`), job ownership authorization, hidden test case output sanitization, rate limits (429), queue saturation (503 with Retry-After: 5), validation errors (400, 413, 404), and 405 Method Not Allowed handling verified in `tests/unit/api-execution-runtime.test.mjs`.
+  - Architecture boundaries and route inventory validated in `tests/architecture/architecture.test.mjs` (13/13 passing).
   - All unit tests pass in `npm test` (312/312 passing).
   - Critical lint passes (`npm run lint:critical` with 0 warnings).
   - Turborepo build (`turbo run build`) succeeds cleanly for all workspaces.
@@ -169,8 +169,8 @@ Submissions, submission history, resets, and student workspace draft persistence
 - **Gateway Cutover**:
   - Same-origin gateway (`apps/web/src/lib/api-gateway.js`) configured to route `/api/submit`, `/api/student/submissions`, `/api/student/workspaces/*`, `/api/student/practicals/:id/submit`, `/api/student/practicals/:id/submissions`, `/api/faculty/practicals/:id/submissions`, and `/api/faculty/submissions/:id` to `INTERNAL_API_URL`.
 - **Verification**:
-  - Direct Fastify API and gateway cutover contracts verified in `tests/api-submissions-runtime.test.mjs` (30/30 assertions passing).
-  - Architecture boundary rules and route inventory validated in `tests/architecture.test.mjs` (13/13 passing).
+  - Direct Fastify API and gateway cutover contracts verified in `tests/unit/api-submissions-runtime.test.mjs` (30/30 assertions passing).
+  - Architecture boundary rules and route inventory validated in `tests/architecture/architecture.test.mjs` (13/13 passing).
   - All 339 tests in unit test suite pass in `npm test`.
   - Critical lint passes (`npm run lint:critical` with 0 warnings).
   - Turborepo build (`turbo run build`) succeeds cleanly for all workspaces.
@@ -205,10 +205,10 @@ Operations, readiness, metrics, logs, queue statistics, admin stats, and usernam
   - **Readiness (`/api/health`)**: Runtime probe evaluating operational dependencies (PostgreSQL schema readiness, Redis queue, execution workers) with 10s caching; returns 200 when ready, 503 when degraded. Never runs migrations.
   - **Deployment Readiness (`deployment:check` / migration ledger)**: Deployment verification command checking migration ledger compliance before cutover.
 - **Verification**:
-  - Direct Fastify API and gateway cutover contracts verified in `tests/api-operations-runtime.test.mjs` (12/12 assertions passing).
-  - Health failure and degradation verified in `tests/health.test.mjs`.
-  - Profile privacy and sanitization verified in `tests/profile-privacy.test.mjs`.
-  - Architecture boundary rules and route inventory validated in `tests/architecture.test.mjs` (13/13 passing).
+  - Direct Fastify API and gateway cutover contracts verified in `tests/unit/api-operations-runtime.test.mjs` (12/12 assertions passing).
+  - Health failure and degradation verified in `tests/unit/health.test.mjs`.
+  - Profile privacy and sanitization verified in `tests/unit/profile-privacy.test.mjs`.
+  - Architecture boundary rules and route inventory validated in `tests/architecture/architecture.test.mjs` (13/13 passing).
   - All unit tests pass in `npm test`.
   - Critical lint passes (`npm run lint:critical` with 0 warnings).
   - Turborepo build (`turbo run build`) succeeds cleanly for all workspaces.
@@ -253,4 +253,4 @@ All ten runtime migration issues (#49–#58) were closed and their PRs merged, a
 | Pagination | `listPage` | `packages/core/src/shared/pagination.js` | Shared Primitive |
 
 ### Boundary Enforcement
-`tests/final-separation.test.mjs` explicitly asserts that the six API-only modules (`UserManagementService`, `PracticalManagementService`, `StudentPracticalService`, `CourseReportService`, `PracticalReportService`, `SubmissionHistoryService`) do not exist in `packages/core`, and that their replacement services are present in `apps/api`.
+`tests/architecture/final-separation.test.mjs` explicitly asserts that the six API-only modules (`UserManagementService`, `PracticalManagementService`, `StudentPracticalService`, `CourseReportService`, `PracticalReportService`, `SubmissionHistoryService`) do not exist in `packages/core`, and that their replacement services are present in `apps/api`.

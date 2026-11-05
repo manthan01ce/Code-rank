@@ -1,27 +1,17 @@
+import { filesFor } from './test-lanes.mjs';
 import { spawn } from 'node:child_process';
-import { mkdir, readdir, writeFile } from 'node:fs/promises';
+import { mkdir, readFile, writeFile } from 'node:fs/promises';
 import { fileURLToPath } from 'node:url';
 import { resolve } from 'node:path';
 import { verifyTap } from './verify-tap.mjs';
 
 const root = fileURLToPath(new URL('../../', import.meta.url));
-export async function testConfiguration(mode) {
-  const integration = ['queue', 'realtime', 'worker-readiness', 'worker-recovery', 'postgres'].map(name => `tests/integration/${name}.test.mjs`);
-  // Quarantined from unit lane (explicit named exclusion with reason):
-  //   tests/batch-execution.test.js — legacy Docker-command shim predates the
-  //   current Sandbox run/exec lifecycle. Not currently run by any CI lane.
-  //   Owner CR-ARCH-24: modernize against Executor, verify with disposable real
-  //   Docker, register in the docker lane, then remove quarantine; not just rename.
-  const UNIT_QUARANTINE = new Set(['batch-execution.test.js']);
-  const modes = {
-    unit: { files: (await readdir(resolve(root, 'tests'))).filter(name => (name.endsWith('.test.mjs') || name.endsWith('.test.js')) && !UNIT_QUARANTINE.has(name)).sort().map(name => `tests/${name}`), timeoutMs: 300000 },
-    integration: { files: integration, timeoutMs: 300000 },
-    docker: { files: ['tests/integration/sandbox.test.mjs'], timeoutMs: 300000 },
-  };
-  if (!Object.hasOwn(modes, mode)) throw new Error('Expected exactly one mode: unit, integration, or docker');
+export async function testConfiguration(mode, rootDir = root) {
+  const modes = Object.fromEntries(await Promise.all(['unit', 'integration', 'docker', 'batch'].map(async lane => [lane, { files: await filesFor(lane, rootDir), timeoutMs: 300000 }])));
+  if (!Object.hasOwn(modes, mode)) throw new Error('Expected exactly one mode: unit, integration, docker, or batch');
   const config = modes[mode];
   if (!config.files.length) throw new Error('No test files discovered');
-  return { ...config, args: ['--experimental-test-module-mocks', '--test-concurrency=2', '--test-timeout=30000', '--test-reporter=tap', '--test', ...config.files] };
+  return { ...config, args: ['--experimental-test-module-mocks', '--test-concurrency=2', '--test-timeout=30000', '--test-reporter=tap', '--test-reporter=./scripts/ci/file-reporter.mjs', '--test-reporter-destination=stdout', `--test-reporter-destination=test-results/${mode}.files.json`, '--test', ...config.files] };
 }
 
 export async function captureTestProcess(args, { timeoutMs, env = process.env } = {}) {
@@ -64,12 +54,16 @@ export async function runTestMode(mode) {
   const artifact = resolve(root, 'test-results', `${mode}.tap`);
   await mkdir(resolve(root, 'test-results'), { recursive: true });
   await writeFile(artifact, '');
+  const fileArtifact = resolve(root, 'test-results', `${mode}.files.json`);
+  await writeFile(fileArtifact, '');
   const result = await captureTestProcess(config.args, { timeoutMs: config.timeoutMs });
   const { stdout, stderr, timedOut, limitExceeded } = result;
   await writeFile(artifact, stdout);
   process.stdout.write(stdout);
   process.stderr.write(stderr);
-  const verdict = verifyTap(stdout, { ...result, timedOut, args: config.args, expectedFiles: config.files });
+  let executedFiles = [];
+  try { executedFiles = JSON.parse(await readFile(fileArtifact, 'utf8')).executedFiles; } catch { /* Missing reporter output fails the inventory check below. */ }
+  const verdict = verifyTap(stdout, { ...result, timedOut, args: config.args, expectedFiles: config.files, executedFiles, requireFileEvidence: true });
   if (limitExceeded) { verdict.ok = false; verdict.errors.push('Test output exceeded the bounded artifact limit'); }
   if (!verdict.ok) throw new Error(`Strict ${mode} test gate failed:\n${verdict.errors.join('\n')}`);
   console.log(`Strict ${mode} test gate passed: ${verdict.counts.tests} tests; artifact test-results/${mode}.tap`);
@@ -77,6 +71,6 @@ export async function runTestMode(mode) {
 }
 
 if (process.argv[1] && resolve(process.argv[1]) === fileURLToPath(import.meta.url)) {
-  if (process.argv.length !== 3) { console.error('Usage: node scripts/ci/run-tests.mjs <unit|integration|docker>'); process.exitCode = 1; }
+  if (process.argv.length !== 3) { console.error('Usage: node scripts/ci/run-tests.mjs <unit|integration|docker|batch>'); process.exitCode = 1; }
   else await runTestMode(process.argv[2]).catch(error => { console.error(error.message); process.exitCode = 1; });
 }

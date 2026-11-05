@@ -1,0 +1,2409 @@
+{
+  "baseline": "0d7679850a8346cf545c096b57ee23d02fbf586f",
+  "originalFiles": 100,
+  "files": [
+    {
+      "before": "tests/active-actor.test.mjs",
+      "beforeSha256": "b06e9913ab0b4d750f6348cde4ab7349e81845d5ca15c1537a2ca045759b0f09",
+      "beforeLane": "unit",
+      "assertionScope": [
+        "'active authentication validates database identity, roles and current session'",
+        "'legacy sessionless accounts remain compatible until a session is established'",
+        "'invalid tokens and nonpersistent identities never reach database authentication'",
+        "'optional authentication only permits absence of credentials, never invalid bearer downgrade'",
+        "'authentication lookup outages fail closed with service unavailable'",
+        "'deactivated students, faculty and administrators cannot reuse otherwise valid sessions'"
+      ],
+      "destinations": [
+        {
+          "path": "tests/unit/active-actor.test.mjs",
+          "lane": "unit",
+          "sha256": "4f55c9d03f4dbbae0ac7a6588b71bca2bb1534f847135befbdf834aa2a900e05",
+          "assertionScope": [
+            "'active authentication validates database identity, roles and current session'",
+            "'legacy sessionless accounts remain compatible until a session is established'",
+            "'invalid tokens and nonpersistent identities never reach database authentication'",
+            "'optional authentication only permits absence of credentials, never invalid bearer downgrade'",
+            "'authentication lookup outages fail closed with service unavailable'",
+            "'deactivated students, faculty and administrators cannot reuse otherwise valid sessions'"
+          ]
+        }
+      ],
+      "status": "All original test declarations preserved"
+    },
+    {
+      "before": "tests/admin-api.test.mjs",
+      "beforeSha256": "acb4fbe15121e7e0d4237fb085eefdf45ce6459807cfcb374a165fcd4543d1ea",
+      "beforeLane": "unit",
+      "assertionScope": [
+        "'practical adapters enforce role and payloads, preserve response and notify only on commit'",
+        "'mapping adapter normalizes IDs and denies duplicate or unauthorized writes'"
+      ],
+      "destinations": [
+        {
+          "path": "tests/unit/admin-api.test.mjs",
+          "lane": "unit",
+          "sha256": "4da22bbc130e213887c57b93a75dbf38b2cc2dbf59bbc3f6793f464435f6eb30",
+          "assertionScope": [
+            "'practical adapters enforce role and payloads, preserve response and notify only on commit'",
+            "'mapping adapter normalizes IDs and denies duplicate or unauthorized writes'"
+          ]
+        }
+      ],
+      "status": "All original test declarations preserved"
+    },
+    {
+      "before": "tests/admin-bootstrap.test.mjs",
+      "beforeSha256": "7cc7cf30f7e9dbfcffd021f584391806d9c43a4a8d66e8e926b6523e90202439",
+      "beforeLane": "unit",
+      "assertionScope": [
+        "\"configured admin bootstraps a persistent identity and never logs in without a committed session\""
+      ],
+      "destinations": [
+        {
+          "path": "tests/unit/admin-bootstrap.test.mjs",
+          "lane": "unit",
+          "sha256": "486a1a97894c53ffa3e03203fba43aa1c78973f762d7c56de80a8209e274c768",
+          "assertionScope": [
+            "\"configured admin bootstraps a persistent identity and never logs in without a committed session\""
+          ]
+        }
+      ],
+      "status": "All original test declarations preserved"
+    },
+    {
+      "before": "tests/admin-transactions.test.mjs",
+      "beforeSha256": "3daeba408ee6909171a2765cc46fd4c8d290af52c309314f47bf213f48b96e67",
+      "beforeLane": "unit",
+      "assertionScope": [
+        "'mapping and practical changes commit audit/cases atomically and preserve graded history'"
+      ],
+      "destinations": [
+        {
+          "path": "tests/unit/admin-transactions.test.mjs",
+          "lane": "unit",
+          "sha256": "1b2964cf6eef55f46e233dc2a412782cdf63a7fd5c5cbca52c92a52c336dd029",
+          "assertionScope": [
+            "'mapping and practical changes commit audit/cases atomically and preserve graded history'"
+          ]
+        }
+      ],
+      "status": "All original test declarations preserved"
+    },
+    {
+      "before": "tests/api-auth-runtime.test.mjs",
+      "beforeSha256": "6613d682b7d30c149d6152c30cc405ac4a3da217e25d8035ac4e2970c82dec7f",
+      "beforeLane": "unit",
+      "assertionScope": [
+        "'real auth HTTP preserves malformed/unauthorized errors and fails closed on a Redis outage'"
+      ],
+      "destinations": [
+        {
+          "path": "tests/unit/api-auth-runtime.test.mjs",
+          "lane": "unit",
+          "sha256": "45cd713e45db734553f5f16c511e38e1d2810bf882bba444e9a409e525960e67",
+          "assertionScope": [
+            "'real auth HTTP preserves malformed/unauthorized errors and fails closed on a Redis outage'"
+          ]
+        }
+      ],
+      "status": "All original test declarations preserved"
+    },
+    {
+      "before": "tests/api-courses-runtime.test.mjs",
+      "beforeSha256": "0598229db6dc5990353667345ce39986efa6ad9e25714fa5fb3bac9d382a1428",
+      "beforeLane": "unit",
+      "assertionScope": [
+        "'Fastify courses, departments, and mapping HTTP contracts direct and via gateway'"
+      ],
+      "destinations": [
+        {
+          "path": "tests/unit/api-courses-runtime.test.mjs",
+          "lane": "unit",
+          "sha256": "d0a4587947b290043cd881820de8685fe88a648db7a92d1d059e49a2ac62ac9c",
+          "assertionScope": [
+            "'Fastify courses, departments, and mapping HTTP contracts direct and via gateway'"
+          ]
+        }
+      ],
+      "status": "All original test declarations preserved"
+    },
+    {
+      "before": "tests/api-execution-runtime.test.mjs",
+      "beforeSha256": "deac6891747ca7e5e075bd7f8564d58dbb4cde2bc32dfa7861482f1306991646",
+      "beforeLane": "unit",
+      "assertionScope": [
+        "'Fastify execution and job polling runtime contracts direct and via gateway'",
+        "`[${name}] GET /api/execute returns queue health, languages and Cache-Control: no-store`",
+        "`[${name}] GET /api/practice-run returns queue stats and Cache-Control: no-store`",
+        "`[${name}] Anonymous execution creates guest session cookie and enqueues playground job`",
+        "`[${name}] Language aliases enqueue practice jobs and sanitize hidden tests`",
+        "`[${name}] Practical execution obeys batch/semester authorization`",
+        "`[${name}] Validation errors return 400 or 413`",
+        "`[${name}] Rate limit 429 and Queue full 503 error responses`",
+        "`[${name}] Unsupported HTTP methods return HTTP 405 Method Not Allowed`",
+        "'Same-origin gateway bypasses unmigrated paths to web fallback (418)'"
+      ],
+      "destinations": [
+        {
+          "path": "tests/unit/api-execution-runtime.test.mjs",
+          "lane": "unit",
+          "sha256": "8944d276df47675859230b24ab395c54c25e274db2b2775a130ba6d4f91e60d7",
+          "assertionScope": [
+            "'Fastify execution and job polling runtime contracts direct and via gateway'",
+            "`[${name}] GET /api/execute returns queue health, languages and Cache-Control: no-store`",
+            "`[${name}] GET /api/practice-run returns queue stats and Cache-Control: no-store`",
+            "`[${name}] Anonymous execution creates guest session cookie and enqueues playground job`",
+            "`[${name}] Language aliases enqueue practice jobs and sanitize hidden tests`",
+            "`[${name}] Practical execution obeys batch/semester authorization`",
+            "`[${name}] Validation errors return 400 or 413`",
+            "`[${name}] Rate limit 429 and Queue full 503 error responses`",
+            "`[${name}] Unsupported HTTP methods return HTTP 405 Method Not Allowed`",
+            "'Same-origin gateway bypasses unmigrated paths to web fallback (418)'"
+          ]
+        }
+      ],
+      "status": "All original test declarations preserved"
+    },
+    {
+      "before": "tests/api-input-contracts.test.mjs",
+      "beforeSha256": "2c61b06fd8dc49f8903fb80251cad5d19c046445db33c6a5e618485dbbd315e3",
+      "beforeLane": "unit",
+      "assertionScope": [
+        "'JSON mutation adapters reject malformed and non-object bodies with 400'",
+        "'both upload adapters reject malformed multipart requests and redact unexpected errors'"
+      ],
+      "destinations": [
+        {
+          "path": "tests/unit/api-input-contracts.test.mjs",
+          "lane": "unit",
+          "sha256": "115d9d6b2be5f21b174a6fe1cc93a35a8d5badaab71c4c4e8d3c927c7074d5de",
+          "assertionScope": [
+            "'JSON mutation adapters reject malformed and non-object bodies with 400'",
+            "'both upload adapters reject malformed multipart requests and redact unexpected errors'"
+          ]
+        }
+      ],
+      "status": "All original test declarations preserved"
+    },
+    {
+      "before": "tests/api-live-runtime.test.mjs",
+      "beforeSha256": "1fb40c2d81647376ad6cec33b2bb431f797f569bc10f135481bb67971fda7433",
+      "beforeLane": "unit",
+      "assertionScope": [
+        "'Fastify API direct runtime contracts for GET /api/live'",
+        "'GET /api/live returns HTTP 200, status ok, recent ISO timestamp and Cache-Control: no-store'",
+        "'Unsupported HTTP methods return HTTP 405 Method Not Allowed with Allow header'",
+        "'Oversized or malformed payload to unsupported methods returns HTTP 405'",
+        "'Unmigrated routes are not authoritative on API runtime (return 404)'",
+        "'API server lifecycle and clean shutdown'",
+        "'Same-origin gateway routing and cutover contract'",
+        "'Gateway proxies GET /api/live to API runtime'",
+        "'production gateway preserves query, auth, cookies and response cookies'",
+        "'Gateway forwards unsupported methods on /api/live to API runtime (405)'",
+        "'unmigrated paths bypass API forwarding'",
+        "'API outage is visible as an uncached 502'",
+        "'API environment isolates the web port and ignores inherited machine HOSTNAME'",
+        "'actual API entry point handles SIGTERM and frees its listening port'"
+      ],
+      "destinations": [
+        {
+          "path": "tests/unit/api-live-runtime.test.mjs",
+          "lane": "unit",
+          "sha256": "683a0b91ece33fca61287ea56793ca086ff072de42ac2e034738f3604d379674",
+          "assertionScope": [
+            "'Fastify API direct runtime contracts for GET /api/live'",
+            "'GET /api/live returns HTTP 200, status ok, recent ISO timestamp and Cache-Control: no-store'",
+            "'Unsupported HTTP methods return HTTP 405 Method Not Allowed with Allow header'",
+            "'Oversized or malformed payload to unsupported methods returns HTTP 405'",
+            "'Unmigrated routes are not authoritative on API runtime (return 404)'",
+            "'API server lifecycle and clean shutdown'",
+            "'Same-origin gateway routing and cutover contract'",
+            "'Gateway proxies GET /api/live to API runtime'",
+            "'production gateway preserves query, auth, cookies and response cookies'",
+            "'Gateway forwards unsupported methods on /api/live to API runtime (405)'",
+            "'unmigrated paths bypass API forwarding'",
+            "'API outage is visible as an uncached 502'",
+            "'API environment isolates the web port and ignores inherited machine HOSTNAME'",
+            "'actual API entry point handles SIGTERM and frees its listening port'"
+          ]
+        }
+      ],
+      "status": "All original test declarations preserved"
+    },
+    {
+      "before": "tests/api-operations-runtime.test.mjs",
+      "beforeSha256": "0909013b14febcff2e2e3e0e4e5f537bdc76ea0ed3bb080ba501a26b38424111",
+      "beforeLane": "unit",
+      "assertionScope": [
+        "'Fastify operations, readiness and profile runtime contracts direct and via gateway'",
+        "'GET /api/live returns status ok, timestamp and no-store (direct & gateway)'",
+        "'GET /api/health evaluates readiness with in-memory caching (direct & gateway)'",
+        "'GET /api/health/detailed requires administrator authorization'",
+        "'GET /api/logs returns audit records for administrator and validates limits'",
+        "'GET /api/metrics exposes HTTP telemetries to administrator'",
+        "'GET /api/queue/stats is public and returns queue statistics with caching'",
+        "'GET /api/stats returns system counters for administrator'",
+        "'GET /api/profile/[username] requires auth, sanitizes passwords and source code'",
+        "'PUT /api/profile/[username] validates JSON and updates caller biography'",
+        "'Method Not Allowed (405) contracts on all operations and profile endpoints'",
+        "'Gateway bypasses non-migrated paths to web fallback (418)'"
+      ],
+      "destinations": [
+        {
+          "path": "tests/unit/api-operations-runtime.test.mjs",
+          "lane": "unit",
+          "sha256": "f0b0590c80a565543a5e1d2409816733aff5168e5b6f5f6e614f311c640872be",
+          "assertionScope": [
+            "'Fastify operations, readiness and profile runtime contracts direct and via gateway'",
+            "'GET /api/live returns status ok, timestamp and no-store (direct & gateway)'",
+            "'GET /api/health evaluates readiness with in-memory caching (direct & gateway)'",
+            "'GET /api/health/detailed requires administrator authorization'",
+            "'GET /api/logs returns audit records for administrator and validates limits'",
+            "'GET /api/metrics exposes HTTP telemetries to administrator'",
+            "'GET /api/queue/stats is public and returns queue statistics with caching'",
+            "'GET /api/stats returns system counters for administrator'",
+            "'GET /api/profile/[username] requires auth, sanitizes passwords and source code'",
+            "'PUT /api/profile/[username] validates JSON and updates caller biography'",
+            "'Method Not Allowed (405) contracts on all operations and profile endpoints'",
+            "'Gateway bypasses non-migrated paths to web fallback (418)'"
+          ]
+        }
+      ],
+      "status": "All original test declarations preserved"
+    },
+    {
+      "before": "tests/api-practicals-runtime.test.mjs",
+      "beforeSha256": "585546adf1ea33192c87067c0abf9615d7b735bd291db8581e07947330964e28",
+      "beforeLane": "unit",
+      "assertionScope": [
+        "'Fastify practicals and practical reporting HTTP contracts direct and via gateway'"
+      ],
+      "destinations": [
+        {
+          "path": "tests/unit/api-practicals-runtime.test.mjs",
+          "lane": "unit",
+          "sha256": "dd728938f6f370339f4e92c3e4de27d5dd11d3d41fc17c6f4c13b90cd6f57917",
+          "assertionScope": [
+            "'Fastify practicals and practical reporting HTTP contracts direct and via gateway'"
+          ]
+        }
+      ],
+      "status": "All original test declarations preserved"
+    },
+    {
+      "before": "tests/api-realtime-runtime.test.mjs",
+      "beforeSha256": "46204302b1f84736b2047e530f1b2ff20a002d70ebce025bd8bf7b1245b15568",
+      "beforeLane": "unit",
+      "assertionScope": [
+        "'Fastify API Socket.IO runtime and same-origin gateway cutover'",
+        "'Direct API Socket.IO connects with valid service token'",
+        "'Direct API Socket.IO connects as guest with guest cookie'",
+        "'Direct API Socket.IO rejects connection without credentials'",
+        "'Gateway proxies WebSocket upgrade to API Socket.IO server'",
+        "'Worker job completion broadcasts to subscriber through gateway'",
+        "'Transitional web practical publisher sends events to API Socket.IO server'",
+        "'Unrelated WebSocket upgrade requests are rejected by gateway'",
+        "'API close drains connected direct and gateway WebSockets without process exit'"
+      ],
+      "destinations": [
+        {
+          "path": "tests/unit/api-realtime-runtime.test.mjs",
+          "lane": "unit",
+          "sha256": "28e460b6367ed4669f96fbc65238acb97a6734a3e4edb4bc11f72080a78e4517",
+          "assertionScope": [
+            "'Fastify API Socket.IO runtime and same-origin gateway cutover'",
+            "'Direct API Socket.IO connects with valid service token'",
+            "'Direct API Socket.IO connects as guest with guest cookie'",
+            "'Direct API Socket.IO rejects connection without credentials'",
+            "'Gateway proxies WebSocket upgrade to API Socket.IO server'",
+            "'Worker job completion broadcasts to subscriber through gateway'",
+            "'Transitional web practical publisher sends events to API Socket.IO server'",
+            "'Unrelated WebSocket upgrade requests are rejected by gateway'",
+            "'API close drains connected direct and gateway WebSockets without process exit'"
+          ]
+        }
+      ],
+      "status": "All original test declarations preserved"
+    },
+    {
+      "before": "tests/api-route-contracts.test.mjs",
+      "beforeSha256": "41d3032176aa7de2de83e181282796210c316cdcd331e6825e22805a8abaf7c7",
+      "beforeLane": "unit",
+      "assertionScope": [
+        "'every protected API method rejects missing identity; optional execution routes reject invalid and revoked bearers'",
+        "'every authenticated API method fails closed with 503 when identity storage is unavailable'"
+      ],
+      "destinations": [
+        {
+          "path": "tests/unit/api-route-contracts.test.mjs",
+          "lane": "unit",
+          "sha256": "82850d1853aae34157b9d1159a6c4fcf4e7b06dce2dd98a96e5a54a65ee23a9a",
+          "assertionScope": [
+            "'every protected API method rejects missing identity; optional execution routes reject invalid and revoked bearers'",
+            "'every authenticated API method fails closed with 503 when identity storage is unavailable'"
+          ]
+        }
+      ],
+      "status": "All original test declarations preserved"
+    },
+    {
+      "before": "tests/api-submissions-runtime.test.mjs",
+      "beforeSha256": "3a10cfd38661292b0b1bdb4b2dc75d538eff7f4b2191d1d243b8c8ba38147074",
+      "beforeLane": "unit",
+      "assertionScope": [
+        "'Fastify submissions and workspaces HTTP contracts direct and via gateway'",
+        "`${prefix} POST /api/submit denies anonymous submission with 401`",
+        "`${prefix} POST /api/submit student can submit to practical`",
+        "`${prefix} POST /api/submit denies faculty graded practical submission with 403`",
+        "`${prefix} POST /api/student/practicals/:id/submit enqueues graded submission for enrolled student`",
+        "`${prefix} POST /api/student/practicals/:id/submit validates id and body`",
+        "`${prefix} POST /api/student/practicals/:id/submit rejects unenrolled student with 403`",
+        "`${prefix} GET & POST /api/student/workspaces load and save roundtrip`",
+        "`${prefix} GET /api/student/submissions returns history and X-Next-Cursor`",
+        "`${prefix} GET /api/student/practicals/:id/submissions returns practical history`",
+        "`${prefix} GET /api/faculty/practicals/:id/submissions returns faculty view for assigned practical`",
+        "`${prefix} GET /api/faculty/practicals/:id/submissions denies unassigned faculty with 404`",
+        "`${prefix} GET /api/faculty/submissions/:id decodes binary code and includes test cases`",
+        "`${prefix} DELETE /api/faculty/submissions/:id allows faculty reset`",
+        "`${prefix} Method Not Allowed and OPTIONS contracts`",
+        "'Same-origin gateway bypasses unmigrated paths to web fallback (418)'"
+      ],
+      "destinations": [
+        {
+          "path": "tests/unit/api-submissions-runtime.test.mjs",
+          "lane": "unit",
+          "sha256": "a825661b81aa90968cbdbf2ab505e5db1cf06e5563e7855de6e3d5317ffbab4f",
+          "assertionScope": [
+            "'Fastify submissions and workspaces HTTP contracts direct and via gateway'",
+            "`${prefix} POST /api/submit denies anonymous submission with 401`",
+            "`${prefix} POST /api/submit student can submit to practical`",
+            "`${prefix} POST /api/submit denies faculty graded practical submission with 403`",
+            "`${prefix} POST /api/student/practicals/:id/submit enqueues graded submission for enrolled student`",
+            "`${prefix} POST /api/student/practicals/:id/submit validates id and body`",
+            "`${prefix} POST /api/student/practicals/:id/submit rejects unenrolled student with 403`",
+            "`${prefix} GET & POST /api/student/workspaces load and save roundtrip`",
+            "`${prefix} GET /api/student/submissions returns history and X-Next-Cursor`",
+            "`${prefix} GET /api/student/practicals/:id/submissions returns practical history`",
+            "`${prefix} GET /api/faculty/practicals/:id/submissions returns faculty view for assigned practical`",
+            "`${prefix} GET /api/faculty/practicals/:id/submissions denies unassigned faculty with 404`",
+            "`${prefix} GET /api/faculty/submissions/:id decodes binary code and includes test cases`",
+            "`${prefix} DELETE /api/faculty/submissions/:id allows faculty reset`",
+            "`${prefix} Method Not Allowed and OPTIONS contracts`",
+            "'Same-origin gateway bypasses unmigrated paths to web fallback (418)'"
+          ]
+        }
+      ],
+      "status": "All original test declarations preserved"
+    },
+    {
+      "before": "tests/api-users-runtime.test.mjs",
+      "beforeSha256": "4bb39690ea185e6ae9772a90484839d21c4aa7aa3cbec4b41541f66958a17bb8",
+      "beforeLane": "unit",
+      "assertionScope": [
+        "'Fastify API and same-origin gateway user management runtime contracts'",
+        "`${label} Anonymous and non-admin requests are denied across all endpoints`",
+        "`${label} GET /api/users returns keyset pagination, filters and Cache-Control: no-store`",
+        "`${label} POST /api/users creates user with Server-Timing, Cache-Control and rawPassword`",
+        "`${label} PUT and DELETE on /api/users and /api/users/:id`",
+        "`${label} POST /api/admin/password changes administrator password`",
+        "`${label} POST /api/admin/bulk-upload CSV multipart ingestion`",
+        "`${label} POST /api/users/bulk CSV multipart batch creation`",
+        "`${label} Unsupported HTTP methods return HTTP 405 Method Not Allowed`",
+        "'Course slice is forwarded to API after users and courses cutover'",
+        "'Same-origin gateway bypasses unmigrated paths to web fallback (418)'"
+      ],
+      "destinations": [
+        {
+          "path": "tests/unit/api-users-runtime.test.mjs",
+          "lane": "unit",
+          "sha256": "c1aa6ad0d9db42762f1abb6cc19207995a99062163ed01d24f9bd89e2753d519",
+          "assertionScope": [
+            "'Fastify API and same-origin gateway user management runtime contracts'",
+            "`${label} Anonymous and non-admin requests are denied across all endpoints`",
+            "`${label} GET /api/users returns keyset pagination, filters and Cache-Control: no-store`",
+            "`${label} POST /api/users creates user with Server-Timing, Cache-Control and rawPassword`",
+            "`${label} PUT and DELETE on /api/users and /api/users/:id`",
+            "`${label} POST /api/admin/password changes administrator password`",
+            "`${label} POST /api/admin/bulk-upload CSV multipart ingestion`",
+            "`${label} POST /api/users/bulk CSV multipart batch creation`",
+            "`${label} Unsupported HTTP methods return HTTP 405 Method Not Allowed`",
+            "'Course slice is forwarded to API after users and courses cutover'",
+            "'Same-origin gateway bypasses unmigrated paths to web fallback (418)'"
+          ]
+        }
+      ],
+      "status": "All original test declarations preserved"
+    },
+    {
+      "before": "tests/architecture.test.mjs",
+      "beforeSha256": "d0c3d5f36eba9c624026d2ee62eaa530c4d72c2c18492ffb86318e705fe6e8ab",
+      "beforeLane": "unit",
+      "assertionScope": [
+        "'all inventoried API paths and pages retain their HTTP methods, locations, and migration allocations'",
+        "'route inventory rejects unassigned, duplicate, or invalid endpoint allocations (negative validation)'",
+        "'domain and infrastructure dependencies obey one-way package boundaries'",
+        "'core package contains no browser-only PDF generation utilities or exports'",
+        "'tooling package is resolved and critical lint uses tooling configuration'",
+        "'HTTP adapters delegate SQL and sandbox execution to packages'",
+        "'apps/api contains no Next.js, React, runner or Docker imports'",
+        "'active JS/TS/TSX parses and local imports resolve'",
+        "'active lab launchers use the workspace and authoritative infrastructure'",
+        "'student coding page never serializes private practical content before bearer authentication'",
+        "'unit test discovery includes both .test.mjs and .test.js files and respects explicit quarantine'",
+        "'runtime config is exported deliberately and no relative cross-workspace env imports remain'",
+        "'API artifact excludes runner source and web gateway has runtime configuration'"
+      ],
+      "destinations": [
+        {
+          "path": "tests/architecture/architecture.test.mjs",
+          "lane": "architecture",
+          "sha256": "84d0a74355c0c8ed80fe37c4883ca1faa3b0a755a8948c0dcc69ed6c88d5abde",
+          "assertionScope": [
+            "'all inventoried API paths and pages retain their HTTP methods, locations, and migration allocations'",
+            "'route inventory rejects unassigned, duplicate, or invalid endpoint allocations (negative validation)'",
+            "'domain and infrastructure dependencies obey one-way package boundaries'",
+            "'core package contains no browser-only PDF generation utilities or exports'",
+            "'tooling package is resolved and critical lint uses tooling configuration'",
+            "'HTTP adapters delegate SQL and sandbox execution to packages'",
+            "'apps/api contains no Next.js, React, runner or Docker imports'",
+            "'active JS/TS/TSX parses and local imports resolve'",
+            "'active lab launchers use the workspace and authoritative infrastructure'",
+            "'student coding page never serializes private practical content before bearer authentication'",
+            "'unit test discovery includes both .test.mjs and .test.js files and respects explicit quarantine'",
+            "'runtime config is exported deliberately and no relative cross-workspace env imports remain'",
+            "'API artifact excludes runner source and web gateway has runtime configuration'"
+          ]
+        }
+      ],
+      "status": "All original test declarations preserved"
+    },
+    {
+      "before": "tests/auth-feature-ownership.test.mjs",
+      "beforeSha256": "ffd697a11b7f01db629405e7ce11530626b9aa2bae4b9d3db37f1700a44788f0",
+      "beforeLane": "unit",
+      "assertionScope": [
+        "'shared role gate preserves role permissions and rejects missing/corrupt sessions'",
+        "'self-identity and username profile requests keep independent public contracts and abort signals'"
+      ],
+      "destinations": [
+        {
+          "path": "tests/unit/auth-feature-ownership.test.mjs",
+          "lane": "unit",
+          "sha256": "c0dc5c6ac488ce486ec86cbc950357d3b2fc3af6b97162b209a2fbd67d93a674",
+          "assertionScope": [
+            "'shared role gate preserves role permissions and rejects missing/corrupt sessions'",
+            "'self-identity and username profile requests keep independent public contracts and abort signals'"
+          ]
+        }
+      ],
+      "status": "All original test declarations preserved"
+    },
+    {
+      "before": "tests/auth-resilience.test.mjs",
+      "beforeSha256": "e757e554d2c7a80d7aedb8cb1e855554a49447f76ed3ef433cd1e344f392933b",
+      "beforeLane": "unit",
+      "assertionScope": [
+        "'safe read retry has one budget and does not retry permission failures'",
+        "'sign in distinguishes outage and throttling and aborts a stalled request without replay'",
+        "'login fails closed on limiter outage, preserves 429 and only authenticates allowed requests'",
+        "'timing headers accept only numeric durations and safe labels'"
+      ],
+      "destinations": [
+        {
+          "path": "tests/unit/auth-resilience.test.mjs",
+          "lane": "unit",
+          "sha256": "c31ac36d6b0633ef823eff820e0353713a9f7ab9b3d3cd6bec95eb5142d23505",
+          "assertionScope": [
+            "'safe read retry has one budget and does not retry permission failures'",
+            "'sign in distinguishes outage and throttling and aborts a stalled request without replay'",
+            "'login fails closed on limiter outage, preserves 429 and only authenticates allowed requests'",
+            "'timing headers accept only numeric durations and safe labels'"
+          ]
+        }
+      ],
+      "status": "All original test declarations preserved"
+    },
+    {
+      "before": "tests/batch-execution.test.js",
+      "beforeSha256": "4f981a07872440a95f478b2580ab28476f199fdf229c1fcb2dac7ff4904f298d",
+      "beforeLane": "quarantine",
+      "assertionScope": [
+        "'batch protocol: output framing, errors, per-case timeout and continued execution'"
+      ],
+      "destinations": [
+        {
+          "path": "tests/docker/batch-execution.test.js",
+          "lane": "quarantine",
+          "sha256": "8918275344161a6163886fa6ce723f7f876f96802b4346858e35d0da864a4d3a",
+          "assertionScope": [
+            "'real batch framing/marks survives an ordinary case error and continues'",
+            "'real batch timeout destroys its sandbox and later cases fail closed'",
+            "'real compilation failure is reported and leaves no batch container'",
+            "'real compiled batch rejects malformed case fields and cleans up'"
+          ]
+        }
+      ],
+      "status": "Reimplemented; quarantine retained pending real Docker pass"
+    },
+    {
+      "before": "tests/browser-socket-auth.test.mjs",
+      "beforeSha256": "8bdbc78b71a0e6778acf32320aec288e38f65893bf57329091e275447fd87700",
+      "beforeLane": "unit",
+      "assertionScope": [
+        "'guest socket auth omits bearer credentials and reconnects read the current token'"
+      ],
+      "destinations": [
+        {
+          "path": "tests/unit/browser-socket-auth.test.mjs",
+          "lane": "unit",
+          "sha256": "0225b6f2d938939acd0f815b6f5c275e89b913a4c97e8c3c75e7a441a67cd567",
+          "assertionScope": [
+            "'guest socket auth omits bearer credentials and reconnects read the current token'"
+          ]
+        }
+      ],
+      "status": "All original test declarations preserved"
+    },
+    {
+      "before": "tests/browser/auth-performance.spec.mjs",
+      "beforeSha256": "b1f6612b3f5cc0d0428f4f5454f1ceb9ce2779a56275b78073d99bb0acac2da3",
+      "beforeLane": "browser",
+      "assertionScope": [
+        "'measure 20 successful sign-ins per fresh and reused browser condition'",
+        "'measure 20 real account creations and visible confirmation per browser condition'"
+      ],
+      "destinations": [
+        {
+          "path": "tests/browser/auth-performance.spec.mjs",
+          "lane": "performance",
+          "sha256": "b1f6612b3f5cc0d0428f4f5454f1ceb9ce2779a56275b78073d99bb0acac2da3",
+          "assertionScope": [
+            "'measure 20 successful sign-ins per fresh and reused browser condition'",
+            "'measure 20 real account creations and visible confirmation per browser condition'"
+          ]
+        }
+      ],
+      "status": "All original test declarations preserved"
+    },
+    {
+      "before": "tests/browser/faculty-review.spec.mjs",
+      "beforeSha256": "a20ccbff68668205329c1ec3472643e9b59d7e7f59d61e093f41ee215d047184",
+      "beforeLane": "browser",
+      "assertionScope": [
+        "'submission filtering, sorting, cursor paging and denied reset preserve state'",
+        "'late detail response cannot reopen a dialog after switching course'",
+        "'marks pagination, failure, course switching and theme render'",
+        "'view-only faculty cannot see reset actions and successful reset refreshes rows'",
+        "`${tab}: delayed response cannot restore a deselected course`"
+      ],
+      "destinations": [
+        {
+          "path": "tests/browser/faculty-review.spec.mjs",
+          "lane": "frontend",
+          "sha256": "a20ccbff68668205329c1ec3472643e9b59d7e7f59d61e093f41ee215d047184",
+          "assertionScope": [
+            "'submission filtering, sorting, cursor paging and denied reset preserve state'",
+            "'late detail response cannot reopen a dialog after switching course'",
+            "'marks pagination, failure, course switching and theme render'",
+            "'view-only faculty cannot see reset actions and successful reset refreshes rows'",
+            "`${tab}: delayed response cannot restore a deselected course`"
+          ]
+        }
+      ],
+      "status": "All original test declarations preserved"
+    },
+    {
+      "before": "tests/browser/role-workflows.spec.mjs",
+      "beforeSha256": "f3c7c040c94a390ca27b207ee9a8e79dd8612676d401a43fdd2589af47176508",
+      "beforeLane": "browser",
+      "assertionScope": [
+        "'administrator hydrates dashboard, retains login on reload and loads master selectors'",
+        "'faculty course selection renders the assigned practical and survives refresh'",
+        "'student dashboard shows the assigned practical and retains current authentication on refresh'",
+        "'browser sessions enforce role mutations, grade ownership and hidden-case privacy'",
+        "'public pages preserve theme and remain usable at phone, tablet and desktop widths'",
+        "'admin menu preserves existing destinations and keyboard operation on mobile'",
+        "'student overview and practical selection retain readable themes, navigation and mobile layout'",
+        "'late practical list response cannot overwrite the newly selected course'",
+        "'administrator downloads a readable credential PDF through the real student form'",
+        "'faculty authoring validates, creates, edits, extends and archives a practical over real HTTP'"
+      ],
+      "destinations": [
+        {
+          "path": "tests/browser/role-workflows.spec.mjs",
+          "lane": "browser",
+          "sha256": "f3c7c040c94a390ca27b207ee9a8e79dd8612676d401a43fdd2589af47176508",
+          "assertionScope": [
+            "'administrator hydrates dashboard, retains login on reload and loads master selectors'",
+            "'faculty course selection renders the assigned practical and survives refresh'",
+            "'student dashboard shows the assigned practical and retains current authentication on refresh'",
+            "'browser sessions enforce role mutations, grade ownership and hidden-case privacy'",
+            "'public pages preserve theme and remain usable at phone, tablet and desktop widths'",
+            "'admin menu preserves existing destinations and keyboard operation on mobile'",
+            "'student overview and practical selection retain readable themes, navigation and mobile layout'",
+            "'late practical list response cannot overwrite the newly selected course'",
+            "'administrator downloads a readable credential PDF through the real student form'",
+            "'faculty authoring validates, creates, edits, extends and archives a practical over real HTTP'"
+          ]
+        }
+      ],
+      "status": "All original test declarations preserved"
+    },
+    {
+      "before": "tests/bulk-users-api.test.mjs",
+      "beforeSha256": "9c0cbaffbbbb88ee6ae023bf57ed6b236f9ed8951b1107fd56710f8014804ba0",
+      "beforeLane": "unit",
+      "assertionScope": [
+        "\"bulk CSV validates roles/limits and reports only committed rows without leaking DB errors\""
+      ],
+      "destinations": [
+        {
+          "path": "tests/unit/bulk-users-api.test.mjs",
+          "lane": "unit",
+          "sha256": "69191bda2c45e784e7a529cafbf125493df230c9fc91d46349125fd92ebb2d9a",
+          "assertionScope": [
+            "\"bulk CSV validates roles/limits and reports only committed rows without leaking DB errors\""
+          ]
+        }
+      ],
+      "status": "All original test declarations preserved"
+    },
+    {
+      "before": "tests/capacity.test.mjs",
+      "beforeSha256": "92c1b4043b9f002a9c323d496443679aa61da386d1fe7fee8e3cdf596648bed7",
+      "beforeLane": "unit",
+      "assertionScope": [
+        "'capacity runner requires an explicit origin and strictly bounded parameters'",
+        "'real loopback capacity run checks output, per-job ownership cookie and bounded concurrency'",
+        "`capacity run fails honestly for ${mode}`",
+        "'unready deployment fails before admitting any execution workload'",
+        "'achieved throughput and latency thresholds affect the result'",
+        "'whole-run deadline bounds outstanding polling and prevents further admissions'",
+        "`strict deployment readiness or redirects reject ${mode}`"
+      ],
+      "destinations": [
+        {
+          "path": "tests/unit/capacity.test.mjs",
+          "lane": "unit",
+          "sha256": "f3f312eb17c10ed492734214e0c821d428b6e562d9b493e3fe6c02cbe6d144ba",
+          "assertionScope": [
+            "'capacity runner requires an explicit origin and strictly bounded parameters'",
+            "'real loopback capacity run checks output, per-job ownership cookie and bounded concurrency'",
+            "`capacity run fails honestly for ${mode}`",
+            "'unready deployment fails before admitting any execution workload'",
+            "'achieved throughput and latency thresholds affect the result'",
+            "'whole-run deadline bounds outstanding polling and prevents further admissions'",
+            "`strict deployment readiness or redirects reject ${mode}`"
+          ]
+        }
+      ],
+      "status": "All original test declarations preserved"
+    },
+    {
+      "before": "tests/certification.test.mjs",
+      "beforeSha256": "49c30ef2f0d2718a1904d14f555227eca3077f51a4439ff118f41fd6b8298f0b",
+      "beforeLane": "unit",
+      "assertionScope": [
+        "'certification rejects incomplete, flaky, skipped, failed and missing system evidence'"
+      ],
+      "destinations": [
+        {
+          "path": "tests/unit/certification.test.mjs",
+          "lane": "unit",
+          "sha256": "a91cee770dfc8b776dc7dcfb9c844755ff5ec494c0aa39ad00bd6682e4f32226",
+          "assertionScope": [
+            "'certification rejects incomplete, flaky, skipped, failed and missing system evidence'",
+            "'certification cannot conceal a missing quarantine registry or unverified batch coverage'",
+            "'certification requires actual browser specs and exact discovered file membership'"
+          ]
+        }
+      ],
+      "status": "All original test declarations preserved"
+    },
+    {
+      "before": "tests/ci-summary.test.mjs",
+      "beforeSha256": "337352472078c4e38234610c405e4233a4fe5d955c2626edd5693b964cfa1980",
+      "beforeLane": "unit",
+      "assertionScope": [
+        "'quick-checks workflow has PR-only triggers and correct step IDs and env bindings'",
+        "'architecture-checks workflow has PR-only triggers'",
+        "'formatStatus maps GitHub Actions outcomes correctly'",
+        "'formatPreflight maps GitHub Actions outcomes correctly'",
+        "'getUnitDetails derives status and count only on verified success'",
+        "'buildSummary generates correct markdown matrix for different pipeline runs'",
+        "'writeSummary writes output to GITHUB_STEP_SUMMARY if defined'"
+      ],
+      "destinations": [
+        {
+          "path": "tests/unit/ci-summary.test.mjs",
+          "lane": "unit",
+          "sha256": "18b02846edd60aed512552a440054864cf854b253a8712e6f14f12943b98734e",
+          "assertionScope": [
+            "'quick-checks workflow has PR-only triggers and correct step IDs and env bindings'",
+            "'architecture-checks workflow has PR-only triggers'",
+            "'formatStatus maps GitHub Actions outcomes correctly'",
+            "'formatPreflight maps GitHub Actions outcomes correctly'",
+            "'getUnitDetails derives status and count only on verified success'",
+            "'buildSummary generates correct markdown matrix for different pipeline runs'",
+            "'writeSummary writes output to GITHUB_STEP_SUMMARY if defined'"
+          ]
+        }
+      ],
+      "status": "All original test declarations preserved"
+    },
+    {
+      "before": "tests/ci-tap.test.mjs",
+      "beforeSha256": "9ff30916656db296b50112b810fea46a549c509314ee6cf00dca9991da33e8ff",
+      "beforeLane": "unit",
+      "assertionScope": [
+        "`strict TAP accepts complete actual Node ${mode} protocol`",
+        "`strict TAP rejects actual Node ${mode} protocol`",
+        "'strict TAP rejects an explicitly focused invocation even when Node reports all green'",
+        "'strict TAP rejects truncated, empty, forged count and plan streams'",
+        "'strict test configurations cannot recurse into fixtures or forward caller filters'",
+        "'strict subprocess hard deadline terminates a real hung Node test process'"
+      ],
+      "destinations": [
+        {
+          "path": "tests/unit/ci-tap.test.mjs",
+          "lane": "unit",
+          "sha256": "ac7b274181360a66ae5676f06ecf4ce201a9e58396ef4ddcc38ff2241339ff8f",
+          "assertionScope": [
+            "`strict TAP accepts complete actual Node ${mode} protocol`",
+            "`strict TAP rejects actual Node ${mode} protocol`",
+            "'strict TAP rejects an explicitly focused invocation even when Node reports all green'",
+            "'strict TAP rejects truncated, empty, forged count and plan streams'",
+            "'strict test configurations cannot recurse into fixtures or forward caller filters'",
+            "'strict subprocess hard deadline terminates a real hung Node test process'",
+            "'a complete passing stream still fails when executed-file evidence omits or duplicates a discovered file'"
+          ]
+        }
+      ],
+      "status": "All original test declarations preserved"
+    },
+    {
+      "before": "tests/cluster-config.test.mjs",
+      "beforeSha256": "d173646aaa5244f4a32b08a9743e082db40c99082e3f5a6fee1b0b8a5b7ba5ae",
+      "beforeLane": "unit",
+      "assertionScope": [
+        "'lab supervisor rejects invalid replica counts and colliding listener ports before startup'"
+      ],
+      "destinations": [
+        {
+          "path": "tests/unit/cluster-config.test.mjs",
+          "lane": "unit",
+          "sha256": "322b36170940ad0aea38bfaa4ff58d3a96351ba736696befc991c24b47bd4e44",
+          "assertionScope": [
+            "'lab supervisor rejects invalid replica counts and colliding listener ports before startup'"
+          ]
+        }
+      ],
+      "status": "All original test declarations preserved"
+    },
+    {
+      "before": "tests/course-management-service.test.mjs",
+      "beforeSha256": "719c46e32276028beb2c190d6f129e902041b7bb5c2544f3b26507245bb5c502",
+      "beforeLane": "unit",
+      "assertionScope": [
+        "'catalog service validates payloads and identifiers before database access'",
+        "'catalog service delegates one parameterized atomic write and maps database errors'"
+      ],
+      "destinations": [
+        {
+          "path": "tests/unit/course-management-service.test.mjs",
+          "lane": "unit",
+          "sha256": "6cdeef906cc708eed77055ef9df9035134a6e58888dd7933522c40e92cef0f17",
+          "assertionScope": [
+            "'catalog service validates payloads and identifiers before database access'",
+            "'catalog service delegates one parameterized atomic write and maps database errors'"
+          ]
+        }
+      ],
+      "status": "All original test declarations preserved"
+    },
+    {
+      "before": "tests/course-management-sql.test.mjs",
+      "beforeSha256": "3e6fcc41a89e926424f9d85a9ce5f60e5aade831086762826ab4cee1529be759",
+      "beforeLane": "unit",
+      "assertionScope": [
+        "'catalog mutations preserve history, department references and audit atomicity'"
+      ],
+      "destinations": [
+        {
+          "path": "tests/unit/course-management-sql.test.mjs",
+          "lane": "unit",
+          "sha256": "02fd6f1ffe87daf2814e340b69461fc375c659707b46d1f91070663a0824fbc6",
+          "assertionScope": [
+            "'catalog mutations preserve history, department references and audit atomicity'"
+          ]
+        }
+      ],
+      "status": "All original test declarations preserved"
+    },
+    {
+      "before": "tests/course-report.test.mjs",
+      "beforeSha256": "803cd5850e32eaf60f0052ef2e2241ad3113c8ac4347a7d0158748abe2b34848",
+      "beforeLane": "unit",
+      "assertionScope": [
+        "\"marks matrix bounds both dimensions, ignores malformed semesters and scopes grades\""
+      ],
+      "destinations": [
+        {
+          "path": "tests/unit/course-report.test.mjs",
+          "lane": "unit",
+          "sha256": "3d0b6d79d0f4b64e8a37e44b28419b2c59dab8229191838796128149903562da",
+          "assertionScope": [
+            "\"marks matrix bounds both dimensions, ignores malformed semesters and scopes grades\""
+          ]
+        }
+      ],
+      "status": "All original test declarations preserved"
+    },
+    {
+      "before": "tests/credential-pdf.test.mjs",
+      "beforeSha256": "d3ea6057bc7aa0f22d1cd0b9c6728538aec487e04709825fef3c4d11f1615476",
+      "beforeLane": "unit",
+      "assertionScope": [
+        "'credential PDF functions reject execution outside of a browser window'",
+        "'credential PDF feature exposes the authoritative browser methods'",
+        "'credential PDF generation constructs valid document with synthetic non-sensitive data'"
+      ],
+      "destinations": [
+        {
+          "path": "tests/unit/credential-pdf.test.mjs",
+          "lane": "unit",
+          "sha256": "a949158babf9c857c93e30a6d7dbbf202795fdd857095932c23ad594fd29357c",
+          "assertionScope": [
+            "'credential PDF functions reject execution outside of a browser window'",
+            "'credential PDF feature exposes the authoritative browser methods'",
+            "'credential PDF generation constructs valid document with synthetic non-sensitive data'"
+          ]
+        }
+      ],
+      "status": "All original test declarations preserved"
+    },
+    {
+      "before": "tests/database-assets.test.mjs",
+      "beforeSha256": "50561550b9d5a28fe0f98624c209b184861574e00bf878c1c98e9777c3e7ec1d",
+      "beforeLane": "unit",
+      "assertionScope": [
+        "'relocated SQL preserves every original name, raw byte checksum and ledger manifest'",
+        "'database assets and manifest generation resolve outside repository cwd; seed still refuses'"
+      ],
+      "destinations": [
+        {
+          "path": "tests/unit/database-assets.test.mjs",
+          "lane": "unit",
+          "sha256": "6e75b6193faa5f0d4b8d9a3bfe2b545160bbe99148810a6fb725d4fdcdb0bf23",
+          "assertionScope": [
+            "'relocated SQL preserves every original name, raw byte checksum and ledger manifest'",
+            "'database assets and manifest generation resolve outside repository cwd; seed still refuses'"
+          ]
+        }
+      ],
+      "status": "All original test declarations preserved"
+    },
+    {
+      "before": "tests/database-client.test.mjs",
+      "beforeSha256": "028f513e0e4fccb15e1ad8ce0f05e131b0dcdab9444d9ab586bda208e0f56013",
+      "beforeLane": "unit",
+      "assertionScope": [
+        "\"native transaction awaits its definitive result instead of timing out before a late commit\""
+      ],
+      "destinations": [
+        {
+          "path": "tests/unit/database-client.test.mjs",
+          "lane": "unit",
+          "sha256": "d144c8e28044a285910c8831ca3cc67d59fd77f3224c27ff91c4bd078edd4506",
+          "assertionScope": [
+            "\"native transaction awaits its definitive result instead of timing out before a late commit\""
+          ]
+        }
+      ],
+      "status": "All original test declarations preserved"
+    },
+    {
+      "before": "tests/database-inspection.test.mjs",
+      "beforeSha256": "54bb66833ff2c920332af1cc81fe6fd139d83fb5bf5fb1e194d62991f1157f6d",
+      "beforeLane": "unit",
+      "assertionScope": [
+        "'supported schema/index inspection runs read-only queries and closes the client'"
+      ],
+      "destinations": [
+        {
+          "path": "tests/unit/database-inspection.test.mjs",
+          "lane": "unit",
+          "sha256": "404b00aeaf311b5a6e11c9217946dc1026127b7dd56ef57f2e24f89211ab59c0",
+          "assertionScope": [
+            "'supported schema/index inspection runs read-only queries and closes the client'"
+          ]
+        }
+      ],
+      "status": "All original test declarations preserved"
+    },
+    {
+      "before": "tests/database-no-replay.test.mjs",
+      "beforeSha256": "4ea23e7f2a49d9d65c5ead27e50f6448785219a3c0423da59451d97a7c805208",
+      "beforeLane": "unit",
+      "assertionScope": [
+        "'uncertain writes and native transactions are never automatically replayed'"
+      ],
+      "destinations": [
+        {
+          "path": "tests/unit/database-no-replay.test.mjs",
+          "lane": "unit",
+          "sha256": "1677729380cc879c894b6cab8d018a4366bd3533bcfffe673f357ac0ca39a2af",
+          "assertionScope": [
+            "'uncertain writes and native transactions are never automatically replayed'"
+          ]
+        }
+      ],
+      "status": "All original test declarations preserved"
+    },
+    {
+      "before": "tests/database-ops.test.mjs",
+      "beforeSha256": "c8a6b085fc82567aaba6a01aebddfa3f6c8cb076773affb1c229a66e35386758",
+      "beforeLane": "unit",
+      "assertionScope": [
+        "'database operations restore and rehearse before any source migration, preserving private evidence'",
+        "'verify mode never migrates the source and restore mismatches prevent all migrations'",
+        "'restore or rehearsal failures clean disposable databases and block source writes'",
+        "'explicit target, maintenance gate, direct connection, and isolated restore target are mandatory'",
+        "'libpq command environment has decoded credentials without leaking URLs into argv'"
+      ],
+      "destinations": [
+        {
+          "path": "tests/unit/database-ops.test.mjs",
+          "lane": "unit",
+          "sha256": "0017f6b015aa7e7954303d2db32da2b933b7a61cfb54c2bec06133d2fcff62d0",
+          "assertionScope": [
+            "'database operations restore and rehearse before any source migration, preserving private evidence'",
+            "'verify mode never migrates the source and restore mismatches prevent all migrations'",
+            "'restore or rehearsal failures clean disposable databases and block source writes'",
+            "'explicit target, maintenance gate, direct connection, and isolated restore target are mandatory'",
+            "'libpq command environment has decoded credentials without leaking URLs into argv'"
+          ]
+        }
+      ],
+      "status": "All original test declarations preserved"
+    },
+    {
+      "before": "tests/deployment-readiness.test.mjs",
+      "beforeSha256": "4da048b5999605d535e0bb0e57531238ea1644ed3a8a057fdf5a7790f85eefcc",
+      "beforeLane": "unit",
+      "assertionScope": [
+        "\"deployment gate rejects degraded workers, stale health, caches and redirects over real HTTP\""
+      ],
+      "destinations": [
+        {
+          "path": "tests/unit/deployment-readiness.test.mjs",
+          "lane": "unit",
+          "sha256": "ff4f9d55dd0491f55b1d90ed6bdff2b0a44535f2935627606730446a1a71c3a3",
+          "assertionScope": [
+            "\"deployment gate rejects degraded workers, stale health, caches and redirects over real HTTP\""
+          ]
+        }
+      ],
+      "status": "All original test declarations preserved"
+    },
+    {
+      "before": "tests/execution-api.test.mjs",
+      "beforeSha256": "e6c377b615cb694c5e2c98c9789f1b621bb2ba1f60f3114d09bddd8b5a348209",
+      "beforeLane": "unit",
+      "assertionScope": [
+        "'all five language routes deny anonymous practical execution and accept assigned students'",
+        "'both submission entry points enforce role and shared validation/rate limits'",
+        "'job endpoint denies cross-user reads and redacts hidden tests for the owner'",
+        "'anonymous playground polling requires its HttpOnly browser session'",
+        "'direct-Docker legacy practice path now queues and validates payloads'",
+        "'prototype-property problem identifiers cannot enqueue an empty test suite'",
+        "'workspace routes enforce practical membership and bounded source input'"
+      ],
+      "destinations": [
+        {
+          "path": "tests/unit/execution-api.test.mjs",
+          "lane": "unit",
+          "sha256": "f1a3ff1ec500297b46e20153743e82387bb54a6bd0dad8ed970ebb67ac6cf354",
+          "assertionScope": [
+            "'all five language routes deny anonymous practical execution and accept assigned students'",
+            "'both submission entry points enforce role and shared validation/rate limits'",
+            "'job endpoint denies cross-user reads and redacts hidden tests for the owner'",
+            "'anonymous playground polling requires its HttpOnly browser session'",
+            "'direct-Docker legacy practice path now queues and validates payloads'",
+            "'prototype-property problem identifiers cannot enqueue an empty test suite'",
+            "'workspace routes enforce practical membership and bounded source input'"
+          ]
+        }
+      ],
+      "status": "All original test declarations preserved"
+    },
+    {
+      "before": "tests/execution-security.test.mjs",
+      "beforeSha256": "335bdb6febe40670ab6fc397d0db64d6fe77d482660ea0f8b1943f5632b0924e",
+      "beforeLane": "unit",
+      "assertionScope": [
+        "'guest sessions are opaque, reusable, and reject malformed cookies'",
+        "'job ownership denies anonymous and other-user reads, including legacy ownerless jobs'",
+        "'hidden test allowlist removes inputs, expected results, outputs and future secret fields'",
+        "'all practical entry points can share batch, semester, session and role policy'",
+        "'execution rejects oversized, invalid language and non-string input payloads'"
+      ],
+      "destinations": [
+        {
+          "path": "tests/unit/execution-security.test.mjs",
+          "lane": "unit",
+          "sha256": "c30135615fea29f5309bc99f9a344eb6282d9e6673f89ac5b82c58422a24d4b2",
+          "assertionScope": [
+            "'guest sessions are opaque, reusable, and reject malformed cookies'",
+            "'job ownership denies anonymous and other-user reads, including legacy ownerless jobs'",
+            "'hidden test allowlist removes inputs, expected results, outputs and future secret fields'",
+            "'all practical entry points can share batch, semester, session and role policy'",
+            "'execution rejects oversized, invalid language and non-string input payloads'"
+          ]
+        }
+      ],
+      "status": "All original test declarations preserved"
+    },
+    {
+      "before": "tests/extracted-read-services.test.mjs",
+      "beforeSha256": "dab2f9ae08b2856df5c130902b06e9bdbf1b13934a6102a222e29d070082c87c",
+      "beforeLane": "unit",
+      "assertionScope": [
+        "'extracted reads preserve cohort visibility, reporting authority, ordering and validation'"
+      ],
+      "destinations": [
+        {
+          "path": "tests/unit/extracted-read-services.test.mjs",
+          "lane": "unit",
+          "sha256": "0c9ca8198fc18d29285d7fbd3b79108e195b09dcc76e775760854863d96fb0d2",
+          "assertionScope": [
+            "'extracted reads preserve cohort visibility, reporting authority, ordering and validation'"
+          ]
+        }
+      ],
+      "status": "All original test declarations preserved"
+    },
+    {
+      "before": "tests/faculty-mapping-authority.test.mjs",
+      "beforeSha256": "1c629e67829b6b73acfc1f26d75547a6abbd5b9ae894b8982bf0e46f9864fe3f",
+      "beforeLane": "unit",
+      "assertionScope": [
+        "'original practical ownership cannot bypass a revoked current faculty mapping'"
+      ],
+      "destinations": [
+        {
+          "path": "tests/unit/faculty-mapping-authority.test.mjs",
+          "lane": "unit",
+          "sha256": "002e92f5bb3ccfbc1d0b3f11a967592d098c3214ce3647077091d9416793f9a9",
+          "assertionScope": [
+            "'original practical ownership cannot bypass a revoked current faculty mapping'"
+          ]
+        }
+      ],
+      "status": "All original test declarations preserved"
+    },
+    {
+      "before": "tests/faculty-review-fixtures.test.mjs",
+      "beforeSha256": "6d5bf65fe200b4d389f14a4dea4a096b545ffa83b8dc6f18acf5642ca2cb67f4",
+      "beforeLane": "unit",
+      "assertionScope": [
+        "'browser fixtures load finite selectors through the real collection client and page submissions'"
+      ],
+      "destinations": [
+        {
+          "path": "tests/unit/faculty-review-fixtures.test.mjs",
+          "lane": "unit",
+          "sha256": "ccd48b6056e7ac2c3ff3ca44e370136c1ec3633647df0382dae416c6b7a18b46",
+          "assertionScope": [
+            "'browser fixtures load finite selectors through the real collection client and page submissions'"
+          ]
+        }
+      ],
+      "status": "All original test declarations preserved"
+    },
+    {
+      "before": "tests/faculty-review-requests.test.mjs",
+      "beforeSha256": "ba4fd9660f06b097c32c9a020244de590f3070b84cf37b8c8c42bf35344ac1c6",
+      "beforeLane": "unit",
+      "assertionScope": [
+        "'selection changes abort work and discard late successful/failed responses'",
+        "'public review clients retain cursor/filter contracts and propagate forbidden/reset failures'"
+      ],
+      "destinations": [
+        {
+          "path": "tests/unit/faculty-review-requests.test.mjs",
+          "lane": "unit",
+          "sha256": "bca05e316b58a24eda8b36e9d04ede3b5098cc7fa526ac3e02da9778650991f0",
+          "assertionScope": [
+            "'selection changes abort work and discard late successful/failed responses'",
+            "'public review clients retain cursor/filter contracts and propagate forbidden/reset failures'"
+          ]
+        }
+      ],
+      "status": "All original test declarations preserved"
+    },
+    {
+      "before": "tests/fetch-collection.test.mjs",
+      "beforeSha256": "8d33a7b59888aba6daeb962bd0bd9ecc508c4c45f491528bf16aa28217d0dba0",
+      "beforeLane": "unit",
+      "assertionScope": [
+        "'selector follows bounded pages, encodes cursor and preserves credentials'",
+        "'selector stops on repeated cursors and rejects failed responses'"
+      ],
+      "destinations": [
+        {
+          "path": "tests/unit/fetch-collection.test.mjs",
+          "lane": "unit",
+          "sha256": "665c7e6c9ca24ed6e78842ef139b5d0e9693b69d2751657f3bc980b40c3da9f8",
+          "assertionScope": [
+            "'selector follows bounded pages, encodes cursor and preserves credentials'",
+            "'selector stops on repeated cursors and rejects failed responses'"
+          ]
+        }
+      ],
+      "status": "All original test declarations preserved"
+    },
+    {
+      "before": "tests/final-separation.test.mjs",
+      "beforeSha256": "a4465b2ed70098814b1a3210ecf98e9ec1f6ac7bb51217c367e3440cd2e6134e",
+      "beforeLane": "unit",
+      "assertionScope": [
+        "'all baseline endpoints belong to API and frontend source/config cannot import backend implementations or secrets'",
+        "'public practice contracts stay browser safe and every application declares static and dynamic direct imports'",
+        "'standard Next.js processes receive frontend settings without backend or launcher secrets'",
+        "'confirmed API-only feature modules are owned by API and do not return to core'"
+      ],
+      "destinations": [
+        {
+          "path": "tests/architecture/final-separation.test.mjs",
+          "lane": "architecture",
+          "sha256": "32f7b3266e86c6283a9e7d67d01f706ea775119667779540311eded67e2dadea",
+          "assertionScope": [
+            "'all baseline endpoints belong to API and frontend source/config cannot import backend implementations or secrets'",
+            "'public practice contracts stay browser safe and every application declares static and dynamic direct imports'",
+            "'standard Next.js processes receive frontend settings without backend or launcher secrets'",
+            "'confirmed API-only feature modules are owned by API and do not return to core'"
+          ]
+        }
+      ],
+      "status": "All original test declarations preserved"
+    },
+    {
+      "before": "tests/function-harness.test.mjs",
+      "beforeSha256": "dc3ef582c89ba5e72476ca095ccad59b61022c952e0e0d81bccd639f09bd6fef",
+      "beforeLane": "unit",
+      "assertionScope": [
+        "`${language} real harness: ${problem.slug}`",
+        "'function comparison rejects invalid output and incorrect values'"
+      ],
+      "destinations": [
+        {
+          "path": "tests/unit/function-harness.test.mjs",
+          "lane": "unit",
+          "sha256": "1a88d2c39ca4357e4859dcf58c5bd60c109733b5d17371c34c54226708c2f7d4",
+          "assertionScope": [
+            "`${language} real harness: ${problem.slug}`",
+            "'function comparison rejects invalid output and incorrect values'"
+          ]
+        }
+      ],
+      "status": "All original test declarations preserved"
+    },
+    {
+      "before": "tests/gateway-routing.test.mjs",
+      "beforeSha256": "e8fef6693826b3ad9022042bff8f96a65c3ba3df0951eb275c0b4886fd351b20",
+      "beforeLane": "unit",
+      "assertionScope": [
+        "'external gateway has one API owner for all API paths, preserves cookies/query, and keeps pages available through API outage'"
+      ],
+      "destinations": [
+        {
+          "path": "tests/unit/gateway-routing.test.mjs",
+          "lane": "unit",
+          "sha256": "2f2aa28c42dd979e816495fcd0f0ac8e0be066ea6e5e5854ac41db18731de5ed",
+          "assertionScope": [
+            "'external gateway has one API owner for all API paths, preserves cookies/query, and keeps pages available through API outage'"
+          ]
+        }
+      ],
+      "status": "All original test declarations preserved"
+    },
+    {
+      "before": "tests/grading.test.mjs",
+      "beforeSha256": "cc8945dc2cbff86f3d750412f9e07d5c069f6da60b1be4ca0dcb332fca0c83ea",
+      "beforeLane": "unit",
+      "assertionScope": [
+        "'zero-mark failed cases cannot pass; queue time determines lateness and hidden cases stay redacted'",
+        "'database failure rejects the job instead of reporting completed grading'",
+        "'replayed completed attempt does not execute code again'"
+      ],
+      "destinations": [
+        {
+          "path": "tests/unit/grading.test.mjs",
+          "lane": "unit",
+          "sha256": "14f412680d6e3baf0fcbe8fe89960b2d3c810735d5a718cc1533215861172ca5",
+          "assertionScope": [
+            "'zero-mark failed cases cannot pass; queue time determines lateness and hidden cases stay redacted'",
+            "'database failure rejects the job instead of reporting completed grading'",
+            "'replayed completed attempt does not execute code again'"
+          ]
+        }
+      ],
+      "status": "All original test declarations preserved"
+    },
+    {
+      "before": "tests/health.test.mjs",
+      "beforeSha256": "df368c10731cb1b87eb9669fb91c57dbcd37022fdc9fdf772b3e4b14a2e564e2",
+      "beforeLane": "unit",
+      "assertionScope": [
+        "\"readiness becomes 503 after dependency failure and does not retain stale healthy state\""
+      ],
+      "destinations": [
+        {
+          "path": "tests/unit/health.test.mjs",
+          "lane": "unit",
+          "sha256": "deafe48454088370c5efc10090431f757e588364960be9ea1017ad462ac7d2fb",
+          "assertionScope": [
+            "\"readiness becomes 503 after dependency failure and does not retain stale healthy state\""
+          ]
+        }
+      ],
+      "status": "All original test declarations preserved"
+    },
+    {
+      "before": "tests/integration/neon-upgrade.test.mjs",
+      "beforeSha256": "3b637177395f15d76d870eedf6aad4d239cc562c9e423942c9f089e10613ac6b",
+      "beforeLane": "neon",
+      "assertionScope": [
+        "\"Neon upgrade on copied deployed table definitions preserves compatibility\""
+      ],
+      "destinations": [
+        {
+          "path": "tests/integration/neon-upgrade.test.mjs",
+          "lane": "neon",
+          "sha256": "3b637177395f15d76d870eedf6aad4d239cc562c9e423942c9f089e10613ac6b",
+          "assertionScope": [
+            "\"Neon upgrade on copied deployed table definitions preserves compatibility\""
+          ]
+        }
+      ],
+      "status": "All original test declarations preserved"
+    },
+    {
+      "before": "tests/integration/neon.test.mjs",
+      "beforeSha256": "c69ea8c1e61aeb43d19ae8657797201adff462227e927c864c8580610659363f",
+      "beforeLane": "neon",
+      "assertionScope": [
+        "\"isolated Neon schema: migrations, concurrent grades and transactional administration\""
+      ],
+      "destinations": [
+        {
+          "path": "tests/integration/neon.test.mjs",
+          "lane": "neon",
+          "sha256": "c69ea8c1e61aeb43d19ae8657797201adff462227e927c864c8580610659363f",
+          "assertionScope": [
+            "\"isolated Neon schema: migrations, concurrent grades and transactional administration\""
+          ]
+        }
+      ],
+      "status": "All original test declarations preserved"
+    },
+    {
+      "before": "tests/integration/postgres.test.mjs",
+      "beforeSha256": "722c39d537135bda64ed1e38037703e239c5332f3ae2dd50a07d57d552156fed",
+      "beforeLane": "integration",
+      "assertionScope": [
+        "'concurrent PostgreSQL attempts preserve one best grade and matching cases'"
+      ],
+      "destinations": [
+        {
+          "path": "tests/integration/postgres.test.mjs",
+          "lane": "integration",
+          "sha256": "722c39d537135bda64ed1e38037703e239c5332f3ae2dd50a07d57d552156fed",
+          "assertionScope": [
+            "'concurrent PostgreSQL attempts preserve one best grade and matching cases'"
+          ]
+        }
+      ],
+      "status": "All original test declarations preserved"
+    },
+    {
+      "before": "tests/integration/queue.test.mjs",
+      "beforeSha256": "87492e537a26015330213c79b764d07dfa71e9b01f0b31ea158a6cda835d644d",
+      "beforeLane": "integration",
+      "assertionScope": [
+        "'atomic admission caps concurrent producers, isolates owners and recovers completed slots'"
+      ],
+      "destinations": [
+        {
+          "path": "tests/integration/queue.test.mjs",
+          "lane": "integration",
+          "sha256": "87492e537a26015330213c79b764d07dfa71e9b01f0b31ea158a6cda835d644d",
+          "assertionScope": [
+            "'atomic admission caps concurrent producers, isolates owners and recovers completed slots'"
+          ]
+        }
+      ],
+      "status": "All original test declarations preserved"
+    },
+    {
+      "before": "tests/integration/realtime.test.mjs",
+      "beforeSha256": "a474bf067ca294159d1d243b45321b8763c3025c9207073decf1b1db98734250",
+      "beforeLane": "integration",
+      "assertionScope": [
+        "'shared Redis adapter delivers authorized rooms across independent websocket servers'"
+      ],
+      "destinations": [
+        {
+          "path": "tests/integration/realtime.test.mjs",
+          "lane": "integration",
+          "sha256": "a474bf067ca294159d1d243b45321b8763c3025c9207073decf1b1db98734250",
+          "assertionScope": [
+            "'shared Redis adapter delivers authorized rooms across independent websocket servers'"
+          ]
+        }
+      ],
+      "status": "All original test declarations preserved"
+    },
+    {
+      "before": "tests/integration/sandbox.test.mjs",
+      "beforeSha256": "d32e91beb06ddbaa267bebfaba392fdbbad6c98e2598b475c6ecf75c7908e829",
+      "beforeLane": "docker",
+      "assertionScope": [
+        "`${language} compiles and executes in a disposable container`",
+        "'real sandboxes cannot see another job workspace or write the image filesystem'",
+        "'C and JavaScript function problems execute through the sandbox runner'",
+        "'real sandbox drops capabilities, excludes host sockets and disables external network'",
+        "'real timeout removes the container including detached child processes'",
+        "'real sandbox expires without a worker cleanup call'",
+        "'recovery drill kills owner then reaps only its expired deployment-scoped sandbox'"
+      ],
+      "destinations": [
+        {
+          "path": "tests/docker/sandbox.test.mjs",
+          "lane": "docker",
+          "sha256": "d32e91beb06ddbaa267bebfaba392fdbbad6c98e2598b475c6ecf75c7908e829",
+          "assertionScope": [
+            "`${language} compiles and executes in a disposable container`",
+            "'real sandboxes cannot see another job workspace or write the image filesystem'",
+            "'C and JavaScript function problems execute through the sandbox runner'",
+            "'real sandbox drops capabilities, excludes host sockets and disables external network'",
+            "'real timeout removes the container including detached child processes'",
+            "'real sandbox expires without a worker cleanup call'",
+            "'recovery drill kills owner then reaps only its expired deployment-scoped sandbox'"
+          ]
+        }
+      ],
+      "status": "All original test declarations preserved"
+    },
+    {
+      "before": "tests/integration/worker-readiness.test.mjs",
+      "beforeSha256": "f0865642350e4dcd5de678209ae933867d59acb958beab118da03408344430c0",
+      "beforeLane": "integration",
+      "assertionScope": [
+        "'real Redis readiness detects missing, paused, unhealthy and expired worker leases'"
+      ],
+      "destinations": [
+        {
+          "path": "tests/integration/worker-readiness.test.mjs",
+          "lane": "integration",
+          "sha256": "f0865642350e4dcd5de678209ae933867d59acb958beab118da03408344430c0",
+          "assertionScope": [
+            "'real Redis readiness detects missing, paused, unhealthy and expired worker leases'"
+          ]
+        }
+      ],
+      "status": "All original test declarations preserved"
+    },
+    {
+      "before": "tests/integration/worker-recovery.test.mjs",
+      "beforeSha256": "3656fa72dbadbb5b4e609d4a173fe64127a5b5add7117fa080bc8e4eece30ef2",
+      "beforeLane": "integration",
+      "assertionScope": [
+        "\"a killed worker leaves quota reserved until the same job is recovered and completed\"",
+        "\"production shutdown drains an active real Redis job without starting waiting work\"",
+        "\"repeated worker crashes exhaust stalled recovery and release the owner slot\""
+      ],
+      "destinations": [
+        {
+          "path": "tests/integration/worker-recovery.test.mjs",
+          "lane": "integration",
+          "sha256": "3656fa72dbadbb5b4e609d4a173fe64127a5b5add7117fa080bc8e4eece30ef2",
+          "assertionScope": [
+            "\"a killed worker leaves quota reserved until the same job is recovered and completed\"",
+            "\"production shutdown drains an active real Redis job without starting waiting work\"",
+            "\"repeated worker crashes exhaust stalled recovery and release the owner slot\""
+          ]
+        }
+      ],
+      "status": "All original test declarations preserved"
+    },
+    {
+      "before": "tests/job-lifecycle.test.js",
+      "beforeSha256": "3a50b5f1b2688b6662ca2212be45f4ae51118f06d1838befe44922b0ef0d73d6",
+      "beforeLane": "unit",
+      "assertionScope": [
+        "'passing sample verdict is independent of grading marks'",
+        "'job lifecycle handles queue, completion, terminal errors, deadline and navigation'",
+        "'queued → active → completed returns result and phases'",
+        "`HTTP ${status} terminates instead of polling forever`",
+        "'worker failure is surfaced'",
+        "'deadline does not claim job cancellation'",
+        "'navigation abort interrupts a stalled request'"
+      ],
+      "destinations": [
+        {
+          "path": "tests/unit/job-lifecycle.test.js",
+          "lane": "unit",
+          "sha256": "e791c788bf1351f4b0c1355fe444806c2c1372b7d73fcaac13634edb57bea1ea",
+          "assertionScope": [
+            "'passing sample verdict is independent of grading marks'",
+            "'job lifecycle handles queue, completion, terminal errors, deadline and navigation'",
+            "'queued → active → completed returns result and phases'",
+            "`HTTP ${status} terminates instead of polling forever`",
+            "'worker failure is surfaced'",
+            "'deadline does not claim job cancellation'",
+            "'navigation abort interrupts a stalled request'"
+          ]
+        }
+      ],
+      "status": "All original test declarations preserved"
+    },
+    {
+      "before": "tests/job-wait.test.mjs",
+      "beforeSha256": "73b596d447593e302385705422933f658820fa609e74432bdf172ecf22725103",
+      "beforeLane": "unit",
+      "assertionScope": [
+        "'polling preserves authorization and returns completed result'",
+        "'access denied stops polling immediately'",
+        "'a hung request is bounded and aborted by the deadline'",
+        "'socket completion only resolves its matching job and cleans subscriptions'"
+      ],
+      "destinations": [
+        {
+          "path": "tests/unit/job-wait.test.mjs",
+          "lane": "unit",
+          "sha256": "0674f0d17da7a0f4e37e3dc363e485d966064a22ea37123e980c8830c120f722",
+          "assertionScope": [
+            "'polling preserves authorization and returns completed result'",
+            "'access denied stops polling immediately'",
+            "'a hung request is bounded and aborted by the deadline'",
+            "'socket completion only resolves its matching job and cleans subscriptions'"
+          ]
+        }
+      ],
+      "status": "All original test declarations preserved"
+    },
+    {
+      "before": "tests/lab-launcher-env.test.mjs",
+      "beforeSha256": "4081629353294d01c0559389bb4afffeb066285439bc3ca70c637bfd22f3c03c",
+      "beforeLane": "unit",
+      "assertionScope": [
+        "'launcher preserves the web port and derives worker realtime from the API port'",
+        "'launcher dotenv precedence matches web bootstrap while process overrides win'",
+        "'launcher preserves explicit dotenv realtime/origins and process overrides'",
+        "'launcher parses dotenv as data and does not export unrelated app configuration'",
+        "'launcher defaults are bounded and invalid ports fail before startup'",
+        "'both native launchers delegate to the shared resolver before applying defaults'",
+        "'launcher bridge passes resolved values to a real child and preserves its exit code'",
+        "'launcher derives a separate API origin and preserves explicit overrides'"
+      ],
+      "destinations": [
+        {
+          "path": "tests/unit/lab-launcher-env.test.mjs",
+          "lane": "unit",
+          "sha256": "899a50984eafce99a014504c5b6b5ff39ff62cfffc086b8aa1b32976eaa2afcc",
+          "assertionScope": [
+            "'launcher preserves the web port and derives worker realtime from the API port'",
+            "'launcher dotenv precedence matches web bootstrap while process overrides win'",
+            "'launcher preserves explicit dotenv realtime/origins and process overrides'",
+            "'launcher parses dotenv as data and does not export unrelated app configuration'",
+            "'launcher defaults are bounded and invalid ports fail before startup'",
+            "'both native launchers delegate to the shared resolver before applying defaults'",
+            "'launcher bridge passes resolved values to a real child and preserves its exit code'",
+            "'launcher derives a separate API origin and preserves explicit overrides'"
+          ]
+        }
+      ],
+      "status": "All original test declarations preserved"
+    },
+    {
+      "before": "tests/load-result.test.mjs",
+      "beforeSha256": "030e6a66cbb74cf2ff3a2bd3ae1e9b46d7580ac670700944b47195d91ad09840",
+      "beforeLane": "unit",
+      "assertionScope": [
+        "\"capacity measurement requires successful execution and the expected output\""
+      ],
+      "destinations": [
+        {
+          "path": "tests/unit/load-result.test.mjs",
+          "lane": "unit",
+          "sha256": "c81a1faeb8ecf1d5dc211a86dfc1b94e6b861f14fae62320c2136704d50a9768",
+          "assertionScope": [
+            "\"capacity measurement requires successful execution and the expected output\""
+          ]
+        }
+      ],
+      "status": "All original test declarations preserved"
+    },
+    {
+      "before": "tests/migration-errors.test.mjs",
+      "beforeSha256": "6d8aa7d6f277483e3e746960fcc171691baae33f507374019f6c9c3804cd3846",
+      "beforeLane": "unit",
+      "assertionScope": [
+        "'migration SQL errors survive a database outage during reconciliation'"
+      ],
+      "destinations": [
+        {
+          "path": "tests/unit/migration-errors.test.mjs",
+          "lane": "unit",
+          "sha256": "d86b3bab8c7a83d87e20325fbf1de8c3c308411d923b269745968e4ffcc53ce8",
+          "assertionScope": [
+            "'migration SQL errors survive a database outage during reconciliation'"
+          ]
+        }
+      ],
+      "status": "All original test declarations preserved"
+    },
+    {
+      "before": "tests/migrations.test.mjs",
+      "beforeSha256": "4ceb557461a91aa71d5110f7d230863b78d09414505ddc40c1c5c0ee12746632",
+      "beforeLane": "unit",
+      "assertionScope": [
+        "'migrations and grading are transactional, idempotent and preserve best grades'",
+        "'duplicate historic grades stop migration without partial schema changes'"
+      ],
+      "destinations": [
+        {
+          "path": "tests/unit/migrations.test.mjs",
+          "lane": "unit",
+          "sha256": "03459619b503c6474fed57f6d2440c59d4bb963e4ee0529fb2f77a37f55c09b3",
+          "assertionScope": [
+            "'migrations and grading are transactional, idempotent and preserve best grades'",
+            "'duplicate historic grades stop migration without partial schema changes'"
+          ]
+        }
+      ],
+      "status": "All original test declarations preserved"
+    },
+    {
+      "before": "tests/password-session.test.mjs",
+      "beforeSha256": "3033b573fa502e295d7dd3a1a48b760106621d5df34601c0599d4c281688dfc7",
+      "beforeLane": "unit",
+      "assertionScope": [
+        "'self-service password changes rotate sessions atomically and reject concurrent session changes'"
+      ],
+      "destinations": [
+        {
+          "path": "tests/unit/password-session.test.mjs",
+          "lane": "unit",
+          "sha256": "258f3f76d49e715e989db1fefc687885cb7cd98caac200eaae333797bd1fb4d7",
+          "assertionScope": [
+            "'self-service password changes rotate sessions atomically and reject concurrent session changes'"
+          ]
+        }
+      ],
+      "status": "All original test declarations preserved"
+    },
+    {
+      "before": "tests/postgres-client.test.mjs",
+      "beforeSha256": "c99c10fc4561390e817759621177fc87d5507eeb7134f712aad90859349bff32",
+      "beforeLane": "unit",
+      "assertionScope": [
+        "\"PostgreSQL transport parameterizes tags and rolls back failed transactions\"",
+        "\"PostgreSQL transport rejects invalid pool/timeout configuration\"",
+        "\"failed rollback discards its connection and preserves the original failure\""
+      ],
+      "destinations": [
+        {
+          "path": "tests/unit/postgres-client.test.mjs",
+          "lane": "unit",
+          "sha256": "1938ab1a2bdb80623f13c91f5fbc079ad128d815cc383db042d98c69aa2a66f7",
+          "assertionScope": [
+            "\"PostgreSQL transport parameterizes tags and rolls back failed transactions\"",
+            "\"PostgreSQL transport rejects invalid pool/timeout configuration\"",
+            "\"failed rollback discards its connection and preserves the original failure\""
+          ]
+        }
+      ],
+      "status": "All original test declarations preserved"
+    },
+    {
+      "before": "tests/practical-authoring.test.mjs",
+      "beforeSha256": "3c599f0c6f13e0c643025cc16eea3cd853dfc27735ffa478f4249f11207537c9",
+      "beforeLane": "unit",
+      "assertionScope": [
+        "'practicals API client constructs correct URLs, methods, headers and payloads'",
+        "'practicals API client surfaces backend error messages on failure'",
+        "'practicals feature obeys frontend-only boundary constraints'"
+      ],
+      "destinations": [
+        {
+          "path": "tests/architecture/practical-authoring.test.mjs",
+          "lane": "architecture",
+          "sha256": "a9a7d85bc4ffa9c91334fdd4f860b3af4657f70af7f12e3588c69dc84e706720",
+          "assertionScope": [
+            "'practicals API client constructs correct URLs, methods, headers and payloads'",
+            "'practicals API client surfaces backend error messages on failure'",
+            "'practicals feature obeys frontend-only boundary constraints'"
+          ]
+        }
+      ],
+      "status": "All original test declarations preserved"
+    },
+    {
+      "before": "tests/practical-navigation.test.mjs",
+      "beforeSha256": "2119ecfd34d2f8ca602f65bb0c9b9df32f274ebc495b49c4ecf648a89064bc73",
+      "beforeLane": "unit",
+      "assertionScope": [
+        "'practical links encode the course and never fall back to an unrelated question'",
+        "'scheduled practicals remain locked until their actual start time'",
+        "'identical course names cannot route a question into the wrong course'"
+      ],
+      "destinations": [
+        {
+          "path": "tests/unit/practical-navigation.test.mjs",
+          "lane": "unit",
+          "sha256": "a61a487f647bda186f455a80e79cd3d7db7054856de1fa7dd4230db310f064bb",
+          "assertionScope": [
+            "'practical links encode the course and never fall back to an unrelated question'",
+            "'scheduled practicals remain locked until their actual start time'",
+            "'identical course names cannot route a question into the wrong course'"
+          ]
+        }
+      ],
+      "status": "All original test declarations preserved"
+    },
+    {
+      "before": "tests/profile-privacy.test.mjs",
+      "beforeSha256": "d2fc985ca40f3a9423234995a6ec087e078ae3eb64a7b9b483b159f2794d1bc8",
+      "beforeLane": "unit",
+      "assertionScope": [
+        "\"profile history is bounded and excludes source/secret grading fields; handles are literal\""
+      ],
+      "destinations": [
+        {
+          "path": "tests/unit/profile-privacy.test.mjs",
+          "lane": "unit",
+          "sha256": "a4a80c862435824d462702b324371606c012711dd4a1dc1482effb01bb298aa9",
+          "assertionScope": [
+            "\"profile history is bounded and excludes source/secret grading fields; handles are literal\""
+          ]
+        }
+      ],
+      "status": "All original test declarations preserved"
+    },
+    {
+      "before": "tests/progress-updates.test.mjs",
+      "beforeSha256": "814d4510d692bc9c08522e41000bd9f751949c09ba4d446447b2195bd080333a",
+      "beforeLane": "unit",
+      "assertionScope": [
+        "'profile progress reflects accepted submissions and keeps solved status after a failed retry'",
+        "'an accepted retry updates the profile and empty history stays empty'"
+      ],
+      "destinations": [
+        {
+          "path": "tests/unit/progress-updates.test.mjs",
+          "lane": "unit",
+          "sha256": "7424827b6def5c471953868b5a42d823aeda306c9cc234f12887a866cfec9c71",
+          "assertionScope": [
+            "'profile progress reflects accepted submissions and keeps solved status after a failed retry'",
+            "'an accepted retry updates the profile and empty history stays empty'"
+          ]
+        }
+      ],
+      "status": "All original test declarations preserved"
+    },
+    {
+      "before": "tests/queue-script-contract.test.mjs",
+      "beforeSha256": "ed2b0000b5a9a20455e769f46ce50925b81b8f10e75eec3ff9f74d350888268e",
+      "beforeLane": "unit",
+      "assertionScope": [
+        "'bullmq-scripts wrapper exports a valid addStandardJob object'",
+        "'bullmq-scripts does not re-export the internal import through the queue public index'",
+        "'admissionBackend is exported and creates a backend factory function'",
+        "'admissionBackend rejects invalid capacity arguments'",
+        "'Redis admission contract'",
+        "'global capacity limit enforced under concurrency'",
+        "'per-owner limit enforced independently of global capacity'",
+        "'no duplicate job IDs inserted under concurrent load'",
+        "'sweepOwnerIndexes removes stale owner entries after job deletion'"
+      ],
+      "destinations": [
+        {
+          "path": "tests/unit/queue-script-contract.test.mjs",
+          "lane": "unit",
+          "sha256": "af9bd6fffef4f5930256fbf28ceeeb17d4e1cdeb5d38593ca0bbfd5c721ba13a",
+          "assertionScope": [
+            "'bullmq-scripts wrapper exports a valid addStandardJob object'",
+            "'bullmq-scripts does not re-export the internal import through the queue public index'",
+            "'admissionBackend is exported and creates a backend factory function'",
+            "'admissionBackend rejects invalid capacity arguments'",
+            "'direct BullMQ consumers and installed script package use exactly the same pinned version'"
+          ]
+        },
+        {
+          "path": "tests/integration/queue-script-admission.test.mjs",
+          "lane": "integration",
+          "sha256": "c7da00cf17dddbdc185c5e56f4c097e8aedb214f9d36aa470cff488f9d14f8b4",
+          "assertionScope": [
+            "'Redis admission contract'",
+            "'global capacity limit enforced under concurrency'",
+            "'per-owner limit enforced independently of global capacity'",
+            "'no duplicate job IDs inserted under concurrent load'",
+            "'sweepOwnerIndexes removes stale owner entries after job deletion'"
+          ]
+        }
+      ],
+      "status": "All original test declarations preserved"
+    },
+    {
+      "before": "tests/rate-limit.test.mjs",
+      "beforeSha256": "a532abd1477384af20b6f0ac3fa132a072e0f6a1bac1176b419f0ea607f335fd",
+      "beforeLane": "unit",
+      "assertionScope": [
+        "'authentication and execution limits fail closed during Redis outage'"
+      ],
+      "destinations": [
+        {
+          "path": "tests/unit/rate-limit.test.mjs",
+          "lane": "unit",
+          "sha256": "6341d378e868438d9ab81930f07e7438f447bef50896a138f656f58f377c8df0",
+          "assertionScope": [
+            "'authentication and execution limits fail closed during Redis outage'"
+          ]
+        }
+      ],
+      "status": "All original test declarations preserved"
+    },
+    {
+      "before": "tests/realtime-membership.test.mjs",
+      "beforeSha256": "88543e8cf626fcd55a7b277542069a5761caeb88279f8cf14bf3494486cee715",
+      "beforeLane": "unit",
+      "assertionScope": [
+        "'periodic room checks remove revoked course and practical mappings and expired jobs'",
+        "'concurrent subscriptions cannot exceed 64 and leaving releases capacity'",
+        "'periodic authorization errors fail closed and clear affected room membership'"
+      ],
+      "destinations": [
+        {
+          "path": "tests/unit/realtime-membership.test.mjs",
+          "lane": "unit",
+          "sha256": "aebf802bc2dfa67deca94aa5118b99c96c84ad78c09380c1cd5fdce4b189b009",
+          "assertionScope": [
+            "'periodic room checks remove revoked course and practical mappings and expired jobs'",
+            "'concurrent subscriptions cannot exceed 64 and leaving releases capacity'",
+            "'periodic authorization errors fail closed and clear affected room membership'"
+          ]
+        }
+      ],
+      "status": "All original test declarations preserved"
+    },
+    {
+      "before": "tests/realtime-revocation.test.mjs",
+      "beforeSha256": "119fee6528e5731f450828303e30424b75c2293a9e1b1d3865c1fcba67c8b258",
+      "beforeLane": "unit",
+      "assertionScope": [
+        "'socket subscriptions recheck current identity and disconnect revoked sessions'",
+        "'expired service sessions cannot publish and service credentials cannot subscribe'",
+        "'subscriptions authorize the freshly loaded actor rather than the handshake snapshot'"
+      ],
+      "destinations": [
+        {
+          "path": "tests/unit/realtime-revocation.test.mjs",
+          "lane": "unit",
+          "sha256": "f9ed449dd6ba11dfa2aaabd3ee93c91a2d923f65f07d3b246b7c90e38ef7dbd5",
+          "assertionScope": [
+            "'socket subscriptions recheck current identity and disconnect revoked sessions'",
+            "'expired service sessions cannot publish and service credentials cannot subscribe'",
+            "'subscriptions authorize the freshly loaded actor rather than the handshake snapshot'"
+          ]
+        }
+      ],
+      "status": "All original test declarations preserved"
+    },
+    {
+      "before": "tests/realtime-session.test.mjs",
+      "beforeSha256": "2d27bde6194625d0e12fe2625fd7f36995efb6cf79085470f49b7b8bd7281c07",
+      "beforeLane": "unit",
+      "assertionScope": [
+        "'idle revoked browser disconnects and clears its session timers'",
+        "'service and guest sockets expire without database revalidation timers'",
+        "'periodic checks never overlap or resurrect a disconnected socket'",
+        "'valid idle sessions schedule only the next bounded unrefed check'"
+      ],
+      "destinations": [
+        {
+          "path": "tests/unit/realtime-session.test.mjs",
+          "lane": "unit",
+          "sha256": "e3db3300462aba382b4eb5962d6f8cd8530ac8c57536e83282f4e49fffd5e0c5",
+          "assertionScope": [
+            "'idle revoked browser disconnects and clears its session timers'",
+            "'service and guest sockets expire without database revalidation timers'",
+            "'periodic checks never overlap or resurrect a disconnected socket'",
+            "'valid idle sessions schedule only the next bounded unrefed check'"
+          ]
+        }
+      ],
+      "status": "All original test declarations preserved"
+    },
+    {
+      "before": "tests/realtime.test.mjs",
+      "beforeSha256": "0648319f85b8b95d1a3276e30527ac2815d7aa9c1797be7cd17e65031489f5a1",
+      "beforeLane": "unit",
+      "assertionScope": [
+        "'browser cannot forge job completion or faculty broadcasts'",
+        "'unauthorized subscriptions fail and authorized subscriptions join only their rooms'",
+        "'trusted completion is scoped and redacted'",
+        "'service tokens are scoped and reject tampering'",
+        "'service credentials cannot be reused as browser/user JWTs'",
+        "'only trusted service can notify persisted submission changes to scoped rooms'"
+      ],
+      "destinations": [
+        {
+          "path": "tests/unit/realtime.test.mjs",
+          "lane": "unit",
+          "sha256": "9c8e77a7dec2b64e9949c1314336980f7c27b9af7cb88bd3c56b5739f1714d76",
+          "assertionScope": [
+            "'browser cannot forge job completion or faculty broadcasts'",
+            "'unauthorized subscriptions fail and authorized subscriptions join only their rooms'",
+            "'trusted completion is scoped and redacted'",
+            "'service tokens are scoped and reject tampering'",
+            "'service credentials cannot be reused as browser/user JWTs'",
+            "'only trusted service can notify persisted submission changes to scoped rooms'"
+          ]
+        }
+      ],
+      "status": "All original test declarations preserved"
+    },
+    {
+      "before": "tests/remaining-views-api.test.mjs",
+      "beforeSha256": "26c6b652a229cc17e69c7faba89dab67b7380144a429d7a7f21ab8f8295d1648",
+      "beforeLane": "unit",
+      "assertionScope": [
+        "'feature HTTP clients preserve public methods, bodies, errors and cancellation'"
+      ],
+      "destinations": [
+        {
+          "path": "tests/unit/remaining-views-api.test.mjs",
+          "lane": "unit",
+          "sha256": "e3e5615a915123ef00e9d646ffe3521a91404251e7f1fa957f026da1e276df51",
+          "assertionScope": [
+            "'feature HTTP clients preserve public methods, bodies, errors and cancellation'"
+          ]
+        }
+      ],
+      "status": "All original test declarations preserved"
+    },
+    {
+      "before": "tests/request-revocation.test.mjs",
+      "beforeSha256": "3bf7de720ccf345b6a82b0a4587153f9a1e114d36b873016034d4caac1bb5eab",
+      "beforeLane": "unit",
+      "assertionScope": [
+        "'protected polling checks current status/session and cannot downgrade a revoked bearer to guest'",
+        "'revoked faculty tokens are rejected before a mutation reaches the domain layer'"
+      ],
+      "destinations": [
+        {
+          "path": "tests/unit/request-revocation.test.mjs",
+          "lane": "unit",
+          "sha256": "e58db1133513cafff8eb0a5ed5d26ced9c6bec7f7ad590ff09a9101ab44ceb69",
+          "assertionScope": [
+            "'protected polling checks current status/session and cannot downgrade a revoked bearer to guest'",
+            "'revoked faculty tokens are rejected before a mutation reaches the domain layer'"
+          ]
+        }
+      ],
+      "status": "All original test declarations preserved"
+    },
+    {
+      "before": "tests/retention.test.mjs",
+      "beforeSha256": "4354d115b7d221f56296303becd958f5671a96d577b05fe65a7f218c97e8463f",
+      "beforeLane": "unit",
+      "assertionScope": [
+        "'retention is bounded, preview-only by default, audited and preserves academic records and fresh drafts'"
+      ],
+      "destinations": [
+        {
+          "path": "tests/unit/retention.test.mjs",
+          "lane": "unit",
+          "sha256": "70713239c24ce48bdada33c33d5f3339e8e0925ed0721308bae9133ba3c1e89b",
+          "assertionScope": [
+            "'retention is bounded, preview-only by default, audited and preserves academic records and fresh drafts'"
+          ]
+        }
+      ],
+      "status": "All original test declarations preserved"
+    },
+    {
+      "before": "tests/runner.test.mjs",
+      "beforeSha256": "14a5d8d951ebe89b83d3128e57cb96a2570794790f15d2aba20b1813b7fff8fd",
+      "beforeLane": "unit",
+      "assertionScope": [
+        "'identical code gets private workspaces and compilation never trusts directory existence'",
+        "'runtime failure never passes even when output matches; timings are measured'",
+        "'per-case deadlines run inside the container and timeout cannot pass an empty-output test'",
+        "'successful output with diagnostic stderr remains a successful process'",
+        "'function-style practice cases are rejected instead of silently misgraded as stdin/stdout'",
+        "'playground cleanup runs after failures'",
+        "'execution cannot exceed five seconds through defaults, constructor or testcase overrides'"
+      ],
+      "destinations": [
+        {
+          "path": "tests/unit/runner.test.mjs",
+          "lane": "unit",
+          "sha256": "14a5d8d951ebe89b83d3128e57cb96a2570794790f15d2aba20b1813b7fff8fd",
+          "assertionScope": [
+            "'identical code gets private workspaces and compilation never trusts directory existence'",
+            "'runtime failure never passes even when output matches; timings are measured'",
+            "'per-case deadlines run inside the container and timeout cannot pass an empty-output test'",
+            "'successful output with diagnostic stderr remains a successful process'",
+            "'function-style practice cases are rejected instead of silently misgraded as stdin/stdout'",
+            "'playground cleanup runs after failures'",
+            "'execution cannot exceed five seconds through defaults, constructor or testcase overrides'"
+          ]
+        }
+      ],
+      "status": "All original test declarations preserved"
+    },
+    {
+      "before": "tests/runtime-config.test.mjs",
+      "beforeSha256": "e8522c6055123a3a72150a78d2c75152c13eb694313c85f9d7be01b8b359c686",
+      "beforeLane": "unit",
+      "assertionScope": [
+        "'public package export @coderank/core/config/env resolves across root, web and worker workspaces'",
+        "'@coderank/core/config/env exports process.env as default and root as named export'",
+        "'runtime config preserves dotenv precedence with temporary fixtures'",
+        "'side-effect import executes before downstream modules read configuration'"
+      ],
+      "destinations": [
+        {
+          "path": "tests/unit/runtime-config.test.mjs",
+          "lane": "unit",
+          "sha256": "ffdaf44c137d65566c43b100f320321cba2928d16b12eda94c7b3c594fbd8d8c",
+          "assertionScope": [
+            "'public package export @coderank/core/config/env resolves across root, web and worker workspaces'",
+            "'@coderank/core/config/env exports process.env as default and root as named export'",
+            "'runtime config preserves dotenv precedence with temporary fixtures'",
+            "'side-effect import executes before downstream modules read configuration'"
+          ]
+        }
+      ],
+      "status": "All original test declarations preserved"
+    },
+    {
+      "before": "tests/sandbox-recovery.test.mjs",
+      "beforeSha256": "0560df12cc8ccb9c969afd3e14159bf3d9c5eb4e6d2fc06c312768d94d4ba58c",
+      "beforeLane": "unit",
+      "assertionScope": [
+        "'actual sandbox launch labels satisfy recovery ownership and bounded expiry checks'",
+        "'only exact managed scope and complete metadata establish sandbox ownership'",
+        "'dead owner does not shorten a valid lifetime and Docker start delay is respected'",
+        "'reaper inspects exact immutable IDs and removes only verified stale owned containers'",
+        "'dry run cannot remove a sandbox and inspected identity mismatch fails closed'",
+        "'Docker disappearance is safe, other inspect failures are reported without removing anything'",
+        "'bounded batches advance a cursor beyond active sandboxes'",
+        "'recovery loop coalesces scans and stops before a later interval can run'",
+        "'recovery CLI requires explicit deployment scope and defaults to dry-run'"
+      ],
+      "destinations": [
+        {
+          "path": "tests/unit/sandbox-recovery.test.mjs",
+          "lane": "unit",
+          "sha256": "8c5abef46a1a2b12548e2a33d62acb6335b998f63aeb117e463689b882c03419",
+          "assertionScope": [
+            "'actual sandbox launch labels satisfy recovery ownership and bounded expiry checks'",
+            "'only exact managed scope and complete metadata establish sandbox ownership'",
+            "'dead owner does not shorten a valid lifetime and Docker start delay is respected'",
+            "'reaper inspects exact immutable IDs and removes only verified stale owned containers'",
+            "'dry run cannot remove a sandbox and inspected identity mismatch fails closed'",
+            "'Docker disappearance is safe, other inspect failures are reported without removing anything'",
+            "'bounded batches advance a cursor beyond active sandboxes'",
+            "'recovery loop coalesces scans and stops before a later interval can run'",
+            "'recovery CLI requires explicit deployment scope and defaults to dry-run'"
+          ]
+        }
+      ],
+      "status": "All original test declarations preserved"
+    },
+    {
+      "before": "tests/sandbox.test.mjs",
+      "beforeSha256": "bdc4acde304cb2cadc99ed61f534980da3fed2d41fa450cc08a3de43c6184577",
+      "beforeLane": "unit",
+      "assertionScope": [
+        "'invalid lifetimes retain a finite deadline and all values stay bounded'",
+        "'each job has a separate, bounded container without network or host mounts'",
+        "'timeout destroys the container and detached children'",
+        "'output overflow destroys the container rather than leaving runaway children'",
+        "'warm daemon skips docker run and destroy is a no-op for the shared container'",
+        "'warm daemon falls back to ephemeral container when exec reports No such container'"
+      ],
+      "destinations": [
+        {
+          "path": "tests/unit/sandbox.test.mjs",
+          "lane": "unit",
+          "sha256": "bdc4acde304cb2cadc99ed61f534980da3fed2d41fa450cc08a3de43c6184577",
+          "assertionScope": [
+            "'invalid lifetimes retain a finite deadline and all values stay bounded'",
+            "'each job has a separate, bounded container without network or host mounts'",
+            "'timeout destroys the container and detached children'",
+            "'output overflow destroys the container rather than leaving runaway children'",
+            "'warm daemon skips docker run and destroy is a no-op for the shared container'",
+            "'warm daemon falls back to ephemeral container when exec reports No such container'"
+          ]
+        }
+      ],
+      "status": "All original test declarations preserved"
+    },
+    {
+      "before": "tests/schema-readiness.test.mjs",
+      "beforeSha256": "29eb398433f7a565b3a626d361b9d5b2e7e00163a11a375a811f6ecd28e4e356",
+      "beforeLane": "unit",
+      "assertionScope": [
+        "\"bundled readiness manifest matches every versioned migration checksum\"",
+        "\"readiness fails closed for absent, pending and modified schemas without writing to the database\""
+      ],
+      "destinations": [
+        {
+          "path": "tests/unit/schema-readiness.test.mjs",
+          "lane": "unit",
+          "sha256": "0dff9ffde023c23374d4e820143350fd1bfed29b1f96f0b334bf1e40ced18d17",
+          "assertionScope": [
+            "\"bundled readiness manifest matches every versioned migration checksum\"",
+            "\"readiness fails closed for absent, pending and modified schemas without writing to the database\""
+          ]
+        }
+      ],
+      "status": "All original test declarations preserved"
+    },
+    {
+      "before": "tests/seed-safety.test.mjs",
+      "beforeSha256": "761a07a184fea8f42c2f3a2ec66a3345b61c3be0c6038024e5e1c1fba120d553",
+      "beforeLane": "unit",
+      "assertionScope": [
+        "'seed refuses unacknowledged or ambiguous destructive reset: ' + JSON.stringify(args)"
+      ],
+      "destinations": [
+        {
+          "path": "tests/unit/seed-safety.test.mjs",
+          "lane": "unit",
+          "sha256": "7ca657c0e02703170361db6b30535cf9a6b5ff04e0d8bed251f94c64a0cca385",
+          "assertionScope": [
+            "'seed refuses unacknowledged or ambiguous destructive reset: ' + JSON.stringify(args)"
+          ]
+        }
+      ],
+      "status": "All original test declarations preserved"
+    },
+    {
+      "before": "tests/selector-pagination.test.mjs",
+      "beforeSha256": "39a7374c750cf245d1df07ea21c448b04f34057c372cf5cca0d2ce23f73b6779",
+      "beforeLane": "unit",
+      "assertionScope": [
+        "'selector pagination rejects invalid bounds and cursors'",
+        "'course, department, faculty and batch selectors traverse complete nonoverlapping SQL pages'"
+      ],
+      "destinations": [
+        {
+          "path": "tests/unit/selector-pagination.test.mjs",
+          "lane": "unit",
+          "sha256": "60660f2a103db700a50b838a752d3f845dc60052e134b0ff515cb5413d57d40f",
+          "assertionScope": [
+            "'selector pagination rejects invalid bounds and cursors'",
+            "'course, department, faculty and batch selectors traverse complete nonoverlapping SQL pages'"
+          ]
+        }
+      ],
+      "status": "All original test declarations preserved"
+    },
+    {
+      "before": "tests/static-runners.test.mjs",
+      "beforeSha256": "ee36f61e42179797a91a99f05aa2cb6c4aa5346aeb304385ee347c3833536898",
+      "beforeLane": "unit",
+      "assertionScope": [
+        "`${lang} function runner enforces in-container deadline and cleans its private directory`",
+        "`${lang} timeout returns a failure and still cleans its workspace`"
+      ],
+      "destinations": [
+        {
+          "path": "tests/unit/static-runners.test.mjs",
+          "lane": "unit",
+          "sha256": "1dd2771f7eac84f5f550035ad67eb029f691b2eb828362104b061772fa58a2d2",
+          "assertionScope": [
+            "`${lang} function runner enforces in-container deadline and cleans its private directory`",
+            "`${lang} timeout returns a failure and still cleans its workspace`"
+          ]
+        }
+      ],
+      "status": "All original test declarations preserved"
+    },
+    {
+      "before": "tests/student-theme.test.mjs",
+      "beforeSha256": "56959dc795687c978324b91de128eac68c8325a02459e4fdd004b832694038f0",
+      "beforeLane": "unit",
+      "assertionScope": [
+        "'student theme preserves dark as default and honors existing light editor preference'",
+        "'both theme choices persist for navigation and synchronize the editor setting'",
+        "'blocked browser storage fails safely'",
+        "'workspace dark palette retains original fallbacks and every token has a light counterpart'"
+      ],
+      "destinations": [
+        {
+          "path": "tests/unit/student-theme.test.mjs",
+          "lane": "unit",
+          "sha256": "f66972d89c44ccd205527fc3b470a972299a870046bb73e3504f4e0619c41591",
+          "assertionScope": [
+            "'student theme preserves dark as default and honors existing light editor preference'",
+            "'both theme choices persist for navigation and synchronize the editor setting'",
+            "'blocked browser storage fails safely'",
+            "'workspace dark palette retains original fallbacks and every token has a light counterpart'"
+          ]
+        }
+      ],
+      "status": "All original test declarations preserved"
+    },
+    {
+      "before": "tests/submission-history.test.mjs",
+      "beforeSha256": "5848277c7fed717616778cb00f96abf754929c40fc4cc19479f03a2b14406d54",
+      "beforeLane": "unit",
+      "assertionScope": [
+        "'submission keysets preserve ties and timestamp precision in every sort direction'"
+      ],
+      "destinations": [
+        {
+          "path": "tests/unit/submission-history.test.mjs",
+          "lane": "unit",
+          "sha256": "9ae5cd8b927a73c67b76ce6b7ad260fb10f281b7dc1b883ede8efb4ea27043ea",
+          "assertionScope": [
+            "'submission keysets preserve ties and timestamp precision in every sort direction'"
+          ]
+        }
+      ],
+      "status": "All original test declarations preserved"
+    },
+    {
+      "before": "tests/submission-reset.test.mjs",
+      "beforeSha256": "1056fa9104880a60ced0e4f4895040bdd5a0e8830787391883c79b461d0722f8",
+      "beforeLane": "unit",
+      "assertionScope": [
+        "'reset authorizes current mapping atomically and rolls back deletion when audit fails'"
+      ],
+      "destinations": [
+        {
+          "path": "tests/unit/submission-reset.test.mjs",
+          "lane": "unit",
+          "sha256": "e4f2491af1efcb68cb65b9598f67e644b7e272777869b41038c8025e561fcad6",
+          "assertionScope": [
+            "'reset authorizes current mapping atomically and rolls back deletion when audit fails'"
+          ]
+        }
+      ],
+      "status": "All original test declarations preserved"
+    },
+    {
+      "before": "tests/tooling-lint.test.mjs",
+      "beforeSha256": "8b1bbe3e7971db839d060d4f7abf4cae60d1dbdcb8e5b54c649653f40331ce9e",
+      "beforeLane": "unit",
+      "assertionScope": [
+        "`backend correctness rules apply to ${path}`",
+        "'both frontend lint entry points preserve memoization errors'"
+      ],
+      "destinations": [
+        {
+          "path": "tests/architecture/tooling-lint.test.mjs",
+          "lane": "architecture",
+          "sha256": "8b1bbe3e7971db839d060d4f7abf4cae60d1dbdcb8e5b54c649653f40331ce9e",
+          "assertionScope": [
+            "`backend correctness rules apply to ${path}`",
+            "'both frontend lint entry points preserve memoization errors'"
+          ]
+        }
+      ],
+      "status": "All original test declarations preserved"
+    },
+    {
+      "before": "tests/user-management-api.test.mjs",
+      "beforeSha256": "8f9546471583d322b7dcacd73518555ca15ea2776c0feada88cd89978caeaace",
+      "beforeLane": "unit",
+      "assertionScope": [
+        "\"user management validates roles, passwords, IDs and normalizes bounded payloads\""
+      ],
+      "destinations": [
+        {
+          "path": "tests/unit/user-management-api.test.mjs",
+          "lane": "unit",
+          "sha256": "32b7c8c7a285e6bb7e5d665109588464b01261dacbb1d74b0aa3016fbb00cd3a",
+          "assertionScope": [
+            "\"user management validates roles, passwords, IDs and normalizes bounded payloads\""
+          ]
+        }
+      ],
+      "status": "All original test declarations preserved"
+    },
+    {
+      "before": "tests/user-management-sql.test.mjs",
+      "beforeSha256": "e549c8e1b800dda01afdef1d76ca1734a2da9535b8fa63b0cefb1b3e5bd16a47",
+      "beforeLane": "unit",
+      "assertionScope": [
+        "\"user transactions preserve coordinator consistency, audit atomicity and protected accounts\""
+      ],
+      "destinations": [
+        {
+          "path": "tests/unit/user-management-sql.test.mjs",
+          "lane": "unit",
+          "sha256": "3299b42f0dca4613806abcd09cbd013ace29bc443c624966f077b8c636433c05",
+          "assertionScope": [
+            "\"user transactions preserve coordinator consistency, audit atomicity and protected accounts\""
+          ]
+        }
+      ],
+      "status": "All original test declarations preserved"
+    },
+    {
+      "before": "tests/user-pagination.test.mjs",
+      "beforeSha256": "00c6c58d2f93e6ad62c04f7e3b5dec66933f531804577e4938e0a09caa0cc00d",
+      "beforeLane": "unit",
+      "assertionScope": [
+        "'user queries use bounded keyset pages and validate pagination'"
+      ],
+      "destinations": [
+        {
+          "path": "tests/unit/user-pagination.test.mjs",
+          "lane": "unit",
+          "sha256": "39141d39916be7565ba9f6d43d7f6ea38596a21ba7e260b41e6af6bfe7d78421",
+          "assertionScope": [
+            "'user queries use bounded keyset pages and validate pagination'"
+          ]
+        }
+      ],
+      "status": "All original test declarations preserved"
+    },
+    {
+      "before": "tests/users-ui-api.test.mjs",
+      "beforeSha256": "d096634ba93cdeb9e3d27dcffbb0098b6f329c316831c32187bdeaca89996a22",
+      "beforeLane": "unit",
+      "assertionScope": [
+        "'role-specific user clients retain CRUD, cursor, upload and error contracts'",
+        "'list cleanup aborts requests and invalidates a late response after unmount'"
+      ],
+      "destinations": [
+        {
+          "path": "tests/unit/users-ui-api.test.mjs",
+          "lane": "unit",
+          "sha256": "ffc982733df1bffa3a755cb120c36705fc9a85374ce773d8e24ed37059e2a136",
+          "assertionScope": [
+            "'role-specific user clients retain CRUD, cursor, upload and error contracts'",
+            "'list cleanup aborts requests and invalidates a late response after unmount'"
+          ]
+        }
+      ],
+      "status": "All original test declarations preserved"
+    },
+    {
+      "before": "tests/worker-config.test.mjs",
+      "beforeSha256": "a49b435f9d11205b171176874a99fc66ffa71952e9c89bfa90c5097ad5f7c37c",
+      "beforeLane": "unit",
+      "assertionScope": [
+        "'submission worker rejects invalid concurrency before allocating a queue worker'",
+        "'service token expiration reconnects with fresh auth while explicit shutdown prevents reconnect'",
+        "'worker lock duration remains finite with invalid environment and errors have listeners'",
+        "'extracted publisher redacts hidden cases and keeps terminal failures generic'"
+      ],
+      "destinations": [
+        {
+          "path": "tests/unit/worker-config.test.mjs",
+          "lane": "unit",
+          "sha256": "830cdbc40c2a251b9dbde6bba4f552768a1afedf0a081574b749003d7f5a2de0",
+          "assertionScope": [
+            "'submission worker rejects invalid concurrency before allocating a queue worker'",
+            "'service token expiration reconnects with fresh auth while explicit shutdown prevents reconnect'",
+            "'worker lock duration remains finite with invalid environment and errors have listeners'",
+            "'extracted publisher redacts hidden cases and keeps terminal failures generic'"
+          ]
+        }
+      ],
+      "status": "All original test declarations preserved"
+    },
+    {
+      "before": "tests/worker-dispatch.test.mjs",
+      "beforeSha256": "9ed45093cc5f196e9c818fe300d387a2c480d1c93c7aef8b84c8478dfcb387d7",
+      "beforeLane": "unit",
+      "assertionScope": [
+        "'runner capability identifiers match all five intake languages and dispatch each practice once'",
+        "'dynamic dispatch binds actor, stable job identity and enqueue time; playground preserves inputs'",
+        "'runner implementations remain independent of application, core and database packages'"
+      ],
+      "destinations": [
+        {
+          "path": "tests/unit/worker-dispatch.test.mjs",
+          "lane": "unit",
+          "sha256": "3432178d5d3c583519e9ac627ad894db9743451b5072e05e038b7792973aaa00",
+          "assertionScope": [
+            "'runner capability identifiers match all five intake languages and dispatch each practice once'",
+            "'dynamic dispatch binds actor, stable job identity and enqueue time; playground preserves inputs'",
+            "'runner implementations remain independent of application, core and database packages'"
+          ]
+        }
+      ],
+      "status": "All original test declarations preserved"
+    },
+    {
+      "before": "tests/worker-heartbeat.test.mjs",
+      "beforeSha256": "074c0fba831bbd5429f0a105f32a730abc0875e15d9e3146547b817be6790a2f",
+      "beforeLane": "unit",
+      "assertionScope": [
+        "'capability heartbeat publishes an expiring per-worker record after checking the image'",
+        "'missing image or paused worker is never advertised as healthy'",
+        "'concurrent capability refreshes coalesce and shutdown prevents a late healthy publish'",
+        "'Docker or Redis failures do not refresh a healthy lease or reject background refresh'"
+      ],
+      "destinations": [
+        {
+          "path": "tests/unit/worker-heartbeat.test.mjs",
+          "lane": "unit",
+          "sha256": "b2c4a6c90244f10d074a950b72c82883a72af4558b766b5beeea51d591376db3",
+          "assertionScope": [
+            "'capability heartbeat publishes an expiring per-worker record after checking the image'",
+            "'missing image or paused worker is never advertised as healthy'",
+            "'concurrent capability refreshes coalesce and shutdown prevents a late healthy publish'",
+            "'Docker or Redis failures do not refresh a healthy lease or reject background refresh'"
+          ]
+        }
+      ],
+      "status": "All original test declarations preserved"
+    },
+    {
+      "before": "tests/worker-shutdown.test.mjs",
+      "beforeSha256": "8100354fc3b840aca6884efb7ce8cd34b29a40ee14dc89bb885e2e5c9f573a83",
+      "beforeLane": "unit",
+      "assertionScope": [
+        "'shutdown stops intake before draining and disconnects once across repeated signals'",
+        "'shutdown deadline includes a Redis pause that never resolves'",
+        "'shutdown deadline includes active work that never drains'",
+        "'shutdown handles Redis errors and disconnects the realtime client'",
+        "'database cleanup runs once after queue drain and before socket disconnect'",
+        "'database cleanup shares the finite drain deadline'"
+      ],
+      "destinations": [
+        {
+          "path": "tests/unit/worker-shutdown.test.mjs",
+          "lane": "unit",
+          "sha256": "9d3882318077dd92000af54ea4acc9a3310ea51a2eeeb95fed98c157f22dca73",
+          "assertionScope": [
+            "'shutdown stops intake before draining and disconnects once across repeated signals'",
+            "'shutdown deadline includes a Redis pause that never resolves'",
+            "'shutdown deadline includes active work that never drains'",
+            "'shutdown handles Redis errors and disconnects the realtime client'",
+            "'database cleanup runs once after queue drain and before socket disconnect'",
+            "'database cleanup shares the finite drain deadline'"
+          ]
+        }
+      ],
+      "status": "All original test declarations preserved"
+    }
+  ],
+  "addedFiles": [
+    "tests/unit/test-discovery.test.mjs"
+  ]
+}

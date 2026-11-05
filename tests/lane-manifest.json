@@ -1,0 +1,127 @@
+{
+  "categories": {
+    "unit": [
+      "tests/unit/active-actor.test.mjs",
+      "tests/unit/admin-api.test.mjs",
+      "tests/unit/admin-bootstrap.test.mjs",
+      "tests/unit/admin-transactions.test.mjs",
+      "tests/unit/api-auth-runtime.test.mjs",
+      "tests/unit/api-courses-runtime.test.mjs",
+      "tests/unit/api-execution-runtime.test.mjs",
+      "tests/unit/api-input-contracts.test.mjs",
+      "tests/unit/api-live-runtime.test.mjs",
+      "tests/unit/api-operations-runtime.test.mjs",
+      "tests/unit/api-practicals-runtime.test.mjs",
+      "tests/unit/api-realtime-runtime.test.mjs",
+      "tests/unit/api-route-contracts.test.mjs",
+      "tests/unit/api-submissions-runtime.test.mjs",
+      "tests/unit/api-users-runtime.test.mjs",
+      "tests/unit/auth-feature-ownership.test.mjs",
+      "tests/unit/auth-resilience.test.mjs",
+      "tests/unit/browser-socket-auth.test.mjs",
+      "tests/unit/bulk-users-api.test.mjs",
+      "tests/unit/capacity.test.mjs",
+      "tests/unit/certification.test.mjs",
+      "tests/unit/ci-summary.test.mjs",
+      "tests/unit/ci-tap.test.mjs",
+      "tests/unit/cluster-config.test.mjs",
+      "tests/unit/course-management-service.test.mjs",
+      "tests/unit/course-management-sql.test.mjs",
+      "tests/unit/course-report.test.mjs",
+      "tests/unit/credential-pdf.test.mjs",
+      "tests/unit/database-assets.test.mjs",
+      "tests/unit/database-client.test.mjs",
+      "tests/unit/database-inspection.test.mjs",
+      "tests/unit/database-no-replay.test.mjs",
+      "tests/unit/database-ops.test.mjs",
+      "tests/unit/deployment-readiness.test.mjs",
+      "tests/unit/execution-api.test.mjs",
+      "tests/unit/execution-security.test.mjs",
+      "tests/unit/extracted-read-services.test.mjs",
+      "tests/unit/faculty-mapping-authority.test.mjs",
+      "tests/unit/faculty-review-fixtures.test.mjs",
+      "tests/unit/faculty-review-requests.test.mjs",
+      "tests/unit/fetch-collection.test.mjs",
+      "tests/unit/function-harness.test.mjs",
+      "tests/unit/gateway-routing.test.mjs",
+      "tests/unit/grading.test.mjs",
+      "tests/unit/health.test.mjs",
+      "tests/unit/job-lifecycle.test.js",
+      "tests/unit/job-wait.test.mjs",
+      "tests/unit/lab-launcher-env.test.mjs",
+      "tests/unit/load-result.test.mjs",
+      "tests/unit/migration-errors.test.mjs",
+      "tests/unit/migrations.test.mjs",
+      "tests/unit/password-session.test.mjs",
+      "tests/unit/postgres-client.test.mjs",
+      "tests/unit/practical-navigation.test.mjs",
+      "tests/unit/profile-privacy.test.mjs",
+      "tests/unit/progress-updates.test.mjs",
+      "tests/unit/queue-script-contract.test.mjs",
+      "tests/unit/rate-limit.test.mjs",
+      "tests/unit/realtime-membership.test.mjs",
+      "tests/unit/realtime-revocation.test.mjs",
+      "tests/unit/realtime-session.test.mjs",
+      "tests/unit/realtime.test.mjs",
+      "tests/unit/remaining-views-api.test.mjs",
+      "tests/unit/request-revocation.test.mjs",
+      "tests/unit/retention.test.mjs",
+      "tests/unit/runner.test.mjs",
+      "tests/unit/runtime-config.test.mjs",
+      "tests/unit/sandbox-recovery.test.mjs",
+      "tests/unit/sandbox.test.mjs",
+      "tests/unit/schema-readiness.test.mjs",
+      "tests/unit/seed-safety.test.mjs",
+      "tests/unit/selector-pagination.test.mjs",
+      "tests/unit/static-runners.test.mjs",
+      "tests/unit/student-theme.test.mjs",
+      "tests/unit/submission-history.test.mjs",
+      "tests/unit/submission-reset.test.mjs",
+      "tests/unit/test-discovery.test.mjs",
+      "tests/unit/user-management-api.test.mjs",
+      "tests/unit/user-management-sql.test.mjs",
+      "tests/unit/user-pagination.test.mjs",
+      "tests/unit/users-ui-api.test.mjs",
+      "tests/unit/worker-config.test.mjs",
+      "tests/unit/worker-dispatch.test.mjs",
+      "tests/unit/worker-heartbeat.test.mjs",
+      "tests/unit/worker-shutdown.test.mjs"
+    ],
+    "architecture": [
+      "tests/architecture/architecture.test.mjs",
+      "tests/architecture/final-separation.test.mjs",
+      "tests/architecture/practical-authoring.test.mjs",
+      "tests/architecture/tooling-lint.test.mjs"
+    ],
+    "integration": [
+      "tests/integration/postgres.test.mjs",
+      "tests/integration/queue-script-admission.test.mjs",
+      "tests/integration/queue.test.mjs",
+      "tests/integration/realtime.test.mjs",
+      "tests/integration/worker-readiness.test.mjs",
+      "tests/integration/worker-recovery.test.mjs"
+    ],
+    "docker": [
+      "tests/docker/sandbox.test.mjs"
+    ],
+    "neon": [
+      "tests/integration/neon-upgrade.test.mjs",
+      "tests/integration/neon.test.mjs"
+    ],
+    "browser": [
+      "tests/browser/role-workflows.spec.mjs"
+    ],
+    "frontend": [
+      "tests/browser/faculty-review.spec.mjs"
+    ],
+    "performance": [
+      "tests/browser/auth-performance.spec.mjs"
+    ],
+    "quarantine": [
+      "tests/docker/batch-execution.test.js"
+    ]
+  },
+  "quarantine": {
+    "tests/docker/batch-execution.test.js": "CR-ARCH-24 / #79: modernized real-Sandbox candidate; retain quarantine until real Docker validation passes. Docker unavailable in implementation workspace."
+  }
+}
