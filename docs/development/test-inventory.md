@@ -45,3 +45,9 @@ Implementation base: `0d7679850a8346cf545c096b57ee23d02fbf586f`. Work is isolate
 Run `npm ci`, `npm run lint:critical`, `npm test`, and `npm run build`. On a disposable service host also run `npm run test:integration`, build `infrastructure/docker/runner/Dockerfile`, run the batch candidate command above, then `npm run test:docker` and the authenticated browser/full certification workflows. Integration requires isolated PostgreSQL/Redis; no live Neon commands are authorized by this refactor. Full strict certification remains blocked until batch is active in the Docker lane and all final-head runtime evidence passes. Record the tested source SHA and command exit codes in the PR; a green fast lane is not full certification.
 
 The #81 evidence-audit unit tests cover missing move-map/runtime rows, skipped predecessor gates, wrong host/source/hardware, pending commands, artifact tampering/escape and the Compose minimum. They validate rejection behavior and are not lab runtime evidence.
+
+## Batch 5B additions (#97)
+
+The ordinary unit command also runs `tests/architecture/core-public-entries.test.mjs` (retired-path/import-resolution/ownership boundaries) and `tests/unit/worker-import.test.mjs` (bootstrap links real database close export). Database mocks now target `@coderank/database`; pagination uses `@coderank/core/shared/pagination`. User pagination exercises the API-owned management implementation after removal of the unused duplicate core service. These additions do not certify real PostgreSQL or worker recovery. Historical move hashes in the batch 4 inventory describe that move revision, not these later edits.
+
+Batch 5E adds `tests/unit/load-test-entrypoints.test.mjs` to normal discovery and the existing Windows fast job. It verifies supported npm commands, PowerShell scenario selection, helper/profiling references and current guide executable paths without running a workload. Native PowerShell parsing runs separately in that Windows job.

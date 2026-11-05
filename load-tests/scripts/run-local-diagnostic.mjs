@@ -24,7 +24,8 @@ function start(command, args, name, env = environment) {
 }
 const result = { startedAt: new Date().toISOString(), baseUrl: 'http://127.0.0.1:3000',
   notes: ['Real application/worker processes; no Docker, Redis or DB mocks.', 'Development-mode smoke, not a production capacity benchmark.'] };
-const web = start(process.execPath, ['apps/web/server.js'], 'web');
+start(process.execPath, ['apps/api/src/server.js'], 'api');
+const web = start(process.execPath, ['scripts/dev/web-runtime.mjs'], 'web');
 const worker = start(process.execPath, ['apps/worker/src/index.js'], 'worker');
 try {
   await new Promise((resolve, reject) => {

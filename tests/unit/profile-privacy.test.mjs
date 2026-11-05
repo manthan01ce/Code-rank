@@ -13,10 +13,7 @@ const sql = Object.assign(
   },
   { query: async (q, p) => (await db.query(q, p)).rows },
 );
-mock.module(
-  new URL("../../packages/core/src/db/client.js", import.meta.url).href,
-  { defaultExport: sql },
-);
+
 mock.module('@coderank/database', { defaultExport: sql, namedExports: { closeDatabase: async () => {} } });
 const { ProfileService: UserService } = await import('../../apps/api/src/modules/profile/profile.service.js');
 

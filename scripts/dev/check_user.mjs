@@ -3,7 +3,7 @@ import sql from '../../packages/database/src/client.js';
 import { comparePassword } from '../../packages/core/src/utils/auth.js';
 
 import { generateToken } from '../../packages/core/src/utils/auth.js';
-import { SubmissionService } from '../../packages/core/src/services/SubmissionService.js';
+import { SubmissionService } from '@coderank/core/submissions';
 import { PracticalService } from '../../packages/core/src/modules/practicals/PracticalService.js';
 
 async function main() {

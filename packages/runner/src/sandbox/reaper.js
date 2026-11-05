@@ -1,6 +1,6 @@
 import { performance } from 'node:perf_hooks';
 import { dockerCommand } from './docker.js';
-import { SANDBOX_PREFIX as PREFIX, SANDBOX_VERSION, sandboxScope } from './sandbox-metadata.js';
+import { SANDBOX_PREFIX as PREFIX, SANDBOX_VERSION, sandboxScope } from './metadata.js';
 
 const UUID = '[a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12}';
 const NAME = new RegExp(`^/coderank-job-${UUID}$`);

@@ -1,4 +1,4 @@
-import sql from '@coderank/core/db';
+import sql from '@coderank/database';
 import { listPage } from '@coderank/core/shared/pagination';
 
 export class PracticalReportService {

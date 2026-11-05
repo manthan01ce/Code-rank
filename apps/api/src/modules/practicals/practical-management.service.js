@@ -1,4 +1,4 @@
-import sql from '@coderank/core/db';
+import sql from '@coderank/database';
 import { positiveId } from '@coderank/core/shared/identifiers';
 
 const fail = (status, message) => {

@@ -1,4 +1,4 @@
-import sql from '../db/client.js';
+import sql from '@coderank/database';
 import { verifyToken } from '../utils/auth.js';
 
 const unauthorized = () => { throw { status: 401, message: 'Authentication required or session expired' }; };

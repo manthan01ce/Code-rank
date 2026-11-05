@@ -20,7 +20,7 @@ try {
     Write-Host "✓ Server is running`n" -ForegroundColor Green
 } catch {
     Write-Host "❌ Server is not running on http://localhost:3000" -ForegroundColor Red
-    Write-Host "   Please start the server first with: npm run start" -ForegroundColor White
+    Write-Host "   Please start the server first with: npm run dev" -ForegroundColor White
     exit 1
 }
 

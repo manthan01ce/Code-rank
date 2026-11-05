@@ -1273,7 +1273,7 @@
       ],
       "services": [
         "@/lib/execution-api",
-        "@coderank/core/services/SubmissionService"
+        "@coderank/core/submissions"
       ],
       "description": "Unified execution intake and execution service status",
       "observedResponseHeaders": {
@@ -1326,7 +1326,7 @@
         503
       ],
       "services": [
-        "@coderank/core/services/SubmissionService",
+        "@coderank/core/submissions",
         "@coderank/core/security/active-actor"
       ],
       "description": "Polling endpoint for execution job status and completed result",
@@ -1369,8 +1369,8 @@
       ],
       "services": [
         "apps/api/src/modules/submissions/submissions.service.js",
-        "@coderank/core/services/SubmissionService",
-        "@coderank/core/services/PracticalService"
+        "@coderank/core/submissions",
+        "@coderank/core/practicals"
       ],
       "description": "Practice and generic code submission handler",
       "observedResponseHeaders": {
@@ -1425,8 +1425,8 @@
       ],
       "services": [
         "apps/api/src/modules/submissions/submissions.service.js",
-        "@coderank/core/services/SubmissionService",
-        "@coderank/core/services/PracticalService"
+        "@coderank/core/submissions",
+        "@coderank/core/practicals"
       ],
       "description": "Student graded submission dispatch for assigned practical",
       "observedResponseHeaders": {
@@ -1675,9 +1675,9 @@
         503
       ],
       "services": [
-        "@coderank/core/db",
-        "@coderank/core/db-readiness",
-        "@coderank/core/services/SubmissionService"
+        "@coderank/database",
+        "@coderank/database/readiness",
+        "@coderank/core/submissions"
       ],
       "description": "Public health check with DB/queue readiness evaluation and in-memory cache",
       "observedResponseHeaders": {
@@ -1797,7 +1797,7 @@
         503
       ],
       "services": [
-        "@coderank/core/services/SubmissionService"
+        "@coderank/core/submissions"
       ],
       "description": "Public execution queue depth and status check",
       "observedResponseHeaders": {
@@ -1864,7 +1864,7 @@
         500
       ],
       "services": [
-        "@coderank/core/services/UserService",
+        "apps/api/src/modules/profile/profile.service.js",
         "@coderank/core/security/active-actor"
       ],
       "description": "Public username profile lookup and student biography update",

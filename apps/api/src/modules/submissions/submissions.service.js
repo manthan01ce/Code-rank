@@ -1,9 +1,9 @@
-import { SubmissionService } from '@coderank/core/services/SubmissionService';
+import { SubmissionService } from '@coderank/core/submissions';
 import { SubmissionHistoryService, pageOptions } from './submission-history.service.js';
 import { ExecutionService } from '../execution/execution.service.js';
-import { PracticalService } from '@coderank/core/services/PracticalService';
+import { PracticalService } from '@coderank/core/practicals';
 import { ALLOWED_LANGUAGES } from '@coderank/core/security/execution';
-import sql from '@coderank/core/db';
+import sql from '@coderank/database';
 
 export function decodeBinaryCode(codeField) {
   if (!codeField) return '';

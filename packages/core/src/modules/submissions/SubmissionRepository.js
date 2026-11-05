@@ -1,4 +1,4 @@
-import sql from '../../db/client.js';
+import sql from '@coderank/database';
 
 // A single PostgreSQL statement owns the attempt ledger, best grade and case rows.
 export async function saveAttempt(a) {

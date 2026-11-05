@@ -1,5 +1,6 @@
 # ✅ Smoke Test Pre-Flight Checklist
 
+> Historical tuning observations are retained below. For the current three-app startup and repository-root commands, use [the load-test guide](README.md). Relative scenario/helper examples here run from `load-tests/`.
 ## Prerequisites Check
 
 ### Software Requirements
@@ -26,10 +27,10 @@
 ## Pre-Test Setup
 
 ### 1. Code Changes Verification
-- [ ] `apps/web/src/app/api/health/route.js` - Updated
-- [ ] `apps/web/src/app/api/queue/stats/route.js` - Updated
+- [ ] `apps/api/src/modules/operations/operations.routes.js` - Updated
+- [ ] `apps/api/src/modules/operations/operations.service.js` - Updated
 - [ ] `apps/web/next.config.mjs` - Updated
-- [ ] `apps/web/server.js` - Updated
+- [ ] `scripts/dev/web-runtime.mjs` - Updated
 - [ ] `load-tests/scenarios/smoke-test.js` - Updated
 
 ### 2. Build Process
@@ -81,7 +82,7 @@ cd load-tests
 
 #### Option A: Using PowerShell Script
 ```powershell
-.\test-smoke.ps1
+.\scripts\test-smoke.ps1
 ```
 - [ ] Script executes without errors
 - [ ] k6 is found
@@ -90,7 +91,7 @@ cd load-tests
 
 #### Option B: Direct k6
 ```powershell
-k6 run smoke-test.js
+k6 run scenarios/smoke-test.js
 ```
 - [ ] Test initialization succeeds
 - [ ] Warmup phase completes (5s)
@@ -326,16 +327,16 @@ Get-NetTCPConnection -LocalPort 3000 -ErrorAction SilentlyContinue
 ### Test Execution
 ```powershell
 # Full test
-.\test-smoke.ps1
+.\scripts\test-smoke.ps1
 
 # Direct k6
-k6 run smoke-test.js
+k6 run scenarios/smoke-test.js
 
 # With custom VUs
-k6 run --vus 30 smoke-test.js
+k6 run --vus 30 scenarios/smoke-test.js
 
 # Longer duration
-k6 run --duration 60s smoke-test.js
+k6 run --duration 60s scenarios/smoke-test.js
 ```
 
 ### Health Checks

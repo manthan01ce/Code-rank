@@ -2,7 +2,7 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 let mapped = false;
 const practical = { id: 9, faculty_id: 7, course_id: 2, status: 'active', semester: 1 };
-test.mock.module('../../packages/core/src/db/client.js', { defaultExport: async strings => {
+test.mock.module('@coderank/database', { defaultExport: async strings => {
   const text = strings.join('?');
   if (text.includes('FROM course_faculty')) return mapped ? [{ assigned: 1 }] : [];
   if (text.includes('SELECT p.*')) return [practical];

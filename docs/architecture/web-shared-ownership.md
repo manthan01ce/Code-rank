@@ -32,14 +32,14 @@
 ## 2. Justified Retention Decisions for Styles
 
 1. **`apps/web/src/app/globals.css` (Retained in `apps/web/src/app/globals.css`):**
-   - **Requirement:** Next.js App Router root layout (`apps/web/src/app/layout.js`) requires importing the root global stylesheet.
+   - **Consumer:** The root layout (`apps/web/src/app/layout.js`) imports this global stylesheet. Its location is a project convention, not a framework requirement; Next.js does not require the stylesheet to live under `app`.
    - **Content:** Contains Tailwind CSS v4 `@theme inline` declarations, CSS reset, body font-family, and root CSS variables (`--primary`, `--bg-color`, `--card-bg`, etc.).
    - **Decision:** Kept in `app/globals.css` per framework standard. Does not contain role-specific or domain-specific styles.
 
 2. **`apps/web/src/app/student/student-theme.css` (Retained in `apps/web/src/app/student/student-theme.css`):**
    - **Scope:** Defines CSS custom properties scoped strictly to `.student-theme[data-student-theme="dark|light"]` used inside the student workspace and code editor.
    - **Consumer:** Imported exclusively by `apps/web/src/app/student/layout.js`.
-   - **Decision:** Retained under `app/student/` as a feature-scoped theme sheet. Moving it to a generic global `styles/` folder would violate feature isolation and pollute the global style graph.
+   - **Decision:** Retained under `app/student/` as a feature-scoped theme sheet. The import from the student layout preserves its scope. This is a documented retention choice; a folder move alone would not change CSS scoping.
 
 3. **Role-Specific Styles (`admin.css`, `faculty.css`):**
    - Retained under their respective feature layouts (`apps/web/src/app/admin/admin.css`, `apps/web/src/app/faculty/faculty.css`).

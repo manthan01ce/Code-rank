@@ -1,5 +1,5 @@
 import { AccountService } from '../auth/account.service.js';
-import sql from '@coderank/core/db';
+import sql from '@coderank/database';
 import { UserManagementService } from './user-management.service.js';
 
 const fail = (status, message) => {

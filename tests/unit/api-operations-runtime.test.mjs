@@ -67,15 +67,10 @@ sqlTagged.query = async (queryText, params = []) => {
   return res.rows;
 };
 
+
 test.mock.module('@coderank/database', {
   defaultExport: sqlTagged,
-  namedExports: {
-    closeDatabase: async () => {},
-  },
-});
-
-test.mock.module(new URL('../../packages/core/src/db/client.js', import.meta.url).href, {
-  defaultExport: sqlTagged,
+  namedExports: { closeDatabase: async () => {} },
 });
 
 test.mock.module('@coderank/queue', {

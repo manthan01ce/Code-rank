@@ -50,6 +50,7 @@
       "tests/unit/job-wait.test.mjs",
       "tests/unit/lab-launcher-env.test.mjs",
       "tests/unit/load-result.test.mjs",
+      "tests/unit/load-test-entrypoints.test.mjs",
       "tests/unit/local-lab-audit.test.mjs",
       "tests/unit/migration-errors.test.mjs",
       "tests/unit/migrations.test.mjs",
@@ -86,10 +87,12 @@
       "tests/unit/worker-config.test.mjs",
       "tests/unit/worker-dispatch.test.mjs",
       "tests/unit/worker-heartbeat.test.mjs",
+      "tests/unit/worker-import.test.mjs",
       "tests/unit/worker-shutdown.test.mjs"
     ],
     "architecture": [
       "tests/architecture/architecture.test.mjs",
+      "tests/architecture/core-public-entries.test.mjs",
       "tests/architecture/final-separation.test.mjs",
       "tests/architecture/practical-authoring.test.mjs",
       "tests/architecture/tooling-lint.test.mjs"

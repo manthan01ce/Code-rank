@@ -1,6 +1,6 @@
-import { dockerCommand } from './docker.js';
-import { Sandbox } from './Sandbox.js';
-export { dockerCommand } from './docker.js';
+import { dockerCommand } from './sandbox/docker.js';
+import { Sandbox } from './sandbox/Sandbox.js';
+export { dockerCommand } from './sandbox/docker.js';
 import crypto from 'node:crypto';
 
 export const MAX_EXECUTION_MS = 5000;

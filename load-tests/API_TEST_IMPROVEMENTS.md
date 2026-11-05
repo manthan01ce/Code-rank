@@ -1,5 +1,6 @@
 # API Load Test Performance Improvements
 
+> Historical tuning observations are retained below. For the current three-app startup and repository-root commands, use [the load-test guide](README.md). Relative scenario/helper examples here run from `load-tests/`.
 ## Problem Analysis
 
 ### Current Status (PASSED ✅)
@@ -274,14 +275,14 @@ npm run start
 cd ..\..\load-tests
 
 # Run the test
-k6 run api-load-test.js
+k6 run scenarios/api-load-test.js
 
 # Or with custom BASE_URL
-k6 run -e BASE_URL=http://localhost:3000 api-load-test.js
+k6 run -e BASE_URL=http://localhost:3000 scenarios/api-load-test.js
 
 # With JWT token for authenticated routes
 $env:JWT_TOKEN="your-jwt-token-here"
-k6 run -e JWT_TOKEN=$env:JWT_TOKEN api-load-test.js
+k6 run -e JWT_TOKEN=$env:JWT_TOKEN scenarios/api-load-test.js
 ```
 
 ### 3. Monitor During Test
@@ -358,7 +359,7 @@ echo $env:NODE_ENV
 # (Use database monitoring tools)
 
 # Reduce peak VUs
-k6 run --stage 30s:100 --stage 30s:100 --stage 30s:0 api-load-test.js
+k6 run --stage 30s:100 --stage 30s:100 --stage 30s:0 scenarios/api-load-test.js
 ```
 
 ### If Error Rate High (>5%)
@@ -375,7 +376,7 @@ k6 run --stage 30s:100 --stage 30s:100 --stage 30s:0 api-load-test.js
 # Check server logs for errors
 
 # Reduce concurrent users
-k6 run --stage 30s:75 --stage 30s:75 --stage 20s:0 api-load-test.js
+k6 run --stage 30s:75 --stage 30s:75 --stage 20s:0 scenarios/api-load-test.js
 
 # Increase timeouts
 # Edit api-load-test.js and increase timeout values

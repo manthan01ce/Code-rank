@@ -123,7 +123,7 @@
         "tests/unit/progress-updates.test.mjs",
         "tests/unit/fetch-collection.test.mjs"
       ],
-      "finding": "Browser infrastructure consolidated in lib/client; environment-independent utilities in lib/shared; generic tailwind helper in lib/utils.ts; framework-required root styles retained in app/globals.css; student workspace theme retained in app/student/student-theme.css; feature-specific useExecutionLifecycle hook moved to features/coding-workspace. Shared useSocket, usePolling, and useProgressRefresh retained in hooks with multi-feature consumers.",
+      "finding": "Browser infrastructure consolidated in lib/client; environment-independent utilities in lib/shared; generic tailwind helper in lib/utils.ts; root styles retained by documented project convention in app/globals.css; student workspace theme retained in app/student/student-theme.css; feature-specific useExecutionLifecycle hook moved to features/coding-workspace. Shared useSocket, usePolling, and useProgressRefresh retained in hooks with multi-feature consumers.",
       "functionalAcceptance": "unverified"
     },
     {
@@ -145,20 +145,25 @@
     },
     {
       "id": "core-facades",
-      "issue": 70,
-      "structuralState": "gap",
+      "issue": 97,
+      "structuralState": "implemented",
       "requirement": "Trace and justify retained compatibility facades and pagination aliases",
       "paths": [
-        "packages/core/src/db",
-        "packages/core/src/services",
-        "packages/core/src/modules/courses/list-pagination.js",
-        "packages/core/src/index.js"
+        "packages/core/package.json",
+        "packages/core/src/shared",
+        "packages/core/src/modules",
+        "packages/database/src/client.js",
+        "packages/database/src/readiness.js"
       ],
       "tests": [
+        "tests/architecture/core-public-entries.test.mjs",
+        "tests/unit/worker-import.test.mjs",
         "tests/unit/selector-pagination.test.mjs",
-        "tests/unit/user-pagination.test.mjs"
+        "tests/unit/user-pagination.test.mjs",
+        "tests/integration/postgres.test.mjs",
+        "tests/integration/worker-recovery.test.mjs"
       ],
-      "finding": "API and worker still consume @coderank/core/db and service exports; tests still consume deprecated course pagination. These are re-exports, not duplicate implementations. Keep working importers; owner-approved retention/retirement and consumer migration remain unresolved.",
+      "finding": "Repository consumers and mocks migrated to owning database, feature and shared exports. Root/services/db/pagination aliases and side-effect migration shim retired after caller inventory; duplicate unused core users implementation removed. See core-public-entries.md and core-public-entries-consumers.json. Structural implementation is not acceptance: disposable PostgreSQL actor ordering/ledger/readiness/grading and real worker regressions remain unverified; #97 stays open.",
       "functionalAcceptance": "unverified"
     },
     {
@@ -204,19 +209,22 @@
     {
       "id": "runner-grouping",
       "issue": 78,
-      "structuralState": "gap",
+      "structuralState": "implemented",
       "requirement": "Languages and sandbox lifecycle grouped behind public runner exports",
       "paths": [
-        "packages/runner/src/languages.js",
-        "packages/runner/src/Executor.js",
-        "packages/runner/src/Sandbox.js",
-        "packages/runner/src/reaper.js"
+        "packages/runner/src/languages",
+        "packages/runner/src/sandbox",
+        "packages/runner/src/Executor.js"
       ],
       "tests": [
         "tests/unit/worker-dispatch.test.mjs",
+        "tests/unit/runner.test.mjs",
+        "tests/unit/static-runners.test.mjs",
+        "tests/unit/sandbox.test.mjs",
+        "tests/unit/sandbox-recovery.test.mjs",
         "tests/docker/sandbox.test.mjs"
       ],
-      "finding": "Public exports exist, but implementations remain flat in packages/runner/src. The requested languages/ and sandbox/ grouping is absent; no justified deviation is recorded. Avoid renaming or changing execution mechanics during certification.",
+      "finding": "Language implementations are grouped under packages/runner/src/languages and container lifecycle, metadata, health, and reaping under packages/runner/src/sandbox. Public package exports are preserved, and shared Executor remains a single implementation.",
       "functionalAcceptance": "unverified"
     },
     {
@@ -292,9 +300,10 @@
       ],
       "tests": [
         "tests/unit/lab-launcher-env.test.mjs",
-        "tests/unit/seed-safety.test.mjs"
+        "tests/unit/seed-safety.test.mjs",
+        "tests/unit/load-test-entrypoints.test.mjs"
       ],
-      "finding": "Root launchers, manifests/config and public URLs are intentional. Windows execution, asset/hydration parity and startup still require host evidence.",
+      "finding": "Root launchers, manifests/config and public URLs are intentional. Windows execution, asset/hydration parity and startup still require host evidence. Batch 5E (#100): npm k6:smoke-100/k6:stress now select scenarios owners; relative guide/helper commands and local diagnostic startup are reconciled. Focused executable reference checks cover npm, PowerShell selectors, helper paths and current docs. Real k6 and native PowerShell evidence remain separately required; no stress/capacity acceptance is claimed.",
       "functionalAcceptance": "unverified"
     },
     {
@@ -309,9 +318,10 @@
         "load-tests/run-k6.ps1"
       ],
       "tests": [
-        "tests/unit/capacity.test.mjs"
+        "tests/unit/capacity.test.mjs",
+        "tests/unit/load-test-entrypoints.test.mjs"
       ],
-      "finding": "Public npm/PowerShell entry points remain. Hardware-qualified capacity and supported workload runs are not certified by this folder move.",
+      "finding": "Public npm/PowerShell entry points remain. Hardware-qualified capacity and supported workload runs are not certified by this folder move. Batch 5E (#100): npm k6:smoke-100/k6:stress now select scenarios owners; relative guide/helper commands and local diagnostic startup are reconciled. Focused executable reference checks cover npm, PowerShell selectors, helper paths and current docs. Real k6 and native PowerShell evidence remain separately required; no stress/capacity acceptance is claimed.",
       "functionalAcceptance": "unverified"
     },
     {

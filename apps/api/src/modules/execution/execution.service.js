@@ -1,8 +1,8 @@
 import { authenticateRequest } from '@coderank/core/security/active-actor';
 import { guestActor, GUEST_COOKIE, ALLOWED_LANGUAGES, validateExecution } from '@coderank/core/security/execution';
-import { PracticalService } from '@coderank/core/services/PracticalService';
+import { PracticalService } from '@coderank/core/practicals';
 import { STATIC_PROBLEMS } from '@coderank/contracts/practice';
-import { SubmissionService } from '@coderank/core/services/SubmissionService';
+import { SubmissionService } from '@coderank/core/submissions';
 import { checkRateLimit } from '../../middleware/rate-limiter.js';
 
 export class ExecutionService {

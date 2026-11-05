@@ -22,15 +22,12 @@ db.query = async () => {
   if (!dbHealthy) throw Error("offline");
   return schemaCurrent ? required : required.slice(0, -1);
 };
-mock.module(
-  new URL("../../packages/core/src/db/client.js", import.meta.url).href,
-  { defaultExport: db },
-);
+
 mock.module("@coderank/database", {
   defaultExport: db,
   namedExports: { closeDatabase: async () => {} },
 });
-mock.module("@coderank/core/services/SubmissionService", {
+mock.module("@coderank/core/submissions", {
   namedExports: {
     SubmissionService: {
       getQueueStats: async () => ({ cached: !queueHealthy }),

@@ -3,7 +3,7 @@ import { parse } from 'csv-parse/sync';
 import ExcelJS from 'exceljs';
 import path from 'node:path';
 import { Readable } from 'node:stream';
-import { requestTiming } from '@coderank/core/utils/request-timing';
+import { requestTiming } from '@coderank/core/shared/request-timing';
 import { requireAdmin } from '../../middleware/authentication.js';
 import { UsersService } from './users.service.js';
 

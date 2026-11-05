@@ -36,8 +36,11 @@ scoop install k6
 # Infrastructure (Postgres + Redis)
 docker compose -f infrastructure/docker-compose.yml up -d
 
-# Web server (Next.js + Socket.IO)
-npm run web       # or: node apps/web/server.js
+# API server (HTTP + Socket.IO)
+npm run api
+
+# Web server (Next.js; API and Socket.IO are served by the API app)
+npm run web
 
 # Code execution worker
 npm run worker

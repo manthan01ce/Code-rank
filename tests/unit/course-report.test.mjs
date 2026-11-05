@@ -5,7 +5,7 @@ import { migrate } from "../../packages/database/src/migrations.js";
 const db = new PGlite();
 const query = async (q, p) => (await db.query(q, p)).rows;
 mock.module(
-  new URL("../../packages/core/src/db/client.js", import.meta.url).href,
+  '@coderank/database',
   { defaultExport: { query } },
 );
 const { CourseReportService: service } = await import(

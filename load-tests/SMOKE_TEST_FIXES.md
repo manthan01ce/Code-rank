@@ -1,5 +1,6 @@
 # Smoke Test Performance Fixes - Summary
 
+> Historical tuning observations are retained below. For the current three-app startup and repository-root commands, use [the load-test guide](README.md). Relative scenario/helper examples here run from `load-tests/`.
 ## Problem Statement
 
 The smoke test was failing with:
@@ -161,10 +162,10 @@ npm run start
 ```powershell
 # Option 1: Using script
 cd ..\..\load-tests
-.\test-smoke.ps1
+.\scripts\test-smoke.ps1
 
 # Option 2: Direct k6
-k6 run smoke-test.js
+k6 run scenarios/smoke-test.js
 ```
 
 ### 4. Verify Results

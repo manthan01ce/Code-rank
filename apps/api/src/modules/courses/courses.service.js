@@ -1,5 +1,5 @@
 import sql from '@coderank/database';
-import { listPage } from '@coderank/core/pagination';
+import { listPage } from '@coderank/core/shared/pagination';
 
 function fail(status, message) {
   throw { status, message };

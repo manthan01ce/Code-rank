@@ -5,12 +5,12 @@
   "type": "module",
   "exports": {
     ".": "./src/Executor.js",
-    "./sandbox": "./src/Sandbox.js",
-    "./languages": "./src/languages.js",
-    "./docker": "./src/docker.js",
-    "./reaper": "./src/reaper.js",
-    "./function-harness": "./src/function-harness.js",
-    "./function-runner": "./src/function-runner.js",
-    "./health": "./src/health.js"
+    "./sandbox": "./src/sandbox/Sandbox.js",
+    "./languages": "./src/languages/index.js",
+    "./docker": "./src/sandbox/docker.js",
+    "./reaper": "./src/sandbox/reaper.js",
+    "./function-harness": "./src/languages/function-harness.js",
+    "./function-runner": "./src/languages/function-runner.js",
+    "./health": "./src/sandbox/health.js"
   }
 }

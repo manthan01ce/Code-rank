@@ -1,4 +1,4 @@
-import { requestTiming } from '@coderank/core/utils/request-timing';
+import { requestTiming } from '@coderank/core/shared/request-timing';
 import { AuthService } from './auth.service.js';
 import { requireActor } from '../../middleware/authentication.js';
 import { checkRateLimit } from '../../middleware/rate-limiter.js';
