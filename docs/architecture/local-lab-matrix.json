@@ -293,9 +293,10 @@
       ],
       "tests": [
         "tests/unit/lab-launcher-env.test.mjs",
-        "tests/unit/seed-safety.test.mjs"
+        "tests/unit/seed-safety.test.mjs",
+        "tests/unit/load-test-entrypoints.test.mjs"
       ],
-      "finding": "Root launchers, manifests/config and public URLs are intentional. Windows execution, asset/hydration parity and startup still require host evidence.",
+      "finding": "Root launchers, manifests/config and public URLs are intentional. Windows execution, asset/hydration parity and startup still require host evidence. Batch 5E (#100): npm k6:smoke-100/k6:stress now select scenarios owners; relative guide/helper commands and local diagnostic startup are reconciled. Focused executable reference checks cover npm, PowerShell selectors, helper paths and current docs. Real k6 and native PowerShell evidence remain separately required; no stress/capacity acceptance is claimed.",
       "functionalAcceptance": "unverified"
     },
     {
@@ -310,9 +311,10 @@
         "load-tests/run-k6.ps1"
       ],
       "tests": [
-        "tests/unit/capacity.test.mjs"
+        "tests/unit/capacity.test.mjs",
+        "tests/unit/load-test-entrypoints.test.mjs"
       ],
-      "finding": "Public npm/PowerShell entry points remain. Hardware-qualified capacity and supported workload runs are not certified by this folder move.",
+      "finding": "Public npm/PowerShell entry points remain. Hardware-qualified capacity and supported workload runs are not certified by this folder move. Batch 5E (#100): npm k6:smoke-100/k6:stress now select scenarios owners; relative guide/helper commands and local diagnostic startup are reconciled. Focused executable reference checks cover npm, PowerShell selectors, helper paths and current docs. Real k6 and native PowerShell evidence remain separately required; no stress/capacity acceptance is claimed.",
       "functionalAcceptance": "unverified"
     },
     {

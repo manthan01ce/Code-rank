@@ -7,7 +7,9 @@ param (
 )
 
 $ErrorActionPreference = "Continue"
-$reportsDir = "load-tests\reports"
+$loadTestDir = Split-Path -Parent $PSScriptRoot
+$runner = Join-Path $loadTestDir "run-k6.ps1"
+$reportsDir = Join-Path $loadTestDir "reports"
 $timestamp = Get-Date -Format "yyyy-MM-dd_HH-mm-ss"
 $summaryFile = "$reportsDir\test-summary-$timestamp.md"
 
@@ -55,7 +57,7 @@ foreach ($test in $tests) {
     $startTime = Get-Date
     
     try {
-        .\load-tests\run-k6.ps1 -Test $test.Script -BaseUrl $BaseUrl -DisableRateLimit -DisableCache | Tee-Object -FilePath $outputFile
+        & $runner -Test $test.Script -BaseUrl $BaseUrl -DisableRateLimit -DisableCache | Tee-Object -FilePath $outputFile
         $exitCode = $LASTEXITCODE
     } catch {
         $exitCode = 1

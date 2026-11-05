@@ -90,3 +90,23 @@ jobs:
       # Built-in Node modules only; no DB/Docker or secrets are used by these tests.
       - name: Verify CMD environment handoff and destructive seed guard
         run: node --test tests/unit/lab-launcher-env.test.mjs tests/unit/seed-safety.test.mjs
+
+      - name: Parse load-test PowerShell entry points
+        shell: pwsh
+        run: |
+          Get-ChildItem load-tests -Recurse -Filter *.ps1 | ForEach-Object {
+            $tokens = $null
+            $parseErrors = $null
+            [System.Management.Automation.Language.Parser]::ParseFile($_.FullName, [ref]$tokens, [ref]$parseErrors) | Out-Null
+            if ($parseErrors.Count) { throw ($parseErrors | Out-String) }
+          }
+      - name: Check Windows load-test references
+        run: node --test tests/unit/load-test-entrypoints.test.mjs
+
+      - name: Parse public Windows PowerShell runner
+        shell: powershell
+        run: |
+          $tokens = $null
+          $parseErrors = $null
+          [System.Management.Automation.Language.Parser]::ParseFile((Resolve-Path load-tests/run-k6.ps1), [ref]$tokens, [ref]$parseErrors) | Out-Null
+          if ($parseErrors.Count) { throw ($parseErrors | Out-String) }
