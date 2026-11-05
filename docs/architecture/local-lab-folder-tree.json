@@ -103,6 +103,8 @@
     "apps/web/src/features/users/hooks",
     "apps/web/src/hooks",
     "apps/web/src/lib",
+    "apps/web/src/lib/client",
+    "apps/web/src/lib/shared",
     "apps/worker",
     "apps/worker/src",
     "apps/worker/src/jobs",

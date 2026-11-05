@@ -1,6 +1,6 @@
 'use client';
 import { useState, useRef, useEffect } from 'react';
-import { createRequestScope } from '@/lib/http-client';
+import { createRequestScope } from '@/lib/client/http-client';
 import { fetchMarksPage } from '../api/reports-api';
 import { usePolling } from '@/hooks/usePolling';
 

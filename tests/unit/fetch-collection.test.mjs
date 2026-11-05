@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { fetchCollection } from '../../apps/web/src/lib/fetch-collection.js';
+import { fetchCollection } from '../../apps/web/src/lib/client/fetch-collection.js';
 test('selector follows bounded pages, encodes cursor and preserves credentials',async t=>{
  const calls=[];t.mock.method(globalThis,'fetch',async(url,options)=>{calls.push({url,options});return new Response(JSON.stringify([{id:calls.length}]),{headers:{'X-Next-Cursor':calls.length===1?'a/b+':''}});});
  const options={headers:{Authorization:'Bearer test'}};

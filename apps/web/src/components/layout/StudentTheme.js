@@ -1,7 +1,7 @@
 'use client';
 
 import { createContext, useContext, useSyncExternalStore } from 'react';
-import { readStudentTheme, saveStudentTheme, STUDENT_THEME_KEY } from '@/lib/student-theme';
+import { readStudentTheme, saveStudentTheme, STUDENT_THEME_KEY } from '@/lib/shared/student-theme';
 
 const ThemeContext = createContext(null);
 const eventName = 'coderank-student-theme';

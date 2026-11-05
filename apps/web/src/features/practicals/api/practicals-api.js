@@ -1,4 +1,4 @@
-import { fetchCollection } from '../../../lib/fetch-collection.js';
+import { fetchCollection } from '../../../lib/client/fetch-collection.js';
 
 /**
  * Fetch all practicals for a given course.

@@ -9,7 +9,7 @@ import { assessMatrix, assessPredecessors, assessHost, artifactHash, supportedCo
 
 test('local audit keeps actual merged ownership gaps visible and rejects omitted or empty move-map rows', () => {
   const errors = assessMatrix(matrix);
-  for (const id of ['shared-client-styles','core-facades','runner-grouping','sandbox-warm','test-lanes-batch']) assert.ok(errors.some(e=>e.startsWith(id+':')),id);
+  for (const id of ['core-facades','runner-grouping','sandbox-warm','test-lanes-batch']) assert.ok(errors.some(e=>e.startsWith(id+':')),id);
   for (const change of [m=>m.rows.pop(),m=>m.rows.push(m.rows[0]),m=>m.runtimeRequirements.pop(),m=>{m.rows[0].paths=[];}]) {
     const value=structuredClone(matrix);change(value);
     assert.ok(assessMatrix(value).length > errors.length);

@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { practicalDestination, practicalHasStarted, practicalBelongsToCourse } from '../../apps/web/src/lib/practical-navigation.js';
+import { practicalDestination, practicalHasStarted, practicalBelongsToCourse } from '../../apps/web/src/lib/shared/practical-navigation.js';
 test('practical links encode the course and never fall back to an unrelated question', () => {
   assert.equal(practicalDestination({id:42}, 'C++ / Lab'), '/student/code/practical_42?subject=C%2B%2B%20%2F%20Lab');
   for (const id of [undefined, null, '', -1, 0, 'other', Infinity, '1/../../admin']) assert.equal(practicalDestination({id}), null);

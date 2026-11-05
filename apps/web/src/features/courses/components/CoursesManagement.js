@@ -1,6 +1,6 @@
 'use client';
 import { useState, useEffect, useMemo } from 'react';
-import { fetchCollection } from '@/lib/fetch-collection';
+import { fetchCollection } from '@/lib/client/fetch-collection';
 import LoadingOverlay from '@/components/ui/LoadingOverlay';
 import { useAdminAuth } from '@/features/auth/hooks/useAdminAuth';
 import { useSocket } from '@/hooks/useSocket';

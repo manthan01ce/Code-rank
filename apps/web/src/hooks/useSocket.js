@@ -2,7 +2,7 @@
 
 import { useEffect, useRef, useState } from 'react';
 import { io } from 'socket.io-client';
-import { browserSocketAuth } from '../lib/browser-socket-auth.js';
+import { browserSocketAuth } from '../lib/client/browser-socket-auth.js';
 
 // Singleton socket to prevent multiple connections across component remounts
 let globalSocket = null;

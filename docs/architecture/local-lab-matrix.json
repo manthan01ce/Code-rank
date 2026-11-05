@@ -108,18 +108,22 @@
     {
       "id": "shared-client-styles",
       "issue": 75,
-      "structuralState": "gap",
+      "structuralState": "implemented",
       "requirement": "Browser infrastructure in lib/client, environment-independent utilities in lib/shared, common style tokens in styles after consumer analysis",
       "paths": [
-        "apps/web/src/lib",
+        "apps/web/src/lib/client",
+        "apps/web/src/lib/shared",
+        "apps/web/src/lib/utils.ts",
         "apps/web/src/app/globals.css",
         "apps/web/src/app/student/student-theme.css"
       ],
       "tests": [
         "tests/unit/browser-socket-auth.test.mjs",
-        "tests/unit/student-theme.test.mjs"
+        "tests/unit/student-theme.test.mjs",
+        "tests/unit/progress-updates.test.mjs",
+        "tests/unit/fetch-collection.test.mjs"
       ],
-      "finding": "Current client/shared helpers remain mixed in flat lib; global/theme styles remain under app. No completed consumer-based disposition is documented. Do not create empty target folders or move feature CSS blindly.",
+      "finding": "Browser infrastructure consolidated in lib/client; environment-independent utilities in lib/shared; generic tailwind helper in lib/utils.ts; framework-required root styles retained in app/globals.css; student workspace theme retained in app/student/student-theme.css; feature-specific useExecutionLifecycle hook moved to features/coding-workspace. Shared useSocket, usePolling, and useProgressRefresh retained in hooks with multi-feature consumers.",
       "functionalAcceptance": "unverified"
     },
     {

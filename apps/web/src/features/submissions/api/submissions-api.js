@@ -1,4 +1,4 @@
-import { requestPage } from '../../../lib/http-client.js';
+import { requestPage } from '../../../lib/client/http-client.js';
 
 export function fetchSubmissionPage(practicalId, token, filters, signal) {
   const params = new URLSearchParams({

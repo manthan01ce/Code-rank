@@ -3,7 +3,7 @@ import { userRequest, userListRequest, uploadUsers } from '../api/users-api';
 import { useUserListLifecycle } from './useUserListLifecycle';
 
 import { useState, useEffect, useRef, useMemo, useCallback } from 'react';
-import { fetchCollection } from '@/lib/fetch-collection';
+import { fetchCollection } from '@/lib/client/fetch-collection';
 
 import { useAdminAuth } from '@/features/auth/hooks/useAdminAuth';
 import { useSocket } from '@/hooks/useSocket';

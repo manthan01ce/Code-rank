@@ -1,6 +1,6 @@
 'use client';
 import { useEffect } from 'react';
-import { PROGRESS_EVENT, PROGRESS_KEY } from '@/lib/progress-updates';
+import { PROGRESS_EVENT, PROGRESS_KEY } from '@/lib/client/progress-updates';
 export function useProgressRefresh(refresh, enabled = true) {
   useEffect(() => {
     if (!enabled) return;

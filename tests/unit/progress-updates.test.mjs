@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { profilePracticals } from '../../apps/web/src/lib/progress-updates.js';
+import { profilePracticals } from '../../apps/web/src/lib/client/progress-updates.js';
 test('profile progress reflects accepted submissions and keeps solved status after a failed retry', () => {
   const base = { practical_id: 5, practical_title: 'Arrays', course_code: 'CS', course_name: 'Algorithms' };
   const rows = profilePracticals([{ ...base, status: 'Accepted', normalized_marks: 10 }, { ...base, status: 'Wrong Answer', normalized_marks: 2 }]);

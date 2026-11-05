@@ -2,7 +2,7 @@
 import { selfProfileRequest, usernameProfileRequest } from '../api/profile-api';
 import { useState, useEffect, useCallback, useMemo, useRef } from 'react';
 import { useParams, useRouter } from 'next/navigation';
-import { profilePracticals } from '@/lib/progress-updates';
+import { profilePracticals } from '@/lib/client/progress-updates';
 import { useProgressRefresh } from '@/hooks/useProgressRefresh';
 import { usePolling } from '@/hooks/usePolling';
 
