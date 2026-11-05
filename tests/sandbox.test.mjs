@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { Sandbox, jobLifetime } from '../packages/runner/src/Sandbox.js';
+import { Sandbox, jobLifetime } from '@coderank/runner/sandbox';
 test('invalid lifetimes retain a finite deadline and all values stay bounded', () => {
  for (const value of ['invalid', '', 'Infinity', '-4', '0']) assert.equal(jobLifetime(value), 30000);
  assert.equal(jobLifetime('250'), 1000);

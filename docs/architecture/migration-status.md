@@ -1,5 +1,7 @@
 # Architecture migration status
 
+Worker dispatch/lifecycle and public runner consumers are reconciled in [the #77 ownership map](worker-runner-ownership.md); live sandbox/recovery/capacity acceptance remains pending.
+
 Database assets/lifecycle ownership is reconciled in [the #76 inventory](database-assets-ownership.md); this move preserves SQL/ledger identity and leaves real container/recovery acceptance pending.
 
 Remaining frontend route and workflow owners are reconciled in [the #74 ownership inventory](remaining-views-ownership.md); runtime/browser acceptance is tracked separately from these implementation moves.

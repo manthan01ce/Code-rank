@@ -1,4 +1,4 @@
-import { Sandbox } from '../../packages/runner/src/Sandbox.js';
+import { Sandbox } from '@coderank/runner/sandbox';
 const sandbox=new Sandbox();
 try {
   await sandbox.start();

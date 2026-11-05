@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { startExecutionHeartbeat, WORKER_REGISTRY, WORKER_KEY_PREFIX } from '../apps/worker/src/heartbeat.js';
+import { startExecutionHeartbeat, WORKER_REGISTRY, WORKER_KEY_PREFIX } from '../apps/worker/src/lifecycle/heartbeat.js';
 
 class FakeRedis {
   transactions = [];

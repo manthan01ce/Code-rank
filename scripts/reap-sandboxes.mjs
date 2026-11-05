@@ -2,7 +2,7 @@
 // versioned CodeRank sandboxes can be removed; names alone are never ownership.
 import { fileURLToPath } from 'node:url';
 import { resolve } from 'node:path';
-import { reapExpiredSandboxes } from '../packages/runner/src/reaper.js';
+import { reapExpiredSandboxes } from '@coderank/runner/reaper';
 
 export async function reapSandboxCommand(args, reap = reapExpiredSandboxes) {
   let scope, apply = false;

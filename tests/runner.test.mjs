@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { Executor } from '../apps/worker/src/execution/runners/Executor.js';
+import { Executor } from '@coderank/runner';
 
 test('identical code gets private workspaces and compilation never trusts directory existence', async () => {
   const calls = [];
@@ -48,7 +48,7 @@ test('playground cleanup runs after failures', async () => {
 });
 
 test('execution cannot exceed five seconds through defaults, constructor or testcase overrides', async () => {
-  const { executionBudget } = await import('../packages/runner/src/Executor.js');
+  const { executionBudget } = await import('@coderank/runner');
   for (const value of [undefined, 0, -1, Infinity, NaN, 999999]) assert.equal(executionBudget(value), 5000);
   assert.equal(executionBudget(40), 40);
   const calls = [];

@@ -4,7 +4,7 @@ import { mkdtempSync,writeFileSync,rmSync } from 'node:fs';
 import { fileURLToPath } from 'node:url';
 import path from 'node:path';
 import { execFileSync, execSync } from 'node:child_process';
-import { buildFunctionSource,functionCases,sameFunctionValue } from '../packages/runner/src/function-harness.js';
+import { buildFunctionSource,functionCases,sameFunctionValue } from '@coderank/runner/function-harness';
 import { STATIC_PROBLEMS } from '../apps/web/src/features/practice/problems.js';
 const hasGcc = (() => {
  try { execSync('gcc --version', { stdio: 'ignore' }); return true; } catch { return false; }

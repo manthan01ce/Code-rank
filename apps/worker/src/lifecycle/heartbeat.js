@@ -1,6 +1,6 @@
 import { randomUUID } from 'node:crypto';
 import Redis from 'ioredis';
-import { checkDockerHealth } from './execution/docker.js';
+import { checkDockerHealth } from '@coderank/runner/health';
 
 export const WORKER_REGISTRY = 'coderank:execution:workers';
 export const WORKER_KEY_PREFIX = 'coderank:execution:worker:';

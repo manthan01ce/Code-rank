@@ -6,6 +6,11 @@
   "exports": {
     ".": "./src/Executor.js",
     "./sandbox": "./src/Sandbox.js",
-    "./languages": "./src/languages.js"
+    "./languages": "./src/languages.js",
+    "./docker": "./src/docker.js",
+    "./reaper": "./src/reaper.js",
+    "./function-harness": "./src/function-harness.js",
+    "./function-runner": "./src/function-runner.js",
+    "./health": "./src/health.js"
   }
 }

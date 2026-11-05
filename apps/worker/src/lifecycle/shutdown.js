@@ -1,7 +1,7 @@
 import { jobLifetime } from '@coderank/runner/sandbox';
 
 // The deadline covers Redis pause/close as well as active execution draining.
-export function createShutdown({ workers, socket, graceMs = process.env.SHUTDOWN_GRACE_MS, log = console }) {
+export function createShutdown({ workers, socket, graceMs = process.env.SHUTDOWN_GRACE_MS, log = console, afterDrain = async () => {} }) {
   const defaultGrace = jobLifetime() + 15000;
   const configured = Number(graceMs ?? defaultGrace);
   const deadlineMs = Number.isFinite(configured) && configured > 0 ? Math.min(configured, 180000) : defaultGrace;
@@ -13,6 +13,7 @@ export function createShutdown({ workers, socket, graceMs = process.env.SHUTDOWN
         (async () => {
           await Promise.all(workers.map(worker => worker.pause(true)));
           await Promise.all(workers.map(worker => worker.close()));
+          await afterDrain();
         })(),
         new Promise((_, reject) => {
           timer = setTimeout(() => reject(new Error('Worker graceful shutdown deadline exceeded')), deadlineMs);
