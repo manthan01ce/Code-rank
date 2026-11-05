@@ -1,7 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { facultyReviewResponse } from '../browser/fixtures/faculty-review.mjs';
-import { fetchCollection } from '../../apps/web/src/lib/fetch-collection.js';
+import { fetchCollection } from '../../apps/web/src/lib/client/fetch-collection.js';
 import { fetchCoursePracticals } from '../../apps/web/src/features/practicals/api/practicals-api.js';
 import { fetchSubmissionPage } from '../../apps/web/src/features/submissions/api/submissions-api.js';
 

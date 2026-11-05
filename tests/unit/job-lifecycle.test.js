@@ -1,6 +1,6 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { waitForJob, boundedFetch, responseError } from '../../apps/web/src/lib/job-lifecycle.js';
+import { waitForJob, boundedFetch, responseError } from '../../apps/web/src/lib/client/job-lifecycle.js';
 import { practicalPassed } from '../../packages/core/src/modules/submissions/legacy-verdict.js';
 
 test('passing sample verdict is independent of grading marks', () => {

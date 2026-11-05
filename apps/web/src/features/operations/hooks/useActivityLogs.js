@@ -1,5 +1,5 @@
 'use client';
-import { createRequestScope } from '@/lib/http-client';
+import { createRequestScope } from '@/lib/client/http-client';
 import { logsRequest } from '../api/operations-api';
 
 import { useCallback, useEffect, useState, useMemo } from 'react';

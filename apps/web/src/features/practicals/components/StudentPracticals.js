@@ -3,7 +3,7 @@ import WorkspaceReturn from '@/components/layout/WorkspaceReturn';
 import styles from '@/features/dashboard/components/overview.module.css';
 import { StudentThemeToggle, useStudentTheme } from '@/components/layout/StudentTheme';
 import { usePracticalPage } from '@/features/practicals/hooks/usePracticalPage';
-import { fetchCollection } from '@/lib/fetch-collection';
+import { fetchCollection } from '@/lib/client/fetch-collection';
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import Editor from '@monaco-editor/react';

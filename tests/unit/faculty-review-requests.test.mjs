@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { createRequestScope, requestPage } from '../../apps/web/src/lib/http-client.js';
+import { createRequestScope, requestPage } from '../../apps/web/src/lib/client/http-client.js';
 import { fetchSubmissionPage, deleteSubmission } from '../../apps/web/src/features/submissions/api/submissions-api.js';
 import { fetchMarksPage, fetchGradePage } from '../../apps/web/src/features/reports/api/reports-api.js';
 

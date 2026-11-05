@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { readStudentTheme, saveStudentTheme, STUDENT_THEME_KEY } from '../../apps/web/src/lib/student-theme.js';
+import { readStudentTheme, saveStudentTheme, STUDENT_THEME_KEY } from '../../apps/web/src/lib/shared/student-theme.js';
 const storage = (entries = []) => {
   const values = new Map(entries);
   return { getItem: key => values.get(key) ?? null, setItem: (key, value) => values.set(key, value) };

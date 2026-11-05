@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { waitForJob } from '../../apps/web/src/lib/wait-for-job.js';
+import { waitForJob } from '../../apps/web/src/lib/client/wait-for-job.js';
 
 test('polling preserves authorization and returns completed result', async () => {
   let headers;

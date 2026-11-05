@@ -1,7 +1,7 @@
 'use client';
 import Link from 'next/link';
 import { useEffect, useState } from 'react';
-import { practicalDestination, practicalHasStarted } from '@/lib/practical-navigation';
+import { practicalDestination, practicalHasStarted } from '@/lib/shared/practical-navigation';
 
 function dateLabel(value) {
   if (!value) return null;

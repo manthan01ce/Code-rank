@@ -1,9 +1,9 @@
 'use client';
 import WorkspaceReturn from '@/components/layout/WorkspaceReturn';
-import { notifyProgressChanged } from '@/lib/progress-updates';
+import { notifyProgressChanged } from '@/lib/client/progress-updates';
 import { StudentThemeToggle, useStudentTheme } from '@/components/layout/StudentTheme';
 import { usePracticalPage } from '@/features/practicals/hooks/usePracticalPage';
-import { fetchCollection } from '@/lib/fetch-collection';
+import { fetchCollection } from '@/lib/client/fetch-collection';
 import { useState, useEffect, useRef } from 'react';
 import { useRouter } from 'next/navigation';
 import { Panel, Group as PanelGroup, Separator as PanelResizeHandle } from 'react-resizable-panels';
@@ -15,8 +15,8 @@ import { Play, ChevronRight, Settings, User, List } from 'lucide-react';
 import { DEFAULT_LANGUAGE, LANGUAGES } from '@/features/coding-workspace/components/LanguageConfig';
 import { STATIC_PROBLEMS } from '@/features/practice/problems';
 import { useSocket } from '@/hooks/useSocket';
-import { useExecutionLifecycle } from '@/hooks/useExecutionLifecycle';
-import { boundedFetch, responseError, waitForJob } from '@/lib/job-lifecycle';
+import { useExecutionLifecycle } from '../hooks/useExecutionLifecycle';
+import { boundedFetch, responseError, waitForJob } from '@/lib/client/job-lifecycle';
 import { useCodingWorkspace, PRACTICAL_BOILERPLATES, friendlyError } from '@/features/coding-workspace/hooks/useCodingWorkspace';
 
 export default function WorkspaceLayout({ problem }) {

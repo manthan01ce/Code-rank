@@ -6,7 +6,7 @@ import { MarksOverview } from '@/features/reports/components/MarksOverview';
 import { SubmissionReview } from '@/features/submissions/components/SubmissionReview';
 import PracticalGradeReport from '@/features/reports/components/PracticalGradeReport';
 
-import { fetchCollection } from '@/lib/fetch-collection';
+import { fetchCollection } from '@/lib/client/fetch-collection';
 import { useState, useEffect, useRef, Suspense } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import LoadingOverlay from '@/components/ui/LoadingOverlay';

@@ -6,7 +6,7 @@ import { mkdirSync, openSync, closeSync } from "node:fs";
 import { once } from "node:events";
 import { fileURLToPath } from "node:url";
 import { io } from "socket.io-client";
-import { browserSocketAuth } from "../../apps/web/src/lib/browser-socket-auth.js";
+import { browserSocketAuth } from "../../apps/web/src/lib/client/browser-socket-auth.js";
 import { successfulExecution } from "../../load-tests/lib/execution-result.js";
 
 const root = fileURLToPath(new URL("../../", import.meta.url));

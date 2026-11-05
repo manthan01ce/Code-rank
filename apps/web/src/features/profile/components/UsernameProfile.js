@@ -7,7 +7,7 @@ import { useParams, useRouter } from 'next/navigation';
 import Link from 'next/link';
 import Image from 'next/image';
 import styles from '@/features/profile/components/profile.module.css';
-import { profilePracticals } from '@/lib/progress-updates';
+import { profilePracticals } from '@/lib/client/progress-updates';
 import { useProgressRefresh } from '@/hooks/useProgressRefresh';
 import { usePolling } from '@/hooks/usePolling';
 import AdminProfileOverview from './AdminProfileOverview';

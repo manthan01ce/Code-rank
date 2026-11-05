@@ -9,7 +9,13 @@ import { assessMatrix, assessPredecessors, assessHost, artifactHash, supportedCo
 
 test('local audit keeps actual merged ownership gaps visible and rejects omitted or empty move-map rows', () => {
   const errors = assessMatrix(matrix);
-  for (const id of ['shared-client-styles','sandbox-warm','test-lanes-batch']) assert.ok(errors.some(e=>e.startsWith(id+':')),id);
+  for (const id of ['sandbox-warm','test-lanes-batch']) assert.ok(errors.some(e=>e.startsWith(id+':')),id);
+  const shared = matrix.rows.find(row => row.id === 'shared-client-styles');
+  assert.equal(shared.structuralState, 'implemented');
+  assert.equal(shared.functionalAcceptance, 'unverified');
+  const sharedRegressed = structuredClone(matrix);
+  sharedRegressed.rows.find(row => row.id === 'shared-client-styles').structuralState = 'gap';
+  assert.ok(assessMatrix(sharedRegressed).some(error => error.startsWith('shared-client-styles:')));
   const core = matrix.rows.find(row => row.id === 'core-facades');
   assert.equal(core.structuralState, 'implemented');
   assert.equal(core.functionalAcceptance, 'verified-local-regression');

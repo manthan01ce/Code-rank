@@ -1,7 +1,7 @@
 'use client';
 import { useState, useEffect, useRef, useMemo } from 'react';
-import { fetchCollection } from '@/lib/fetch-collection';
-import { fetchUserOptions } from '@/lib/fetch-user-options';
+import { fetchCollection } from '@/lib/client/fetch-collection';
+import { fetchUserOptions } from '@/lib/client/fetch-user-options';
 import LoadingOverlay from '@/components/ui/LoadingOverlay';
 import { useAdminAuth } from '@/features/auth/hooks/useAdminAuth';
 import { usePolling } from '@/hooks/usePolling';

@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { browserSocketAuth } from '../../apps/web/src/lib/browser-socket-auth.js';
+import { browserSocketAuth } from '../../apps/web/src/lib/client/browser-socket-auth.js';
 
 test('guest socket auth omits bearer credentials and reconnects read the current token', () => {
   let token = null;
