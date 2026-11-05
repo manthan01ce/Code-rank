@@ -9,7 +9,7 @@ import PracticalGradeReport from '@/features/reports/components/PracticalGradeRe
 import { fetchCollection } from '@/lib/fetch-collection';
 import { useState, useEffect, useRef, Suspense } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
-import LoadingOverlay from '@/components/LoadingOverlay';
+import LoadingOverlay from '@/components/ui/LoadingOverlay';
 import { useSocket } from '@/hooks/useSocket';
 import { usePolling } from '@/hooks/usePolling';
 import { useFacultyAuth } from '@/features/auth/hooks/useFacultyAuth';

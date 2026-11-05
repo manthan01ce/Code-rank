@@ -1,4 +1,4 @@
-import { StudentThemeProvider } from '@/components/student/StudentTheme';
+import { StudentThemeProvider } from '@/components/layout/StudentTheme';
 import './student-theme.css';
 
 export default function StudentLayout({ children }) {

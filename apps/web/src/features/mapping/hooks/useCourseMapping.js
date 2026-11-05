@@ -5,10 +5,10 @@ import { mappingRequest } from '../api/mapping-api';
 import { useState, useEffect, useRef, useMemo } from 'react';
 import { fetchCollection } from '@/lib/fetch-collection';
 import { fetchUserOptions } from '@/lib/fetch-user-options';
-import LoadingOverlay from '@/components/LoadingOverlay';
+import LoadingOverlay from '@/components/ui/LoadingOverlay';
 import { useAdminAuth } from '@/features/auth/hooks/useAdminAuth';
 import { usePolling } from '@/hooks/usePolling';
-import RefreshButton from '@/components/RefreshButton';
+import RefreshButton from '@/components/ui/RefreshButton';
 import {
   IconSearch,
   IconCheck,

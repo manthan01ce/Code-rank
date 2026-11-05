@@ -1,6 +1,6 @@
 'use client';
 import { workspaceRequest } from '../api/coding-workspace-api';
-import WorkspaceReturn from '@/components/WorkspaceReturn';
+import WorkspaceReturn from '@/components/layout/WorkspaceReturn';
 
 /**
  * PURPOSE OF THIS FILE:
@@ -13,7 +13,7 @@ import WorkspaceReturn from '@/components/WorkspaceReturn';
  */
 
 import { notifyProgressChanged } from '@/lib/progress-updates';
-import { StudentThemeToggle, useStudentTheme } from '@/components/student/StudentTheme';
+import { StudentThemeToggle, useStudentTheme } from '@/components/layout/StudentTheme';
 import { usePracticalPage } from '@/features/practicals/hooks/usePracticalPage';
 import { fetchCollection } from '@/lib/fetch-collection';
 import { useState, useEffect, useRef } from 'react';

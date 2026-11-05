@@ -1,7 +1,7 @@
 'use client';
 import { useAdminProfile } from '../hooks/useAdminProfile';
 
-import LoadingOverlay from '@/components/LoadingOverlay';
+import LoadingOverlay from '@/components/ui/LoadingOverlay';
 import {
   IconUser,
   IconMail,

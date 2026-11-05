@@ -1,7 +1,7 @@
 'use client';
 import { useAccountSettings } from '../hooks/useAccountSettings';
 
-import LoadingOverlay from '@/components/LoadingOverlay';
+import LoadingOverlay from '@/components/ui/LoadingOverlay';
 import {
   IconShieldLock,
   IconEye,
