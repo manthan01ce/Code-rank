@@ -27,11 +27,13 @@ test('concurrent cold jobs share neither workspace, output nor detached processe
   const marker = `retired-warm-${randomUUID()}`;
   try {
     assert.equal(a.isWarm, false); assert.equal(b.isWarm, false); assert.notEqual(a.name, b.name);
-    await a.script(`echo synthetic-secret >/app/owner-file\nexec -a '${marker}' sleep 20 >/dev/null 2>&1 &`, 1000);
+    await a.script(`set -e\necho synthetic-secret >/app/owner-file\nexec -a '${marker}' sleep 20 >/dev/null 2>&1 &`, 1000);
+    assert.equal((await a.script('cat /app/owner-file', 1000)).stdout.trim(), 'synthetic-secret');
+    assert.ok((await a.script('ps -o args', 1000)).stdout.includes(marker));
     assert.ok(!(await b.script('ps -o args', 1000)).stdout.includes(marker));
     const [left, right] = await Promise.all([
-      a.script('sleep 0.2; printf owner', 2000),
-      b.script('test ! -e /app/owner-file; printf other', 2000),
+      a.script('sleep 0.2 && printf owner', 2000),
+      b.script('test ! -e /app/owner-file && printf other', 2000),
     ]);
     assert.equal(left.stdout, 'owner'); assert.equal(right.stdout, 'other');
     await a.destroy();
