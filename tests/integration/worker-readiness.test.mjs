@@ -3,7 +3,7 @@ import assert from 'node:assert/strict';
 import { once } from 'node:events';
 import Redis from 'ioredis';
 import { Queue } from 'bullmq';
-import { startExecutionHeartbeat,WORKER_KEY_PREFIX } from '../../apps/worker/src/heartbeat.js';
+import { startExecutionHeartbeat,WORKER_KEY_PREFIX } from '../../apps/worker/src/lifecycle/heartbeat.js';
 import { readExecutionWorkers } from '../../packages/queue/src/index.js';
 test('real Redis readiness detects missing, paused, unhealthy and expired worker leases',async()=>{
  const connection={host:'127.0.0.1',port:Number(process.env.REDIS_PORT||6379),maxRetriesPerRequest:1};

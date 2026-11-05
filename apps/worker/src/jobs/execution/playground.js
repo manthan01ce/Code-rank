@@ -1,12 +1,5 @@
-import { Executor } from './Executor.js';
-import { runPython } from './python.js';
-import { runCpp } from './cpp.js';
-import { runJava } from './java.js';
-import { runC } from './c.js';
-import { runJavaScript } from './javascript.js';
-import { runDynamicPractical } from './dynamic.js';
-
-export const ALLOWED_LANGUAGES = new Set(['python', 'cpp', 'c', 'java', 'javascript']);
+import { Executor } from '@coderank/runner';
+import { ALLOWED_LANGUAGES } from '@coderank/runner/languages';
 
 export async function executeCode(language, code, input = '') {
   if (!ALLOWED_LANGUAGES.has(language)) {
@@ -55,12 +48,3 @@ export async function executeCode(language, code, input = '') {
     };
   } finally { await executor.cleanup(); }
 }
-
-export {
-  runPython,
-  runCpp,
-  runJava,
-  runC,
-  runJavaScript,
-  runDynamicPractical
-};

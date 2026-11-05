@@ -1,7 +1,7 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { waitForJob, boundedFetch, responseError } from '../apps/web/src/lib/job-lifecycle.js';
-import { practicalPassed } from '../apps/worker/src/execution/runners/verdict.js';
+import { practicalPassed } from '../packages/core/src/modules/submissions/legacy-verdict.js';
 
 test('passing sample verdict is independent of grading marks', () => {
   assert.equal(practicalPassed({ isSubmit: false, rawMarks: 0, totalMarks: 10, cases: [{ passed: true }] }), true);

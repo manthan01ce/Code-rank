@@ -8,7 +8,7 @@ import {
   admissionBackend,
   sweepOwnerIndexes,
 } from "../../packages/queue/src/index.js";
-import { createShutdown } from "../../apps/worker/src/shutdown.js";
+import { createShutdown } from "../../apps/worker/src/lifecycle/shutdown.js";
 
 const connection = {
   host: "127.0.0.1",

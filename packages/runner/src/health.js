@@ -1,4 +1,4 @@
-import { dockerCommand } from '@coderank/runner';
+import { dockerCommand } from './docker.js';
 export async function checkDockerHealth() {
   try {
     const { stdout } = await dockerCommand(['info', '--format', '{{.ServerVersion}}'], { timeout: 3000 });

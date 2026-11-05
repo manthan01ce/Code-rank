@@ -1,8 +1,8 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { Executor } from '../../packages/runner/src/Executor.js';
-import { Sandbox } from '../../packages/runner/src/Sandbox.js';
-import { dockerCommand } from '../../packages/runner/src/docker.js';
+import { Executor } from '@coderank/runner';
+import { Sandbox } from '@coderank/runner/sandbox';
+import { dockerCommand } from '@coderank/runner/docker';
 const programs = { python:'print(input())', javascript:"process.stdin.on('data', d => process.stdout.write(d))", c:'#include <stdio.h>\nint main(){char b[100];fgets(b,100,stdin);printf("%s",b);}', cpp:'#include <iostream>\n#include <string>\nint main(){std::string s;std::getline(std::cin,s);std::cout<<s;}', java:'public class Solution { public static void main(String[] args){ System.out.println(new java.util.Scanner(System.in).nextLine()); } }' };
 for (const [language,code] of Object.entries(programs)) test(`${language} compiles and executes in a disposable container`,async()=>{
  const executor=new Executor(language,code,5000);
@@ -18,7 +18,7 @@ test('real sandboxes cannot see another job workspace or write the image filesys
 });
 
 test('C and JavaScript function problems execute through the sandbox runner',async()=>{
- const { runC,runJavaScript }=await import('../../packages/runner/src/languages.js');
+ const { runC,runJavaScript }=await import('@coderank/runner/languages');
  const problem={entry:{type:'class-method',className:'Solution',methodName:'fib'}};
  const testCases=[{args:[0],expected:0},{args:[7],expected:13}];
  const c=await runC({problem,testCases,code:'int fib(int n){int a=0,b=1;while(n--){int next=a+b;a=b;b=next;}return a;}'});
@@ -66,7 +66,7 @@ test('recovery drill kills owner then reaps only its expired deployment-scoped s
  const {spawn}=await import('node:child_process');
  const {once}=await import('node:events');
  const {randomUUID}=await import('node:crypto');
- const {reapExpiredSandboxes}=await import('../../packages/runner/src/reaper.js');
+ const {reapExpiredSandboxes}=await import('@coderank/runner/reaper');
  const root=new URL('../../',import.meta.url);
  const scope=`drill-${randomUUID()}`;
  const active=new Sandbox(undefined,{scope});

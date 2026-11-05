@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { createShutdown } from '../apps/worker/src/shutdown.js';
+import { createShutdown } from '../apps/worker/src/lifecycle/shutdown.js';
 const silent = { info() {}, error() {} };
 test('shutdown stops intake before draining and disconnects once across repeated signals', async () => {
  const events=[];
@@ -22,4 +22,20 @@ test('shutdown handles Redis errors and disconnects the realtime client', async 
  let disconnected=false;
  const shutdown=createShutdown({workers:[{pause:async()=>{throw Error('Redis unavailable')}}],socket:{disconnect:()=>{disconnected=true}},log:silent});
  assert.equal(await shutdown(),1);assert.equal(disconnected,true);
+});
+
+test('database cleanup runs once after queue drain and before socket disconnect', async () => {
+  const events = [];
+  const stop = createShutdown({
+    workers: [{ pause: async () => events.push('pause'), close: async () => events.push('close') }],
+    afterDrain: async () => events.push('database'), socket: { disconnect: () => events.push('socket') }, log: silent,
+  });
+  await Promise.all([stop(), stop()]);
+  assert.deepEqual(events, ['pause', 'close', 'database', 'socket']);
+});
+
+test('database cleanup shares the finite drain deadline', async () => {
+  let disconnected = false;
+  const stop = createShutdown({ workers: [], afterDrain: () => new Promise(() => {}), socket: { disconnect: () => { disconnected = true; } }, graceMs: 15, log: silent });
+  assert.equal(await stop(), 1); assert.equal(disconnected, true);
 });

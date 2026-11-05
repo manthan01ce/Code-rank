@@ -1,6 +1,6 @@
 import { Worker } from 'bullmq';
 import { logger } from '@coderank/core/utils/logger';
-import { checkDockerHealth } from '../execution/docker.js';
+import { checkDockerHealth } from '@coderank/runner/health';
 
 export function createSystemWorker() {
   const connection = {

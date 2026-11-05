@@ -9,7 +9,7 @@ mock.module(new URL('../packages/runner/src/docker.js', import.meta.url).href, {
   return { stdout: JSON.stringify({ status: 'accepted', cases: [] }), stderr: '' };
 } } });
 for (const [lang, method] of [['python', 'runPython'], ['cpp', 'runCpp'], ['java', 'runJava']]) {
-  const runner = (await import(`../apps/worker/src/execution/runners/${lang}.js`))[method];
+  const runner = (await import('@coderank/runner/languages'))[method];
   test(`${lang} function runner enforces in-container deadline and cleans its private directory`, async () => {
     calls.length = 0; failure = false;
     await runner({ code: 'source', problem: { id: 1 }, testCases: [] });

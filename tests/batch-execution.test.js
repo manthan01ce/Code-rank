@@ -2,7 +2,7 @@ import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { mkdtemp, mkdir, writeFile, chmod, rm } from 'node:fs/promises';
 import path from 'node:path';
-import { Executor } from '../apps/worker/src/execution/runners/Executor.js';
+import { Executor } from '@coderank/runner';
 
 test('batch protocol: output framing, errors, per-case timeout and continued execution', async () => {
   const dir = await mkdtemp(path.join(process.cwd(), 'coderank-batch-'));

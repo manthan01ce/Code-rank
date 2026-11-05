@@ -10,13 +10,14 @@ class FakeSocket {
   listeners = new Map();
   connects = 0;
   on(event, listener) { this.listeners.set(event, listener); return this; }
-  emit() {}
+  emissions = [];
+  emit(event, payload) { this.emissions.push({ event, payload }); }
   disconnect() {}
   connect() { this.connects++; }
 }
 mock.module('socket.io-client', { namedExports: { io: () => new FakeSocket() } });
-const { createSubmissionWorker } = await import('../apps/worker/src/workers/submission.worker.js');
-const { createSystemWorker } = await import('../apps/worker/src/workers/system.worker.js');
+const { createSubmissionWorker } = await import('../apps/worker/src/jobs/execution/submission.worker.js');
+const { createSystemWorker } = await import('../apps/worker/src/jobs/system/system.worker.js');
 
 test('submission worker rejects invalid concurrency before allocating a queue worker', () => {
   const original = process.env.MAX_CONCURRENT_JOBS;
@@ -58,4 +59,17 @@ test('worker lock duration remains finite with invalid environment and errors ha
     if (originalTimeout === undefined) delete process.env.JOB_TIMEOUT_MS; else process.env.JOB_TIMEOUT_MS = originalTimeout;
     if (originalConcurrency === undefined) delete process.env.MAX_CONCURRENT_JOBS; else process.env.MAX_CONCURRENT_JOBS = originalConcurrency;
   }
+});
+
+
+test('extracted publisher redacts hidden cases and keeps terminal failures generic', async t => {
+  t.mock.method(console, 'log', () => {});
+  t.mock.method(console, 'error', () => {});
+  const { worker, socket, disconnectRealtime } = createSubmissionWorker();
+  const job = { id: 'synthetic-job', data: { userId: 7 }, processedOn: 1, finishedOn: 2 };
+  await worker.listeners.get('completed')(job, { cases: [{ is_hidden: true, passed: false, stdout: 'private output', input: 'private input' }] });
+  assert.deepEqual(socket.emissions[0], { event: 'worker_job_complete', payload: { jobId: job.id, result: { cases: [{ is_hidden: true, passed: false }] } } });
+  worker.listeners.get('failed')(job, new Error('internal diagnostic'));
+  assert.deepEqual(socket.emissions[1].payload.result, { status: 'internal_error', summary: 'Execution failed internally', runtimeError: 'Execution failed internally' });
+  disconnectRealtime();
 });
