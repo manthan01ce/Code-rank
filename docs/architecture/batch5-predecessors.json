@@ -1,0 +1,99 @@
+{
+  "observedOn": "2026-11-06",
+  "sourceCommit": "29324a4b7690e8f71e356b121f568b091ba793c9",
+  "scope": "Merged prerequisite facts only; not final integrated runtime certification",
+  "issues": [
+    {
+      "issue": 96,
+      "prs": [
+        106
+      ]
+    },
+    {
+      "issue": 97,
+      "prs": [
+        103,
+        107
+      ]
+    },
+    {
+      "issue": 98,
+      "prs": [
+        105
+      ]
+    },
+    {
+      "issue": 99,
+      "prs": [
+        108
+      ]
+    },
+    {
+      "issue": 100,
+      "prs": [
+        104
+      ]
+    },
+    {
+      "issue": 101,
+      "prs": [
+        109
+      ]
+    }
+  ],
+  "pullRequests": [
+    {
+      "number": 103,
+      "url": "https://github.com/manthan01ce/Code-rank/pull/103",
+      "merged": true,
+      "head": "8b744ed4a58bca58ef8937909b519bbd6f7ac26b",
+      "merge": "1b819ef209ce94ffe7b912cb176819e60191518b"
+    },
+    {
+      "number": 104,
+      "url": "https://github.com/manthan01ce/Code-rank/pull/104",
+      "merged": true,
+      "head": "9d46fdebd63788295f3c5ccd20aaa721d3655545",
+      "merge": "e5fbc5235b980b701be1ea65a571aa3bbf296a3c"
+    },
+    {
+      "number": 105,
+      "url": "https://github.com/manthan01ce/Code-rank/pull/105",
+      "merged": true,
+      "head": "312f9005e76ae9534a9c0497986024b8befa9a0d",
+      "merge": "3fb23e02496033765ac064a3577511c22188bb95"
+    },
+    {
+      "number": 106,
+      "url": "https://github.com/manthan01ce/Code-rank/pull/106",
+      "merged": true,
+      "head": "5ba7db37c42cb28b4fb69dcf58033b964c0f6840",
+      "merge": "502f4f530016b7ac53c4f2f981302d6913d5ff9e"
+    },
+    {
+      "number": 107,
+      "url": "https://github.com/manthan01ce/Code-rank/pull/107",
+      "merged": true,
+      "head": "b40c5b80bed5c3cb2f798f57f7575ec1a278a316",
+      "merge": "a482efa2de1d1233393f3daedea3e3408425ea01"
+    },
+    {
+      "number": 108,
+      "url": "https://github.com/manthan01ce/Code-rank/pull/108",
+      "merged": true,
+      "head": "c7e21383d29fe036142556729205ec19aabdf77d",
+      "merge": "4513fcd5c39e1b4a956945e0ba62420744bd5bb1"
+    },
+    {
+      "number": 109,
+      "url": "https://github.com/manthan01ce/Code-rank/pull/109",
+      "merged": true,
+      "head": "c490b25c847c449cad552160a5d640ad532b01bd",
+      "merge": "29324a4b7690e8f71e356b121f568b091ba793c9"
+    }
+  ],
+  "acceptanceCaveats": [
+    "PR #108 merged despite its body documenting blocked Docker acceptance; issue closure is not replacement evidence.",
+    "PR #109 reports 18 real Docker tests passing on its own head; no raw artifact verification or full integrated certification is implied."
+  ]
+}

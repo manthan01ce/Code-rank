@@ -1,7 +1,7 @@
-# Warm-daemon retirement candidate (#99 / batch 5D)
+# Warm-daemon retirement implementation (#99 / batch 5D)
 
 **Docker acceptance is blocked. Do not merge or close #99 on unit evidence.**
-This branch proposes explicit retirement of shared warm daemons while preserving the
+PR #108 merged explicit retirement of shared warm daemons while preserving the
 existing cold per-job sandbox as the sole execution mode. #98 is merged via #105
 (`3fb23e0`); work starts from latest master `502f4f530016b7ac53c4f2f981302d6913d5ff9e`.
 
@@ -73,8 +73,7 @@ full-container and CI configurations with disposable environment fixture values;
 starts application/DB services or publishes expanded environment values. It builds a
 unique test tag from the one canonical Dockerfile using a minimal context, records
 source/Dockerfile labels and actual image ID/digests, runs the strict active Docker lane,
-checks the image did not change, and removes only that test-owned image tag. Existing
-quarantined batch execution remains separately tracked by #101; nothing is newly skipped
+checks the image did not change, and removes only that test-owned image tag. Batch execution is active after #101 / PR #109; nothing is newly skipped
 or quarantined here. No expensive GitHub Actions is enabled or dispatched.
 
 `tests/docker/warm-retirement.test.mjs` requires a real daemon before checking stale
@@ -88,3 +87,7 @@ A missing CLI/daemon yields blocked status, nonzero exit and null image identity
 workspace has no Docker CLI/socket/configured host, so no resolved native Compose or image
 execution report exists yet. The matrix remains partial/unverified and #99 stays open.
 College host/LAN/cloud/provisioning/production work is outside this issue.
+
+## Current integration disposition
+
+PR #108 is merged and #99 is closed. Its original unavailable-tool observations above are historical evidence, not the present GitHub state. PR #109 reports all 18 Docker tests passing at its head, including retirement coverage; the full warm-disposition image/configuration report and final integrated checks still need exact-revision evidence for #102. See [the scoped integration report](../development/BATCH5_INTEGRATED_ACCEPTANCE.md).
