@@ -369,8 +369,7 @@ th {
 .auth-split .auth-submit { background: #3730a3; box-shadow: 0 4px 12px #3730a315; }
 .auth-split .auth-submit:hover:not(:disabled) { background: #312e81; }
 .auth-campus { position: relative; min-height: 650px; border: 1px solid #e2e8f0; border-radius: 18px; overflow: hidden; background: #eff1ff; }
-.auth-campus > img { object-fit: cover; object-position: 52% 45%; }
-.auth-campus::after { content: ''; position: absolute; inset: 0; background: linear-gradient(180deg,transparent 40%,#0f172a55 100%); pointer-events: none; }
+.auth-campus > img { object-fit: cover; object-position: center; }
 .auth-campus-caption { position: absolute; z-index: 1; bottom: 24px; left: 24px; right: 24px; background: #fffffff5; border: 1px solid #e2e8f0; border-radius: 13px; padding: 26px; backdrop-filter: blur(8px); }
 .auth-campus-caption h2 { font-size: clamp(25px,2.7vw,38px); letter-spacing: -1px; line-height: 1.2; font-weight: 600; color: #0f172a; margin: 12px 0; }
 .auth-campus-caption > p:not(.auth-eyebrow) { font-size: 12px; line-height: 1.8; color: #475569; max-width: 350px; }

@@ -6,7 +6,7 @@ import Image from "next/image";
 
 export interface Testimonial { avatarSrc: string; name: string; handle: string; text: string }
 interface Props { title?: ReactNode; description?: ReactNode; heroImageSrc?: string; testimonials?: Testimonial[]; onSignIn: (event: FormEvent<HTMLFormElement>) => void; onGoogleSignIn?: () => void; onResetPassword?: () => void; onCreateAccount?: () => void; loading?: boolean; error?: string }
-export function SignInPage({ title = "Welcome back", description = "Sign in to continue your CodeRank journey.", onSignIn, onGoogleSignIn, onResetPassword, loading = false, error }: Props) {
+export function SignInPage({ title = "Welcome back", description = "Sign in to continue your CodeRank journey.", heroImageSrc = "/images/lavender-coding-bg.jpg", onSignIn, onGoogleSignIn, onResetPassword, loading = false, error }: Props) {
   const [showPassword, setShowPassword] = useState(false);
   return <main className="auth-shell auth-refined auth-split">
     <section className="auth-form">
@@ -22,9 +22,8 @@ export function SignInPage({ title = "Welcome back", description = "Sign in to c
       <footer className="auth-page-footer"><Link href="/">← Back to CodeRank</Link><span>Learn. Practice. Progress.</span></footer>
     </section>
 
-    <section className="auth-campus" aria-labelledby="practical-motivation">
-      <Image src="/images/coderank-workspace.webp" alt="A light-theme coding workstation with an algorithm notebook in a bright university lab" fill sizes="(max-width: 767px) 100vw, 52vw" priority />
-      <div className="auth-campus-caption"><h2 id="practical-motivation">Turn what you learn<br/>into what you can build.</h2><p>Practice with purpose. Take on your next coding practical with CodeRank.</p><span>C · C++ · Java · Python</span></div>
+    <section className="auth-campus">
+      <Image src={heroImageSrc || "/images/lavender-coding-bg.jpg"} alt="CodeRank lavender coding background" fill sizes="(max-width: 767px) 100vw, 52vw" priority className="object-cover" style={{ objectFit: 'cover' }} />
     </section>
   </main>;
 }
