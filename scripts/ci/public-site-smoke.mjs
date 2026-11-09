@@ -64,6 +64,7 @@ try {
     assert.equal(missing.status(), 404);
     assert.equal(await page.locator('h1').textContent(), 'Page not found');
     await page.getByRole('link', { name: 'Back to home', exact: true }).click();
+    await page.waitForURL(`${base}/`, { timeout: 10000 });
     assert.equal(new URL(page.url()).pathname, '/');
   }
   assert.deepEqual(errors, [], 'Public routes must not raise browser exceptions');
