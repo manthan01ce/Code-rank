@@ -18,8 +18,8 @@ export function SignInPage({ title = "Welcome back", description = "Sign in to c
         {error && <p role="alert" className="auth-error">{error}</p>}
         <button type="submit" className="auth-submit" disabled={loading}>{loading ? 'Signing in…' : 'Sign in to your workspace'}<ArrowUpRight size={17} aria-hidden="true"/></button>
       </form>
-      <div className="auth-links">{onResetPassword ? <button type="button" onClick={onResetPassword}>Reset password</button> : <p>Password help? Contact your faculty or administrator.</p>}{onGoogleSignIn && <button type="button" onClick={onGoogleSignIn}>Continue with Google</button>}</div>
-      <footer className="auth-page-footer"><Link href="/">← Back to CodeRank</Link><span>Learn. Practice. Progress.</span></footer>
+      <div className="auth-links">{onResetPassword ? <button type="button" onClick={onResetPassword}>Reset password</button> : <p>Password help? <Link href="/contact">Contact your institution</Link>.</p>}{onGoogleSignIn && <button type="button" onClick={onGoogleSignIn}>Continue with Google</button>}</div>
+      <footer className="auth-page-footer"><Link href="/">← Back to CodeRank</Link><Link href="/privacy">Privacy</Link><Link href="/terms">Usage guidelines</Link><Link href="/contact">Support</Link></footer>
     </section>
 
     <section className="auth-campus" aria-labelledby="practical-motivation">

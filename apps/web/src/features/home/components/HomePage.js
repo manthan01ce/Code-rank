@@ -114,7 +114,7 @@ export default function HomePage() {
           <div className={styles.footerAbout}><Link href="/" className={styles.footerLogo}><Image src="/coderank-logo.jpg" alt="" width={36} height={36}/><span>Code<strong>Rank</strong></span></Link><p>Practice with purpose.<br/>Progress with confidence.</p><small>A connected space for university<br/>coding labs and practical learning.</small></div>
           <nav aria-label="Footer platform navigation"><h3>Explore CodeRank</h3><a href="#experience">The learning experience</a><a href="#roles">Student & faculty workspaces</a><Link href="/login">Sign in to your workspace ↗</Link></nav>
         </div>
-        <div className={styles.footerLegal}><span>© {new Date().getFullYear()} CodeRank</span><span>Built for the university coding lab.</span><a href="#main">Back to top ↑</a></div>
+        <div className={styles.footerLegal}><span>© {new Date().getFullYear()} CodeRank</span><nav aria-label="Information and support"><Link href="/privacy">Privacy</Link><Link href="/terms">Usage guidelines</Link><Link href="/contact">Contact & support</Link></nav><a href="#main">Back to top ↑</a></div>
       </footer>
     </div>
   );

@@ -1,21 +1,16 @@
-import "./globals.css";
+import './globals.css';
+import { getSiteConfig } from '@/lib/site-config';
 
+const { origin, indexable } = getSiteConfig();
 export const metadata = {
-  title: "CodeRank – Rank Up Your Coding",
-  description:
-    "CodeRank is a secure, real-time coding platform for academic institutions — featuring dynamic practicals, live code execution, faculty dashboards, and student progress tracking.",
-  keywords: "coding platform, practicals, lab exam, code execution, faculty dashboard, academic",
-  openGraph: {
-    title: "CodeRank – Rank Up Your Coding",
-    description: "A secure, real-time academic coding platform with live execution and dashboards.",
-    type: "website",
-  },
+  ...(origin ? { metadataBase: new URL(origin) } : {}),
+  title: 'CodeRank – Rank Up Your Coding',
+  description: 'CodeRank connects academic coding practicals, live code execution, faculty assessment and student progress.',
+  robots: { index: indexable, follow: indexable },
+  openGraph: { title: 'CodeRank – Rank Up Your Coding', description: 'Practice with purpose. Progress with confidence.', type: 'website', siteName: 'CodeRank' },
+  twitter: { card: 'summary_large_image' },
 };
 
 export default function RootLayout({ children }) {
-  return (
-    <html lang="en" suppressHydrationWarning>
-      <body suppressHydrationWarning>{children}</body>
-    </html>
-  );
+  return <html lang="en" suppressHydrationWarning><body suppressHydrationWarning>{children}</body></html>;
 }

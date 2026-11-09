@@ -1,0 +1,15 @@
+import Link from 'next/link';
+import PublicPage from '@/components/layout/PublicPage';
+import { pageMetadata } from '@/lib/site-config';
+
+export const metadata = pageMetadata('Privacy | CodeRank', 'How CodeRank handles account information, coding submissions, progress and browser storage.', '/privacy', true);
+
+export default function PrivacyPage() {
+  return <PublicPage title="Privacy at CodeRank" intro="Understand the information used to run your institution’s coding workspace.">
+    <section><h2>Information used by the platform</h2><p>CodeRank processes account details such as your name, username, email, role and institutional course or batch assignments. Depending on the features you use, it also stores profile information, saved code, submissions, execution results, attempts, grades and activity records.</p></section>
+    <section><h2>Why this information is used</h2><p>This information supports sign-in, access control, practical assignments, code execution, assessment, progress reporting and investigation of operational problems. Students, faculty and administrators access information according to their role and assignments.</p><p>Faculty and administrators use assessment records to manage teaching and evaluation. Hosting and infrastructure services used by your institution may also process technical request records.</p></section>
+    <section><h2>Cookies and browser storage</h2><p>CodeRank uses browser storage for sign-in information, editor preferences, selected courses, themes and saved coding drafts. Guest code execution can set a short-lived cookie to associate execution requests with a guest session.</p><p>On a shared computer, sign out when you finish. Saved drafts and preferences may remain in browser storage after sign-out; clear site data when leaving a shared device, after saving work you need. Clearing site data does not delete server-side academic records.</p></section>
+    <section><h2>Retention and institutional policies</h2><p>Your institution determines how long academic records and operational information must be retained. There is no universal automatic deletion period for submissions and grades. Ask your institution for its retention schedule, backup policy, hosting providers and any additional privacy notice that applies to your deployment.</p></section>
+    <section><h2>Questions and corrections</h2><p>Contact your institution to ask about your information, request corrections or discuss access and deletion requests. Academic record requirements may affect how a request can be handled.</p><p><Link href="/contact">Find support and privacy contact guidance →</Link></p></section>
+  </PublicPage>;
+}

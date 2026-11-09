@@ -2,7 +2,7 @@
   "baselineRevision": "e8cd0a5e7306befc8c441c249b0b50b524597dd9",
   "generatedAt": "2026-11-03T12:08:22+05:30",
   "summary": {
-    "totalPages": 19,
+    "totalPages": 22,
     "totalEndpoints": 47,
     "allocationCounts": {
       "CR-ARCH-09": 1,
@@ -83,6 +83,12 @@
       "description": "Standalone coding playground and run execution UI"
     },
     {
+      "url": "/contact",
+      "file": "apps/web/src/app/contact/page.js",
+      "owner": "public-site",
+      "description": "Institutional support contact and guidance"
+    },
+    {
       "url": "/faculty",
       "file": "apps/web/src/app/faculty/page.js",
       "owner": "CR-ARCH-11B",
@@ -99,6 +105,12 @@
       "file": "apps/web/src/app/practice/page.js",
       "owner": "CR-ARCH-12A",
       "description": "Practice problem coding and execution interface"
+    },
+    {
+      "url": "/privacy",
+      "file": "apps/web/src/app/privacy/page.js",
+      "owner": "public-site",
+      "description": "Public privacy information"
     },
     {
       "url": "/profile/[username]",
@@ -129,6 +141,12 @@
       "file": "apps/web/src/app/student/practicals/page.js",
       "owner": "CR-ARCH-11B",
       "description": "Student practical lab assignments list"
+    },
+    {
+      "url": "/terms",
+      "file": "apps/web/src/app/terms/page.js",
+      "owner": "public-site",
+      "description": "Institutional usage guidelines"
     }
   ],
   "endpoints": [
