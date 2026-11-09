@@ -1,3 +1,7 @@
+import { pageMetadata } from '@/lib/site-config';
+
+export const metadata = pageMetadata('Faculty dashboard | CodeRank', 'Your institutional CodeRank workspace.');
+
 import WorkspaceReturn from '@/components/layout/WorkspaceReturn';
 import '../admin/admin.css';
 import './faculty.css';

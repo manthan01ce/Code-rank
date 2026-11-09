@@ -47,7 +47,7 @@ if (!user) return null;
           }}>
             <img
               src="/coderank-logo.jpg"
-              alt="Logo"
+              alt="CodeRank"
               style={{ height: '40px', width: '40px', objectFit: 'cover', borderRadius: '50%' }}
               onError={(e) => {
                 e.currentTarget.style.display = 'none';

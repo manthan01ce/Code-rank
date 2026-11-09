@@ -303,3 +303,5 @@
  .experience .pathDetail h3,.experience .pathDetail p,.experience .pathFlow,.experience .pathDetail a { grid-column:1; }
 }
 @media(prefers-reduced-motion:reduce) { .featureIllustration * { animation:none!important; } .experience .pathNavigation button { transition:none; } }
+
+.footerLegal nav { display:flex; flex-wrap:wrap; gap:12px 20px; }

@@ -98,5 +98,14 @@
   ],
   "apps/web/src/app/student/practicals/page.js": [
     "PAGE"
+  ],
+  "apps/web/src/app/privacy/page.js": [
+    "PAGE"
+  ],
+  "apps/web/src/app/terms/page.js": [
+    "PAGE"
+  ],
+  "apps/web/src/app/contact/page.js": [
+    "PAGE"
   ]
 }

@@ -1,0 +1,40 @@
+name: Public site readiness
+on:
+  pull_request:
+    paths:
+      - 'apps/web/**'
+      - 'scripts/ci/public-site-smoke.mjs'
+      - '.github/workflows/public-site-checks.yml'
+      - 'package-lock.json'
+      - 'turbo.json'
+permissions:
+  contents: read
+concurrency:
+  group: public-site-${{ github.ref }}
+  cancel-in-progress: true
+jobs:
+  web:
+    runs-on: ubuntu-latest
+    timeout-minutes: 12
+    env:
+      NEXT_TELEMETRY_DISABLED: '1'
+      CODERANK_PUBLIC_URL: 'https://college.example'
+      CODERANK_ALLOW_INDEXING: 'true'
+      CODERANK_SUPPORT_EMAIL: 'help@college.example'
+      CODERANK_SUPPORT_URL: 'https://college.example/support'
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: npm
+      - run: npm ci
+      - run: npx playwright install --with-deps chromium
+      - run: npm run build --workspace=apps/web
+      - run: node scripts/ci/public-site-smoke.mjs
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: public-site-checks
+          path: test-results/public-site/
+          if-no-files-found: ignore

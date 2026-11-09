@@ -59,6 +59,7 @@
       "tests/unit/practical-navigation.test.mjs",
       "tests/unit/profile-privacy.test.mjs",
       "tests/unit/progress-updates.test.mjs",
+      "tests/unit/public-site.test.mjs",
       "tests/unit/queue-script-contract.test.mjs",
       "tests/unit/rate-limit.test.mjs",
       "tests/unit/realtime-membership.test.mjs",
