@@ -22,10 +22,11 @@ async function database(){
 }
 
 test('history persists across restarts, deduplicates minute samples and coordinates fleet incidents',async()=>{
- const {db,query}=await database();let clock=Math.floor(Date.now()/60000)*60000-8*60000,current=snapshot(false),cpu=0;
+ const {db,query}=await database();let clock=Math.floor(Date.now()/60000)*60000-8*60000,current=snapshot(false,0),cpu=0;
  const runtime=createAnalyticsRuntime({query,collect:async()=>current,env,instance:'api-a',boot:'boot-a',now:()=>clock,cpu:()=>({user:cpu,system:0})});
  try{
   await runtime.tick();assert.equal(runtime.getState().lastError,null);
+  assert.equal((await query('SELECT latency_p95_ms FROM analytics_samples'))[0].latency_p95_ms,null,'No requests means latency is unknown');
   await runtime.tick();assert.equal((await query('SELECT count(*)::int AS n FROM analytics_samples'))[0].n,1,'A retry cannot double sample a minute');
   clock+=60000;current=snapshot(false,40);cpu+=10000;await runtime.tick();
   assert.equal((await query("SELECT count(*)::int AS n FROM analytics_incidents WHERE rule='workers_offline' AND resolved_at IS NULL"))[0].n,1);

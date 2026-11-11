@@ -80,8 +80,8 @@ try{
         await page.getByRole('button',{name:'Close submission details'}).click();
       }
       if(view==='Progress')await page.getByRole('cell',{name:'1',exact:true}).first().waitFor();
-      if(view==='History'){await page.getByRole('columnheader',{name:'Max sample P95',exact:true}).waitFor();const data=await(await page.request.get(`${base}/api/analytics/history`)).json();assert.ok(data.points.length>0);}
-      if(view==='Usage'){await page.getByRole('columnheader',{name:'Runs accepted',exact:true}).waitFor();const data=await(await page.request.get(`${base}/api/analytics/usage`)).json();assert.ok(data.daily.reduce((n,r)=>n+Number(r.page_views),0)>=1);assert.ok(data.daily.reduce((n,r)=>n+Number(r.runs),0)>=1);}
+      if(view==='History'){await page.getByRole('columnheader',{name:/^max sample p95$/i}).waitFor();const data=await(await page.request.get(`${base}/api/analytics/history`)).json();assert.ok(data.points.length>0);}
+      if(view==='Usage'){await page.getByRole('columnheader',{name:/^runs accepted$/i}).waitFor();const data=await(await page.request.get(`${base}/api/analytics/usage`)).json();assert.ok(data.daily.reduce((n,r)=>n+Number(r.page_views),0)>=1);assert.ok(data.daily.reduce((n,r)=>n+Number(r.runs),0)>=1);}
       if(view==='Incidents')await page.getByRole('cell',{name:/CI controlled incident/}).first().waitFor();
       if(view==='Access log')await page.getByRole('cell',{name:'VIEW_SUBMISSION',exact:true}).first().waitFor();
       assert.ok(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth+1),`${view} must fit ${width}px`);
