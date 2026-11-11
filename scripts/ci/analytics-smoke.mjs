@@ -61,6 +61,8 @@ try{
       await page.getByRole('button',{name:view,exact:true}).click();
       if(view==='Submissions'){
         await page.getByText('Analytics CI Student',{exact:true}).waitFor();
+        await page.getByRole('button',{name:'Submissions',exact:true}).click();
+        await page.getByRole('status').filter({hasText:'Loading submissions'}).waitFor({state:'hidden'});
         await page.getByRole('button',{name:/Inspect submission/}).first().click();
         await page.locator('dialog pre').filter({hasText:'analytics-ci-source'}).waitFor();
         await page.getByRole('button',{name:'Close submission details'}).click();
