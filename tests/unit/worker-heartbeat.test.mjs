@@ -63,3 +63,13 @@ test('Docker or Redis failures do not refresh a healthy lease or reject backgrou
  const second=startExecutionHeartbeat(worker,{redis:broken,checkDocker:async()=>({healthy:true}),log});
  try {await assert.doesNotReject(second.refresh())}finally{await second.stop()}
 });
+
+
+test('shutdown during analytics observation cannot republish a healthy lease',async()=>{
+ let finishObservation;
+ const redis=new FakeRedis();
+ const heartbeat=startExecutionHeartbeat(worker,{redis,checkDocker:async()=>({healthy:true}),observe:()=>new Promise(resolve=>{finishObservation=resolve}),log});
+ while(!finishObservation)await new Promise(resolve=>setImmediate(resolve));
+ const stopping=heartbeat.stop();finishObservation({activeJobs:0,accepting:true});await stopping;
+ assert.ok(redis.transactions.every(commands=>commands.every(command=>command[0]!=='set')));
+});

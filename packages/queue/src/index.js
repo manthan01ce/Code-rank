@@ -1,3 +1,4 @@
+export { readAnalyticsQueue } from './analytics.js';
 export { readExecutionWorkers } from './worker-readiness.js';
 import { startOwnerIndexJanitor } from './owner-index.js';
 export { sweepOwnerIndexes } from './owner-index.js';

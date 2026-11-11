@@ -17,6 +17,7 @@ export function startExecutionHeartbeat(worker, {
   now = Date.now,
   log = console,
   intervalMs = 10000,
+  observe,
 } = {}) {
   const id = randomUUID();
   const key = `${WORKER_KEY_PREFIX}${id}`;
@@ -32,13 +33,15 @@ export function startExecutionHeartbeat(worker, {
       try {
         const docker = await checkDocker();
         if (stopped) return;
+        const telemetry = observe ? await observe() : {};
+        if (stopped) return;
         const checkedAt = now();
         const healthy = docker.healthy === true && worker.isRunning() && !worker.isPaused();
-        const record = { id, healthy, checkedAt, image: process.env.RUNNER_IMAGE || 'coderank-base:latest', concurrency: worker.opts.concurrency };
+        const record = { ...telemetry, id, healthy, checkedAt, image: process.env.RUNNER_IMAGE || 'coderank-base:latest', concurrency: worker.opts.concurrency };
         const replies = await redis.multi()
-          .set(key, JSON.stringify(record), 'EX', ttlSeconds)
+          .set(key, JSON.stringify(record), 'EX', observe ? 120 : ttlSeconds)
           .zadd(WORKER_REGISTRY, checkedAt + ttlSeconds * 1000, id)
-          .zremrangebyscore(WORKER_REGISTRY, '-inf', checkedAt)
+          .zremrangebyscore(WORKER_REGISTRY, '-inf', observe ? checkedAt - 90000 : checkedAt)
           .exec();
         if (!replies || replies.some(([error]) => error)) throw new Error('Heartbeat transaction failed');
       } catch (error) {

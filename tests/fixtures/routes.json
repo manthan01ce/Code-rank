@@ -107,5 +107,13 @@
   ],
   "apps/web/src/app/contact/page.js": [
     "PAGE"
+  ],
+  "apps/web/src/app/analytics/page.js": [
+    "PAGE"
+  ],
+  "apps/api/src/modules/analytics/analytics.routes.js": [
+    "DELETE",
+    "GET",
+    "POST"
   ]
 }

@@ -83,6 +83,11 @@ export class SubmissionService {
   /**
    * Get queue statistics with caching for better performance
    */
+  static async getAnalyticsSnapshot() {
+    const { readAnalyticsQueue } = await import('@coderank/queue');
+    return withTimeout(readAnalyticsQueue(getExecutionQueue()), 2500);
+  }
+
   static async getWorkerStatus() { return readExecutionWorkers(getExecutionQueue()); }
 
   static async getQueueStats() {

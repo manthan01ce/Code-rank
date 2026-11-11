@@ -104,6 +104,11 @@ export class OperationsService {
       throw { status: 401, message: 'Unauthorized' };
     }
 
+    return this.snapshotHttpMetrics();
+  }
+
+  // Permission checks belong to each caller: admin routes or separate analytics sessions.
+  static snapshotHttpMetrics() {
     const elapsedSeconds = Math.max(1, (Date.now() - obsState.startedAt) / 1000);
     const cpu = process.cpuUsage(obsState.lastCpu);
     obsState.lastCpu = process.cpuUsage();
