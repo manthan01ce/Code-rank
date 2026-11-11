@@ -1,4 +1,5 @@
 import Fastify from 'fastify';
+import analyticsRoutes from './modules/analytics/analytics.routes.js';
 import { OperationsService } from './modules/operations/operations.service.js';
 import operationsRoutes from './modules/operations/operations.routes.js';
 import { SubmissionService } from '@coderank/core/submissions';
@@ -32,6 +33,7 @@ export function buildApp(options = {}) {
 
   app.register(realtimePlugin, options.realtime || {});
   app.register(operationsRoutes, { prefix: '/api' });
+  app.register(analyticsRoutes, { prefix: '/api' });
   app.register(authRoutes, { prefix: '/api' });
   app.register(usersRoutes, { prefix: '/api' });
   app.register(coursesRoutes, { prefix: '/api' });

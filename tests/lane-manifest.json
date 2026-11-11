@@ -5,6 +5,8 @@
       "tests/unit/admin-api.test.mjs",
       "tests/unit/admin-bootstrap.test.mjs",
       "tests/unit/admin-transactions.test.mjs",
+      "tests/unit/analytics-runtime.test.mjs",
+      "tests/unit/analytics-telemetry.test.mjs",
       "tests/unit/api-auth-runtime.test.mjs",
       "tests/unit/api-courses-runtime.test.mjs",
       "tests/unit/api-execution-runtime.test.mjs",

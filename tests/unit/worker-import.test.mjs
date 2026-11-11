@@ -1,9 +1,10 @@
 import test, { mock } from 'node:test';
 import assert from 'node:assert/strict';
+import { EventEmitter } from 'node:events';
 import { closeDatabase } from '@coderank/database';
 
 // Import smoke only. Real Redis/recovery and Docker execution remain separate gates.
-const workers = [{ id: 'execution' }, { id: 'system' }];
+const workers = [Object.assign(new EventEmitter(),{id:'execution'}), { id: 'system' }];
 let shutdownOptions;
 mock.module('../../apps/worker/src/jobs/execution/submission.worker.js', {
   namedExports: { createSubmissionWorker: () => ({ worker: workers[0], disconnectRealtime() {} }) },
@@ -15,7 +16,7 @@ mock.module('../../apps/worker/src/lifecycle/heartbeat.js', {
   namedExports: { startExecutionHeartbeat: () => ({ stop: async () => {} }) },
 });
 mock.module('@coderank/runner/sandbox', {
-  namedExports: { assertColdSandboxConfiguration: () => {}, startSandboxReaper: () => ({ stop: async () => {} }) },
+  namedExports: { readSandboxContainers: async()=>({status:'unavailable',running:null}), assertColdSandboxConfiguration: () => {}, startSandboxReaper: () => ({ stop: async () => {} }) },
 });
 mock.module('../../apps/worker/src/lifecycle/shutdown.js', {
   namedExports: { createShutdown: options => { shutdownOptions = options; return async () => 0; } },

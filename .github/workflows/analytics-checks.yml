@@ -1,0 +1,78 @@
+name: Analytics dashboard verification
+on:
+  pull_request:
+    paths:
+      - 'apps/api/src/modules/analytics/**'
+      - 'apps/api/src/app.js'
+      - 'apps/web/src/features/analytics/**'
+      - 'apps/web/src/app/analytics/**'
+      - 'apps/worker/src/lifecycle/**'
+      - 'packages/queue/src/**'
+      - 'packages/runner/src/sandbox/telemetry.js'
+      - 'packages/database/migrations/008*'
+      - 'scripts/ci/install-browser.mjs'
+      - 'scripts/ci/analytics-smoke.mjs'
+      - 'scripts/ci/analytics-runner-smoke.mjs'
+      - '.github/workflows/analytics-checks.yml'
+permissions:
+  contents: read
+concurrency:
+  group: analytics-${{ github.ref }}
+  cancel-in-progress: true
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    timeout-minutes: 12
+    services:
+      postgres:
+        image: postgres:16-alpine
+        env:
+          POSTGRES_PASSWORD: test-only-password
+          POSTGRES_DB: analytics_test
+        ports: ['5432:5432']
+        options: --health-cmd "pg_isready -U postgres" --health-interval 5s --health-timeout 3s --health-retries 10
+      redis:
+        image: redis:7-alpine
+        ports: ['6379:6379']
+        options: --health-cmd "redis-cli ping" --health-interval 5s --health-timeout 3s --health-retries 10
+    env:
+      DATABASE_DRIVER: postgres
+      DATABASE_URL: postgresql://postgres:test-only-password@127.0.0.1:5432/analytics_test
+      REDIS_HOST: 127.0.0.1
+      REDIS_PORT: '6379'
+      API_HOST: 127.0.0.1
+      API_PORT: '3312'
+      JWT_SECRET: analytics-ci-only-unrelated-admin-secret
+      NEXT_TELEMETRY_DISABLED: '1'
+      ANALYTICS_ORIGIN: http://127.0.0.1:3311
+      ANALYTICS_CI_PASSWORD: ci-only-analytics-password-never-production
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: npm
+      - run: npm ci
+      - name: Configure isolated analytics test access
+        run: |
+          node --input-type=module <<'NODE'
+          import {appendFileSync} from 'node:fs';
+          import {randomBytes} from 'node:crypto';
+          import {hashAnalyticsPassword} from './apps/api/src/modules/analytics/auth.js';
+          appendFileSync(process.env.GITHUB_ENV,`ANALYTICS_PASSWORD_HASH=${await hashAnalyticsPassword(process.env.ANALYTICS_CI_PASSWORD)}\nANALYTICS_SESSION_SECRET=${randomBytes(48).toString('hex')}\n`);
+          NODE
+      - run: npm run db:migrate
+      - run: npm run db:preflight
+      - run: npm run build --workspace=apps/api
+      - run: npm run build --workspace=apps/web
+      - run: node scripts/ci/install-browser.mjs
+      - run: node scripts/ci/analytics-smoke.mjs
+      - name: Build the real isolated execution image
+        run: docker build -t coderank-base:latest -f infrastructure/docker/runner/Dockerfile .
+      - run: node scripts/ci/analytics-runner-smoke.mjs
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: analytics-dashboard-evidence
+          path: test-results/analytics/
+          if-no-files-found: ignore

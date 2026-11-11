@@ -1,3 +1,4 @@
+export { readSandboxContainers } from './telemetry.js';
 import { randomUUID } from 'node:crypto';
 import { dockerCommand } from './docker.js';
 import { SANDBOX_OWNER, SANDBOX_VERSION, SANDBOX_PREFIX, sandboxScope } from './metadata.js';

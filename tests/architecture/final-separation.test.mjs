@@ -23,7 +23,8 @@ function imports(file) {
 }
 
 test('all baseline endpoints belong to API and frontend source/config cannot import backend implementations or secrets', () => {
-  assert.equal(inventory.endpoints.length, 47);
+  assert.equal(inventory.endpoints.filter(e=>!e.url.startsWith('/api/analytics/')).length, 47);
+  assert.equal(inventory.endpoints.filter(e=>e.url.startsWith('/api/analytics/')).length, 6);
   for (const endpoint of inventory.endpoints) assert.ok(endpoint.file.startsWith('apps/api/src/modules/'), endpoint.url);
   for (const path of ['apps/web/server.js', 'apps/web/cluster.js', 'infrastructure/vercel.json']) assert.equal(existsSync(path), false, path);
   assert.deepEqual(JSON.parse(readFileSync('vercel.json', 'utf8')), { $schema: 'https://openapi.vercel.sh/vercel.json', git: { deploymentEnabled: { master: true, '*': false } } }, 'root Vercel policy must enable only master without taking API routing ownership');
@@ -34,7 +35,7 @@ test('all baseline endpoints belong to API and frontend source/config cannot imp
       const target = specifier.startsWith('.') ? resolve(dirname(file), specifier) : specifier;
       assert.doesNotMatch(target, /@coderank\/(?:core|database|queue|runner)|\/packages\/(?:core|database|queue|runner)(?:\/|$)/, `${file}: ${specifier}`);
     }
-    assert.doesNotMatch(readFileSync(file, 'utf8'), /process\.env\.(?:JWT_SECRET|DATABASE_URL|REDIS_HOST|REDIS_PORT|ADMIN_PASSWORD|SERVICE_TOKEN)/, file);
+    assert.doesNotMatch(readFileSync(file, 'utf8'), /process\.env\.(?:JWT_SECRET|DATABASE_URL|REDIS_HOST|REDIS_PORT|ADMIN_PASSWORD|SERVICE_TOKEN|ANALYTICS_PASSWORD_HASH|ANALYTICS_SESSION_SECRET)/, file);
   }
   const web = JSON.parse(readFileSync('apps/web/package.json'));
   assert.equal(web.scripts.dev, 'next dev'); assert.equal(web.scripts.start, 'next start');
@@ -58,7 +59,7 @@ test('public practice contracts stay browser safe and every application declares
 });
 
 test('standard Next.js processes receive frontend settings without backend or launcher secrets', () => {
-  const inherited = { PATH: '/bin', JWT_SECRET: 'private', DATABASE_URL: 'private', REDIS_HOST: 'private', ADMIN_PASSWORD: 'private', INTERNAL_API_URL: 'private', NEXT_PUBLIC_REALTIME_URL: 'https://public.example', NEXT_TELEMETRY_DISABLED: '1' };
+  const inherited = { PATH: '/bin', JWT_SECRET: 'private', ANALYTICS_PASSWORD_HASH: 'private', ANALYTICS_SESSION_SECRET: 'private', DATABASE_URL: 'private', REDIS_HOST: 'private', ADMIN_PASSWORD: 'private', INTERNAL_API_URL: 'private', NEXT_PUBLIC_REALTIME_URL: 'https://public.example', NEXT_TELEMETRY_DISABLED: '1' };
   const env = webEnvironment(inherited, { port: 3020, production: true });
   assert.deepEqual(Object.keys(env).sort(), ['HOSTNAME', 'NEXT_PUBLIC_REALTIME_URL', 'NEXT_TELEMETRY_DISABLED', 'NODE_ENV', 'PATH', 'PORT'].sort());
   assert.equal(env.NODE_ENV, 'production'); assert.equal(env.PORT, '3020');

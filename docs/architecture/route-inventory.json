@@ -2,8 +2,8 @@
   "baselineRevision": "e8cd0a5e7306befc8c441c249b0b50b524597dd9",
   "generatedAt": "2026-11-03T12:08:22+05:30",
   "summary": {
-    "totalPages": 22,
-    "totalEndpoints": 47,
+    "totalPages": 23,
+    "totalEndpoints": 53,
     "allocationCounts": {
       "CR-ARCH-09": 1,
       "CR-ARCH-10A": 3,
@@ -12,7 +12,7 @@
       "CR-ARCH-11B": 9,
       "CR-ARCH-12A": 9,
       "CR-ARCH-12B": 8,
-      "CR-ARCH-13": 7
+      "CR-ARCH-13": 13
     }
   },
   "pages": [
@@ -147,6 +147,12 @@
       "file": "apps/web/src/app/terms/page.js",
       "owner": "public-site",
       "description": "Institutional usage guidelines"
+    },
+    {
+      "url": "/analytics",
+      "file": "apps/web/src/app/analytics/page.js",
+      "owner": "CR-ARCH-13",
+      "description": "Independent password-protected read-only operations dashboard"
     }
   ],
   "endpoints": [
@@ -1890,6 +1896,152 @@
       "contractSources": [
         "apps/api/src/modules/profile/profile.routes.js"
       ]
+    },
+    {
+      "url": "/api/analytics/session",
+      "file": "apps/api/src/modules/analytics/analytics.routes.js",
+      "owner": "CR-ARCH-13",
+      "methods": [
+        "GET",
+        "POST",
+        "DELETE"
+      ],
+      "statusCodes": [
+        200,
+        400,
+        401,
+        403,
+        404,
+        413,
+        429,
+        503
+      ],
+      "description": "Independent analytics session or read-only diagnostic data",
+      "observedResponseHeaders": {
+        "cache-control": [
+          "private, no-store"
+        ]
+      }
+    },
+    {
+      "url": "/api/analytics/overview",
+      "file": "apps/api/src/modules/analytics/analytics.routes.js",
+      "owner": "CR-ARCH-13",
+      "methods": [
+        "GET"
+      ],
+      "statusCodes": [
+        200,
+        400,
+        401,
+        403,
+        404,
+        413,
+        429,
+        503
+      ],
+      "description": "Independent analytics session or read-only diagnostic data",
+      "observedResponseHeaders": {
+        "cache-control": [
+          "private, no-store"
+        ]
+      }
+    },
+    {
+      "url": "/api/analytics/submissions",
+      "file": "apps/api/src/modules/analytics/analytics.routes.js",
+      "owner": "CR-ARCH-13",
+      "methods": [
+        "GET"
+      ],
+      "statusCodes": [
+        200,
+        400,
+        401,
+        403,
+        404,
+        413,
+        429,
+        503
+      ],
+      "description": "Independent analytics session or read-only diagnostic data",
+      "observedResponseHeaders": {
+        "cache-control": [
+          "private, no-store"
+        ]
+      }
+    },
+    {
+      "url": "/api/analytics/submissions/[id]",
+      "file": "apps/api/src/modules/analytics/analytics.routes.js",
+      "owner": "CR-ARCH-13",
+      "methods": [
+        "GET"
+      ],
+      "statusCodes": [
+        200,
+        400,
+        401,
+        403,
+        404,
+        413,
+        429,
+        503
+      ],
+      "description": "Independent analytics session or read-only diagnostic data",
+      "observedResponseHeaders": {
+        "cache-control": [
+          "private, no-store"
+        ]
+      }
+    },
+    {
+      "url": "/api/analytics/progress",
+      "file": "apps/api/src/modules/analytics/analytics.routes.js",
+      "owner": "CR-ARCH-13",
+      "methods": [
+        "GET"
+      ],
+      "statusCodes": [
+        200,
+        400,
+        401,
+        403,
+        404,
+        413,
+        429,
+        503
+      ],
+      "description": "Independent analytics session or read-only diagnostic data",
+      "observedResponseHeaders": {
+        "cache-control": [
+          "private, no-store"
+        ]
+      }
+    },
+    {
+      "url": "/api/analytics/access",
+      "file": "apps/api/src/modules/analytics/analytics.routes.js",
+      "owner": "CR-ARCH-13",
+      "methods": [
+        "GET"
+      ],
+      "statusCodes": [
+        200,
+        400,
+        401,
+        403,
+        404,
+        413,
+        429,
+        503
+      ],
+      "description": "Independent analytics session or read-only diagnostic data",
+      "observedResponseHeaders": {
+        "cache-control": [
+          "private, no-store"
+        ]
+      }
     }
   ],
   "contractReview": {

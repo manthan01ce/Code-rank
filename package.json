@@ -51,7 +51,9 @@
     "db:inspect": "node packages/database/scripts/inspect-schema.js",
     "test:batch": "node scripts/ci/run-tests.mjs batch",
     "lab:audit": "node scripts/ci/local-lab-audit.mjs",
-    "test:warm-disposition": "node scripts/ci/warm-mode-acceptance.mjs"
+    "test:warm-disposition": "node scripts/ci/warm-mode-acceptance.mjs",
+    "analytics:setup": "node scripts/ops/setup-analytics.mjs",
+    "analytics:maintenance": "node scripts/ops/analytics-maintenance.mjs"
   },
   "devDependencies": {
     "@electric-sql/pglite": "0.5.10",

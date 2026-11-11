@@ -1,5 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
+import { EventEmitter } from 'node:events';
 import { startExecutionHeartbeat, WORKER_REGISTRY, WORKER_KEY_PREFIX } from '../../apps/worker/src/lifecycle/heartbeat.js';
 
 class FakeRedis {
@@ -62,4 +63,27 @@ test('Docker or Redis failures do not refresh a healthy lease or reject backgrou
  const broken=new FakeRedis();broken.multi=()=>({set(){return this},zadd(){return this},zremrangebyscore(){return this},exec:async()=>[[Error('Redis failed'),null]]});
  const second=startExecutionHeartbeat(worker,{redis:broken,checkDocker:async()=>({healthy:true}),log});
  try {await assert.doesNotReject(second.refresh())}finally{await second.stop()}
+});
+
+
+test('shutdown during analytics observation cannot republish a healthy lease',async()=>{
+ let finishObservation;
+ const redis=new FakeRedis();
+ const heartbeat=startExecutionHeartbeat(Object.assign(new EventEmitter(),worker),{redis,checkDocker:async()=>({healthy:true}),observe:()=>new Promise(resolve=>{finishObservation=resolve}),log});
+ while(!finishObservation)await new Promise(resolve=>setImmediate(resolve));
+ const stopping=heartbeat.stop();finishObservation({activeJobs:0,accepting:true});await stopping;
+ assert.ok(redis.transactions.every(commands=>commands.every(command=>command[0]!=='set')));
+});
+
+
+test('short job events trigger a fresh observation before the periodic heartbeat',async()=>{
+ const redis=new FakeRedis(),emitter=Object.assign(new EventEmitter(),worker);let active=0;
+ const heartbeat=startExecutionHeartbeat(emitter,{redis,checkDocker:async()=>({healthy:true}),observe:async()=>({activeJobs:active,accepting:true}),intervalMs:60000,log});
+ try {
+  await heartbeat.refresh();active=1;emitter.emit('active',{id:'short-job'});
+  const deadline=Date.now()+2000;
+  while(redis.transactions.filter(commands=>commands[0][0]==='set').length<2 && Date.now()<deadline)await new Promise(resolve=>setTimeout(resolve,20));
+  assert.equal(JSON.parse(redis.transactions.at(-1)[0][2]).activeJobs,1);
+ }finally{await heartbeat.stop();}
+ assert.equal(emitter.listenerCount('active'),0);
 });

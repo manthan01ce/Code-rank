@@ -30,5 +30,9 @@
   {
     "name": "007_retention_and_report_indexes.sql",
     "checksum": "049ae70c7f29492f94489d832afa66649147db2027c7d13a473db317e9b54c31"
+  },
+  {
+    "name": "008_analytics_access.sql",
+    "checksum": "729637113899df6f8d916922ffe021222752bfd6c9e04aa592217d91dadb5cd5"
   }
 ]
