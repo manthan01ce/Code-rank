@@ -3,7 +3,7 @@
   "generatedAt": "2026-11-03T12:08:22+05:30",
   "summary": {
     "totalPages": 23,
-    "totalEndpoints": 53,
+    "totalEndpoints": 60,
     "allocationCounts": {
       "CR-ARCH-09": 1,
       "CR-ARCH-10A": 3,
@@ -12,7 +12,7 @@
       "CR-ARCH-11B": 9,
       "CR-ARCH-12A": 9,
       "CR-ARCH-12B": 8,
-      "CR-ARCH-13": 13
+      "CR-ARCH-13": 20
     }
   },
   "pages": [
@@ -2037,6 +2037,174 @@
         503
       ],
       "description": "Independent analytics session or read-only diagnostic data",
+      "observedResponseHeaders": {
+        "cache-control": [
+          "private, no-store"
+        ]
+      }
+    },
+    {
+      "url": "/api/analytics/history",
+      "file": "apps/api/src/modules/analytics/analytics.routes.js",
+      "owner": "CR-ARCH-13",
+      "methods": [
+        "GET"
+      ],
+      "statusCodes": [
+        200,
+        400,
+        401,
+        403,
+        404,
+        413,
+        429,
+        503
+      ],
+      "description": "Protected persisted analytics report or audited CSV export",
+      "observedResponseHeaders": {
+        "cache-control": [
+          "private, no-store"
+        ]
+      }
+    },
+    {
+      "url": "/api/analytics/usage",
+      "file": "apps/api/src/modules/analytics/analytics.routes.js",
+      "owner": "CR-ARCH-13",
+      "methods": [
+        "GET"
+      ],
+      "statusCodes": [
+        200,
+        400,
+        401,
+        403,
+        404,
+        413,
+        429,
+        503
+      ],
+      "description": "Protected persisted analytics report or audited CSV export",
+      "observedResponseHeaders": {
+        "cache-control": [
+          "private, no-store"
+        ]
+      }
+    },
+    {
+      "url": "/api/analytics/incidents",
+      "file": "apps/api/src/modules/analytics/analytics.routes.js",
+      "owner": "CR-ARCH-13",
+      "methods": [
+        "GET"
+      ],
+      "statusCodes": [
+        200,
+        400,
+        401,
+        403,
+        404,
+        413,
+        429,
+        503
+      ],
+      "description": "Protected persisted analytics report or audited CSV export",
+      "observedResponseHeaders": {
+        "cache-control": [
+          "private, no-store"
+        ]
+      }
+    },
+    {
+      "url": "/api/analytics/export",
+      "file": "apps/api/src/modules/analytics/analytics.routes.js",
+      "owner": "CR-ARCH-13",
+      "methods": [
+        "GET"
+      ],
+      "statusCodes": [
+        200,
+        400,
+        401,
+        403,
+        404,
+        413,
+        429,
+        503
+      ],
+      "description": "Protected persisted analytics report or audited CSV export",
+      "observedResponseHeaders": {
+        "cache-control": [
+          "private, no-store"
+        ]
+      }
+    },
+    {
+      "url": "/api/usage/config",
+      "file": "apps/api/src/modules/usage/usage.routes.js",
+      "owner": "CR-ARCH-13",
+      "methods": [
+        "GET"
+      ],
+      "auth": "none",
+      "statusCodes": [
+        200,
+        202,
+        400,
+        403,
+        413,
+        429,
+        503
+      ],
+      "description": "Optional coarse aggregate usage configuration or event intake",
+      "observedResponseHeaders": {
+        "cache-control": [
+          "no-store"
+        ]
+      }
+    },
+    {
+      "url": "/api/usage/events",
+      "file": "apps/api/src/modules/usage/usage.routes.js",
+      "owner": "CR-ARCH-13",
+      "methods": [
+        "POST"
+      ],
+      "auth": "none",
+      "statusCodes": [
+        200,
+        202,
+        400,
+        403,
+        413,
+        429,
+        503
+      ],
+      "description": "Optional coarse aggregate usage configuration or event intake",
+      "observedResponseHeaders": {
+        "cache-control": [
+          "no-store"
+        ]
+      }
+    },
+    {
+      "url": "/api/analytics/collect",
+      "file": "apps/api/src/modules/analytics/analytics.routes.js",
+      "owner": "CR-ARCH-13",
+      "methods": [
+        "POST"
+      ],
+      "statusCodes": [
+        200,
+        400,
+        401,
+        403,
+        404,
+        413,
+        429,
+        503
+      ],
+      "description": "Authenticated collection and usage flush; never modifies academic records",
       "observedResponseHeaders": {
         "cache-control": [
           "private, no-store"

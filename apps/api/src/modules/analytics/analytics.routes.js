@@ -1,9 +1,11 @@
+import { createAnalyticsReports,csvReport } from './reports.js';
 import { analyticsConfig, createAnalyticsAuth, requireAnalyticsOrigin } from './auth.js';
 import { analyticsQuery, createAnalyticsService } from './service.js';
 
 export default async function analyticsRoutes(fastify,options) {
   const query=options.query || analyticsQuery;
-  const auth=createAnalyticsAuth(query), service=createAnalyticsService(query);
+  const auth=createAnalyticsAuth(query), service=options.service || createAnalyticsService(query);
+  const reports=createAnalyticsReports(query,options.runtime);
   fastify.decorateRequest('analyticsSession',null);
   fastify.addHook('onRequest',async(request,reply)=>{
     reply.header('Cache-Control','private, no-store');
@@ -30,5 +32,17 @@ export default async function analyticsRoutes(fastify,options) {
     return detail;
   });
   fastify.get('/analytics/progress',async()=>service.progress());
+  fastify.post('/analytics/collect',{bodyLimit:512},async()=>{await options.runtime?.tick();return options.runtime?.getState() || {collectionEnabled:false,usageEnabled:false};});
+  fastify.get('/analytics/history',async(request)=>reports.history(request.query));
+  fastify.get('/analytics/usage',async(request)=>reports.usage(request.query));
+  fastify.get('/analytics/incidents',async(request)=>reports.incidents(request.query));
+  fastify.get('/analytics/export',async(request,reply)=>{
+    const type=request.query.type;
+    if(!['history','usage','incidents'].includes(type))return reply.code(400).send({error:'Choose history, usage or incidents.'});
+    const data=await reports[type](request.query);
+    await auth.audit('EXPORT',type);
+    reply.header('Content-Disposition',`attachment; filename="coderank-${type}.csv"`);
+    return reply.type('text/csv; charset=utf-8').send(csvReport(data.points || data.daily || data.rows));
+  });
   fastify.get('/analytics/access',async()=>({rows:await query('SELECT action,detail,created_at FROM analytics_access ORDER BY id DESC LIMIT 100',[])}));
 }

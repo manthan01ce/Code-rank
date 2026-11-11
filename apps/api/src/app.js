@@ -1,4 +1,7 @@
 import Fastify from 'fastify';
+import { createAnalyticsRuntime } from './modules/analytics/history.js';
+import { analyticsQuery,createAnalyticsService } from './modules/analytics/service.js';
+import usageRoutes from './modules/usage/usage.routes.js';
 import analyticsRoutes from './modules/analytics/analytics.routes.js';
 import { OperationsService } from './modules/operations/operations.service.js';
 import operationsRoutes from './modules/operations/operations.routes.js';
@@ -21,11 +24,19 @@ export function buildApp(options = {}) {
     ...options,
   });
 
+  const analyticsService=createAnalyticsService();
+  const analyticsRuntime=createAnalyticsRuntime({query:analyticsQuery,collect:()=>analyticsService.overview()});
+  app.decorateRequest('analyticsAction',null);
+  app.decorateRequest('analyticsActor',null);
+  app.addHook('onReady',async()=>analyticsRuntime.start());
+
   app.addHook('onResponse', async (request, reply) => {
     OperationsService.recordHttpRequest({ url: request.routeOptions.url || '/unmatched', statusCode: reply.statusCode, durationMs: reply.elapsedTime });
+    analyticsRuntime.recordHttp(request,reply);
   });
 
   app.addHook('onClose', async () => {
+    await analyticsRuntime.stop();
     const outcomes = await Promise.allSettled([closeRateLimiter(), closeDatabase(), SubmissionService.close?.()]);
     const failed = outcomes.find(result => result.status === 'rejected');
     if (failed) throw failed.reason;
@@ -33,7 +44,8 @@ export function buildApp(options = {}) {
 
   app.register(realtimePlugin, options.realtime || {});
   app.register(operationsRoutes, { prefix: '/api' });
-  app.register(analyticsRoutes, { prefix: '/api' });
+  app.register(analyticsRoutes, { prefix: '/api',runtime:analyticsRuntime,service:analyticsService });
+  app.register(usageRoutes, { prefix: '/api',runtime:analyticsRuntime });
   app.register(authRoutes, { prefix: '/api' });
   app.register(usersRoutes, { prefix: '/api' });
   app.register(coursesRoutes, { prefix: '/api' });

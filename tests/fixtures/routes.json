@@ -115,5 +115,9 @@
     "DELETE",
     "GET",
     "POST"
+  ],
+  "apps/api/src/modules/usage/usage.routes.js": [
+    "GET",
+    "POST"
   ]
 }

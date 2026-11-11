@@ -94,3 +94,9 @@
 .skip:focus { top:12px; }
 @media(max-width:1200px) { .main { padding:28px; } .metrics { grid-template-columns:repeat(2,minmax(0,1fr)); } .twoColumns,.workerGrid { grid-template-columns:1fr; } }
 @media(max-width:760px) { .shell { display:block; } .sidebar { position:static; width:100%; height:auto; padding:22px 20px; border-right:0; border-bottom:1px solid var(--line); } .sidebarCaption { display:none; } .sidebar nav { display:flex; flex-wrap:wrap; margin:22px 0 0; gap:5px; } .sidebar nav button { padding:10px; gap:7px; font-size:12px; } .sidebarBottom { display:flex; align-items:center; flex-wrap:wrap; gap:14px; padding-top:16px; font-size:11px; } .sidebarBottom>span { margin-right:auto; } .main { padding:26px 16px; } .header h1 { font-size:30px; } .panel { padding:18px; } .metric { padding:16px; } .metric strong { font-size:25px; } .metrics { gap:10px; } .loginCard { padding:28px 24px; } .controls { gap:8px; } }
+.reportHeading { display:flex; align-items:flex-start; justify-content:space-between; flex-wrap:wrap; gap:20px; }
+.reportHeading .controls label { display:grid; gap:8px; font-size:11px; color:var(--muted); }
+.reportHeading .controls { align-items:flex-end; margin-bottom:18px; }
+.exportLink { display:inline-flex; padding:12px; border:1px solid var(--line); border-radius:8px; font-size:12px; text-decoration:none; }
+.collector { display:flex; flex-wrap:wrap; gap:10px 24px; padding:16px; margin:12px 0 24px; background:#0c1724; border-radius:8px; font-size:11px; color:var(--muted); line-height:1.8; }
+.collector strong { color:#f4ca7b; }

@@ -29,8 +29,8 @@ function request(route, token) {
 }
 
 test('every protected API method rejects missing identity; optional execution routes reject invalid and revoked bearers', async () => {
-  assert.equal(inventory.endpoints.filter(e=>!e.url.startsWith('/api/analytics/')).length, 47);
-  assert.equal(inventory.endpoints.filter(e=>e.url.startsWith('/api/analytics/')).length, 6);
+  assert.equal(inventory.endpoints.filter(e=>!e.url.startsWith('/api/analytics/')&&!e.url.startsWith('/api/usage/')).length, 47);
+  assert.equal(inventory.endpoints.filter(e=>e.url.startsWith('/api/analytics/')).length, 11);
   assert.ok(routes.length >= 47, 'migration must not silently empty this security matrix');
   for (const route of routes) {
     if (route.auth !== 'optional') assert.equal((await request(route)).statusCode, 401, `${route.method} ${route.url}: missing bearer`);

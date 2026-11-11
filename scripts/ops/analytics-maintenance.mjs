@@ -1,5 +1,6 @@
 import '@coderank/core/config/env';
 import { parseArgs } from 'node:util';
+import { retainAnalyticsHistory } from '../../apps/api/src/modules/analytics/retention.js';
 import sql,{closeDatabase} from '@coderank/database';
 try{
   const {values}=parseArgs({options:{target:{type:'string'},apply:{type:'boolean',default:false},'access-days':{type:'string',default:'90'}}});
@@ -11,5 +12,6 @@ try{
     const query=values.apply?`WITH expired AS (SELECT ${key} FROM ${table} WHERE ${where} LIMIT 1000) DELETE FROM ${table} USING expired WHERE ${table}.${key}=expired.${key} RETURNING ${table}.${key}`:`SELECT ${key} FROM ${table} WHERE ${where} LIMIT 1000`;
     const rows=await sql.query(query,params);report.push({table,rows:rows.length,mode:values.apply?'deleted':'preview'});
   }
+  report.push(...await retainAnalyticsHistory((q,p)=>sql.query(q,p),{apply:values.apply}));
   console.log(JSON.stringify(report));
 }catch{console.error('Analytics maintenance failed. Verify the explicit target, migrations and retention policy.');process.exitCode=1;}finally{await closeDatabase();}

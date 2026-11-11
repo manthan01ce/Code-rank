@@ -1,4 +1,5 @@
 import './globals.css';
+import UsageTracker from '@/components/layout/UsageTracker';
 import { getSiteConfig } from '@/lib/site-config';
 
 const { origin, indexable } = getSiteConfig();
@@ -12,5 +13,5 @@ export const metadata = {
 };
 
 export default function RootLayout({ children }) {
-  return <html lang="en" suppressHydrationWarning><body suppressHydrationWarning>{children}</body></html>;
+  return <html lang="en" suppressHydrationWarning><body suppressHydrationWarning>{children}<UsageTracker/></body></html>;
 }

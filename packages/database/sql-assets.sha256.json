@@ -48,5 +48,10 @@
     "original": "packages/database/migrations/008_analytics_access.sql",
     "destination": "packages/database/migrations/008_analytics_access.sql",
     "sha256": "729637113899df6f8d916922ffe021222752bfd6c9e04aa592217d91dadb5cd5"
+  },
+  {
+    "original": "packages/database/migrations/009_analytics_history.sql",
+    "destination": "packages/database/migrations/009_analytics_history.sql",
+    "sha256": "405369004a584bbe5609c73916e8cc1f52c0d033cc60bf07625b5f3e8cad2b8f"
   }
 ]
