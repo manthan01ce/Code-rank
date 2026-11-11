@@ -46,7 +46,8 @@ try{
     const context=await browser.newContext({viewport:{width,height:900}}),page=await context.newPage(),errors=[];
     page.on('pageerror',error=>errors.push(error.message));
     const pageView=page.waitForResponse(response=>response.url().endsWith('/api/usage/events')&&response.request().method()==='POST');
-    await page.goto(`${base}/privacy`);assert.equal((await pageView).status(),202,'Real browser tracker must report coarse page activity');
+    await page.goto(`${base}/privacy`);const tracked=await pageView;assert.equal(tracked.status(),202,'Real browser tracker must report coarse page activity');
+    assert.equal(tracked.request().headers().referer,undefined,'Tracker must not transmit a full referrer URL');assert.deepEqual(tracked.request().postDataJSON(),{route:'/privacy'});
     await page.goto(`${base}/analytics`);
     assert.match(await page.title(),/Operations analytics/);
     assert.match(await page.locator('meta[name="robots"]').getAttribute('content'),/noindex/);

@@ -7,7 +7,7 @@ export default function UsageTracker(){
  const path=usePathname(),last=useRef(null),[enabled,setEnabled]=useState(false);
  useEffect(()=>{
   const controller=new AbortController();
-  fetch('/api/usage/config',{cache:'no-store',credentials:'omit',signal:controller.signal}).then(response=>response.ok?response.json():null).then(data=>{if(!controller.signal.aborted)setEnabled(data?.enabled===true);}).catch(()=>{});
+  fetch('/api/usage/config',{cache:'no-store',referrerPolicy:'no-referrer',credentials:'omit',signal:controller.signal}).then(response=>response.ok?response.json():null).then(data=>{if(!controller.signal.aborted)setEnabled(data?.enabled===true);}).catch(()=>{});
   return()=>controller.abort();
  },[]);
  useEffect(()=>{
@@ -15,7 +15,7 @@ export default function UsageTracker(){
   if(!enabled||last.current===path)return;
   last.current=path;
   if(!route)return;
-  void fetch('/api/usage/events',{method:'POST',credentials:'omit',keepalive:true,headers:{'Content-Type':'application/json','X-CodeRank-Usage':'1'},body:JSON.stringify({route})}).catch(()=>{});
+  void fetch('/api/usage/events',{method:'POST',referrerPolicy:'no-referrer',credentials:'omit',keepalive:true,headers:{'Content-Type':'application/json','X-CodeRank-Usage':'1'},body:JSON.stringify({route})}).catch(()=>{});
  },[enabled,path]);
  return null;
 }
