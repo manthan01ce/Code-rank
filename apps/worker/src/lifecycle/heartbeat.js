@@ -24,6 +24,7 @@ export function startExecutionHeartbeat(worker, {
   const ttlSeconds = 30;
   let stopped = false;
   let pending;
+  let eventTimer;
   redis.on('error', error => log.error('Worker heartbeat Redis error:', error.message));
 
   function refresh() {
@@ -44,6 +45,12 @@ export function startExecutionHeartbeat(worker, {
           .zremrangebyscore(WORKER_REGISTRY, '-inf', observe ? checkedAt - 90000 : checkedAt)
           .exec();
         if (!replies || replies.some(([error]) => error)) throw new Error('Heartbeat transaction failed');
+        // Container startup can lag the active event. Keep sampling while jobs
+        // run so a short execution is observable before its periodic idle lease.
+        if (observe && telemetry.activeJobs > 0 && !stopped && !eventTimer) {
+          eventTimer = setTimeout(() => { eventTimer = null; void refresh(); }, 2000);
+          eventTimer.unref();
+        }
       } catch (error) {
         // A failed publish is never refreshed as healthy: its old lease expires.
         log.error('Worker capability heartbeat failed:', error.message);
@@ -52,6 +59,17 @@ export function startExecutionHeartbeat(worker, {
     return pending;
   }
 
+  function changed() {
+    if (stopped || eventTimer) return;
+    eventTimer = setTimeout(() => {
+      eventTimer = null;
+      if (pending) void pending.then(changed);
+      else void refresh();
+    }, 100);
+    eventTimer.unref();
+  }
+  const observedEvents = ['active', 'completed', 'failed', 'paused', 'resumed'];
+  if (observe) for (const event of observedEvents) worker.on(event, changed);
   const timer = setInterval(refresh, intervalMs);
   timer.unref();
   void refresh();
@@ -62,6 +80,8 @@ export function startExecutionHeartbeat(worker, {
       return stopping ||= (async () => {
         stopped = true;
         clearInterval(timer);
+        clearTimeout(eventTimer);
+        if (observe) for (const event of observedEvents) worker.off(event, changed);
         try {
           await pending;
           await redis.multi().del(key).zrem(WORKER_REGISTRY, id).exec();
