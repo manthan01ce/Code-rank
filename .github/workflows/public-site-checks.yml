@@ -3,6 +3,7 @@ on:
   pull_request:
     paths:
       - 'apps/web/**'
+      - 'scripts/ci/install-browser.mjs'
       - 'scripts/ci/public-site-smoke.mjs'
       - '.github/workflows/public-site-checks.yml'
       - 'package-lock.json'
@@ -29,7 +30,7 @@ jobs:
           node-version: 24
           cache: npm
       - run: npm ci
-      - run: npx playwright install --with-deps chromium
+      - run: node scripts/ci/install-browser.mjs
       - run: npm run build --workspace=apps/web
       - run: node scripts/ci/public-site-smoke.mjs
       - uses: actions/upload-artifact@v4
