@@ -60,7 +60,10 @@ try{
     for(const view of ['Overview','Runners','Submissions','Progress','Access log']){
       await page.getByRole('button',{name:view,exact:true}).click();
       if(view==='Submissions'){
-        await page.getByText('Analytics CI Student',{exact:true}).waitFor();
+        const listingResponse=await page.request.get(`${base}/api/analytics/submissions?days=7&page=1`);
+        assert.equal(listingResponse.status(),200);
+        assert.equal((await listingResponse.json()).rows[0].student,'Analytics CI Student');
+        await page.getByRole('cell').filter({hasText:'Analytics CI Student'}).first().waitFor();
         await page.getByRole('button',{name:'Submissions',exact:true}).click();
         await page.getByRole('status').filter({hasText:'Loading submissions'}).waitFor({state:'hidden'});
         await page.getByRole('button',{name:/Inspect submission/}).first().click();
@@ -79,6 +82,10 @@ try{
     await context.close();
   }
   console.log('Analytics passed: real PostgreSQL and Redis, protected production APIs, independent login/logout, admin separation, submission inspection, progress and mobile/desktop layouts.');
+}catch(error){
+  const page=browser?.contexts().at(-1)?.pages().at(-1);
+  if(page)await page.screenshot({path:`${out}/failure.png`,fullPage:true}).catch(()=>{});
+  throw error;
 }finally{
   if(browser)await browser.close();
   if(gateway)await new Promise(resolve=>gateway.close(resolve));
