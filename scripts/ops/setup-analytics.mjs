@@ -32,8 +32,10 @@ try{
   analyticsConfig({ANALYTICS_PASSWORD_HASH:hash,ANALYTICS_SESSION_SECRET:secret,ANALYTICS_ORIGIN:values.origin});
   const file=resolve(values['env-file']);let existing='';
   try{existing=await readFile(file,'utf8');}catch(error){if(error.code!=='ENOENT')throw error;}
-  const retained=existing.split('\n').filter(line=>!/^\s*(?:export\s+)?ANALYTICS_(?:PASSWORD_HASH|SESSION_SECRET|ORIGIN)\s*=/.test(line)).join('\n');
-  await writeFile(file,`${retained.trimEnd()}\nANALYTICS_PASSWORD_HASH='${hash}'\nANALYTICS_SESSION_SECRET='${secret}'\nANALYTICS_ORIGIN='${values.origin}'\n`,{mode:0o600});
+  const priorUsage=existing.match(/^\s*(?:export\s+)?ANALYTICS_USAGE_SECRET\s*=\s*['"]?([a-f0-9]{64})['"]?\s*(?:#.*)?$/m)?.[1];
+  const usageSecret=priorUsage || randomBytes(32).toString('hex');
+  const retained=existing.split('\n').filter(line=>!/^\s*(?:export\s+)?ANALYTICS_(?:PASSWORD_HASH|SESSION_SECRET|ORIGIN|USAGE_SECRET)\s*=/.test(line)).join('\n');
+  await writeFile(file,`${retained.trimEnd()}\nANALYTICS_PASSWORD_HASH='${hash}'\nANALYTICS_SESSION_SECRET='${secret}'\nANALYTICS_ORIGIN='${values.origin}'\nANALYTICS_USAGE_SECRET='${usageSecret}'\n`,{mode:0o600});
   await chmod(file,0o600);
   console.log('Analytics access configured. Restart the API to apply it. Existing analytics sessions will be invalidated.');
 }catch(error){console.error(error.message);process.exitCode=1;}

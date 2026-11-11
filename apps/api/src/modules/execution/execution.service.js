@@ -34,6 +34,8 @@ export class ExecutionService {
     const userId = actor?.role === 'guest' ? null : actor?.id;
     const jobId = await SubmissionService.enqueueJob(type, { ...payload, userId, isSubmit: submit }, actor?.id);
 
+    request.analyticsAction=submit?'submit_accepted':'run_accepted';
+    request.analyticsActor=actor;
     return { jobId, status: 'queued', actor };
   }
 

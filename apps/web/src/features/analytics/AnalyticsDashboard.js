@@ -2,8 +2,9 @@
 
 import { useCallback, useEffect, useRef, useState } from 'react';
 import styles from './analytics.module.css';
+import AnalyticsReports from './AnalyticsReports';
 
-const views=['Overview','Runners','Submissions','Progress','Access log'];
+const views=['Overview','Runners','Submissions','Progress','History','Usage','Incidents','Access log'];
 const number=value=>value==null?'Unknown':Number(value).toLocaleString();
 const duration=value=>value==null?'Unknown':`${(Number(value)/1000).toFixed(2)} s`;
 const bytes=value=>value==null?'Unknown':`${(Number(value)/1024/1024).toFixed(1)} MiB`;
@@ -28,6 +29,7 @@ export default function AnalyticsDashboard() {
   const [clock,setClock]=useState(0);
   const dialog=useRef(null);
   const clearPrivate=useCallback(()=>{setOverview(null);setSubmissions(null);setProgress(null);setAccess(null);setDetail(null);setSelected(null);setConnectionError('');},[]);
+  const clearError=useCallback(()=>setError(''),[]);
   const handleError=useCallback(err=>{if(err.name==='AbortError') return;if(err.status===401){clearPrivate();setSession('locked');}setError(err.message);},[clearPrivate]);
 
   useEffect(()=>{
@@ -118,6 +120,7 @@ export default function AnalyticsDashboard() {
         <div className={styles.twoColumns}><Panel title="Language usage · 30 days">{progress?.languages.map(row=><div className={styles.signal} key={row.language}><span>{row.language}</span><b>{row.attempts} attempts · {row.average_score}/10</b></div>)}</Panel><Panel title="Course participation" note="Current latest grades; assignment-level completion denominators are not inferred.">{progress?.courses.map(row=><div className={styles.signal} key={row.id}><span>{row.course_code}<small>{row.name}</small></span><b>{row.participating_students} students · {row.latest_grades} grades</b></div>)}</Panel></div>
       </>}
       {view==='Access log'&&<Panel title="Analytics access log" note="Latest 100 login, logout and submission-detail access records. No passwords, session tokens or student source code are logged.">{dataBusy?<p role="status">Loading access records…</p>:access?.rows.length?<div className={styles.tableWrap}><table><thead><tr><th>Time</th><th>Action</th><th>Reference</th></tr></thead><tbody>{access.rows.map((row,i)=><tr key={`${row.created_at}-${i}`}><td>{time(row.created_at)}</td><td>{row.action}</td><td>{row.detail || '—'}</td></tr>)}</tbody></table></div>:<Empty>No analytics access events recorded.</Empty>}</Panel>}
+      {['History','Usage','Incidents'].includes(view)&&<AnalyticsReports view={view} request={request} onError={handleError} onSuccess={clearError} refresh={refresh}/>}
       <footer className={styles.footer}>CodeRank Operations · Separate analytics access · Read-only academic and execution data</footer>
     </main>
     {selected&&<dialog ref={dialog} className={styles.dialog} onClose={()=>setSelected(null)} aria-labelledby="submission-detail-title"><header><h2 id="submission-detail-title">Submission {selected}</h2><button onClick={()=>dialog.current?.close()} aria-label="Close submission details">Close ×</button></header>{detailError&&<p role="alert" className={styles.error}>{detailError}</p>}{!detail&&!detailError&&<p role="status">Loading submission…</p>}{detail&&<><p>{detail.student} · {detail.practical} · {detail.language} · {detail.normalized_marks}/10</p><p className={styles.muted}>{detail.note}</p><h3>Submitted source {detail.code_truncated?'(truncated at 65,536 characters)':''}</h3><pre>{detail.code}</pre><h3>Test outcomes</h3>{detail.cases.map(row=><details key={row.test_case_id}><summary>Case {row.test_case_id}: {row.passed?'Passed':'Failed'} · {row.marks_awarded} marks · {duration(row.execution_time_ms)}</summary><pre>{row.actual_output || row.error_message || 'No recorded output.'}</pre></details>)}<h3>Recent completed attempts</h3>{detail.attempts.length?detail.attempts.map(row=><div className={styles.job} key={row.job_id}><code>{row.job_id}</code><span>{row.language} · {row.normalized_marks}/10 · submitted {time(row.submitted_at)} · recorded {time(row.completed_at)}</span></div>):<p>No completed attempt history recorded.</p>}</>}</dialog>}

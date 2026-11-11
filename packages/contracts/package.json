@@ -4,6 +4,7 @@
   "private": true,
   "type": "module",
   "exports": {
-    "./practice": "./src/practice.js"
+    "./practice": "./src/practice.js",
+    "./usage": "./src/usage.js"
   }
 }

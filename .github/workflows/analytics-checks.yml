@@ -9,7 +9,10 @@ on:
       - 'apps/worker/src/lifecycle/**'
       - 'packages/queue/src/**'
       - 'packages/runner/src/sandbox/telemetry.js'
-      - 'packages/database/migrations/008*'
+      - 'packages/database/migrations/**'
+      - 'packages/contracts/**'
+      - 'apps/api/src/modules/usage/**'
+      - 'apps/web/src/components/layout/UsageTracker.js'
       - 'scripts/ci/install-browser.mjs'
       - 'scripts/ci/analytics-smoke.mjs'
       - 'scripts/ci/analytics-runner-smoke.mjs'
@@ -45,6 +48,7 @@ jobs:
       JWT_SECRET: analytics-ci-only-unrelated-admin-secret
       NEXT_TELEMETRY_DISABLED: '1'
       ANALYTICS_ORIGIN: http://127.0.0.1:3311
+      ANALYTICS_RELEASE: ci-history-release
       ANALYTICS_CI_PASSWORD: ci-only-analytics-password-never-production
     steps:
       - uses: actions/checkout@v4
@@ -59,7 +63,7 @@ jobs:
           import {appendFileSync} from 'node:fs';
           import {randomBytes} from 'node:crypto';
           import {hashAnalyticsPassword} from './apps/api/src/modules/analytics/auth.js';
-          appendFileSync(process.env.GITHUB_ENV,`ANALYTICS_PASSWORD_HASH=${await hashAnalyticsPassword(process.env.ANALYTICS_CI_PASSWORD)}\nANALYTICS_SESSION_SECRET=${randomBytes(48).toString('hex')}\n`);
+          appendFileSync(process.env.GITHUB_ENV,`ANALYTICS_PASSWORD_HASH=${await hashAnalyticsPassword(process.env.ANALYTICS_CI_PASSWORD)}\nANALYTICS_SESSION_SECRET=${randomBytes(48).toString('hex')}\nANALYTICS_USAGE_SECRET=${randomBytes(32).toString('hex')}\n`);
           NODE
       - run: npm run db:migrate
       - run: npm run db:preflight
