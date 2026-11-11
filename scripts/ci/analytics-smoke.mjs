@@ -105,7 +105,11 @@ try{
   console.log('Analytics passed: real PostgreSQL and Redis, protected production APIs, independent login/logout, admin separation, submission inspection, progress and mobile/desktop layouts.');
 }catch(error){
   const page=browser?.contexts().at(-1)?.pages().at(-1);
-  if(page)await page.screenshot({path:`${out}/failure.png`,fullPage:true}).catch(()=>{});
+  if(page){
+    await page.screenshot({path:`${out}/failure.png`,fullPage:true}).catch(()=>{});
+    await writeFile(`${out}/failure-accessibility.txt`,await page.locator('body').ariaSnapshot().catch(()=>''));
+    await writeFile(`${out}/failure-headers.json`,JSON.stringify(await page.locator('th').evaluateAll(nodes=>nodes.map(n=>({text:n.textContent,scope:n.getAttribute('scope'),role:n.getAttribute('role'),display:getComputedStyle(n).display,visibility:getComputedStyle(n).visibility}))),null,2));
+  }
   throw error;
 }finally{
   if(browser)await browser.close();
