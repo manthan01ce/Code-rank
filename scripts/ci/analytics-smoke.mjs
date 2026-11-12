@@ -79,7 +79,14 @@ try{
         await page.locator('dialog pre').filter({hasText:'analytics-ci-source'}).waitFor();
         await page.getByRole('button',{name:'Close submission details'}).click();
       }
-      if(view==='Progress')await page.getByRole('cell',{name:'1',exact:true}).first().waitFor();
+      if(view==='Progress'){
+        const [expected]=await sql.query("SELECT count(*)::int AS attempts,count(DISTINCT student_id)::int AS students FROM submission_attempts WHERE submitted_at>=now()-interval '30 days'");
+        const progress=await(await page.request.get(`${base}/api/analytics/progress`)).json();
+        assert.equal(progress.daily.reduce((total,row)=>total+row.attempts,0),expected.attempts);
+        assert.equal(expected.attempts,3,'The Docker submissions and browser fixture must all be persisted');
+        await page.getByRole('cell',{name:String(expected.attempts),exact:true}).first().waitFor();
+        await page.getByRole('cell',{name:String(expected.students),exact:true}).first().waitFor();
+      }
       if(view==='History'){await page.getByRole('columnheader',{name:/^max sample p95$/i}).waitFor();const data=await(await page.request.get(`${base}/api/analytics/history`)).json();assert.ok(data.points.length>0);assert.ok(data.execution.summary.length>0);await page.getByRole('table',{name:'Execution phase summary',exact:true}).waitFor();const csv=await page.request.get(`${base}/api/analytics/export?type=execution`);assert.equal(csv.status(),200);assert.match(await csv.text(),/persist_ms/);}
       if(view==='Usage'){await page.getByRole('columnheader',{name:/^runs accepted$/i}).waitFor();const data=await(await page.request.get(`${base}/api/analytics/usage`)).json();assert.ok(data.daily.reduce((n,r)=>n+Number(r.page_views),0)>=1);assert.ok(data.daily.reduce((n,r)=>n+Number(r.runs),0)>=1);}
       if(view==='Incidents')await page.getByRole('cell',{name:/CI controlled incident/}).first().waitFor();
