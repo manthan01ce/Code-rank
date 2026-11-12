@@ -1,13 +1,14 @@
 import test, { mock } from 'node:test';
 import assert from 'node:assert/strict';
 import { EventEmitter } from 'node:events';
-import { closeDatabase } from '@coderank/database';
+const drainEvents=[];
+mock.module('@coderank/database',{namedExports:{closeDatabase:async()=>{drainEvents.push('database-close');}}});
 
 // Import smoke only. Real Redis/recovery and Docker execution remain separate gates.
 const workers = [Object.assign(new EventEmitter(),{id:'execution'}), { id: 'system' }];
 let shutdownOptions;
 mock.module('../../apps/worker/src/jobs/execution/submission.worker.js', {
-  namedExports: { createSubmissionWorker: () => ({ worker: workers[0], disconnectRealtime() {} }) },
+  namedExports: { createSubmissionWorker: () => ({ worker: workers[0], disconnectRealtime() {}, timings:{stop:async()=>{drainEvents.push('timings-flush');},state:()=>({enabled:false})} }) },
 });
 mock.module('../../apps/worker/src/jobs/system/system.worker.js', {
   namedExports: { createSystemWorker: () => workers[1] },
@@ -27,9 +28,10 @@ test('worker bootstrap links the supported database close export for drain', asy
   const before = new Map(['SIGINT', 'SIGTERM'].map(signal => [signal, process.listeners(signal)]));
   try {
     await import('../../apps/worker/src/index.js');
-    assert.equal(shutdownOptions.afterDrain, closeDatabase);
+    assert.equal(typeof shutdownOptions.afterDrain, 'function');
     assert.deepEqual(shutdownOptions.workers.slice(0, 2), workers);
     await shutdownOptions.afterDrain();
+    assert.deepEqual(drainEvents,['timings-flush','database-close'],'Recording flush must finish before the database closes');
   } finally {
     for (const [signal, listeners] of before) {
       for (const listener of process.listeners(signal)) if (!listeners.includes(listener)) process.removeListener(signal, listener);
