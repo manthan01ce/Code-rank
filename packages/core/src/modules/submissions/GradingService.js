@@ -2,7 +2,7 @@ import sql from '@coderank/database';
 import { publicResult } from '../../security/execution.js';
 import { saveAttempt, findAttempt } from './SubmissionRepository.js';
 
-export async function gradePractical({ language, code, dbId, userId, isSubmit = false, jobId, enqueuedAt }, createExecutor) {
+export async function gradePractical({ language, code, dbId, userId, isSubmit = false, jobId, enqueuedAt }, createExecutor, measurePersistence = operation => operation()) {
   let executor;
   const submittedAt = new Date(enqueuedAt || Date.now());
   if (isSubmit && (!jobId || !userId || !Number.isFinite(submittedAt.getTime()))) throw new Error("Submission job identity is required");
@@ -128,7 +128,7 @@ export async function gradePractical({ language, code, dbId, userId, isSubmit = 
         runtimeError: null,
         cases: []
       };
-      return isSubmit ? saveAttempt({ jobId, userId, dbId, code, language, status: 'Compile Error', rawMarks: 0, normalizedMarks: 0, totalTime: 0, isLate, submittedAt, cases: [], result }) : result;
+      return isSubmit ? await measurePersistence(()=>saveAttempt({ jobId, userId, dbId, code, language, status: 'Compile Error', rawMarks: 0, normalizedMarks: 0, totalTime: 0, isLate, submittedAt, cases: [], result })) : result;
     }
 
     const results = await executor.runBatch(testCases);
@@ -193,7 +193,7 @@ export async function gradePractical({ language, code, dbId, userId, isSubmit = 
       overallStatus
     };
 
-    return isSubmit ? saveAttempt({ jobId, userId, dbId, code, language, status: overallStatus, rawMarks, normalizedMarks, totalTime, isLate, submittedAt, cases: submissionCasesToInsert, result }) : result;
+    return isSubmit ? await measurePersistence(()=>saveAttempt({ jobId, userId, dbId, code, language, status: overallStatus, rawMarks, normalizedMarks, totalTime, isLate, submittedAt, cases: submissionCasesToInsert, result })) : result;
 
   } finally {
     if (executor) await executor.cleanup();

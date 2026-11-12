@@ -1,3 +1,4 @@
+import { measureExecutionPhase } from '../timing.js';
 /* eslint-disable no-useless-escape -- preserve reviewed escaping in generated Java JSON encoder */
 import { Sandbox } from '../sandbox/Sandbox.js';
 import { dockerCommand } from '../sandbox/docker.js';
@@ -151,7 +152,7 @@ export async function runJava({ code, problem, testCases = [], timeoutMs = 10000
     ].join('\n');
 
     try {
-      const { stdout, stderr } = await sandbox.script(cmd, timeoutMs);
+      const { stdout, stderr } = await measureExecutionPhase('harness',()=>sandbox.script(cmd, timeoutMs));
 
       if (stdout.includes('RUNTIME_ERROR:')) {
         const errData = stderr;

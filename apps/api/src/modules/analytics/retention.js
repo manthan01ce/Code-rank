@@ -4,6 +4,7 @@ export async function retainAnalyticsHistory(query,{apply=false,days=30,limit=10
  const targets=[
   ['analytics_samples','observed_at<now()-make_interval(days=>$1)',['id'],days],
   ['analytics_usage_buckets','bucket<now()-make_interval(days=>$1)',['instance_id','boot_id','bucket','kind','route','role','actor_key'],days],
+  ['analytics_execution_timings','observed_at<now()-make_interval(days=>$1)',['event_id'],days],
   ['analytics_incidents','resolved_at<now()-make_interval(days=>$1)',['id'],90],
  ];
  const result=[];

@@ -12,9 +12,10 @@ export function csvReport(rows) {
 }
 export function createAnalyticsReports(query,runtime) {
  return {
+  execution: input => executionReport(query,reportRange(input).hours),
   async history(input={}){
    const range=reportRange(input,runtime?.instanceId);
-   const [instances,points,releases]=await Promise.all([
+   const [instances,points,releases,execution]=await Promise.all([
     query("SELECT DISTINCT instance_id FROM analytics_samples WHERE observed_at>=now()-interval '30 days' ORDER BY instance_id LIMIT 100",[]),
     query(`SELECT date_trunc($1,observed_at,'UTC') AS bucket,max(observed_at) AS last_observed,count(*)::int AS samples,
       round(avg(request_rate),2) AS average_request_rate,max(latency_p95_ms) AS max_sample_p95_ms,
@@ -24,8 +25,9 @@ export function createAnalyticsReports(query,runtime) {
       count(*) FILTER(WHERE available_slots IS NULL)::int AS unknown_capacity_samples
       FROM analytics_samples WHERE observed_at>=now()-make_interval(hours=>$2) AND instance_id=$3 GROUP BY 1 ORDER BY 1 LIMIT 360`,[range.unit,range.hours,range.instance]),
     query(`SELECT release,min(observed_at) AS first_observed,max(observed_at) AS last_observed,count(DISTINCT boot_id)::int AS process_boots FROM analytics_samples WHERE instance_id=$1 AND observed_at>=now()-make_interval(hours=>$2) GROUP BY release ORDER BY first_observed DESC LIMIT 20`,[range.instance,range.hours]),
+    executionReport(query,range.hours),
    ]);
-   return {instances:instances.map(row=>row.instance_id),points,releases,range,lastStoredAt:points.at(-1)?.last_observed || null,collector:runtime?.getState()||null,
+   return {execution,instances:instances.map(row=>row.instance_id),points,releases,range,lastStoredAt:points.at(-1)?.last_observed || null,collector:runtime?.getState()||null,
     scope:'UTC buckets for one reporting API instance. Fleet gauges are not added across API replicas. Missing buckets are collection gaps, not zeros. P95 values are the maximum sampled recent P95, not a combined percentile.'};
   },
   async usage(input={}){
@@ -52,4 +54,18 @@ export function createAnalyticsReports(query,runtime) {
    return {rows,states,collector:runtime?.getState()||null,scope:'Incidents open after two consecutive bad samples and resolve after two good samples. Unknown measurements do not imply recovery. Times describe observed conditions; the monitor cannot persist events while its database is unavailable.'};
   },
  };
+}
+
+export async function executionReport(query,hours=24){
+ const [summary,recent]=await Promise.all([
+  query(`SELECT kind,language,count(*)::int AS jobs,
+   count(prepare_compile_ms)::int AS compile_observations,count(execute_ms)::int AS execute_observations,count(harness_ms)::int AS harness_observations,count(persist_ms)::int AS persist_observations,
+   avg(queue_ms) AS average_queue_ms,avg(worker_ms) AS average_worker_ms,
+   percentile_cont(0.95) WITHIN GROUP(ORDER BY worker_ms) AS p95_worker_ms,
+   avg(prepare_compile_ms) AS average_prepare_compile_ms,avg(execute_ms) AS average_execute_ms,
+   avg(harness_ms) AS average_harness_ms,avg(persist_ms) AS average_persist_ms,avg(cleanup_ms) AS average_cleanup_ms
+   FROM analytics_execution_timings WHERE observed_at>=now()-make_interval(hours=>$1) GROUP BY kind,language ORDER BY jobs DESC,kind,language LIMIT 20`,[hours]),
+  query(`SELECT job_id,attempt,kind,language,outcome,observed_at,queue_ms,worker_ms,prepare_compile_ms,execute_ms,harness_ms,persist_ms,cleanup_ms FROM analytics_execution_timings WHERE observed_at>=now()-make_interval(hours=>$1) ORDER BY observed_at DESC,event_id DESC LIMIT 100`,[hours])
+ ]);
+ return {summary,recent,scope:'Recorded processor attempts, including retries. Queue wait is wall-clock time from original enqueue to this attempt; clock regressions are unknown. Worker duration uses a monotonic clock and includes cleanup. Preparation/compile includes sandbox startup and source preparation; execution includes test I/O and Docker overhead. Legacy practice harnesses combine setup, compilation and execution and are reported separately. Missing phases were not observed, not zero. Averages use only measured values; unavailable phases must not be added. Buffered observations can be lost on crashes.'};
 }

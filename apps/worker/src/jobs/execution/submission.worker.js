@@ -1,3 +1,5 @@
+import sql from '@coderank/database';
+import { createExecutionTimings } from '../../lifecycle/execution-timings.js';
 import { publicResult } from '@coderank/core/security/execution';
 import { Worker } from 'bullmq';
 import { jobLifetime } from '@coderank/runner/sandbox';
@@ -17,6 +19,8 @@ export function createSubmissionWorker() {
     maxRetriesPerRequest: null,
   };
 
+  const timings = createExecutionTimings({query:(q,p)=>sql.query(q,p)});
+  timings.start();
   const publisher = createWorkerPublisher();
   const { socket, disconnectRealtime } = publisher;
 
@@ -26,7 +30,7 @@ export function createSubmissionWorker() {
     const { type, payload, userId } = job.data;
     if (verboseLogs) console.log(`[SubmissionWorker] Processing job ${job.id} (type: ${type})`);
 
-    const result = await dispatchExecution(job);
+    const result = await timings.run(job,()=>dispatchExecution(job));
     return publicResult(result);
   }, {
     connection,
@@ -53,5 +57,5 @@ export function createSubmissionWorker() {
   // so a temporary Redis outage does not become an unhandled EventEmitter error.
   worker.on('error', error => console.error('[SubmissionWorker] Queue error:', error.message));
 
-  return { worker, socket, disconnectRealtime };
+  return { worker, socket, disconnectRealtime, timings };
 }

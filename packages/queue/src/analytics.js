@@ -13,6 +13,7 @@ export function summarizeWorkerRecords(records, now = Date.now()) {
         accepting, concurrency: row.concurrency, occupied: fresh && measured ? row.activeJobs : null,
         available: accepting && measured ? row.concurrency-row.activeJobs : null,
         activeJobs: fresh && Array.isArray(row.jobs) ? row.jobs.slice(0,64).map(job => ({ id: String(job.id).slice(0,80), startedAt: job.startedAt, language: String(job.language || '').slice(0,20), type: String(job.type || '').slice(0,20) })) : [],
+        timings: fresh ? row.timings || null : null,
         image: String(row.image || '').slice(0,200), process: fresh ? row.process || null : null, containers: fresh ? row.containers || null : null });
     } catch { /* Invalid telemetry never establishes available capacity. */ }
   }

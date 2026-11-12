@@ -1,3 +1,4 @@
+import { measureExecutionPhase } from './timing.js';
 import { dockerCommand } from './sandbox/docker.js';
 import { Sandbox } from './sandbox/Sandbox.js';
 export { dockerCommand } from './sandbox/docker.js';
@@ -43,7 +44,8 @@ export class Executor {
     if (remaining <= 0) throw Object.assign(new Error('Job deadline exceeded'), { code: 124 });
     return this.sandbox.script(script, remaining);
   }
-  async compile() {
+  async compile() { return measureExecutionPhase('prepare_compile',()=>this._compile()); }
+  async _compile() {
     try {
       await this.script(`set -e\nmkdir -p '${this.workdir}'\ncd '${this.workdir}'\nprintf '%s' '${b64(this.code)}' | base64 -d > ${this.config.filename}\n${this.config.compile || 'true'}\n`, 10000);
       return { success: true, cached: false };
@@ -58,7 +60,8 @@ export class Executor {
       return { stdout: result.actualOutput, stderr: result.errorMessage, exitCode: result.exitCode, runtimeMs: result.runtimeMs, cpuTimeMs: result.cpuTimeMs, memoryBytes: result.memoryBytes };
     } finally { await this.cleanup(); }
   }
-  async runOneTestCase(input, expectedOutput, tcId, idx, marks = 0, timeLimit = this.timeLimit) {
+  async runOneTestCase(input, expectedOutput, tcId, idx, marks = 0, timeLimit = this.timeLimit) { return measureExecutionPhase('execute',()=>this._runOneTestCase(input, expectedOutput, tcId, idx, marks, timeLimit)); }
+  async _runOneTestCase(input, expectedOutput, tcId, idx, marks = 0, timeLimit = this.timeLimit) {
     const start = performance.now();
     let stdout = '', stderr = '', exitCode = 0;
     try {
@@ -85,7 +88,8 @@ export class Executor {
     }
     return results;
   }
-  async cleanup() {
+  async cleanup() { return measureExecutionPhase('cleanup',()=>this._cleanup()); }
+  async _cleanup() {
     try {
       if (this.workdir) {
         await this.sandbox.script(`rm -rf '${this.workdir}'`, 3000).catch(() => {});
