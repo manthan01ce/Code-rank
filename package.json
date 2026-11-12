@@ -53,7 +53,8 @@
     "lab:audit": "node scripts/ci/local-lab-audit.mjs",
     "test:warm-disposition": "node scripts/ci/warm-mode-acceptance.mjs",
     "analytics:setup": "node scripts/ops/setup-analytics.mjs",
-    "analytics:maintenance": "node scripts/ops/analytics-maintenance.mjs"
+    "analytics:maintenance": "node scripts/ops/analytics-maintenance.mjs",
+    "analytics:check": "node scripts/ops/check-analytics.mjs"
   },
   "devDependencies": {
     "@electric-sql/pglite": "0.5.10",

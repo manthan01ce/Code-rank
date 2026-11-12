@@ -18,7 +18,7 @@ export function analyticsConfig(env = process.env) {
 }
 
 export async function hashAnalyticsPassword(password) {
-  if (typeof password !== 'string' || password.length < 14 || Buffer.byteLength(password) > 512) throw Error('Choose an analytics password of 14–512 bytes.');
+  if (typeof password !== 'string' || password.length < 8 || Buffer.byteLength(password) > 512) throw Error('Choose an analytics password of 8 or more characters, up to 512 bytes.');
   const salt = randomBytes(32).toString('hex');
   const key = await derive(password, salt, 64);
   return `scrypt$${salt}$${key.toString('hex')}`;

@@ -11,7 +11,7 @@
    npm run analytics:setup -- --origin https://your-coderank-host
    ```
 
-   Choose a new password of at least 14 characters. The prompts hide input and write only a salted scrypt hash, a random session secret and the origin to `.env`. The file is restricted to its owner. No plaintext password is written or printed. Use `--env-file` for a different backend environment file; ensure a higher-precedence environment file does not override these values.
+   Choose a new password of at least 8 characters. The prompts hide input and write only a salted scrypt hash, a random session secret and the origin to `.env`. The file is restricted to its owner. No plaintext password is written or printed. Use `--env-file` for a different backend environment file; ensure a higher-precedence environment file does not override these values.
 3. Restart the API. In managed hosting, transfer the three generated `ANALYTICS_*` values into the API's private environment. They must never be `NEXT_PUBLIC_*` settings or committed to git. The frontend needs only the existing same-origin API gateway.
 4. Open `/analytics`. No default password exists. Missing/invalid configuration or inaccessible authentication storage fails closed.
 
@@ -95,3 +95,12 @@ Worker recording buffers at most 200 observations and flushes up to 50 every fiv
 Records contain job reference, attempt number, kind, language, coarse outcome and timings. They contain no account identifiers, source, inputs, outputs or error messages. No timing fields enter public student results. Existing jobs are not backfilled.
 
 External alert delivery still needs a selected destination and an independently running uptime monitor for full-service outages. Host/container instrumentation remains deployment-specific; worker RSS and CPU are process measurements, not host totals.
+
+
+## Local activation and an unavailable login page
+
+The unavailable message indicates configuration, migration or database access failure; it is not the incorrect-password response. From the repository root, configure access using `npm run analytics:setup -- --origin http://localhost:3000 --enable-recording`. Enter the desired password twice in the hidden prompts (minimum eight characters). The command never hardcodes a default password or prints it. It writes a salted hash and random secrets, preserves existing unrelated settings and a valid usage key, and enables history, usage and execution recording when the flag is supplied. It selects `.env.local` when that higher-precedence root file exists; otherwise it selects `.env`. Use `--env-file` when configuring another runtime environment. Existing process environment variables still take precedence.
+
+With the intended local PostgreSQL and Redis running, apply migrations using `npm run db:migrate`, run `npm run db:preflight`, then `npm run analytics:check -- --origin http://localhost:3000`. The last command is read-only and separates access configuration, browser-origin mismatch, usage-key validity, database connectivity, migration state and analytics table access. It prints no secrets or raw database errors. Restart the API and workers with `npm run dev`, open the same origin `/analytics`, and enter the configured password. Replace the origin consistently if using a different port. A LAN browser requires the configured HTTPS origin under the existing access policy.
+
+A setup executed in a remote coding workspace does not configure a separate Windows installation; run these commands in the installation serving the browser. No password is bundled with the repository.

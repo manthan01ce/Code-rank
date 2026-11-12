@@ -8,6 +8,7 @@
       "tests/unit/analytics-execution.test.mjs",
       "tests/unit/analytics-history.test.mjs",
       "tests/unit/analytics-runtime.test.mjs",
+      "tests/unit/analytics-setup.test.mjs",
       "tests/unit/analytics-telemetry.test.mjs",
       "tests/unit/api-auth-runtime.test.mjs",
       "tests/unit/api-courses-runtime.test.mjs",

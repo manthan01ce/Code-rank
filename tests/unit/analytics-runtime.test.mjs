@@ -7,7 +7,7 @@ import { migrate } from '../../packages/database/src/migrations.js';
 import analyticsRoutes from '../../apps/api/src/modules/analytics/analytics.routes.js';
 import { analyticsConfig, hashAnalyticsPassword, verifyAnalyticsPassword } from '../../apps/api/src/modules/analytics/auth.js';
 
-const password='test-only-analytics-password-2026';
+const password='testpass';
 const hash=await hashAnalyticsPassword(password);
 process.env.ANALYTICS_PASSWORD_HASH=hash;
 process.env.ANALYTICS_SESSION_SECRET='test-only-analytics-session-secret-at-least32';
