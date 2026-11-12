@@ -53,5 +53,10 @@
     "original": "packages/database/migrations/009_analytics_history.sql",
     "destination": "packages/database/migrations/009_analytics_history.sql",
     "sha256": "405369004a584bbe5609c73916e8cc1f52c0d033cc60bf07625b5f3e8cad2b8f"
+  },
+  {
+    "original": "packages/database/migrations/010_analytics_execution.sql",
+    "destination": "packages/database/migrations/010_analytics_execution.sql",
+    "sha256": "d0bee1312a0a07e72e4923ab766ff70a448dfe53d5570a1feb3502191f913d32"
   }
 ]

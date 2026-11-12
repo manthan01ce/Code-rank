@@ -38,11 +38,11 @@ export default async function analyticsRoutes(fastify,options) {
   fastify.get('/analytics/incidents',async(request)=>reports.incidents(request.query));
   fastify.get('/analytics/export',async(request,reply)=>{
     const type=request.query.type;
-    if(!['history','usage','incidents'].includes(type))return reply.code(400).send({error:'Choose history, usage or incidents.'});
+    if(!['history','usage','incidents','execution'].includes(type))return reply.code(400).send({error:'Choose history, usage, incidents or execution.'});
     const data=await reports[type](request.query);
     await auth.audit('EXPORT',type);
     reply.header('Content-Disposition',`attachment; filename="coderank-${type}.csv"`);
-    return reply.type('text/csv; charset=utf-8').send(csvReport(data.points || data.daily || data.rows));
+    return reply.type('text/csv; charset=utf-8').send(csvReport(data.points || data.daily || data.rows || data.recent));
   });
   fastify.get('/analytics/access',async()=>({rows:await query('SELECT action,detail,created_at FROM analytics_access ORDER BY id DESC LIMIT 100',[])}));
 }

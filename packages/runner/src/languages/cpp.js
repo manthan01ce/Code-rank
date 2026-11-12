@@ -1,3 +1,4 @@
+import { measureExecutionPhase } from '../timing.js';
 import { Sandbox } from '../sandbox/Sandbox.js';
 import { dockerCommand } from '../sandbox/docker.js';
 import crypto from 'crypto';
@@ -140,7 +141,7 @@ export async function runCpp({ code, problem, testCases }) {
 
     let stdout, stderr;
     try {
-      const execResult = await sandbox.script(cmd, timeoutMs);
+      const execResult = await measureExecutionPhase('harness',()=>sandbox.script(cmd, timeoutMs));
       stdout = execResult.stdout;
       stderr = execResult.stderr;
 

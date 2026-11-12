@@ -11,6 +11,7 @@
     "./reaper": "./src/sandbox/reaper.js",
     "./function-harness": "./src/languages/function-harness.js",
     "./function-runner": "./src/languages/function-runner.js",
-    "./health": "./src/sandbox/health.js"
+    "./health": "./src/sandbox/health.js",
+    "./timing": "./src/timing.js"
   }
 }
